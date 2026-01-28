@@ -36,22 +36,32 @@
 
 ---
 
-## 📁 현재 구조 (v5)
+## 📁 현재 구조 (v5.1)
 
 ### 파일 구조
 ```
-navigator-v5.html (단일 파일)
-├── HTML (마크업)
-├── CSS (스타일)
-└── JavaScript
-    ├── 상태 관리 (appState)
-    ├── 비즈니스 로직
-    │   ├── 우선순위 계산
-    │   ├── 모드 판단
-    │   └── 필터링
-    ├── UI 렌더링 (renderStatic)
-    ├── 이벤트 핸들러
-    └── 로컬스토리지
+navigator-app/
+├── navigator-v5.html (메인 앱, ~3800줄)
+│   ├── HTML (마크업)
+│   ├── CSS (스타일)
+│   │   ├── PC 레이아웃 (3컬럼)
+│   │   ├── 모바일 레이아웃 (1컬럼)
+│   │   ├── 완료 애니메이션
+│   │   └── 진행률 표시
+│   └── JavaScript
+│       ├── 상태 관리 (appState)
+│       ├── 비즈니스 로직
+│       │   ├── 우선순위 계산
+│       │   ├── 모드 판단
+│       │   ├── 필터링
+│       │   ├── 반복 작업 생성
+│       │   └── 시간 계산
+│       ├── UI 렌더링 (renderStatic)
+│       ├── 이벤트 핸들러
+│       ├── 알림 시스템
+│       └── 로컬스토리지
+├── manifest.json (PWA 설정)
+└── sw.js (Service Worker)
 ```
 
 ### 상태 관리
@@ -304,23 +314,26 @@ setInterval(updateTime, 1000); // 1초마다
 interface Task {
   // 식별
   id: number;  // timestamp (임시)
-  
+
   // 기본
   title: string;
   category: '본업' | '부업' | '일상';
-  
+
   // 시간
   deadline: string;        // ISO datetime
   estimatedTime: number;   // 분
   createdAt: string;       // ISO datetime
-  
+
   // 메타
   link: string;            // URL
   expectedRevenue: string; // 숫자 (문자열로 저장)
-  
+
+  // 반복 (v5.1 추가)
+  repeatType?: 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly';
+
   // 상태
   completed: boolean;
-  
+
   // 계산값 (런타임)
   priority?: number;
   urgency?: 'urgent' | 'warning' | 'normal' | 'expired';
@@ -339,6 +352,7 @@ interface Task {
     estimatedTime: 10,
     link: "https://t.me/...",
     expectedRevenue: "50000",
+    repeatType: "none",  // v5.1 추가
     completed: false,
     createdAt: "2026-01-28T14:30:00"
   },
@@ -347,6 +361,15 @@ interface Task {
 
 // localStorage['navigator-shuttle']
 true // or false
+
+// localStorage['navigator-streak'] (v5.1 추가)
+{
+  "count": 3,
+  "lastDate": "2026-01-28"
+}
+
+// localStorage['navigator-notified-tasks'] (v5.1 추가)
+["task-id-1", "task-id-2"]  // 이미 알림 보낸 작업 ID
 ```
 
 ---
@@ -357,26 +380,50 @@ true // or false
 ```
 App
 ├── Header (제목, 로고)
-├── TabNav (실행 | 대시보드)
+├── TabNav (실행 | 대시보드 | 일정)
 └── TabContent
     ├── ActionTab (기본)
-    │   ├── ShuttleStatus
-    │   ├── ModeIndicator
-    │   ├── TimeRemaining
-    │   ├── Stats
-    │   ├── BackupSection
-    │   ├── QuickAdd
-    │   ├── DetailedAdd (optional)
-    │   ├── NextAction
-    │   ├── HiddenTasks (optional)
-    │   ├── TaskList
-    │   └── CompletedTasks (optional)
-    └── DashboardTab
-        ├── TodaySummary
-        ├── CategoryStats
-        ├── UrgentList (optional)
-        ├── AllTasksList
-        └── CompletedList (optional)
+    │   ├── PC 3컬럼 레이아웃
+    │   │   ├── 좌측: CurrentTime, ShuttleStatus, Stats, Backup
+    │   │   ├── 중앙: QuickAdd, NextAction, TaskList
+    │   │   └── 우측: TodayProgress, UrgentList
+    │   └── 모바일 1컬럼 레이아웃
+    │       ├── CurrentTimeSection (NEW)
+    │       ├── ShuttleStatus
+    │       ├── TodayProgress (NEW)
+    │       ├── Stats
+    │       ├── QuickAdd
+    │       ├── DetailedAdd (optional)
+    │       ├── NextAction
+    │       ├── TaskList
+    │       └── CompletedTasks (optional)
+    ├── DashboardTab
+    │   ├── TodaySummary
+    │   ├── CategoryStats
+    │   ├── UrgentList (optional)
+    │   ├── AllTasksList
+    │   └── CompletedList (optional)
+    └── ScheduleTab (NEW)
+        ├── ScheduleFilter (전체 | 오늘 | 평일 | 주말)
+        └── ScheduleList (날짜별 그룹)
+```
+
+### 완료 피드백 시스템 (NEW)
+```
+CompletionOverlay
+├── 체크 아이콘 (애니메이션)
+├── "완료!" 텍스트
+└── 자동 fade-out (0.5초)
+
+TodayProgress
+├── 진행률 바
+├── 완료/전체 카운트
+└── 연속 달성일 (streak)
+
+CurrentTimeSection
+├── 현재 시각 (실시간)
+├── 현재 모드 (회사/여유/생존/출근/휴식)
+└── 모드별 남은 시간
 ```
 
 ### 컴포넌트 책임
@@ -514,24 +561,20 @@ renderStatic() // 전체 HTML 재생성
 React Virtual DOM // 변경된 부분만
 ```
 
-### 5. 반응형 (Medium)
+### ~~5. 반응형~~ ✅ 완료 (v5.1)
 ```css
-/* 현재 */
-.app { max-width: 600px; }
-
-/* 문제 */
-- PC 대화면에서 좁음
-- 태블릿 미지원
-
-/* 해결 (Phase 2) */
-@media (min-width: 768px) {
-  .app { max-width: 800px; }
-}
+/* v5.1에서 구현됨 */
 @media (min-width: 1024px) {
-  .app { 
-    max-width: 1200px;
-    grid-template-columns: 1fr 2fr;
+  .pc-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 380px;
+    gap: 24px;
   }
+}
+
+/* 태블릿도 지원 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 2컬럼 일부 지원 */
 }
 ```
 
@@ -606,3 +649,5 @@ test('사용자가 작업 추가하고 완료', async ({ page }) => {
 ---
 
 **이 아키텍처는 진화합니다. Phase별로 업데이트됩니다.**
+
+**마지막 업데이트: 2026-01-28 (v5.1 확장)**

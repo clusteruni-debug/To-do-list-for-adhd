@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\clust\\\\Desktop\\\\myvibe\\\\navigator-app\\\\navigator-v5.html\")",
+      "Bash(git add:*)"
+    ]
+  }
+}

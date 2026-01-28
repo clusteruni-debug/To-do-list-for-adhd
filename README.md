@@ -3,8 +3,9 @@
 > ADHD 친화적 할일 관리 앱: "생각 안 하고 실행하게"
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
-[![Version](https://img.shields.io/badge/version-5.0-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-5.1-blue.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
+[![PWA](https://img.shields.io/badge/PWA-ready-brightgreen.svg)]()
 
 ---
 
@@ -21,12 +22,13 @@
 - ✅ **Next-Action 단일 표시**: 지금 할 것 하나만 크게
 - ✅ **시간대별 자동 모드**: 회사/생존/여유 모드 자동 전환
 - ✅ **판단 최소화**: 스와이프로 완료/삭제, 햅틱 피드백
+- ✅ **완료 피드백**: 노션 스타일 체크 애니메이션, 진행률 표시
 
 ---
 
-## 🚀 현재 상태 (v5)
+## 🚀 현재 상태 (v5.1)
 
-### ✅ 완료된 기능
+### ✅ 완료된 기능 (기본)
 - [x] 빠른 추가 (제목만 입력)
 - [x] 상세 추가 (카테고리별 입력 필드)
 - [x] 작업 수정/삭제
@@ -42,25 +44,52 @@
 - [x] JSON 백업/복원
 - [x] 에러 처리 및 토스트 알림
 
-### 🔄 진행 중
-- [ ] Next.js로 전환
-- [ ] Vercel 배포
-- [ ] 모바일/PC 동기화
+### ✅ 완료된 기능 (확장)
+- [x] **반복 작업** (매일/평일/매주/매월)
+- [x] **PWA 지원** (홈화면 설치, 오프라인 캐싱)
+- [x] **푸시 알림** (마감 3시간/1시간 전)
+- [x] **PC/모바일 반응형** (PC 3컬럼, 모바일 1컬럼)
+- [x] **일정 탭** (평일/주말 필터, 날짜별 그룹)
+- [x] **완료 애니메이션** (노션 스타일 체크 오버레이)
+- [x] **진행률 표시** (오늘의 진행률, 연속 달성일)
+- [x] **현재 시간 표시** (실시간 시계, 모드별 남은 시간)
+- [x] **검색 & 필터** (제목 검색, 카테고리 필터)
 
-### 📅 예정
-- [ ] Supabase 연동 (실시간 동기화)
-- [ ] PWA 설정 (오프라인, 푸시 알림)
-- [ ] 텔레그램 어그리게이터 연동
+### 🔄 다음 단계
+- [ ] Next.js로 전환 (Phase 2)
+- [ ] Vercel 배포
+- [ ] Supabase 연동 (로그인, 실시간 동기화)
+
+### 📅 나중에
+- [ ] 텔레그램 연동
 - [ ] X 활동 트래커
+- [ ] 고급 통계/인사이트
 
 ---
 
 ## 💻 기술 스택
 
-### 현재 (v5 - HTML 프로토타입)
+### 현재 (v5.1 - HTML 프로토타입 + PWA)
 - **Frontend**: Vanilla JavaScript
 - **Storage**: LocalStorage
+- **PWA**: manifest.json + Service Worker
 - **Deployment**: 로컬 HTML 파일
+
+### 파일 구조
+```
+navigator-app/
+├── navigator-v5.html     # 메인 앱
+├── manifest.json         # PWA 설정
+├── sw.js                 # Service Worker
+├── README.md             # 프로젝트 소개
+├── CONTEXT.md            # 전체 맥락
+├── ROADMAP.md            # 개발 로드맵
+├── ARCHITECTURE.md       # 기술 설계
+├── DECISIONS.md          # 설계 결정 기록
+├── WORKFLOW.md           # Git 가이드
+├── SETUP-GUIDE.md        # 초기 설정
+└── TROUBLESHOOTING.md    # 문제 해결
+```
 
 ### 예정 (v6+ - Production)
 - **Framework**: Next.js 14 (App Router)
@@ -96,11 +125,23 @@
 - **회사 (11-20시)**: 본업만 표시
 - **생존 (22-24시, 셔틀 실패)**: 15분 이하 + 긴급만
 - **여유 (19-24시, 셔틀 성공)**: 전체 표시
+- **출근 (7-11시)**: 이동 중
+- **휴식 (그 외)**: 자유 시간
 
 ### 4. 스와이프 제스처
 - ← 왼쪽: 완료
 - → 오른쪽: 삭제
 - 햅틱 피드백
+
+### 5. 완료 피드백 (NEW)
+- 노션 스타일 체크 애니메이션
+- 오늘의 진행률 바
+- 연속 달성일 (streak) 추적
+- 현재 시간 & 모드별 남은 시간
+
+### 6. 반복 작업 (NEW)
+- 매일/평일/매주/매월 반복
+- 완료 시 다음 작업 자동 생성
 
 ---
 

@@ -121,15 +121,16 @@ kAITO 프로젝트:
 
 ### 2. "작동하는 쓰레기 → 좋은 코드" (Track C)
 ```
-Phase 1: HTML 프로토타입
+Phase 1: HTML 프로토타입 ✅ 완료 + 확장
 → 빠른 검증, 즉시 사용
 → 기술부채 OK
+→ PWA, 반복작업, 일정뷰, UX개선 추가
 
-Phase 2: Next.js 전환
+Phase 2: Next.js 전환 (대기)
 → 제대로 구축
 → 확장 가능하게
 
-Phase 3: Production
+Phase 3: Production (대기)
 → 실시간 동기화
 → 크로스 플랫폼
 ```
@@ -245,23 +246,26 @@ ROI 보너스 (부업):
 interface Task {
   // 식별
   id: number;              // timestamp (임시, UUID로 변경 예정)
-  
+
   // 기본 정보
   title: string;           // 작업 제목
   category: '본업' | '부업' | '일상';
-  
+
   // 시간 정보
   deadline: string;        // ISO datetime (선택)
   estimatedTime: number;   // 분 단위
   createdAt: string;       // ISO datetime
-  
+
   // 메타
   link: string;            // URL (텔레그램, 웹)
   expectedRevenue: string; // 부업만, 선택사항
-  
+
+  // 반복 (v5.1 추가)
+  repeatType?: 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly';
+
   // 상태
   completed: boolean;
-  
+
   // 계산값 (런타임)
   priority?: number;       // 자동 계산
   urgency?: 'urgent' | 'warning' | 'normal' | 'expired';
@@ -325,12 +329,24 @@ appState = {
 해결: 완료 취소 기능 추가
 ```
 
-### v5 (현재)
+### v5 (기본)
 ```
 ✅ 모든 버그 수정
 ✅ 기능 완성
 ✅ 에러 처리 추가
 ✅ 주석 완비
+```
+
+### v5.1 (확장) ← 현재
+```
+✅ PWA 지원 (manifest.json, sw.js)
+✅ 푸시 알림 (마감 3시간/1시간 전)
+✅ 반복 작업 (매일/평일/매주/매월)
+✅ PC/모바일 반응형 (3컬럼/1컬럼)
+✅ 일정 탭 (평일/주말 필터)
+✅ 완료 애니메이션 + 진행률
+✅ 현재 시간 & 모드별 남은 시간
+✅ 검색 & 카테고리 필터
 ```
 
 ---
@@ -598,4 +614,4 @@ JSON 백업:
 
 **이 문서는 살아있습니다. 프로젝트가 진행되며 계속 업데이트됩니다.**
 
-**마지막 업데이트: 2026-01-28 (v5 완성)**
+**마지막 업데이트: 2026-01-28 (v5.1 확장 완료)**

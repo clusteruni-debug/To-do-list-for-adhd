@@ -30,13 +30,16 @@ ls
 
 **있어야 할 파일들**:
 ```
-✅ navigator-v5.html
+✅ navigator-v5.html     # 메인 앱
+✅ manifest.json         # PWA 설정 (v5.1 추가)
+✅ sw.js                 # Service Worker (v5.1 추가)
 ✅ README.md
 ✅ CONTEXT.md
 ✅ ROADMAP.md
 ✅ ARCHITECTURE.md
 ✅ DECISIONS.md
 ✅ WORKFLOW.md
+✅ SETUP-GUIDE.md
 ✅ TROUBLESHOOTING.md
 ✅ .gitignore
 ```
