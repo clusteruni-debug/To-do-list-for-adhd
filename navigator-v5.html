@@ -10368,16 +10368,16 @@
                             const stageIdx = appState.detailedTask.workStageIdx || 0;
                             const subcats = proj?.stages[stageIdx]?.subcategories || [];
                             if (subcats.length > 0) {
-                              return \`
+                              return `
                                 <div class="form-group" style="margin-bottom: 0;">
                                   <label class="form-label">📂 중분류</label>
                                   <select class="form-select" id="detailed-work-subcat" onchange="updateWorkSubcatLink(this.value)">
-                                    \${subcats.map((sub, idx) => \`
-                                      <option value="\${idx}" \${appState.detailedTask.workSubcatIdx === idx ? 'selected' : ''}>\${sub.name}</option>
-                                    \`).join('')}
+                                    ${subcats.map((sub, idx) => `
+                                      <option value="${idx}" ${appState.detailedTask.workSubcatIdx === idx ? 'selected' : ''}>${sub.name}</option>
+                                    `).join('')}
                                   </select>
                                 </div>
-                              \`;
+                              `;
                             } else {
                               return '<div style="color: var(--text-muted); font-size: 12px;">이 단계에 중분류가 없습니다. 본업 탭에서 먼저 추가하세요.</div>';
                             }
