@@ -1495,30 +1495,95 @@
 
     .task-item:hover {
       border-color: rgba(102, 126, 234, 0.5);
-      box-shadow: 0 2px 8px var(--shadow-color);
+      box-shadow: 0 4px 16px var(--shadow-color);
+      transform: translateY(-2px);
     }
-    
+
+    .task-item:active {
+      transform: translateY(0);
+    }
+
     .task-item.swiping-left {
       transform: translateX(-100px);
     }
-    
+
     .task-item.swiping-right {
       transform: translateX(100px);
     }
-    
+
     .task-item.completed {
       opacity: 0.6;
-      background: #151515;
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.05), rgba(56, 161, 105, 0.02));
+      border-color: rgba(72, 187, 120, 0.3);
     }
-    
+
+    .task-item.completed:hover {
+      opacity: 0.8;
+    }
+
+    /* 긴급도 레벨별 그라데이션 */
     .task-item.urgent {
+      background: linear-gradient(135deg, rgba(245, 87, 108, 0.15), rgba(245, 87, 108, 0.05));
       border-color: #f5576c;
       border-width: 2px;
+      box-shadow: 0 2px 12px rgba(245, 87, 108, 0.2);
     }
-    
+
+    .task-item.urgent::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #f5576c, #ff8a9b);
+    }
+
+    .task-item.urgent:hover {
+      box-shadow: 0 4px 20px rgba(245, 87, 108, 0.3);
+      border-color: #ff6b7d;
+    }
+
     .task-item.warning {
+      background: linear-gradient(135deg, rgba(255, 149, 0, 0.12), rgba(255, 149, 0, 0.04));
       border-color: #ff9500;
       border-width: 2px;
+      box-shadow: 0 2px 12px rgba(255, 149, 0, 0.15);
+    }
+
+    .task-item.warning::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, #ff9500, #ffb347);
+    }
+
+    .task-item.warning:hover {
+      box-shadow: 0 4px 20px rgba(255, 149, 0, 0.25);
+      border-color: #ffa726;
+    }
+
+    /* 일반 우선순위 표시 */
+    .task-item.normal {
+      background: var(--bg-secondary);
+    }
+
+    .task-item.normal::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+      opacity: 0.5;
+    }
+
+    .task-item.normal:hover::before {
+      opacity: 1;
     }
 
     /* 드래그 앤 드롭 스타일 */
@@ -1526,15 +1591,32 @@
       cursor: grab;
     }
 
-    .task-item.dragging {
-      opacity: 0.5;
+    .task-item[draggable="true"]:active {
       cursor: grabbing;
-      border: 2px dashed #667eea;
     }
 
-    .task-item.drag-over {
-      border: 2px solid #667eea;
+    /* 호버 시 빠른 액션 표시 */
+    .task-item .task-quick-actions {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 6px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .task-item:hover .task-quick-actions {
+      opacity: 1;
+    }
+
+    /* 호버 시 예상 시간 하이라이트 */
+    .task-item:hover .meta-item {
       background: rgba(102, 126, 234, 0.1);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin: -2px -6px;
     }
 
     .swipe-actions {
@@ -1695,6 +1777,37 @@
       outline: none;
       border-color: #667eea;
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+    }
+
+    /* datetime-local, time 입력 아이콘 스타일 */
+    .form-input[type="datetime-local"],
+    .form-input[type="time"],
+    .form-input[type="date"] {
+      color-scheme: dark;
+    }
+
+    .form-input::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(1.2);
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.8;
+      width: 20px;
+      height: 20px;
+    }
+
+    .form-input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    [data-theme="light"] .form-input[type="datetime-local"],
+    [data-theme="light"] .form-input[type="time"],
+    [data-theme="light"] .form-input[type="date"] {
+      color-scheme: light;
+    }
+
+    [data-theme="light"] .form-input::-webkit-calendar-picker-indicator {
+      filter: none;
+      opacity: 0.7;
     }
 
     .form-note {
@@ -2204,7 +2317,767 @@
       color: var(--text-secondary);
       margin-top: 4px;
     }
-    
+
+    /* 서브태스크 진행률 바 */
+    .subtask-progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .subtask-progress-bar:hover {
+      background: var(--bg-secondary);
+    }
+
+    .subtask-progress-bar-fill-container {
+      flex: 1;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .subtask-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #48bb78, #38a169);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .subtask-progress-bar-fill.complete {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+
+    .subtask-progress-bar-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .subtask-progress-toggle {
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+
+    .subtask-progress-toggle.expanded {
+      transform: rotate(180deg);
+    }
+
+    /* 펼쳐진 서브태스크 목록 */
+    .subtask-list-expanded {
+      margin-top: 6px;
+      padding: 8px 10px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .subtask-list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .subtask-list-item:last-child {
+      border-bottom: none;
+    }
+
+    .subtask-list-item.completed .subtask-list-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .subtask-list-check {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subtask-list-check:hover {
+      border-color: #667eea;
+    }
+
+    .subtask-list-item.completed .subtask-list-check {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .subtask-list-text {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    /* 전체 완료 버튼 */
+    .complete-all-subtasks-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 8px;
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .complete-all-subtasks-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .complete-all-subtasks-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 습관 트래커 (잔디 그리드) */
+    .habit-tracker {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .habit-tracker-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .habit-grid {
+      display: grid;
+      grid-template-columns: 28px repeat(12, 1fr);
+      gap: 4px;
+      font-size: 11px;
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .habit-day-label {
+      color: var(--text-muted);
+      font-size: 11px;
+      text-align: right;
+      padding-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      white-space: nowrap;
+    }
+
+    .habit-cell {
+      aspect-ratio: 1;
+      min-width: 16px;
+      min-height: 16px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .habit-cell:hover {
+      transform: scale(1.2);
+    }
+
+    .habit-cell.level-1 {
+      background: rgba(72, 187, 120, 0.3);
+    }
+
+    .habit-cell.level-2 {
+      background: rgba(72, 187, 120, 0.5);
+    }
+
+    .habit-cell.level-3 {
+      background: rgba(72, 187, 120, 0.7);
+    }
+
+    .habit-cell.level-4 {
+      background: #48bb78;
+    }
+
+    .habit-cell.today {
+      outline: 2px solid #667eea;
+      outline-offset: 1px;
+    }
+
+    .habit-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .habit-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .habit-legend-cell {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    /* 주간 리포트 */
+    .weekly-report {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .weekly-report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .weekly-report-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .weekly-report-period {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .weekly-report-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .weekly-stat {
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .weekly-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .weekly-stat-value.positive {
+      color: #48bb78;
+    }
+
+    .weekly-stat-value.negative {
+      color: #f5576c;
+    }
+
+    .weekly-stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .weekly-stat-change {
+      font-size: 10px;
+      margin-top: 4px;
+    }
+
+    .weekly-stat-change.positive {
+      color: #48bb78;
+    }
+
+    .weekly-stat-change.negative {
+      color: #f5576c;
+    }
+
+    /* 주간 리뷰 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      justify-content: flex-end;
+    }
+
+    /* 주간 리뷰 요약 */
+    .review-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .review-summary-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .review-summary-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .review-summary-compare {
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .review-summary-compare.up {
+      color: #48bb78;
+    }
+
+    .review-summary-compare.down {
+      color: #f5576c;
+    }
+
+    /* 다음 주 계획 */
+    .weekly-plan-section {
+      margin-top: 20px;
+    }
+
+    .weekly-plan-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .weekly-plan-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .weekly-plan-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .weekly-plan-item:hover {
+      background: var(--bg-primary);
+    }
+
+    .weekly-plan-item.selected {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .weekly-plan-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .weekly-plan-item.selected .weekly-plan-check {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .weekly-plan-item-title {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .weekly-plan-item-category {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+    }
+
+    /* 월요일 리마인더 배너 */
+    .monday-reminder {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      color: white;
+    }
+
+    .monday-reminder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .monday-reminder-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .monday-reminder-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .monday-reminder-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .monday-reminder-task {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .monday-reminder-task-num {
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    /* 퀵 필터 버튼들 */
+    .quick-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .quick-filter-btn {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-filter-btn:hover {
+      background: var(--bg-secondary);
+      border-color: #667eea;
+      color: var(--text-primary);
+    }
+
+    .quick-filter-btn.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .quick-filter-btn .filter-count {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .quick-filter-btn.active .filter-count {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 미루기 횟수 뱃지 */
+    .postpone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9500;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .postpone-badge.warning {
+      background: rgba(245, 87, 108, 0.15);
+      color: #f5576c;
+    }
+
+    /* 실제 소요시간 입력 모달 */
+    .time-input-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 20px 20px 0 0;
+      padding: 24px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 10001;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .time-input-modal.show {
+      transform: translateY(0);
+    }
+
+    .time-input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .time-input-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .time-input-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .time-option-btn {
+      padding: 14px 10px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .time-option-btn:hover {
+      border-color: #667eea;
+    }
+
+    .time-option-btn.selected {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .time-input-custom {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .time-input-custom input {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    /* 오늘의 명언 */
+    .daily-quote {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid #667eea;
+    }
+
+    .daily-quote-text {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .daily-quote-author {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* 빈 상태 개선 */
+    .empty-state-enhanced {
+      text-align: center;
+      padding: 50px 30px;
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.05));
+      border-radius: 20px;
+      border: 2px dashed rgba(72, 187, 120, 0.3);
+    }
+
+    .empty-state-icon-large {
+      font-size: 80px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .empty-state-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #48bb78;
+      margin-bottom: 10px;
+    }
+
+    .empty-state-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .empty-state-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .empty-state-btn {
+      padding: 12px 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .empty-state-btn:hover {
+      border-color: #667eea;
+      transform: translateY(-2px);
+    }
+
+    .empty-state-btn.primary {
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      border: none;
+      color: white;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
@@ -2285,6 +3158,157 @@
       color: #888;
       max-width: 280px;
       margin: 0 auto;
+    }
+
+    /* Confetti 효과 */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10000;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0;
+      animation: confetti-fall 3s ease-out forwards;
+    }
+
+    .confetti.circle { border-radius: 50%; }
+    .confetti.square { border-radius: 2px; }
+    .confetti.triangle {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 10px solid currentColor;
+      background: transparent !important;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        opacity: 1;
+        transform: translateY(-10vh) rotate(0deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(720deg);
+      }
+    }
+
+    /* 체크 애니메이션 */
+    @keyframes check-pop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.3); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes check-ripple {
+      0% {
+        box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.4);
+      }
+      100% {
+        box-shadow: 0 0 0 15px rgba(72, 187, 120, 0);
+      }
+    }
+
+    .subtask-list-check.just-checked {
+      animation: check-pop 0.4s ease-out, check-ripple 0.6s ease-out;
+    }
+
+    .task-check-btn.just-checked {
+      animation: check-pop 0.3s ease-out;
+    }
+
+    /* 스트릭 불꽃 애니메이션 */
+    @keyframes fire-glow {
+      0%, 100% {
+        text-shadow: 0 0 10px #f6ad55, 0 0 20px #f6ad55, 0 0 30px #ed8936;
+        transform: scale(1);
+      }
+      50% {
+        text-shadow: 0 0 20px #f6ad55, 0 0 40px #f6ad55, 0 0 60px #ed8936;
+        transform: scale(1.1);
+      }
+    }
+
+    .streak-fire-animate {
+      animation: fire-glow 0.8s ease-in-out;
+    }
+
+    /* 드래그 효과 개선 */
+    .task-item.dragging {
+      opacity: 0.9;
+      transform: scale(1.02) rotate(1deg);
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+      z-index: 1000;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .task-item.drag-over {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    /* 완료 시 슬라이드 아웃 */
+    @keyframes slide-out-complete {
+      0% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+    .task-item.completing {
+      animation: slide-out-complete 0.4s ease-out forwards;
+    }
+
+    /* 성취 뱃지 팝업 */
+    .achievement-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      padding: 30px 40px;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 10001;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: achievement-pop 0.5s ease-out forwards;
+    }
+
+    @keyframes achievement-pop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      60% { transform: translate(-50%, -50%) scale(1.1); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .achievement-popup .achievement-icon {
+      font-size: 60px;
+      margin-bottom: 15px;
+    }
+
+    .achievement-popup .achievement-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .achievement-popup .achievement-desc {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
     }
 
     /* 오늘의 진행률 */
@@ -2455,6 +3479,28 @@
     .notification-btn:disabled {
       background: #444;
       cursor: not-allowed;
+    }
+
+    .notification-btn.granted {
+      background: #48bb78;
+    }
+
+    .notification-btn.denied {
+      background: #f5576c;
+      cursor: pointer;
+    }
+
+    .notification-btn.denied:hover {
+      background: #e04460;
+    }
+
+    .notification-help {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(245, 87, 108, 0.1);
+      border-radius: 6px;
     }
 
     /* 검색 & 필터 스타일 */
@@ -3890,8 +4936,9 @@
     }
 
     .settings-input {
-      width: 100px;
-      padding: 10px 12px;
+      width: 150px;
+      padding: 10px 16px;
+      padding-right: 36px;
       background: var(--bg-tertiary);
       border: 1px solid var(--border-color);
       border-radius: 8px;
@@ -3900,17 +4947,29 @@
       text-align: center;
       font-family: inherit;
       font-weight: 500;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
       color-scheme: dark;
+      position: relative;
     }
 
     .settings-input::-webkit-calendar-picker-indicator {
-      filter: invert(1);
+      filter: invert(1) brightness(1.5);
       cursor: pointer;
-      padding: 0;
-      margin: 0 0 0 4px;
+      padding: 6px;
+      margin-left: 4px;
+      opacity: 0.9;
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      right: 8px;
+    }
+
+    .settings-input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    /* Firefox 시간 입력 */
+    .settings-input::-moz-focus-inner {
+      border: 0;
     }
 
     .settings-input:focus {
@@ -3925,6 +4984,11 @@
 
     [data-theme="light"] .settings-input::-webkit-calendar-picker-indicator {
       filter: none;
+      opacity: 0.7;
+    }
+
+    [data-theme="light"] .settings-input::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
     }
 
     .settings-time-preview {
@@ -4047,16 +5111,22 @@
       color: #f6ad55;
     }
 
-    /* 일일 목표 (한 줄 압축 버전) */
+    /* 일일 목표 (게이미피케이션 버전) */
     .daily-goal-compact {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
       margin-bottom: 16px;
       border: 1px solid var(--border-color);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .daily-goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
     }
 
     .daily-goal-info {
@@ -4067,7 +5137,7 @@
     }
 
     .daily-goal-emoji {
-      font-size: 18px;
+      font-size: 20px;
     }
 
     .daily-goal-text {
@@ -4078,25 +5148,91 @@
     .daily-goal-text strong {
       color: #667eea;
       font-weight: 700;
+      font-size: 16px;
+    }
+
+    .daily-goal-percentage {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .daily-goal-percentage.complete {
+      background: linear-gradient(135deg, #48bb78, #38a169);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .daily-goal-track {
+      position: relative;
+      height: 24px;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      overflow: visible;
+      margin-bottom: 8px;
     }
 
     .daily-goal-bar {
-      flex: 1;
-      height: 8px;
-      background: var(--bg-tertiary);
-      border-radius: 4px;
-      overflow: hidden;
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.5s ease;
     }
 
     .daily-goal-bar-fill {
       height: 100%;
       background: linear-gradient(90deg, #667eea, #764ba2);
-      border-radius: 4px;
-      transition: width 0.5s ease;
+      border-radius: 12px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
 
     .daily-goal-bar-fill.complete {
       background: linear-gradient(90deg, #48bb78, #38a169);
+    }
+
+    .daily-goal-runner {
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      animation: runner-bounce 0.5s ease infinite;
+    }
+
+    @keyframes runner-bounce {
+      0%, 100% { transform: translateY(-50%) translateX(0); }
+      50% { transform: translateY(-60%) translateX(2px); }
+    }
+
+    .daily-goal-finish {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+    }
+
+    .daily-goal-message {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .daily-goal-message.positive {
+      color: #48bb78;
+    }
+
+    .daily-goal-message.encourage {
+      color: #667eea;
     }
 
     /* 주간 통계 그래프 */
@@ -4378,6 +5514,46 @@
   <!-- 파일 업로드용 히든 인풋 -->
   <input type="file" id="file-import" class="hidden-input" accept=".json">
 
+  <!-- 실제 소요시간 입력 모달 -->
+  <div id="time-input-modal" class="time-input-modal">
+    <div class="time-input-header">
+      <span class="time-input-title">⏱️ 실제로 얼마나 걸렸나요?</span>
+      <button class="modal-close" onclick="closeTimeInputModal()">×</button>
+    </div>
+    <div class="time-input-options">
+      <button class="time-option-btn" onclick="saveActualTime(2)">2분</button>
+      <button class="time-option-btn" onclick="saveActualTime(5)">5분</button>
+      <button class="time-option-btn" onclick="saveActualTime(10)">10분</button>
+      <button class="time-option-btn" onclick="saveActualTime(15)">15분</button>
+      <button class="time-option-btn" onclick="saveActualTime(20)">20분</button>
+      <button class="time-option-btn" onclick="saveActualTime(30)">30분</button>
+      <button class="time-option-btn" onclick="saveActualTime(45)">45분</button>
+      <button class="time-option-btn" onclick="saveActualTime(60)">1시간</button>
+    </div>
+    <div class="time-input-custom">
+      <input type="number" id="custom-time-input" placeholder="직접 입력 (분)" min="1" max="480">
+      <button class="btn btn-primary" onclick="saveActualTime(parseInt(document.getElementById('custom-time-input').value))">저장</button>
+      <button class="btn btn-secondary" onclick="closeTimeInputModal()">건너뛰기</button>
+    </div>
+  </div>
+
+  <!-- 주간 리뷰 모달 -->
+  <div id="weekly-review-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content weekly-review-modal">
+      <div class="modal-header">
+        <h2 id="weekly-review-title">📊 이번 주 리뷰</h2>
+        <button class="modal-close" onclick="closeWeeklyReview()">×</button>
+      </div>
+      <div id="weekly-review-content" class="modal-body">
+        <!-- 동적으로 채워짐 -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeWeeklyReview()">나중에</button>
+        <button class="btn btn-primary" onclick="saveWeeklyPlan()">저장하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 키보드 단축키 도움말 (PC) -->
   <button class="shortcuts-toggle" onclick="toggleShortcutsHelp()" title="단축키 도움말">⌨️</button>
   <div id="shortcuts-help" class="shortcuts-help">
@@ -4510,6 +5686,16 @@
       },
       showCelebration: false,          // 축하 효과 표시
       lastMotivation: '',              // 마지막 동기부여 메시지
+      expandedSubtasks: {},             // 펼쳐진 서브태스크 목록 (taskId: true/false)
+      // 주간 계획
+      weeklyPlan: {
+        focusTasks: [],                   // 이번 주 집중할 작업 ID 목록 (최대 3개)
+        lastReviewDate: null,             // 마지막 주간 리뷰 날짜
+        lastReminderDate: null,           // 마지막 월요일 리마인더 날짜
+        dismissed: false                  // 이번 주 리마인더 닫음 여부
+      },
+      quickFilter: null,                  // 퀵 필터: null, '2min', '5min', 'urgent'
+      pendingTimeInput: null,             // 실제 소요시간 입력 대기 중인 작업
       // Firebase 동기화
       user: null,                       // 로그인한 사용자
       syncStatus: 'offline',            // 동기화 상태: offline/syncing/synced/error
@@ -4570,6 +5756,12 @@
           appState.templates = JSON.parse(savedTemplates);
         }
 
+        // 주간 계획 로드
+        const savedWeeklyPlan = localStorage.getItem('navigator-weekly-plan');
+        if (savedWeeklyPlan) {
+          appState.weeklyPlan = { ...appState.weeklyPlan, ...JSON.parse(savedWeeklyPlan) };
+        }
+
         // 오늘 완료한 작업 수 계산
         const today = new Date().toDateString();
         appState.todayStats.completedToday = appState.tasks.filter(t => {
@@ -4602,6 +5794,7 @@
         localStorage.setItem('navigator-theme', appState.theme);
         localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
         localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+        localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
 
         // Firebase 동기화 (로그인된 경우)
         if (appState.user) {
@@ -5023,6 +6216,25 @@
 
       // 검색 및 카테고리 필터 적용
       filtered = getSearchFilteredTasks(filtered);
+
+      // 퀵 필터 적용
+      if (appState.quickFilter) {
+        switch (appState.quickFilter) {
+          case '2min':
+            filtered = filtered.filter(t => t.estimatedTime && t.estimatedTime <= 2);
+            break;
+          case '5min':
+            filtered = filtered.filter(t => t.estimatedTime && t.estimatedTime <= 5);
+            break;
+          case 'urgent':
+            filtered = filtered.filter(t => {
+              if (!t.deadline) return false;
+              const hoursLeft = (new Date(t.deadline) - new Date()) / (1000 * 60 * 60);
+              return hoursLeft <= 24 && hoursLeft > 0;
+            });
+            break;
+        }
+      }
 
       return filtered;
     }
@@ -5824,10 +7036,23 @@
       const task = appState.tasks.find(t => t.id === id);
       if (!task) return;
 
+      const now = new Date();
+      const completedAt = now.toISOString();
+
       // 완료 처리
       appState.tasks = appState.tasks.map(t =>
-        t.id === id ? { ...t, completed: true, completedAt: new Date().toISOString() } : t
+        t.id === id ? { ...t, completed: true, completedAt: completedAt } : t
       );
+
+      // 완료 히스토리 저장
+      saveCompletionHistory({
+        taskId: id,
+        title: task.title,
+        category: task.category,
+        completedAt: completedAt,
+        dayOfWeek: now.getDay(),
+        hour: now.getHours()
+      });
 
       // 오늘 통계 업데이트
       appState.todayStats.completedToday++;
@@ -5871,6 +7096,7 @@
           if (streak > 1) {
             streakEl.textContent = `🔥 ${streak}연속 완료!`;
             streakEl.style.display = 'block';
+            streakEl.classList.add('streak-fire-animate');
           } else {
             streakEl.style.display = 'none';
           }
@@ -5878,13 +7104,69 @@
 
         overlay.classList.add('show');
 
+        // 5연속 이상이면 confetti 효과
+        if (streak >= 5) {
+          showConfetti();
+        }
+
         setTimeout(() => {
           overlay.classList.remove('show');
+          if (streakEl) streakEl.classList.remove('streak-fire-animate');
           renderStatic();
-        }, 1200);
+        }, 1500);
       } else {
         renderStatic();
       }
+    }
+
+    /**
+     * Confetti 효과 표시
+     */
+    function showConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+
+      const colors = ['#667eea', '#764ba2', '#f093fb', '#48bb78', '#f6ad55', '#ed64a6'];
+      const shapes = ['circle', 'square', 'triangle'];
+
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+
+        confetti.className = `confetti ${shape}`;
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.background = shape !== 'triangle' ? color : 'transparent';
+        confetti.style.color = color;
+        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+        confetti.style.animationDuration = (Math.random() * 1 + 2) + 's';
+
+        container.appendChild(confetti);
+      }
+
+      setTimeout(() => {
+        container.remove();
+      }, 4000);
+    }
+
+    /**
+     * 성취 뱃지 팝업 표시
+     */
+    function showAchievement(icon, title, description) {
+      const popup = document.createElement('div');
+      popup.className = 'achievement-popup';
+      popup.innerHTML = `
+        <div class="achievement-icon">${icon}</div>
+        <div class="achievement-title">${title}</div>
+        <div class="achievement-desc">${description}</div>
+      `;
+      document.body.appendChild(popup);
+
+      setTimeout(() => {
+        popup.style.animation = 'achievement-pop 0.3s ease-in reverse forwards';
+        setTimeout(() => popup.remove(), 300);
+      }, 2500);
     }
 
     // ============================================
@@ -6023,11 +7305,20 @@
     function checkMilestone() {
       const completed = appState.todayStats.completedToday;
       const dailyGoal = appState.settings.dailyGoal || 5;
+      const streak = appState.todayStats.streak;
 
       // 일일 목표 달성
       if (completed === dailyGoal) {
         showCelebration('🎯');
-        showMotivation('일일 목표 달성! 대단해요! 🏆');
+        showAchievement('🏆', '일일 목표 달성!', `오늘 ${dailyGoal}개 작업을 완료했어요!`);
+        showConfetti();
+        return;
+      }
+
+      // 스트릭 마일스톤
+      if (streak === 10) {
+        showAchievement('🔥', '10연속 완료!', '멈출 수 없는 집중력!');
+        showConfetti();
         return;
       }
 
@@ -6036,10 +7327,14 @@
         showMotivation('좋아요! 3개 완료! 그 조자에요! 🔥');
       } else if (completed === 5) {
         showCelebration('⭐');
-        showMotivation('와! 벌써 5개! 👏');
+        showAchievement('⭐', '5개 돌파!', '반도 지나왔어요!');
       } else if (completed === 10) {
         showCelebration('🌟');
-        showMotivation('10개 달성! 오늘 진짜 열일했네요! 💪');
+        showAchievement('🌟', '10개 달성!', '오늘 진짜 열일했네요!');
+        showConfetti();
+      } else if (completed === 20) {
+        showAchievement('👑', '20개 마스터!', '당신은 오늘의 영웅입니다!');
+        showConfetti();
       } else if (completed > 0 && completed % 5 === 0) {
         showMotivation(completed + '개 완료! 계속 가보자! 🚀');
       }
@@ -6389,7 +7684,8 @@
 
       appState.detailedTask.subtasks.push({
         text: subtaskText,
-        completed: false
+        completed: false,
+        completedAt: null
       });
       renderStatic();
     }
@@ -6405,15 +7701,51 @@
     }
 
     /**
+     * 상세 입력 폼에서 서브태스크 완료 토글
+     */
+    function toggleDetailedSubtask(index) {
+      if (appState.detailedTask.subtasks && appState.detailedTask.subtasks[index]) {
+        appState.detailedTask.subtasks[index].completed = !appState.detailedTask.subtasks[index].completed;
+        appState.detailedTask.subtasks[index].completedAt = appState.detailedTask.subtasks[index].completed
+          ? new Date().toISOString()
+          : null;
+
+        // 수정 중인 작업이면 실제 작업에도 반영
+        if (appState.editingTaskId) {
+          const task = appState.tasks.find(t => t.id === appState.editingTaskId);
+          if (task && task.subtasks) {
+            task.subtasks = [...appState.detailedTask.subtasks];
+            saveState();
+          }
+        }
+        renderStatic();
+      }
+    }
+
+    /**
      * 서브태스크 완료 토글 (작업 내에서)
      */
     function toggleSubtaskComplete(taskId, subtaskIndex) {
       const task = appState.tasks.find(t => t.id === taskId);
       if (task && task.subtasks && task.subtasks[subtaskIndex]) {
         task.subtasks[subtaskIndex].completed = !task.subtasks[subtaskIndex].completed;
+        task.subtasks[subtaskIndex].completedAt = task.subtasks[subtaskIndex].completed
+          ? new Date().toISOString()
+          : null;
         saveState();
         renderStatic();
       }
+    }
+
+    /**
+     * 서브태스크 목록 펼치기/접기
+     */
+    function toggleSubtaskExpand(taskId) {
+      if (!appState.expandedSubtasks) {
+        appState.expandedSubtasks = {};
+      }
+      appState.expandedSubtasks[taskId] = !appState.expandedSubtasks[taskId];
+      renderStatic();
     }
 
     /**
@@ -6495,6 +7827,337 @@
     function setTagFilter(tag) {
       appState.tagFilter = appState.tagFilter === tag ? null : tag;
       renderStatic();
+    }
+
+    // ============================================
+    // 주간 리뷰 & 계획 시스템
+    // ============================================
+
+    /**
+     * 주간 리뷰 필요 여부 체크 (일요일 저녁)
+     */
+    function checkWeeklyReview() {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 0 = 일요일
+      const hour = now.getHours();
+      const today = now.toDateString();
+
+      // 일요일 18시 이후이고, 오늘 리뷰 안 했으면
+      if (dayOfWeek === 0 && hour >= 18 && appState.weeklyPlan.lastReviewDate !== today) {
+        showWeeklyReview();
+      }
+    }
+
+    /**
+     * 월요일 리마인더 필요 여부 체크
+     */
+    function checkMondayReminder() {
+      const now = new Date();
+      const dayOfWeek = now.getDay(); // 1 = 월요일
+      const today = now.toDateString();
+
+      // 월요일이고, 오늘 리마인더 안 보여줬고, 닫지 않았으면
+      if (dayOfWeek === 1 &&
+          appState.weeklyPlan.lastReminderDate !== today &&
+          !appState.weeklyPlan.dismissed &&
+          appState.weeklyPlan.focusTasks.length > 0) {
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * 주간 리뷰 모달 표시
+     */
+    function showWeeklyReview() {
+      const modal = document.getElementById('weekly-review-modal');
+      const content = document.getElementById('weekly-review-content');
+
+      if (!modal || !content) return;
+
+      const report = getWeeklyReport();
+      const pendingTasks = appState.tasks.filter(t => !t.completed);
+
+      // 비교 텍스트
+      let compareText = '';
+      let compareClass = '';
+      if (report.change > 0) {
+        compareText = `▲ 지난주보다 ${report.change}개 더 완료!`;
+        compareClass = 'up';
+      } else if (report.change < 0) {
+        compareText = `▼ 지난주보다 ${Math.abs(report.change)}개 적음`;
+        compareClass = 'down';
+      } else {
+        compareText = '지난주와 동일';
+        compareClass = '';
+      }
+
+      content.innerHTML = `
+        <div class="review-summary">
+          <div class="review-summary-value">${report.thisWeekCount}</div>
+          <div class="review-summary-label">이번 주 완료한 작업</div>
+          <div class="review-summary-compare ${compareClass}">${compareText}</div>
+        </div>
+
+        <div class="weekly-plan-section">
+          <div class="weekly-plan-title">🎯 다음 주 집중할 작업 선택 (최대 3개)</div>
+          <div class="weekly-plan-list" id="weekly-plan-list">
+            ${pendingTasks.slice(0, 10).map(task => `
+              <div class="weekly-plan-item ${appState.weeklyPlan.focusTasks.includes(task.id) ? 'selected' : ''}"
+                   onclick="toggleFocusTask(${task.id})">
+                <div class="weekly-plan-check">
+                  ${appState.weeklyPlan.focusTasks.includes(task.id) ? '✓' : ''}
+                </div>
+                <div class="weekly-plan-item-title">${task.title}</div>
+                <div class="weekly-plan-item-category">${task.category}</div>
+              </div>
+            `).join('')}
+            ${pendingTasks.length === 0 ? '<div style="text-align: center; color: var(--text-muted); padding: 20px;">진행 중인 작업이 없어요!</div>' : ''}
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; font-size: 13px; color: var(--text-secondary);">
+          💡 선택한 작업은 월요일에 "이번 주 집중" 알림으로 표시됩니다.
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    /**
+     * 집중 작업 토글
+     */
+    function toggleFocusTask(taskId) {
+      const idx = appState.weeklyPlan.focusTasks.indexOf(taskId);
+
+      if (idx === -1) {
+        // 추가 (최대 3개)
+        if (appState.weeklyPlan.focusTasks.length < 3) {
+          appState.weeklyPlan.focusTasks.push(taskId);
+        } else {
+          showToast('최대 3개까지 선택할 수 있어요', 'warning');
+          return;
+        }
+      } else {
+        // 제거
+        appState.weeklyPlan.focusTasks.splice(idx, 1);
+      }
+
+      // UI 업데이트
+      const items = document.querySelectorAll('.weekly-plan-item');
+      items.forEach(item => {
+        const id = parseInt(item.getAttribute('onclick').match(/\d+/)[0]);
+        if (appState.weeklyPlan.focusTasks.includes(id)) {
+          item.classList.add('selected');
+          item.querySelector('.weekly-plan-check').textContent = '✓';
+        } else {
+          item.classList.remove('selected');
+          item.querySelector('.weekly-plan-check').textContent = '';
+        }
+      });
+    }
+
+    /**
+     * 주간 계획 저장
+     */
+    function saveWeeklyPlan() {
+      appState.weeklyPlan.lastReviewDate = new Date().toDateString();
+      appState.weeklyPlan.dismissed = false;
+      saveState();
+      closeWeeklyReview();
+      showToast('다음 주 계획이 저장되었어요! 💪', 'success');
+    }
+
+    /**
+     * 주간 리뷰 모달 닫기
+     */
+    function closeWeeklyReview() {
+      const modal = document.getElementById('weekly-review-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    /**
+     * 월요일 리마인더 닫기
+     */
+    function dismissMondayReminder() {
+      appState.weeklyPlan.lastReminderDate = new Date().toDateString();
+      appState.weeklyPlan.dismissed = true;
+      saveState();
+      renderStatic();
+    }
+
+    // ============================================
+    // 퀵 필터 & 추가 기능
+    // ============================================
+
+    /**
+     * 퀵 필터 설정
+     */
+    function setQuickFilter(filter) {
+      appState.quickFilter = appState.quickFilter === filter ? null : filter;
+      renderStatic();
+    }
+
+    /**
+     * 퀵 필터 적용된 작업 수 계산
+     */
+    function getQuickFilterCount(filter) {
+      const pending = appState.tasks.filter(t => !t.completed);
+      switch (filter) {
+        case '2min':
+          return pending.filter(t => t.estimatedTime && t.estimatedTime <= 2).length;
+        case '5min':
+          return pending.filter(t => t.estimatedTime && t.estimatedTime <= 5).length;
+        case 'urgent':
+          return pending.filter(t => {
+            if (!t.deadline) return false;
+            const hoursLeft = (new Date(t.deadline) - new Date()) / (1000 * 60 * 60);
+            return hoursLeft <= 24 && hoursLeft > 0;
+          }).length;
+        default:
+          return 0;
+      }
+    }
+
+    /**
+     * 작업 내일로 미루기
+     */
+    function postponeTask(taskId) {
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      // 미루기 횟수 증가
+      task.postponeCount = (task.postponeCount || 0) + 1;
+      task.lastPostponed = new Date().toISOString();
+
+      // 마감이 있으면 하루 연장
+      if (task.deadline) {
+        const deadline = new Date(task.deadline);
+        deadline.setDate(deadline.getDate() + 1);
+        task.deadline = deadline.toISOString().slice(0, 16);
+      }
+
+      saveState();
+
+      if (task.postponeCount >= 3) {
+        showToast(`⚠️ 이 작업을 ${task.postponeCount}번 미뤘어요. 오늘 해치워버리는 건 어때요?`, 'warning');
+      } else {
+        showToast('내일로 미뤘어요. 오늘은 쉬어도 돼요! 😌', 'success');
+      }
+
+      renderStatic();
+    }
+
+    /**
+     * 실제 소요시간 입력 모달 표시
+     */
+    function showTimeInputModal(taskId) {
+      appState.pendingTimeInput = taskId;
+      renderStatic();
+
+      // 모달 표시
+      setTimeout(() => {
+        const modal = document.getElementById('time-input-modal');
+        if (modal) modal.classList.add('show');
+      }, 50);
+    }
+
+    /**
+     * 실제 소요시간 저장
+     */
+    function saveActualTime(minutes) {
+      const taskId = appState.pendingTimeInput;
+      if (!taskId) return;
+
+      const task = appState.tasks.find(t => t.id === taskId);
+      if (task) {
+        task.actualTime = minutes;
+        saveState();
+      }
+
+      closeTimeInputModal();
+      renderStatic();
+    }
+
+    /**
+     * 실제 소요시간 입력 모달 닫기
+     */
+    function closeTimeInputModal() {
+      const modal = document.getElementById('time-input-modal');
+      if (modal) modal.classList.remove('show');
+      appState.pendingTimeInput = null;
+    }
+
+    /**
+     * 시간 예측 정확도 계산
+     */
+    function getTimeAccuracy() {
+      const tasksWithBoth = appState.tasks.filter(t =>
+        t.completed && t.estimatedTime && t.actualTime
+      );
+
+      if (tasksWithBoth.length < 3) return null;
+
+      const totalEstimated = tasksWithBoth.reduce((sum, t) => sum + t.estimatedTime, 0);
+      const totalActual = tasksWithBoth.reduce((sum, t) => sum + t.actualTime, 0);
+      const ratio = totalActual / totalEstimated;
+
+      return {
+        ratio: ratio.toFixed(2),
+        message: ratio > 1.2 ? '예상보다 시간이 더 걸려요' :
+                 ratio < 0.8 ? '예상보다 빨리 끝내요!' :
+                 '시간 예측이 정확해요!',
+        count: tasksWithBoth.length
+      };
+    }
+
+    /**
+     * 오늘의 명언 가져오기
+     */
+    function getDailyQuote() {
+      const quotes = [
+        { text: "완벽하게 하려고 하지 마세요. 그냥 시작하세요.", author: "ADHD 생존 가이드" },
+        { text: "5분만 해보자. 5분 후에 그만둬도 돼.", author: "포모도로 철학" },
+        { text: "큰 일도 작은 조각으로 나누면 할 수 있어요.", author: "작업 분해의 힘" },
+        { text: "지금 안 하면 내일의 내가 힘들어해요.", author: "미래의 나에게" },
+        { text: "실수해도 괜찮아요. 다시 시작하면 돼요.", author: "성장 마인드셋" },
+        { text: "오늘 할 일을 내일로 미루면, 내일은 두 배가 돼요.", author: "벤자민 프랭클린" },
+        { text: "시작이 반이다. 나머지 반은 그냥 계속하는 것.", author: "동기부여 101" },
+        { text: "완료된 50%가 완벽한 0%보다 낫다.", author: "실용주의" },
+        { text: "휴식도 생산성의 일부예요. 쉴 때 쉬세요.", author: "번아웃 예방" },
+        { text: "작은 승리를 축하하세요. 그게 큰 승리가 됩니다.", author: "도파민 관리법" },
+        { text: "지금 이 순간에 집중하세요. 과거와 미래는 잠시 내려놓고.", author: "마음챙김" },
+        { text: "어제보다 1%만 나아지면 1년 후엔 37배가 돼요.", author: "복리의 힘" },
+        { text: "못하는 게 아니라, 아직 안 한 것뿐이에요.", author: "성장 마인드셋" },
+        { text: "에너지가 낮을 때는 쉬운 것부터. 높을 때 어려운 것.", author: "에너지 관리" }
+      ];
+
+      // 오늘 날짜 기반 고정 인덱스 (하루 동안 같은 명언)
+      const today = new Date();
+      const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+      const index = dayOfYear % quotes.length;
+
+      return quotes[index];
+    }
+
+    /**
+     * 랜덤 휴식 활동 추천
+     */
+    function getRestActivity() {
+      const activities = [
+        { icon: '🚶', text: '5분 산책하기', desc: '햇빛과 신선한 공기!' },
+        { icon: '🧘', text: '스트레칭하기', desc: '몸을 풀어주세요' },
+        { icon: '☕', text: '따뜻한 음료 마시기', desc: '잠시 여유를 즐기세요' },
+        { icon: '🎵', text: '좋아하는 노래 듣기', desc: '기분 전환!' },
+        { icon: '👀', text: '창밖 바라보기', desc: '눈의 피로를 풀어주세요' },
+        { icon: '💭', text: '5분 명상하기', desc: '마음을 비우세요' },
+        { icon: '🤸', text: '간단한 운동하기', desc: '점핑잭 10개 어때요?' },
+        { icon: '📱', text: '친구에게 안부 보내기', desc: '연결의 기쁨' }
+      ];
+
+      return activities[Math.floor(Math.random() * activities.length)];
     }
 
     /**
@@ -6881,6 +8544,156 @@
     }
 
     /**
+     * 완료 히스토리 저장
+     */
+    function saveCompletionHistory(entry) {
+      try {
+        let history = JSON.parse(localStorage.getItem('navigator-completion-history') || '[]');
+        history.push(entry);
+
+        // 최근 1000개만 유지
+        if (history.length > 1000) {
+          history = history.slice(-1000);
+        }
+
+        localStorage.setItem('navigator-completion-history', JSON.stringify(history));
+      } catch (e) {
+        console.error('완료 히스토리 저장 실패:', e);
+      }
+    }
+
+    /**
+     * 완료 히스토리 로드
+     */
+    function getCompletionHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('navigator-completion-history') || '[]');
+      } catch (e) {
+        return [];
+      }
+    }
+
+    /**
+     * 주간 리포트 데이터 생성
+     */
+    function getWeeklyReport() {
+      const now = new Date();
+
+      // 이번 주 시작 (일요일)
+      const thisWeekStart = new Date(now);
+      thisWeekStart.setDate(now.getDate() - now.getDay());
+      thisWeekStart.setHours(0, 0, 0, 0);
+
+      // 지난 주 시작/끝
+      const lastWeekStart = new Date(thisWeekStart);
+      lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+      const lastWeekEnd = new Date(thisWeekStart);
+
+      // 이번 주 완료된 작업
+      const thisWeekCompleted = appState.tasks.filter(t => {
+        if (!t.completed || !t.completedAt) return false;
+        const completedDate = new Date(t.completedAt);
+        return completedDate >= thisWeekStart;
+      });
+
+      // 지난 주 완료된 작업
+      const lastWeekCompleted = appState.tasks.filter(t => {
+        if (!t.completed || !t.completedAt) return false;
+        const completedDate = new Date(t.completedAt);
+        return completedDate >= lastWeekStart && completedDate < lastWeekEnd;
+      });
+
+      // 요일별 완료 수 계산
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayData = [0, 0, 0, 0, 0, 0, 0];
+
+      thisWeekCompleted.forEach(task => {
+        const day = new Date(task.completedAt).getDay();
+        dayData[day]++;
+      });
+
+      // 가장 생산적인 요일
+      const maxDayIdx = dayData.indexOf(Math.max(...dayData));
+      const bestDay = dayData[maxDayIdx] > 0 ? dayNames[maxDayIdx] : '-';
+      const bestDayCount = dayData[maxDayIdx];
+
+      // 카테고리별 완료 수
+      const categoryData = {};
+      thisWeekCompleted.forEach(task => {
+        const cat = task.category || '기타';
+        categoryData[cat] = (categoryData[cat] || 0) + 1;
+      });
+
+      // 가장 많이 완료한 카테고리
+      let topCategory = '-';
+      let topCategoryCount = 0;
+      Object.keys(categoryData).forEach(cat => {
+        if (categoryData[cat] > topCategoryCount) {
+          topCategoryCount = categoryData[cat];
+          topCategory = cat;
+        }
+      });
+
+      // 변화량 계산
+      const change = thisWeekCompleted.length - lastWeekCompleted.length;
+
+      return {
+        thisWeekCount: thisWeekCompleted.length,
+        lastWeekCount: lastWeekCompleted.length,
+        change: change,
+        bestDay: bestDay,
+        bestDayCount: bestDayCount,
+        topCategory: topCategory,
+        topCategoryCount: topCategoryCount,
+        dayData: dayData.map((count, i) => ({ day: dayNames[i], count })),
+        streak: appState.streak.current
+      };
+    }
+
+    /**
+     * 습관 트래커 데이터 생성 (최근 12주)
+     */
+    function getHabitTrackerData() {
+      const now = new Date();
+      const weeks = 12;
+      const data = [];
+
+      // 오늘 날짜 문자열
+      const todayStr = now.toISOString().split('T')[0];
+
+      // 완료 맵 생성
+      const completionMap = getCompletionMap();
+
+      // 12주 전부터 시작
+      for (let week = weeks - 1; week >= 0; week--) {
+        const weekData = [];
+        for (let day = 0; day < 7; day++) {
+          const date = new Date(now);
+          date.setDate(now.getDate() - (week * 7 + (6 - day)) - now.getDay());
+          const dateStr = date.toISOString().split('T')[0];
+          const count = completionMap[dateStr] || 0;
+
+          // 레벨 계산
+          let level = 0;
+          if (count >= 1) level = 1;
+          if (count >= 3) level = 2;
+          if (count >= 5) level = 3;
+          if (count >= 7) level = 4;
+
+          weekData.push({
+            date: dateStr,
+            count: count,
+            level: level,
+            isToday: dateStr === todayStr
+          });
+        }
+        data.push(weekData);
+      }
+
+      return data;
+    }
+
+    /**
      * 백업 리마인더 체크
      */
     function checkBackupReminder() {
@@ -7162,22 +8975,94 @@
 
                 <!-- 셔틀 상태는 헤더로 이동됨 -->
 
-                <!-- 일일 목표 진행률 (한 줄) -->
+                <!-- 오늘의 명언 -->
+                ${(() => {
+                  const quote = getDailyQuote();
+                  return `
+                    <div class="daily-quote">
+                      <div class="daily-quote-text">"${quote.text}"</div>
+                      <div class="daily-quote-author">— ${quote.author}</div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 월요일 리마인더 -->
+                ${(() => {
+                  if (!checkMondayReminder()) return '';
+                  const focusTasks = appState.weeklyPlan.focusTasks
+                    .map(id => appState.tasks.find(t => t.id === id))
+                    .filter(t => t && !t.completed);
+                  if (focusTasks.length === 0) return '';
+                  return `
+                    <div class="monday-reminder">
+                      <div class="monday-reminder-header">
+                        <div class="monday-reminder-title">🎯 이번 주 집중할 작업</div>
+                        <button class="monday-reminder-close" onclick="dismissMondayReminder()">×</button>
+                      </div>
+                      <div class="monday-reminder-tasks">
+                        ${focusTasks.map((task, idx) => `
+                          <div class="monday-reminder-task" onclick="editTask(${task.id})">
+                            <span class="monday-reminder-task-num">${idx + 1}</span>
+                            <span>${task.title}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 일일 목표 진행률 (게이미피케이션) -->
                 ${(() => {
                   const dailyGoal = appState.settings.dailyGoal || 5;
                   const completed = appState.todayStats.completedToday;
                   const percentage = Math.min((completed / dailyGoal) * 100, 100);
                   const isComplete = completed >= dailyGoal;
+                  const remaining = dailyGoal - completed;
+
+                  // 동기부여 메시지
+                  let message = '';
+                  let messageClass = '';
+                  if (isComplete) {
+                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
+                    messageClass = 'positive';
+                  } else if (percentage >= 80) {
+                    message = '거의 다 왔어요! 조금만 더! 💪';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 50) {
+                    message = '반 이상 완료! 잘하고 있어요! ⭐';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 20) {
+                    message = '좋은 시작이에요! 계속 가보자! 🚀';
+                    messageClass = '';
+                  } else if (completed > 0) {
+                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
+                    messageClass = '';
+                  } else {
+                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
+                    messageClass = '';
+                  }
+
+                  // 러너 이모지
+                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
 
                   return `
                     <div class="daily-goal-compact">
-                      <div class="daily-goal-info">
-                        <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
-                        <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
+                      <div class="daily-goal-header">
+                        <div class="daily-goal-info">
+                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
+                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
+                        </div>
+                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
                       </div>
-                      <div class="daily-goal-bar">
-                        <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%"></div>
+                      <div class="daily-goal-track">
+                        <div class="daily-goal-bar" style="width: 100%">
+                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
+                            <span class="daily-goal-runner">${runner}</span>
+                          </div>
+                        </div>
+                        <span class="daily-goal-finish">🏁</span>
                       </div>
+                      <div class="daily-goal-message ${messageClass}">${message}</div>
                     </div>
                   `;
                 })()}
@@ -7208,23 +9093,29 @@
                     </div>
                   </div>
                 ` : `
-                  <div class="next-action" style="text-align: center;">
-                    <div style="font-size: 60px; margin-bottom: 15px;">🎉</div>
-                    <div class="next-action-label" style="color: #48bb78;">✨ 모든 작업 완료!</div>
-                    <div class="task-title" style="color: #48bb78; font-size: 24px;">대단해요!</div>
-                    <div style="font-size: 14px; color: var(--text-secondary); margin-top: 15px; line-height: 1.6">
-                      ${(() => {
-                        const messages = [
-                          '오늘 하루도 수고 많으셨어요! 🌟',
-                          '자신에게 작은 보상을 주세요 ☕',
-                          '충분히 쉬어도 괜찮아요 😴',
-                          '내일도 화이팅! 💪',
-                          '잠시 스트레칭 어때요? 🧘'
-                        ];
-                        return messages[Math.floor(Math.random() * messages.length)];
-                      })()}
-                    </div>
-                  </div>
+                  ${(() => {
+                    const rest = getRestActivity();
+                    const completedToday = appState.todayStats.completedToday;
+                    const streak = appState.streak.current;
+                    return `
+                      <div class="empty-state-enhanced">
+                        <div class="empty-state-icon-large">🎉</div>
+                        <div class="empty-state-title">모든 작업 완료!</div>
+                        <div class="empty-state-subtitle">
+                          오늘 <strong>${completedToday}개</strong> 완료했어요!
+                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
+                        </div>
+                        <div class="empty-state-actions">
+                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
+                            ➕ 새 작업 추가
+                          </button>
+                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
+                            ${rest.icon} ${rest.text}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  })()}
                 `}
 
                 ${hiddenCount > 0 ? `
@@ -7248,6 +9139,22 @@
                     onkeypress="if(event.key==='Enter') quickAdd()"
                   >
                   <button class="quick-add-btn" onclick="quickAdd()">+</button>
+                </div>
+
+                <!-- 퀵 필터 -->
+                <div class="quick-filters">
+                  <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')">
+                    ⚡ 2분 룰
+                    <span class="filter-count">${getQuickFilterCount('2min')}</span>
+                  </button>
+                  <button class="quick-filter-btn ${appState.quickFilter === '5min' ? 'active' : ''}" onclick="setQuickFilter('5min')">
+                    🚀 5분 이하
+                    <span class="filter-count">${getQuickFilterCount('5min')}</span>
+                  </button>
+                  <button class="quick-filter-btn ${appState.quickFilter === 'urgent' ? 'active' : ''}" onclick="setQuickFilter('urgent')">
+                    🔥 24시간 내
+                    <span class="filter-count">${getQuickFilterCount('urgent')}</span>
+                  </button>
                 </div>
 
                 <!-- 다른 작업 목록 (접기/펼치기) -->
@@ -7334,15 +9241,28 @@
                       <label class="form-label">서브태스크 (단계별 할일)</label>
                       <div class="subtasks-container">
                         ${(appState.detailedTask.subtasks || []).map((subtask, index) => `
-                          <div class="subtask-item">
-                            <span class="subtask-number">${index + 1}</span>
-                            <span class="subtask-text">${subtask.text}</span>
+                          <div class="subtask-item ${subtask.completed ? 'completed' : ''}">
+                            <span class="subtask-list-check" onclick="toggleDetailedSubtask(${index})" style="cursor:pointer">${subtask.completed ? '✓' : index + 1}</span>
+                            <span class="subtask-text ${subtask.completed ? 'completed' : ''}" style="${subtask.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${subtask.text}</span>
                             <button class="subtask-remove" onclick="removeSubtask(${index})">×</button>
                           </div>
                         `).join('')}
                         <div class="subtask-add">
                           <input type="text" class="form-input subtask-input" id="new-subtask-input" placeholder="서브태스크 추가 후 Enter">
                         </div>
+                        ${(() => {
+                          const subtasks = appState.detailedTask.subtasks || [];
+                          const completedCount = subtasks.filter(s => s.completed).length;
+                          const totalCount = subtasks.length;
+                          if (totalCount > 0 && completedCount === totalCount && appState.editingTaskId) {
+                            return `
+                              <button class="complete-all-subtasks-btn" onclick="completeTask(${appState.editingTaskId}); cancelEdit();">
+                                🎉 모든 서브태스크 완료! 작업 완료하기
+                              </button>
+                            `;
+                          }
+                          return '';
+                        })()}
                       </div>
                     </div>
 
@@ -7437,7 +9357,11 @@
                             ${task.repeatType && task.repeatType !== 'none' ? ` · 🔄 ${getRepeatLabel(task.repeatType, task)}` : ''}
                             ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                             ${task.deadline ? ` · ${formatDeadline(task.deadline)}` : ''}
-                            ${task.priority ? ` · 점수: ${Math.round(task.priority)}` : ''}
+                            ${task.postponeCount && task.postponeCount > 0 ? `
+                              <span class="postpone-badge ${task.postponeCount >= 3 ? 'warning' : ''}">
+                                ⏰ ${task.postponeCount}번 미룸
+                              </span>
+                            ` : ''}
                           </div>
                           ${task.tags && task.tags.length > 0 ? `
                             <div class="task-tags">
@@ -7445,25 +9369,42 @@
                             </div>
                           ` : ''}
                           ${task.subtasks && task.subtasks.length > 0 ? `
-                            <div class="task-subtasks">
-                              ${task.subtasks.map((subtask, idx) => `
-                                <div class="task-subtask ${subtask.completed ? 'completed' : ''}">
-                                  <input type="checkbox" class="task-subtask-checkbox"
-                                    ${subtask.completed ? 'checked' : ''}
-                                    onchange="toggleSubtaskComplete(${task.id}, ${idx})">
-                                  <span class="task-subtask-text">${subtask.text}</span>
+                            ${(() => {
+                              const completedCount = task.subtasks.filter(s => s.completed).length;
+                              const totalCount = task.subtasks.length;
+                              const percentage = Math.round((completedCount / totalCount) * 100);
+                              const isExpanded = appState.expandedSubtasks && appState.expandedSubtasks[task.id];
+                              return `
+                                <div class="subtask-progress-bar" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
+                                  <div class="subtask-progress-bar-fill-container">
+                                    <div class="subtask-progress-bar-fill ${percentage === 100 ? 'complete' : ''}" style="width: ${percentage}%"></div>
+                                  </div>
+                                  <span class="subtask-progress-bar-text">${completedCount}/${totalCount} 완료</span>
+                                  <span class="subtask-progress-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
                                 </div>
-                              `).join('')}
-                              <div class="subtask-progress">
-                                ${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length} 완료
-                              </div>
-                            </div>
+                                ${isExpanded ? `
+                                  <div class="subtask-list-expanded">
+                                    ${task.subtasks.map((subtask, idx) => `
+                                      <div class="subtask-list-item ${subtask.completed ? 'completed' : ''}" onclick="event.stopPropagation(); toggleSubtaskComplete(${task.id}, ${idx})">
+                                        <span class="subtask-list-check">${subtask.completed ? '✓' : ''}</span>
+                                        <span class="subtask-list-text">${subtask.text}</span>
+                                      </div>
+                                    `).join('')}
+                                    ${completedCount === totalCount && totalCount > 0 ? `
+                                      <button class="complete-all-subtasks-btn" onclick="event.stopPropagation(); completeTask(${task.id})">
+                                        🎉 작업 완료하기
+                                      </button>
+                                    ` : ''}
+                                  </div>
+                                ` : ''}
+                              `;
+                            })()}
                           ` : ''}
                           <div class="task-item-actions">
                             ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
                             <button class="btn-small complete" onclick="completeTask(${task.id})">✓</button>
+                            <button class="btn-small" onclick="postponeTask(${task.id})" title="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
                             <button class="btn-small edit" onclick="editTask(${task.id})">✏️</button>
-                            <button class="btn-small copy" onclick="copyTask(${task.id})">📋</button>
                             <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
                           </div>
                         </div>
@@ -7583,15 +9524,20 @@
                   <div class="notification-status">
                     ${appState.notificationPermission === 'granted' ? `
                       <span class="notification-text granted">✓ 활성화됨</span>
-                      <button class="notification-btn" disabled>ON</button>
+                      <button class="notification-btn granted" disabled>ON</button>
                     ` : appState.notificationPermission === 'denied' ? `
                       <span class="notification-text denied">✕ 차단됨</span>
-                      <button class="notification-btn" disabled>OFF</button>
+                      <button class="notification-btn denied" onclick="showToast('브라우저 설정에서 알림을 허용해주세요 (주소창 왼쪽 🔒 클릭)', 'info')">설정</button>
                     ` : `
                       <span class="notification-text">알림 받기</span>
                       <button class="notification-btn" onclick="requestNotificationPermission()">켜기</button>
                     `}
                   </div>
+                  ${appState.notificationPermission === 'denied' ? `
+                    <div class="notification-help">
+                      💡 주소창 왼쪽의 🔒를 클릭하여 알림을 허용으로 변경하세요
+                    </div>
+                  ` : ''}
                 </div>
 
               </div>
@@ -7809,6 +9755,84 @@
                 </div>
               </div>
             </div>
+
+            ${(() => {
+              const report = getWeeklyReport();
+              const now = new Date();
+              const weekStart = new Date(now);
+              weekStart.setDate(now.getDate() - now.getDay());
+              const weekEnd = new Date(weekStart);
+              weekEnd.setDate(weekStart.getDate() + 6);
+              const formatDate = (d) => (d.getMonth() + 1) + '/' + d.getDate();
+
+              return `
+                <div class="dashboard-section weekly-report">
+                  <div class="weekly-report-header">
+                    <div class="weekly-report-title">📅 이번 주 요약</div>
+                    <div class="weekly-report-period">${formatDate(weekStart)} - ${formatDate(weekEnd)}</div>
+                  </div>
+                  <div class="weekly-report-stats">
+                    <div class="weekly-stat">
+                      <div class="weekly-stat-value">${report.thisWeekCount}</div>
+                      <div class="weekly-stat-label">완료한 작업</div>
+                      ${report.change !== 0 ? `
+                        <div class="weekly-stat-change ${report.change > 0 ? 'positive' : 'negative'}">
+                          ${report.change > 0 ? '▲' : '▼'} ${Math.abs(report.change)} vs 지난주
+                        </div>
+                      ` : ''}
+                    </div>
+                    <div class="weekly-stat">
+                      <div class="weekly-stat-value positive">${report.bestDay}요일</div>
+                      <div class="weekly-stat-label">가장 생산적인 요일</div>
+                      ${report.bestDayCount > 0 ? `
+                        <div class="weekly-stat-change">${report.bestDayCount}개 완료</div>
+                      ` : ''}
+                    </div>
+                    <div class="weekly-stat">
+                      <div class="weekly-stat-value">${report.topCategory}</div>
+                      <div class="weekly-stat-label">많이 한 카테고리</div>
+                      ${report.topCategoryCount > 0 ? `
+                        <div class="weekly-stat-change">${report.topCategoryCount}개</div>
+                      ` : ''}
+                    </div>
+                    <div class="weekly-stat">
+                      <div class="weekly-stat-value positive">🔥 ${report.streak}일</div>
+                      <div class="weekly-stat-label">연속 달성 스트릭</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            })()}
+
+            ${(() => {
+              const habitData = getHabitTrackerData();
+              const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+
+              return `
+                <div class="dashboard-section habit-tracker">
+                  <div class="habit-tracker-title">🌱 습관 트래커 (최근 12주)</div>
+                  <div class="habit-grid">
+                    ${dayLabels.map((day, dayIdx) => `
+                      <div class="habit-day-label">${day}</div>
+                      ${habitData.map(week => {
+                        const cell = week[dayIdx];
+                        return `<div class="habit-cell ${cell.level > 0 ? 'level-' + cell.level : ''} ${cell.isToday ? 'today' : ''}"
+                          title="${cell.date}: ${cell.count}개 완료"></div>`;
+                      }).join('')}
+                    `).join('')}
+                  </div>
+                  <div class="habit-legend">
+                    <span>적음</span>
+                    <div class="habit-legend-item"><div class="habit-legend-cell" style="background: var(--bg-tertiary)"></div></div>
+                    <div class="habit-legend-item"><div class="habit-legend-cell level-1" style="background: rgba(72, 187, 120, 0.3)"></div></div>
+                    <div class="habit-legend-item"><div class="habit-legend-cell level-2" style="background: rgba(72, 187, 120, 0.5)"></div></div>
+                    <div class="habit-legend-item"><div class="habit-legend-cell level-3" style="background: rgba(72, 187, 120, 0.7)"></div></div>
+                    <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: #48bb78"></div></div>
+                    <span>많음</span>
+                  </div>
+                </div>
+              `;
+            })()}
 
             <div class="dashboard-section">
               <div class="dashboard-title">📊 카테고리별 현황</div>
@@ -8587,6 +10611,21 @@
     window.setSearchQuery = setSearchQuery;
     window.clearSearch = clearSearch;
     window.setCategoryFilter = setCategoryFilter;
+    window.toggleSubtaskComplete = toggleSubtaskComplete;
+    window.toggleSubtaskExpand = toggleSubtaskExpand;
+    window.toggleDetailedSubtask = toggleDetailedSubtask;
+    window.addSubtask = addSubtask;
+    window.removeSubtask = removeSubtask;
+    window.showWeeklyReview = showWeeklyReview;
+    window.closeWeeklyReview = closeWeeklyReview;
+    window.toggleFocusTask = toggleFocusTask;
+    window.saveWeeklyPlan = saveWeeklyPlan;
+    window.dismissMondayReminder = dismissMondayReminder;
+    window.setQuickFilter = setQuickFilter;
+    window.postponeTask = postponeTask;
+    window.showTimeInputModal = showTimeInputModal;
+    window.saveActualTime = saveActualTime;
+    window.closeTimeInputModal = closeTimeInputModal;
 
     // 히스토리/캘린더 함수
     window.prevMonth = prevMonth;
@@ -8641,20 +10680,34 @@
         return;
       }
 
+      // 버튼 로딩 상태 표시
+      const btn = document.querySelector('.notification-btn:not(:disabled)');
+      if (btn) {
+        btn.textContent = '...';
+        btn.disabled = true;
+      }
+
       try {
         const permission = await Notification.requestPermission();
         appState.notificationPermission = permission;
-        renderStatic();
 
         if (permission === 'granted') {
           showToast('알림이 활성화되었습니다!', 'success');
           // 테스트 알림
-          showNotification('Navigator 알림 활성화', '마감 임박 시 알림을 받을 수 있습니다');
+          setTimeout(() => {
+            showNotification('Navigator 알림 활성화', '마감 임박 시 알림을 받을 수 있습니다');
+          }, 500);
         } else if (permission === 'denied') {
           showToast('알림이 차단되었습니다. 브라우저 설정에서 허용해주세요', 'error');
+        } else {
+          showToast('알림 권한 요청이 취소되었습니다', 'warning');
         }
       } catch (error) {
         console.error('알림 권한 요청 실패:', error);
+        showToast('알림 권한 요청 중 오류가 발생했습니다', 'error');
+      } finally {
+        // 항상 UI 갱신
+        renderStatic();
       }
     }
 
@@ -9089,6 +11142,9 @@
     setInterval(updateTime, 1000);
     setInterval(checkDeadlinesAndNotify, 5 * 60 * 1000); // 5분마다 마감 체크
     checkDeadlinesAndNotify(); // 초기 실행
+
+    // 주간 리뷰 체크 (일요일 저녁)
+    setTimeout(() => checkWeeklyReview(), 3000);
 
     // Firebase 인증 상태 리스너
     window.addEventListener('firebase-ready', () => {
