@@ -1107,6 +1107,34 @@
       border-radius: var(--radius-md);
     }
 
+    /* 빠른 템플릿 */
+    .quick-templates {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .quick-template-btn {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-template-btn:hover {
+      background: var(--bg-secondary);
+      border-color: #667eea;
+      color: #667eea;
+    }
+
     /* 다른 작업 섹션 */
     .other-tasks-section {
       background: var(--bg-secondary);
@@ -2815,6 +2843,24 @@
       gap: 12px;
       font-size: 12px;
       color: var(--text-muted);
+    }
+
+    .work-dashboard-schedule {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .work-date-range {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .work-schedule {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
     }
 
     /* 참여자 트래커 */
@@ -6525,7 +6571,10 @@
         organizer: '',                // 주최자 (부업용): 불개미, 코같투, 맨틀 등
         eventType: '',                // 이벤트 종류 (부업용): 의견작성, 리캡, AMA 등
         tags: [],                     // 태그 목록
-        subtasks: []                  // 서브태스크 목록
+        subtasks: [],                 // 서브태스크 목록
+        workProjectId: null,          // 본업 프로젝트 연결 ID
+        workStageIdx: null,           // 본업 단계 인덱스
+        workSubcatIdx: null           // 본업 중분류 인덱스
       },
       availableTags: ['긴급', '회의', '전화', '외출', '대기중', '검토필요'],  // 사용 가능한 태그
       editingTaskId: null,            // 수정 중인 작업 ID (null이면 새로 추가)
@@ -7867,6 +7916,43 @@
     }
 
     /**
+     * 템플릿에서 빠른 추가
+     */
+    const quickTemplates = {
+      writing: {
+        title: '아티클 작성',
+        category: '부업',
+        estimatedTime: 30,
+        link: 'http://localhost:3000/editor',
+        tags: ['글쓰기']
+      }
+    };
+
+    function addFromTemplate(templateName) {
+      const template = quickTemplates[templateName];
+      if (!template) {
+        showToast('템플릿을 찾을 수 없습니다', 'error');
+        return;
+      }
+
+      appState.tasks.push({
+        id: Date.now(),
+        ...template,
+        completed: false,
+        createdAt: new Date().toISOString()
+      });
+
+      saveState();
+      renderStatic();
+      showToast(`"${template.title}" 추가됨`, 'success');
+
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+    }
+    window.addFromTemplate = addFromTemplate;
+
+    /**
      * 빠른 추가 (제목만 입력)
      */
     function quickAdd() {
@@ -7910,11 +7996,58 @@
         showToast('제목을 입력하세요', 'error');
         return;
       }
-      
+
+      // 본업 프로젝트에 연결된 경우
+      if (task.category === '본업' && task.workProjectId && task.workSubcatIdx !== null) {
+        const project = appState.workProjects.find(p => p.id === task.workProjectId);
+        if (project) {
+          const stageIdx = task.workStageIdx || 0;
+          const subcatIdx = task.workSubcatIdx;
+          const subcat = project.stages[stageIdx]?.subcategories?.[subcatIdx];
+
+          if (subcat) {
+            subcat.tasks.push({
+              title: task.title,
+              status: 'not-started',
+              logs: [],
+              createdAt: new Date().toISOString()
+            });
+            project.updatedAt = new Date().toISOString();
+            saveWorkProjects();
+            showToast(`"${project.name}" 프로젝트에 추가됨`, 'success');
+
+            // 폼 초기화 후 종료
+            appState.detailedTask = {
+              title: '',
+              category: '부업',
+              deadline: '',
+              estimatedTime: 10,
+              link: '',
+              expectedRevenue: '',
+              repeatType: 'none',
+              repeatDays: [],
+              repeatMonthDay: null,
+              organizer: '',
+              eventType: '',
+              tags: [],
+              subtasks: [],
+              workProjectId: null,
+              workStageIdx: null,
+              workSubcatIdx: null
+            };
+            appState.showDetailedAdd = false;
+            renderStatic();
+            return;
+          }
+        }
+        showToast('프로젝트 연결 실패. 중분류를 확인하세요.', 'error');
+        return;
+      }
+
       if (appState.editingTaskId) {
         // 수정 모드
-        appState.tasks = appState.tasks.map(t => 
-          t.id === appState.editingTaskId 
+        appState.tasks = appState.tasks.map(t =>
+          t.id === appState.editingTaskId
             ? { ...task, id: t.id, completed: t.completed, createdAt: t.createdAt }
             : t
         );
@@ -7944,7 +8077,10 @@
         organizer: '',
         eventType: '',
         tags: [],
-        subtasks: []
+        subtasks: [],
+        workProjectId: null,
+        workStageIdx: null,
+        workSubcatIdx: null
       };
       appState.showDetailedAdd = false;
       appState.editingTaskId = null;
@@ -8557,8 +8693,62 @@
      */
     function updateDetailedTaskCategory(category) {
       appState.detailedTask.category = category;
+      // 카테고리 변경 시 프로젝트 연결 초기화
+      if (category !== '본업') {
+        appState.detailedTask.workProjectId = null;
+        appState.detailedTask.workStageIdx = null;
+        appState.detailedTask.workSubcatIdx = null;
+      }
       renderStatic();
     }
+
+    /**
+     * 본업 프로젝트 연결
+     */
+    function updateWorkProjectLink(projectId) {
+      if (projectId) {
+        appState.detailedTask.workProjectId = parseInt(projectId);
+        appState.detailedTask.workStageIdx = 0;
+        // 첫 번째 중분류 선택
+        const proj = appState.workProjects.find(p => p.id === parseInt(projectId));
+        if (proj?.stages[0]?.subcategories?.length > 0) {
+          appState.detailedTask.workSubcatIdx = 0;
+        } else {
+          appState.detailedTask.workSubcatIdx = null;
+        }
+      } else {
+        appState.detailedTask.workProjectId = null;
+        appState.detailedTask.workStageIdx = null;
+        appState.detailedTask.workSubcatIdx = null;
+      }
+      renderStatic();
+    }
+    window.updateWorkProjectLink = updateWorkProjectLink;
+
+    /**
+     * 본업 단계 연결
+     */
+    function updateWorkStageLink(stageIdx) {
+      appState.detailedTask.workStageIdx = parseInt(stageIdx);
+      // 해당 단계의 첫 번째 중분류 선택
+      const proj = appState.workProjects.find(p => p.id === appState.detailedTask.workProjectId);
+      if (proj?.stages[stageIdx]?.subcategories?.length > 0) {
+        appState.detailedTask.workSubcatIdx = 0;
+      } else {
+        appState.detailedTask.workSubcatIdx = null;
+      }
+      renderStatic();
+    }
+    window.updateWorkStageLink = updateWorkStageLink;
+
+    /**
+     * 본업 중분류 연결
+     */
+    function updateWorkSubcatLink(subcatIdx) {
+      appState.detailedTask.workSubcatIdx = parseInt(subcatIdx);
+      renderStatic();
+    }
+    window.updateWorkSubcatLink = updateWorkSubcatLink;
 
     /**
      * 태그를 작업에 추가
@@ -10073,6 +10263,16 @@
                   <button class="quick-add-btn" onclick="quickAdd()">+</button>
                 </div>
 
+                <!-- 빠른 템플릿 -->
+                <div class="quick-templates">
+                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="글쓰기 템플릿">
+                    ✍️ 글쓰기
+                  </button>
+                  <button class="quick-template-btn" onclick="toggleDetailedAdd()" title="상세 입력">
+                    📝 상세 입력
+                  </button>
+                </div>
+
                 <!-- 퀵 필터 -->
                 <div class="quick-filters">
                   <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')">
@@ -10142,6 +10342,50 @@
                         <option value="가족" ${appState.detailedTask.category === '가족' ? 'selected' : ''}>가족</option>
                       </select>
                     </div>
+
+                    ${appState.detailedTask.category === '본업' && appState.workProjects.filter(p => !p.archived).length > 0 ? `
+                      <div class="work-project-link-section" style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                        <div class="form-group" style="margin-bottom: 8px;">
+                          <label class="form-label">📁 프로젝트 연결 (선택)</label>
+                          <select class="form-select" id="detailed-work-project" onchange="updateWorkProjectLink(this.value)">
+                            <option value="">연결 안함 (일반 할일)</option>
+                            ${appState.workProjects.filter(p => !p.archived).map(p => `
+                              <option value="${p.id}" ${appState.detailedTask.workProjectId === p.id ? 'selected' : ''}>${p.name}</option>
+                            `).join('')}
+                          </select>
+                        </div>
+                        ${appState.detailedTask.workProjectId ? `
+                          <div class="form-group" style="margin-bottom: 8px;">
+                            <label class="form-label">📋 단계</label>
+                            <select class="form-select" id="detailed-work-stage" onchange="updateWorkStageLink(this.value)">
+                              ${appState.workProjectStages.map((stage, idx) => `
+                                <option value="${idx}" ${appState.detailedTask.workStageIdx === idx ? 'selected' : ''}>${idx + 1}. ${stage}</option>
+                              `).join('')}
+                            </select>
+                          </div>
+                          ${(() => {
+                            const proj = appState.workProjects.find(p => p.id === appState.detailedTask.workProjectId);
+                            const stageIdx = appState.detailedTask.workStageIdx || 0;
+                            const subcats = proj?.stages[stageIdx]?.subcategories || [];
+                            if (subcats.length > 0) {
+                              return \`
+                                <div class="form-group" style="margin-bottom: 0;">
+                                  <label class="form-label">📂 중분류</label>
+                                  <select class="form-select" id="detailed-work-subcat" onchange="updateWorkSubcatLink(this.value)">
+                                    \${subcats.map((sub, idx) => \`
+                                      <option value="\${idx}" \${appState.detailedTask.workSubcatIdx === idx ? 'selected' : ''}>\${sub.name}</option>
+                                    \`).join('')}
+                                  </select>
+                                </div>
+                              \`;
+                            } else {
+                              return '<div style="color: var(--text-muted); font-size: 12px;">이 단계에 중분류가 없습니다. 본업 탭에서 먼저 추가하세요.</div>';
+                            }
+                          })()}
+                        ` : ''}
+                      </div>
+                    ` : ''}
+
                     <div class="form-group">
                       <label class="form-label">제목</label>
                       <input type="text" class="form-input" id="detailed-title" placeholder="작업 제목" value="${appState.detailedTask.title}">
@@ -11751,6 +11995,13 @@
               <span class="work-deadline ${deadlineClass}">${deadlineText}</span>
             ` : ''}
           </div>
+          ${(project.startDate || project.deadline) ? `
+            <div class="work-dashboard-schedule">
+              📅 ${project.startDate ? `${new Date(project.startDate).getMonth() + 1}/${new Date(project.startDate).getDate()}` : ''}
+              ${project.startDate && project.deadline ? '~' : ''}
+              ${project.deadline ? `${new Date(project.deadline).getMonth() + 1}/${new Date(project.deadline).getDate()}` : ''}
+            </div>
+          ` : ''}
           <div class="work-dashboard-stages">
             ${project.stages.map((s, idx) => `
               <div class="work-dashboard-stage-dot ${s.completed ? 'completed' : (idx === project.currentStage ? 'current' : '')}"></div>
@@ -11785,27 +12036,35 @@
         sum + (s.subcategories || []).reduce((subSum, sub) => subSum + sub.tasks.filter(t => t.status === 'completed').length, 0), 0);
       const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      // 프로젝트 마감일 계산
-      let deadlineHtml = '';
-      if (project.deadline) {
-        const daysLeft = Math.ceil((new Date(project.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-        let deadlineClass = '';
-        let deadlineText = '';
-        if (daysLeft < 0) {
-          deadlineText = `D+${Math.abs(daysLeft)}`;
-          deadlineClass = 'overdue';
-        } else if (daysLeft === 0) {
-          deadlineText = 'D-Day';
-          deadlineClass = 'overdue';
-        } else if (daysLeft <= 3) {
-          deadlineText = `D-${daysLeft}`;
-          deadlineClass = 'soon';
-        } else {
-          deadlineText = `D-${daysLeft}`;
+      // 프로젝트 일정 계산
+      let scheduleHtml = '';
+      const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+      };
+
+      if (project.startDate || project.deadline) {
+        let dDayHtml = '';
+        if (project.deadline) {
+          const daysLeft = Math.ceil((new Date(project.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+          let deadlineClass = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
+          let deadlineText = daysLeft < 0 ? `D+${Math.abs(daysLeft)}` : daysLeft === 0 ? 'D-Day' : `D-${daysLeft}`;
+          dDayHtml = `<span class="work-deadline ${deadlineClass}">${deadlineText}</span>`;
         }
-        deadlineHtml = `<span class="work-deadline ${deadlineClass}" onclick="showWorkModal('deadline', ${project.id})">${deadlineText}</span>`;
+
+        const dateRange = project.startDate && project.deadline
+          ? `${formatDate(project.startDate)} ~ ${formatDate(project.deadline)}`
+          : project.startDate ? `${formatDate(project.startDate)} ~` : `~ ${formatDate(project.deadline)}`;
+
+        scheduleHtml = `
+          <div class="work-schedule" onclick="showWorkModal('deadline', ${project.id})" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <span class="work-date-range">📅 ${dateRange}</span>
+            ${dDayHtml}
+          </div>
+        `;
       } else {
-        deadlineHtml = `<span class="work-deadline none" onclick="showWorkModal('deadline', ${project.id})">+ 마감일</span>`;
+        scheduleHtml = `<span class="work-deadline none" onclick="showWorkModal('deadline', ${project.id})">+ 일정 설정</span>`;
       }
 
       return `
@@ -11815,8 +12074,8 @@
             <div>
               <div class="work-projects-title" style="display: flex; align-items: center; gap: 12px;">
                 ${project.name}
-                ${deadlineHtml}
               </div>
+              ${scheduleHtml}
               <div class="work-project-progress" style="margin-top: 8px;">
                 <div class="work-project-progress-bar">
                   <div class="work-project-progress-fill" style="width: ${progressPercent}%"></div>
@@ -11866,11 +12125,24 @@
                       </div>
                       <span class="work-stage-number">${stageIdx + 1}</span>
                       ${stageName}
-                      ${stage.deadline ? (() => {
-                        const daysLeft = Math.ceil((new Date(stage.deadline) - new Date()) / (1000 * 60 * 60 * 24));
-                        const cls = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
-                        const txt = daysLeft < 0 ? 'D+' + Math.abs(daysLeft) : daysLeft === 0 ? 'D-Day' : 'D-' + daysLeft;
-                        return '<span class="work-deadline ' + cls + '" style="margin-left: 8px;">' + txt + '</span>';
+                      ${(stage.startDate || stage.deadline) ? (() => {
+                        const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
+                        let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 12px; color: var(--text-muted);">';
+                        if (stage.startDate && stage.deadline) {
+                          html += fmtDate(stage.startDate) + '~' + fmtDate(stage.deadline);
+                        } else if (stage.startDate) {
+                          html += fmtDate(stage.startDate) + '~';
+                        } else {
+                          html += '~' + fmtDate(stage.deadline);
+                        }
+                        html += '</span>';
+                        if (stage.deadline) {
+                          const daysLeft = Math.ceil((new Date(stage.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+                          const cls = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
+                          const txt = daysLeft < 0 ? 'D+' + Math.abs(daysLeft) : daysLeft === 0 ? 'D-Day' : 'D-' + daysLeft;
+                          html += '<span class="work-deadline ' + cls + '" style="margin-left: 6px;">' + txt + '</span>';
+                        }
+                        return html;
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
@@ -12138,21 +12410,34 @@
           `;
           break;
         case 'deadline':
-          titleText = '📅 프로젝트 마감일';
+          titleText = '📅 프로젝트 일정';
           bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">시작일</label>
+              <input type="date" class="work-modal-input" id="work-input-startdate" value="${project?.startDate || ''}">
+            </div>
             <div class="work-modal-field">
               <label class="work-modal-label">마감일</label>
               <input type="date" class="work-modal-input" id="work-input-deadline" value="${project?.deadline || ''}">
             </div>
+            ${project?.startDate && project?.deadline ? `
+              <div style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">
+                📆 총 ${Math.ceil((new Date(project.deadline) - new Date(project.startDate)) / (1000 * 60 * 60 * 24))}일 소요 예정
+              </div>
+            ` : ''}
           `;
           break;
         case 'stage-deadline':
-          titleText = '📅 단계 마감일';
-          const stageDeadline = project?.stages[stageIdx]?.deadline || '';
+          titleText = '📅 단계 일정';
+          const stageData = project?.stages[stageIdx] || {};
           bodyHtml = `
             <div class="work-modal-field">
+              <label class="work-modal-label">${appState.workProjectStages[stageIdx]} 시작일</label>
+              <input type="date" class="work-modal-input" id="work-input-startdate" value="${stageData.startDate || ''}">
+            </div>
+            <div class="work-modal-field">
               <label class="work-modal-label">${appState.workProjectStages[stageIdx]} 마감일</label>
-              <input type="date" class="work-modal-input" id="work-input-deadline" value="${stageDeadline}">
+              <input type="date" class="work-modal-input" id="work-input-deadline" value="${stageData.deadline || ''}">
             </div>
           `;
           break;
@@ -12265,26 +12550,30 @@
           break;
         }
         case 'deadline': {
+          const startDate = document.getElementById('work-input-startdate').value || null;
           const deadline = document.getElementById('work-input-deadline').value || null;
           const project = appState.workProjects.find(p => p.id === projectId);
           if (project) {
+            project.startDate = startDate;
             project.deadline = deadline;
             project.updatedAt = new Date().toISOString();
             saveWorkProjects();
             renderStatic();
-            showToast('마감일 설정됨', 'success');
+            showToast('일정 설정됨', 'success');
           }
           break;
         }
         case 'stage-deadline': {
+          const startDate = document.getElementById('work-input-startdate').value || null;
           const deadline = document.getElementById('work-input-deadline').value || null;
           const project = appState.workProjects.find(p => p.id === projectId);
           if (project) {
+            project.stages[stageIdx].startDate = startDate;
             project.stages[stageIdx].deadline = deadline;
             project.updatedAt = new Date().toISOString();
             saveWorkProjects();
             renderStatic();
-            showToast('단계 마감일 설정됨', 'success');
+            showToast('단계 일정 설정됨', 'success');
           }
           break;
         }
