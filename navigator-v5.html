@@ -2470,11 +2470,12 @@
 
     .habit-grid {
       display: grid;
-      grid-template-columns: 28px repeat(12, 1fr);
-      gap: 4px;
+      grid-template-columns: 24px repeat(12, 1fr);
+      gap: 3px;
       font-size: 11px;
       width: 100%;
-      overflow-x: auto;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .habit-day-label {
@@ -2490,8 +2491,8 @@
 
     .habit-cell {
       aspect-ratio: 1;
-      min-width: 16px;
-      min-height: 16px;
+      min-width: 14px;
+      max-width: 28px;
       background: var(--bg-tertiary);
       border-radius: 3px;
       cursor: pointer;
@@ -2542,6 +2543,896 @@
       width: 10px;
       height: 10px;
       border-radius: 2px;
+    }
+
+    /* ========================================
+       본업 프로젝트 관리
+       ======================================== */
+    .work-projects-container {
+      padding: 16px;
+    }
+
+    /* 프로젝트 탭 네비게이션 */
+    .work-project-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .work-project-tab {
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .work-project-tab:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .work-project-tab.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .work-project-tab-add {
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-project-tab-add:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .work-projects-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .work-projects-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .work-project-add-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .work-project-add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .work-project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 상태 뱃지 */
+    .work-status-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .work-status-badge.not-started {
+      background: rgba(160, 160, 160, 0.2);
+      color: #a0a0a0;
+    }
+
+    .work-status-badge.in-progress {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+    }
+
+    .work-status-badge.completed {
+      background: rgba(72, 187, 120, 0.2);
+      color: #48bb78;
+    }
+
+    .work-status-badge.blocked {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 중분류 스타일 */
+    .work-subcategory {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-subcategory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .work-subcategory-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-subcategory-toggle {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .work-subcategory-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* 단계 체크박스 */
+    .work-stage-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-stage-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-stage-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    /* 마감일 표시 */
+    .work-deadline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #667eea;
+      cursor: pointer;
+    }
+
+    .work-deadline.overdue {
+      background: rgba(245, 87, 108, 0.15);
+      color: #f5576c;
+    }
+
+    .work-deadline.soon {
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9500;
+    }
+
+    .work-deadline.none {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      border: 1px dashed var(--border-color);
+    }
+
+    /* 프로젝트 대시보드 */
+    .work-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .work-dashboard-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-dashboard-card.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    }
+
+    .work-dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .work-dashboard-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .work-dashboard-status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+
+    .work-dashboard-stages {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .work-dashboard-stage-dot {
+      width: 24px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-tertiary);
+    }
+
+    .work-dashboard-stage-dot.completed {
+      background: #48bb78;
+    }
+
+    .work-dashboard-stage-dot.current {
+      background: #667eea;
+    }
+
+    .work-dashboard-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 참여자 트래커 */
+    .work-participant-tracker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .work-participant-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .work-participant-count {
+      font-size: 14px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .work-participant-goal {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .work-participant-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .work-participant-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #48bb78);
+      border-radius: 3px;
+    }
+
+    /* 아카이브 뱃지 */
+    .work-archived-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: rgba(160, 160, 160, 0.2);
+      color: #a0a0a0;
+      border-radius: 8px;
+      margin-left: 8px;
+    }
+
+    /* 뷰 전환 탭 */
+    .work-view-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .work-view-tab {
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: none;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .work-view-tab.active {
+      background: #667eea;
+      color: white;
+    }
+
+    .work-project-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+
+    .work-project-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .work-project-card.active {
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .work-project-header {
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .work-project-info {
+      flex: 1;
+    }
+
+    .work-project-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .work-project-stage {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-project-stage-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .work-project-stage-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .work-project-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-project-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .work-project-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .work-project-progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .work-project-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .work-project-action-btn {
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .work-project-action-btn:hover {
+      background: var(--border-color);
+    }
+
+    .work-project-action-btn.delete:hover {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 프로젝트 상세 (단계별 체크리스트) */
+    .work-project-detail {
+      border-top: 1px solid var(--border-color);
+      padding: 16px;
+      background: var(--bg-tertiary);
+    }
+
+    .work-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .work-stage {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-stage.current {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    }
+
+    .work-stage.completed {
+      opacity: 0.7;
+    }
+
+    .work-stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .work-stage-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-stage-number {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .work-stage.current .work-stage-number {
+      background: #667eea;
+      color: white;
+    }
+
+    .work-stage.completed .work-stage-number {
+      background: #48bb78;
+      color: white;
+    }
+
+    .work-stage-add-task {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-stage-add-task:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .work-task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .work-task-item {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-task-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .work-task-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .work-task-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-task-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .work-task-title {
+      flex: 1;
+      font-size: 14px;
+    }
+
+    .work-task-title.completed {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .work-task-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .work-task-action {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-task-action:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* 진행 로그 */
+    .work-task-logs {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .work-task-log {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .work-task-log:last-child {
+      border-bottom: none;
+    }
+
+    .work-task-log-date {
+      color: #667eea;
+      font-weight: 500;
+      white-space: nowrap;
+      min-width: 70px;
+    }
+
+    .work-task-log-content {
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .work-task-log-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .work-task-log-action {
+      padding: 2px 6px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .work-task-log-action:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-log-add {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-log-add input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 13px;
+    }
+
+    .work-log-add input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .work-log-add button {
+      padding: 8px 14px;
+      background: #667eea;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    /* 복사 버튼 */
+    .work-copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: transform 0.2s;
+    }
+
+    .work-copy-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .work-copy-btn.copied {
+      background: #48bb78;
+    }
+
+    /* 빈 상태 */
+    .work-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .work-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .work-empty-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .work-empty-desc {
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    /* 프로젝트 추가 모달 */
+    .work-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .work-modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .work-modal-content {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .work-modal.show .work-modal-content {
+      transform: scale(1);
+    }
+
+    .work-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .work-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .work-modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .work-modal-actions .cancel {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .work-modal-actions .confirm {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .work-modal-field {
+      margin-bottom: 16px;
+    }
+
+    .work-modal-label {
+      display: block;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .work-modal-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .work-modal-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .work-modal-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .work-modal-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* 상태 선택 버튼 그룹 */
+    .work-status-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .work-status-option {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-status-option:hover {
+      border-color: #667eea;
+    }
+
+    .work-status-option.selected {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .work-status-option.selected.in-progress {
+      background: #667eea;
+    }
+
+    .work-status-option.selected.completed {
+      background: #48bb78;
+    }
+
+    .work-status-option.selected.blocked {
+      background: #f5576c;
     }
 
     /* 주간 리포트 */
@@ -5554,6 +6445,20 @@
     </div>
   </div>
 
+  <!-- 본업 프로젝트 입력 모달 -->
+  <div id="work-input-modal" class="work-modal">
+    <div class="work-modal-content">
+      <div class="work-modal-title" id="work-modal-title">새 프로젝트</div>
+      <div id="work-modal-body">
+        <!-- 동적으로 채워짐 -->
+      </div>
+      <div class="work-modal-actions">
+        <button class="cancel" onclick="closeWorkModal()">취소</button>
+        <button class="confirm" onclick="confirmWorkModal()">확인</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 키보드 단축키 도움말 (PC) -->
   <button class="shortcuts-toggle" onclick="toggleShortcutsHelp()" title="단축키 도움말">⌨️</button>
   <div id="shortcuts-help" class="shortcuts-help">
@@ -5696,6 +6601,13 @@
       },
       quickFilter: null,                  // 퀵 필터: null, '2min', '5min', 'urgent'
       pendingTimeInput: null,             // 실제 소요시간 입력 대기 중인 작업
+      // 본업 프로젝트 관리
+      workProjects: [],                   // 업무 프로젝트 목록
+      activeWorkProject: null,            // 현재 선택된 프로젝트 ID
+      workProjectStages: ['준비', '설계', '진행', '점검', '실행', '마무리'],
+      workView: 'dashboard',              // 뷰 모드: 'dashboard' | 'detail'
+      workTemplates: [],                  // 저장된 템플릿 목록
+      showArchivedProjects: false,        // 아카이브 프로젝트 표시 여부
       // Firebase 동기화
       user: null,                       // 로그인한 사용자
       syncStatus: 'offline',            // 동기화 상태: offline/syncing/synced/error
@@ -5760,6 +6672,23 @@
         const savedWeeklyPlan = localStorage.getItem('navigator-weekly-plan');
         if (savedWeeklyPlan) {
           appState.weeklyPlan = { ...appState.weeklyPlan, ...JSON.parse(savedWeeklyPlan) };
+        }
+
+        // 본업 프로젝트 로드
+        const savedWorkProjects = localStorage.getItem('navigator-work-projects');
+        if (savedWorkProjects) {
+          appState.workProjects = JSON.parse(savedWorkProjects);
+          // 첫 프로젝트 자동 선택
+          if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
+            const activeProject = appState.workProjects.find(p => !p.archived);
+            appState.activeWorkProject = activeProject ? activeProject.id : null;
+          }
+        }
+
+        // 본업 템플릿 로드
+        const savedWorkTemplates = localStorage.getItem('navigator-work-templates');
+        if (savedWorkTemplates) {
+          appState.workTemplates = JSON.parse(savedWorkTemplates);
         }
 
         // 오늘 완료한 작업 수 계산
@@ -8936,6 +9865,9 @@
             <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')">
               🎯 오늘
             </button>
+            <button class="tab-btn ${appState.currentTab === 'work' ? 'active' : ''}" onclick="switchTab('work')">
+              💼 본업
+            </button>
             <button class="tab-btn ${appState.currentTab === 'events' ? 'active' : ''}" onclick="switchTab('events')">
               💰 이벤트
             </button>
@@ -9607,6 +10539,11 @@
                 </div>
               </div>
             ` : ''}
+          </div>
+
+          <!-- 본업 프로젝트 탭 -->
+          <div class="tab-content ${appState.currentTab === 'work' ? 'active' : ''}">
+            ${renderWorkProjects()}
           </div>
 
           <!-- 부업 이벤트 탭 -->
@@ -10650,6 +11587,1034 @@
       renderStatic();
     }
     window.dismissSwipeHint = dismissSwipeHint;
+
+    // ============================================
+    // 본업 프로젝트 관리
+    // ============================================
+
+    // 모달 상태
+    let workModalState = {
+      type: null, // 'project', 'subcategory', 'task', 'log'
+      projectId: null,
+      stageIdx: null,
+      subcategoryIdx: null,
+      taskIdx: null
+    };
+
+    // 상태 목록
+    const WORK_STATUS = {
+      'not-started': { label: '미시작', color: '#a0a0a0' },
+      'in-progress': { label: '진행중', color: '#667eea' },
+      'completed': { label: '완료', color: '#48bb78' },
+      'blocked': { label: '보류', color: '#f5576c' }
+    };
+
+    /**
+     * 프로젝트 목록 렌더링
+     */
+    function renderWorkProjects() {
+      const activeProjects = appState.workProjects.filter(p => !p.archived);
+      const archivedProjects = appState.workProjects.filter(p => p.archived);
+
+      if (appState.workProjects.length === 0) {
+        return `
+          <div class="work-projects-container">
+            <div class="work-projects-header">
+              <div class="work-projects-title">💼 본업 프로젝트</div>
+            </div>
+            <div class="work-empty">
+              <div class="work-empty-icon">📋</div>
+              <div class="work-empty-title">프로젝트가 없습니다</div>
+              <div class="work-empty-desc">새 프로젝트를 추가하여 업무를 체계적으로 관리하세요</div>
+              <button class="work-project-add-btn" onclick="showWorkModal('project')">+ 첫 프로젝트 만들기</button>
+            </div>
+          </div>
+        `;
+      }
+
+      const activeProject = appState.workProjects.find(p => p.id === appState.activeWorkProject);
+
+      return `
+        <div class="work-projects-container">
+          <!-- 헤더 -->
+          <div class="work-projects-header">
+            <div class="work-projects-title">💼 본업 프로젝트</div>
+            <div style="display: flex; gap: 8px;">
+              <button class="work-project-add-btn" onclick="showWorkModal('project')">+ 새 프로젝트</button>
+              ${appState.workTemplates.length > 0 ? `
+                <button class="work-project-action-btn" onclick="showWorkModal('template-select')">📋 템플릿</button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- 뷰 전환 -->
+          <div class="work-view-tabs">
+            <button class="work-view-tab ${appState.workView === 'dashboard' ? 'active' : ''}" onclick="setWorkView('dashboard')">📊 대시보드</button>
+            <button class="work-view-tab ${appState.workView === 'detail' ? 'active' : ''}" onclick="setWorkView('detail')">📝 상세보기</button>
+            ${archivedProjects.length > 0 ? `
+              <button class="work-view-tab" style="margin-left: auto;" onclick="toggleArchivedProjects()">
+                📦 아카이브 (${archivedProjects.length})
+              </button>
+            ` : ''}
+          </div>
+
+          ${appState.workView === 'dashboard' ? `
+            <!-- 대시보드 뷰 -->
+            <div class="work-dashboard">
+              ${activeProjects.map(p => renderWorkDashboardCard(p)).join('')}
+            </div>
+            ${appState.showArchivedProjects && archivedProjects.length > 0 ? `
+              <div style="margin-top: 20px;">
+                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">📦 아카이브</div>
+                <div class="work-dashboard">
+                  ${archivedProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                </div>
+              </div>
+            ` : ''}
+          ` : `
+            <!-- 상세 뷰 -->
+            <div class="work-project-tabs">
+              ${activeProjects.map(p => `
+                <button class="work-project-tab ${p.id === appState.activeWorkProject ? 'active' : ''}"
+                        onclick="selectWorkProject(${p.id})">
+                  ${p.name}
+                </button>
+              `).join('')}
+            </div>
+            ${activeProject && !activeProject.archived ? renderWorkProjectDetail(activeProject) : `
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                프로젝트를 선택하세요
+              </div>
+            `}
+          `}
+        </div>
+      `;
+    }
+
+    /**
+     * 뷰 전환
+     */
+    function setWorkView(view) {
+      appState.workView = view;
+      renderStatic();
+    }
+    window.setWorkView = setWorkView;
+
+    /**
+     * 아카이브 토글
+     */
+    function toggleArchivedProjects() {
+      appState.showArchivedProjects = !appState.showArchivedProjects;
+      renderStatic();
+    }
+    window.toggleArchivedProjects = toggleArchivedProjects;
+
+    /**
+     * 대시보드 카드 렌더링
+     */
+    function renderWorkDashboardCard(project) {
+      const completedStages = project.stages.filter(s => s.completed).length;
+      const totalStages = project.stages.length;
+      const totalTasks = project.stages.reduce((sum, s) =>
+        sum + (s.subcategories || []).reduce((subSum, sub) => subSum + sub.tasks.length, 0), 0);
+      const completedTasks = project.stages.reduce((sum, s) =>
+        sum + (s.subcategories || []).reduce((subSum, sub) => subSum + sub.tasks.filter(t => t.status === 'completed').length, 0), 0);
+
+      // 마감일 계산
+      let deadlineText = '';
+      let deadlineClass = 'none';
+      if (project.deadline) {
+        const daysLeft = Math.ceil((new Date(project.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft < 0) {
+          deadlineText = `D+${Math.abs(daysLeft)}`;
+          deadlineClass = 'overdue';
+        } else if (daysLeft === 0) {
+          deadlineText = 'D-Day';
+          deadlineClass = 'overdue';
+        } else if (daysLeft <= 3) {
+          deadlineText = `D-${daysLeft}`;
+          deadlineClass = 'soon';
+        } else {
+          deadlineText = `D-${daysLeft}`;
+        }
+      }
+
+      return `
+        <div class="work-dashboard-card ${project.id === appState.activeWorkProject ? 'active' : ''} ${project.archived ? 'archived' : ''}"
+             onclick="selectWorkProject(${project.id}); setWorkView('detail');">
+          <div class="work-dashboard-header">
+            <div class="work-dashboard-name">
+              ${project.name}
+              ${project.archived ? '<span class="work-archived-badge">아카이브</span>' : ''}
+            </div>
+            ${project.deadline ? `
+              <span class="work-deadline ${deadlineClass}">${deadlineText}</span>
+            ` : ''}
+          </div>
+          <div class="work-dashboard-stages">
+            ${project.stages.map((s, idx) => `
+              <div class="work-dashboard-stage-dot ${s.completed ? 'completed' : (idx === project.currentStage ? 'current' : '')}"></div>
+            `).join('')}
+          </div>
+          <div class="work-dashboard-meta">
+            <span>📋 ${completedTasks}/${totalTasks} 항목</span>
+            <span>✓ ${completedStages}/${totalStages} 단계</span>
+            ${project.participantGoal ? `<span>👥 ${project.participantCount || 0}/${project.participantGoal}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * 프로젝트 선택
+     */
+    function selectWorkProject(projectId) {
+      appState.activeWorkProject = projectId;
+      renderStatic();
+    }
+    window.selectWorkProject = selectWorkProject;
+
+    /**
+     * 프로젝트 상세 렌더링
+     */
+    function renderWorkProjectDetail(project) {
+      const completedStages = project.stages.filter(s => s.completed).length;
+      const totalTasks = project.stages.reduce((sum, s) =>
+        sum + (s.subcategories || []).reduce((subSum, sub) => subSum + sub.tasks.length, 0), 0);
+      const completedTasks = project.stages.reduce((sum, s) =>
+        sum + (s.subcategories || []).reduce((subSum, sub) => subSum + sub.tasks.filter(t => t.status === 'completed').length, 0), 0);
+      const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      // 프로젝트 마감일 계산
+      let deadlineHtml = '';
+      if (project.deadline) {
+        const daysLeft = Math.ceil((new Date(project.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+        let deadlineClass = '';
+        let deadlineText = '';
+        if (daysLeft < 0) {
+          deadlineText = `D+${Math.abs(daysLeft)}`;
+          deadlineClass = 'overdue';
+        } else if (daysLeft === 0) {
+          deadlineText = 'D-Day';
+          deadlineClass = 'overdue';
+        } else if (daysLeft <= 3) {
+          deadlineText = `D-${daysLeft}`;
+          deadlineClass = 'soon';
+        } else {
+          deadlineText = `D-${daysLeft}`;
+        }
+        deadlineHtml = `<span class="work-deadline ${deadlineClass}" onclick="showWorkModal('deadline', ${project.id})">${deadlineText}</span>`;
+      } else {
+        deadlineHtml = `<span class="work-deadline none" onclick="showWorkModal('deadline', ${project.id})">+ 마감일</span>`;
+      }
+
+      return `
+        <div class="work-project-detail">
+          <!-- 프로젝트 헤더 -->
+          <div class="work-projects-header">
+            <div>
+              <div class="work-projects-title" style="display: flex; align-items: center; gap: 12px;">
+                ${project.name}
+                ${deadlineHtml}
+              </div>
+              <div class="work-project-progress" style="margin-top: 8px;">
+                <div class="work-project-progress-bar">
+                  <div class="work-project-progress-fill" style="width: ${progressPercent}%"></div>
+                </div>
+                <span class="work-project-progress-text">${completedTasks}/${totalTasks} 항목 · ${completedStages}/${project.stages.length} 단계</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})">📋 복제</button>
+              <button class="work-project-action-btn" onclick="archiveWorkProject(${project.id})">${project.archived ? '📤 복원' : '📦 보관'}</button>
+              <button class="work-project-action-btn" onclick="saveAsTemplate(${project.id})">💾 템플릿</button>
+              <button class="work-project-action-btn delete" onclick="deleteWorkProject(${project.id})">🗑️ 삭제</button>
+            </div>
+          </div>
+
+          <!-- 참여자 트래커 -->
+          ${project.participantGoal ? `
+            <div class="work-participant-tracker">
+              <span class="work-participant-label">👥 참여자 현황</span>
+              <div class="work-participant-bar">
+                <div class="work-participant-fill" style="width: ${Math.min(100, ((project.participantCount || 0) / project.participantGoal) * 100)}%"></div>
+              </div>
+              <span class="work-participant-count">${project.participantCount || 0}</span>
+              <span class="work-participant-goal">/ ${project.participantGoal}명</span>
+              <button class="work-task-action" onclick="updateParticipantCount(${project.id})">수정</button>
+            </div>
+          ` : `
+            <div style="margin: 12px 0;">
+              <button class="work-stage-add-task" onclick="showWorkModal('participant', ${project.id})">+ 참여자 목표 설정</button>
+            </div>
+          `}
+
+          <!-- 단계별 내용 -->
+          <div class="work-stages">
+            ${project.stages.map((stage, stageIdx) => {
+              const stageName = appState.workProjectStages[stageIdx];
+              const stageClass = stage.completed ? 'completed' : '';
+              const subcategories = stage.subcategories || [];
+
+              return `
+                <div class="work-stage ${stageClass}">
+                  <div class="work-stage-header">
+                    <div class="work-stage-title">
+                      <div class="work-stage-checkbox ${stage.completed ? 'checked' : ''}"
+                           onclick="toggleStageComplete(${project.id}, ${stageIdx})">
+                        ${stage.completed ? '✓' : ''}
+                      </div>
+                      <span class="work-stage-number">${stageIdx + 1}</span>
+                      ${stageName}
+                      ${stage.deadline ? (() => {
+                        const daysLeft = Math.ceil((new Date(stage.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+                        const cls = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
+                        const txt = daysLeft < 0 ? 'D+' + Math.abs(daysLeft) : daysLeft === 0 ? 'D-Day' : 'D-' + daysLeft;
+                        return '<span class="work-deadline ' + cls + '" style="margin-left: 8px;">' + txt + '</span>';
+                      })() : ''}
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})">📅</button>
+                      <button class="work-stage-add-task" onclick="showWorkModal('subcategory', ${project.id}, ${stageIdx})">+ 중분류</button>
+                    </div>
+                  </div>
+
+                  ${subcategories.length > 0 ? `
+                    ${subcategories.map((subcat, subcatIdx) => `
+                      <div class="work-subcategory">
+                        <div class="work-subcategory-header">
+                          <div class="work-subcategory-title">
+                            📁 ${subcat.name}
+                            <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
+                          </div>
+                          <div class="work-subcategory-actions">
+                            <button class="work-task-action" onclick="showWorkModal('task', ${project.id}, ${stageIdx}, ${subcatIdx})">+ 항목</button>
+                            <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})">삭제</button>
+                          </div>
+                        </div>
+                        ${subcat.tasks.length > 0 ? `
+                          <div class="work-task-list">
+                            ${subcat.tasks.map((task, taskIdx) => renderWorkTask(project.id, stageIdx, subcatIdx, task, taskIdx)).join('')}
+                          </div>
+                        ` : '<div style="color: var(--text-muted); font-size: 12px; padding: 8px;">항목 없음</div>'}
+                      </div>
+                    `).join('')}
+                  ` : '<div style="color: var(--text-muted); font-size: 13px; padding: 10px;">중분류를 추가하세요</div>'}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button class="work-copy-btn" onclick="copyWorkProjectToClipboard(${project.id})">
+              📋 노션/슬랙용 복사
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    /**
+     * 단계 완료 토글
+     */
+    function toggleStageComplete(projectId, stageIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.stages[stageIdx].completed = !project.stages[stageIdx].completed;
+
+      // 완료된 단계 이후의 첫 미완료 단계를 현재 단계로 설정
+      const firstIncomplete = project.stages.findIndex(s => !s.completed);
+      project.currentStage = firstIncomplete >= 0 ? firstIncomplete : project.stages.length - 1;
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(project.stages[stageIdx].completed ? '단계 완료!' : '단계 완료 취소', 'success');
+    }
+    window.toggleStageComplete = toggleStageComplete;
+
+    /**
+     * 프로젝트 복제
+     */
+    function duplicateWorkProject(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const newProject = JSON.parse(JSON.stringify(project));
+      newProject.id = Date.now();
+      newProject.name = project.name + ' (복사본)';
+      newProject.createdAt = new Date().toISOString();
+      newProject.updatedAt = new Date().toISOString();
+      newProject.archived = false;
+
+      // 모든 단계와 항목 초기화
+      newProject.stages.forEach(stage => {
+        stage.completed = false;
+        (stage.subcategories || []).forEach(sub => {
+          sub.tasks.forEach(task => {
+            task.status = 'not-started';
+            task.logs = [];
+          });
+        });
+      });
+      newProject.currentStage = 0;
+      newProject.participantCount = 0;
+
+      appState.workProjects.push(newProject);
+      appState.activeWorkProject = newProject.id;
+      saveWorkProjects();
+      renderStatic();
+      showToast('프로젝트 복제됨', 'success');
+    }
+    window.duplicateWorkProject = duplicateWorkProject;
+
+    /**
+     * 프로젝트 아카이브
+     */
+    function archiveWorkProject(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.archived = !project.archived;
+      project.updatedAt = new Date().toISOString();
+
+      if (project.archived && appState.activeWorkProject === projectId) {
+        const active = appState.workProjects.find(p => !p.archived);
+        appState.activeWorkProject = active ? active.id : null;
+      }
+
+      saveWorkProjects();
+      renderStatic();
+      showToast(project.archived ? '아카이브됨' : '아카이브 해제됨', 'success');
+    }
+    window.archiveWorkProject = archiveWorkProject;
+
+    /**
+     * 템플릿으로 저장
+     */
+    function saveAsTemplate(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const templateName = prompt('템플릿 이름을 입력하세요:', project.name + ' 템플릿');
+      if (!templateName) return;
+
+      const template = {
+        id: Date.now(),
+        name: templateName,
+        stages: project.stages.map(stage => ({
+          subcategories: (stage.subcategories || []).map(sub => ({
+            name: sub.name,
+            tasks: sub.tasks.map(t => ({ title: t.title }))
+          }))
+        })),
+        participantGoal: project.participantGoal,
+        createdAt: new Date().toISOString()
+      };
+
+      appState.workTemplates.push(template);
+      localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+      showToast('템플릿 저장됨', 'success');
+    }
+    window.saveAsTemplate = saveAsTemplate;
+
+    /**
+     * 참여자 수 업데이트
+     */
+    function updateParticipantCount(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const count = prompt('현재 참여자 수:', project.participantCount || 0);
+      if (count === null) return;
+
+      project.participantCount = parseInt(count) || 0;
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+    }
+    window.updateParticipantCount = updateParticipantCount;
+
+    /**
+     * 작업 항목 렌더링
+     */
+    function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
+      const statusInfo = WORK_STATUS[task.status] || WORK_STATUS['not-started'];
+
+      return `
+        <div class="work-task-item">
+          <div class="work-task-header">
+            <span class="work-status-badge ${task.status}" onclick="cycleWorkTaskStatus(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})"
+                  title="클릭하여 상태 변경">
+              ${statusInfo.label}
+            </span>
+            <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}">${task.title}</span>
+            <div class="work-task-actions">
+              <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">+ 기록</button>
+              <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">삭제</button>
+            </div>
+          </div>
+          ${task.logs && task.logs.length > 0 ? `
+            <div class="work-task-logs">
+              ${task.logs.map((log, logIdx) => `
+                <div class="work-task-log">
+                  <span class="work-task-log-date">${log.date}</span>
+                  <span class="work-task-log-content">${log.content}</span>
+                  <div class="work-task-log-actions">
+                    <button class="work-task-log-action" onclick="deleteWorkLog(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, ${logIdx})">×</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    /**
+     * 모달 표시
+     */
+    function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null, taskIdx = null) {
+      workModalState = { type, projectId, stageIdx, subcategoryIdx: subcatIdx, taskIdx };
+
+      const modal = document.getElementById('work-input-modal');
+      const title = document.getElementById('work-modal-title');
+      const body = document.getElementById('work-modal-body');
+
+      let titleText = '';
+      let bodyHtml = '';
+
+      const project = projectId ? appState.workProjects.find(p => p.id === projectId) : null;
+
+      switch(type) {
+        case 'project':
+          titleText = '📁 새 프로젝트';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">프로젝트 이름</label>
+              <input type="text" class="work-modal-input" id="work-input-name" placeholder="예: UT 10월차" autofocus>
+            </div>
+            <div class="work-modal-field">
+              <label class="work-modal-label">마감일 (선택)</label>
+              <input type="date" class="work-modal-input" id="work-input-deadline">
+            </div>
+          `;
+          break;
+        case 'subcategory':
+          titleText = '📂 중분류 추가';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">중분류 이름</label>
+              <input type="text" class="work-modal-input" id="work-input-name" placeholder="예: 사전 준비" autofocus>
+            </div>
+          `;
+          break;
+        case 'task':
+          titleText = '📝 항목 추가';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">항목 이름</label>
+              <input type="text" class="work-modal-input" id="work-input-name" placeholder="예: 작업명 입력" autofocus>
+            </div>
+            <div class="work-modal-field">
+              <label class="work-modal-label">진행 상태</label>
+              <div class="work-status-group">
+                <button type="button" class="work-status-option selected" data-status="not-started">미시작</button>
+                <button type="button" class="work-status-option" data-status="in-progress">진행중</button>
+                <button type="button" class="work-status-option" data-status="completed">완료</button>
+                <button type="button" class="work-status-option" data-status="blocked">보류</button>
+              </div>
+            </div>
+          `;
+          break;
+        case 'log':
+          titleText = '📋 진행 기록 추가';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">진행 내용</label>
+              <textarea class="work-modal-textarea" id="work-input-content" placeholder="오늘 진행한 내용을 입력하세요..." autofocus></textarea>
+            </div>
+          `;
+          break;
+        case 'deadline':
+          titleText = '📅 프로젝트 마감일';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">마감일</label>
+              <input type="date" class="work-modal-input" id="work-input-deadline" value="${project?.deadline || ''}">
+            </div>
+          `;
+          break;
+        case 'stage-deadline':
+          titleText = '📅 단계 마감일';
+          const stageDeadline = project?.stages[stageIdx]?.deadline || '';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">${appState.workProjectStages[stageIdx]} 마감일</label>
+              <input type="date" class="work-modal-input" id="work-input-deadline" value="${stageDeadline}">
+            </div>
+          `;
+          break;
+        case 'participant':
+          titleText = '👥 참여자 목표 설정';
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">목표 참여자 수</label>
+              <input type="number" class="work-modal-input" id="work-input-goal" placeholder="예: 10" min="1" value="${project?.participantGoal || ''}">
+            </div>
+            <div class="work-modal-field">
+              <label class="work-modal-label">현재 참여자 수</label>
+              <input type="number" class="work-modal-input" id="work-input-count" placeholder="예: 0" min="0" value="${project?.participantCount || 0}">
+            </div>
+          `;
+          break;
+        case 'template-select':
+          titleText = '📋 템플릿 선택';
+          bodyHtml = `
+            <div class="work-modal-field">
+              ${appState.workTemplates.length > 0 ? `
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  ${appState.workTemplates.map(t => `
+                    <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px;">
+                      <div style="font-weight: 500;">${t.name}</div>
+                      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        ${t.stages.filter(s => s.subcategories.length > 0).length}개 단계에 항목 포함
+                      </div>
+                    </button>
+                  `).join('')}
+                </div>
+              ` : '<div style="color: var(--text-muted);">저장된 템플릿이 없습니다</div>'}
+            </div>
+          `;
+          break;
+      }
+
+      title.textContent = titleText;
+      body.innerHTML = bodyHtml;
+      modal.classList.add('show');
+
+      // 상태 선택 버튼 이벤트
+      if (type === 'task') {
+        body.querySelectorAll('.work-status-option').forEach(btn => {
+          btn.onclick = () => {
+            body.querySelectorAll('.work-status-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+          };
+        });
+      }
+
+      // 템플릿 선택 이벤트
+      if (type === 'template-select') {
+        body.querySelectorAll('.template-option').forEach(btn => {
+          btn.onclick = () => {
+            body.querySelectorAll('.template-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+          };
+        });
+      }
+
+      // 첫 입력 필드에 포커스
+      setTimeout(() => {
+        const input = body.querySelector('input, textarea');
+        if (input) input.focus();
+      }, 100);
+    }
+    window.showWorkModal = showWorkModal;
+
+    /**
+     * 모달 닫기
+     */
+    function closeWorkModal() {
+      document.getElementById('work-input-modal').classList.remove('show');
+      workModalState = { type: null, projectId: null, stageIdx: null, subcategoryIdx: null, taskIdx: null };
+    }
+    window.closeWorkModal = closeWorkModal;
+
+    /**
+     * 모달 확인
+     */
+    function confirmWorkModal() {
+      const { type, projectId, stageIdx, subcategoryIdx, taskIdx } = workModalState;
+
+      switch(type) {
+        case 'project': {
+          const name = document.getElementById('work-input-name').value.trim();
+          if (!name) { showToast('이름을 입력하세요', 'error'); return; }
+          const deadline = document.getElementById('work-input-deadline')?.value || null;
+          addWorkProject(name, deadline);
+          break;
+        }
+        case 'subcategory': {
+          const name = document.getElementById('work-input-name').value.trim();
+          if (!name) { showToast('이름을 입력하세요', 'error'); return; }
+          addSubcategory(projectId, stageIdx, name);
+          break;
+        }
+        case 'task': {
+          const name = document.getElementById('work-input-name').value.trim();
+          if (!name) { showToast('이름을 입력하세요', 'error'); return; }
+          const status = document.querySelector('.work-status-option.selected')?.dataset.status || 'not-started';
+          addWorkTask(projectId, stageIdx, subcategoryIdx, name, status);
+          break;
+        }
+        case 'log': {
+          const content = document.getElementById('work-input-content').value.trim();
+          if (!content) { showToast('내용을 입력하세요', 'error'); return; }
+          addWorkLog(projectId, stageIdx, subcategoryIdx, taskIdx, content);
+          break;
+        }
+        case 'deadline': {
+          const deadline = document.getElementById('work-input-deadline').value || null;
+          const project = appState.workProjects.find(p => p.id === projectId);
+          if (project) {
+            project.deadline = deadline;
+            project.updatedAt = new Date().toISOString();
+            saveWorkProjects();
+            renderStatic();
+            showToast('마감일 설정됨', 'success');
+          }
+          break;
+        }
+        case 'stage-deadline': {
+          const deadline = document.getElementById('work-input-deadline').value || null;
+          const project = appState.workProjects.find(p => p.id === projectId);
+          if (project) {
+            project.stages[stageIdx].deadline = deadline;
+            project.updatedAt = new Date().toISOString();
+            saveWorkProjects();
+            renderStatic();
+            showToast('단계 마감일 설정됨', 'success');
+          }
+          break;
+        }
+        case 'participant': {
+          const goal = parseInt(document.getElementById('work-input-goal').value) || null;
+          const count = parseInt(document.getElementById('work-input-count').value) || 0;
+          const project = appState.workProjects.find(p => p.id === projectId);
+          if (project) {
+            project.participantGoal = goal;
+            project.participantCount = count;
+            project.updatedAt = new Date().toISOString();
+            saveWorkProjects();
+            renderStatic();
+            showToast('참여자 목표 설정됨', 'success');
+          }
+          break;
+        }
+        case 'template-select': {
+          const selected = document.querySelector('.template-option.selected');
+          if (selected) {
+            const templateId = parseInt(selected.dataset.templateId);
+            applyTemplate(templateId);
+          }
+          break;
+        }
+      }
+
+      closeWorkModal();
+    }
+    window.confirmWorkModal = confirmWorkModal;
+
+    /**
+     * 템플릿 적용
+     */
+    function applyTemplate(templateId) {
+      const template = appState.workTemplates.find(t => t.id === templateId);
+      if (!template) return;
+
+      const projectName = prompt('프로젝트 이름을 입력하세요:', template.name.replace(' 템플릿', ''));
+      if (!projectName) return;
+
+      const newProject = {
+        id: Date.now(),
+        name: projectName,
+        currentStage: 0,
+        stages: appState.workProjectStages.map((_, idx) => ({
+          completed: false,
+          subcategories: template.stages[idx]?.subcategories?.map(sub => ({
+            id: Date.now() + Math.random() * 1000,
+            name: sub.name,
+            tasks: sub.tasks.map(t => ({
+              id: Date.now() + Math.random() * 1000,
+              title: t.title,
+              status: 'not-started',
+              logs: []
+            }))
+          })) || []
+        })),
+        participantGoal: template.participantGoal,
+        participantCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      appState.workProjects.push(newProject);
+      appState.activeWorkProject = newProject.id;
+      saveWorkProjects();
+      renderStatic();
+      showToast(`"${projectName}" 생성됨`, 'success');
+    }
+
+    /**
+     * 프로젝트 추가
+     */
+    function addWorkProject(name, deadline = null) {
+      const newProject = {
+        id: Date.now(),
+        name: name,
+        currentStage: 0,
+        deadline: deadline,
+        stages: appState.workProjectStages.map(() => ({ completed: false, subcategories: [] })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      appState.workProjects.push(newProject);
+      appState.activeWorkProject = newProject.id;
+      appState.workView = 'detail'; // 새 프로젝트 생성 시 상세보기로
+      saveWorkProjects();
+      renderStatic();
+      showToast(`프로젝트 "${name}" 생성됨`, 'success');
+    }
+
+    /**
+     * 중분류 추가
+     */
+    function addSubcategory(projectId, stageIdx, name) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      if (!project.stages[stageIdx].subcategories) {
+        project.stages[stageIdx].subcategories = [];
+      }
+
+      project.stages[stageIdx].subcategories.push({
+        id: Date.now(),
+        name: name,
+        tasks: []
+      });
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(`"${name}" 추가됨`, 'success');
+    }
+
+    /**
+     * 중분류 삭제
+     */
+    function deleteSubcategory(projectId, stageIdx, subcatIdx) {
+      if (!confirm('이 중분류와 하위 항목을 모두 삭제하시겠습니까?')) return;
+
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.stages[stageIdx].subcategories.splice(subcatIdx, 1);
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast('삭제됨', 'success');
+    }
+    window.deleteSubcategory = deleteSubcategory;
+
+    /**
+     * 프로젝트 단계 이동
+     */
+    function moveWorkProjectStage(projectId, direction) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const newStage = project.currentStage + direction;
+      if (newStage >= 0 && newStage < appState.workProjectStages.length) {
+        project.currentStage = newStage;
+        project.updatedAt = new Date().toISOString();
+        saveWorkProjects();
+        renderStatic();
+        showToast(`${appState.workProjectStages[newStage]} 단계로 이동`, 'success');
+      }
+    }
+    window.moveWorkProjectStage = moveWorkProjectStage;
+
+    /**
+     * 프로젝트 삭제
+     */
+    function deleteWorkProject(projectId) {
+      if (!confirm('이 프로젝트를 삭제하시겠습니까?')) return;
+
+      appState.workProjects = appState.workProjects.filter(p => p.id !== projectId);
+      if (appState.activeWorkProject === projectId) {
+        appState.activeWorkProject = appState.workProjects.length > 0 ? appState.workProjects[0].id : null;
+      }
+      saveWorkProjects();
+      renderStatic();
+      showToast('프로젝트 삭제됨', 'success');
+    }
+    window.deleteWorkProject = deleteWorkProject;
+
+    /**
+     * 작업 항목 추가
+     */
+    function addWorkTask(projectId, stageIdx, subcatIdx, title, status) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.stages[stageIdx].subcategories[subcatIdx].tasks.push({
+        id: Date.now(),
+        title: title,
+        status: status,
+        logs: []
+      });
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast('항목 추가됨', 'success');
+    }
+
+    /**
+     * 작업 상태 순환
+     */
+    function cycleWorkTaskStatus(projectId, stageIdx, subcatIdx, taskIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const task = project.stages[stageIdx].subcategories[subcatIdx].tasks[taskIdx];
+      const statuses = ['not-started', 'in-progress', 'completed', 'blocked'];
+      const currentIdx = statuses.indexOf(task.status);
+      task.status = statuses[(currentIdx + 1) % statuses.length];
+
+      // 완료로 변경 시 자동 로그
+      if (task.status === 'completed') {
+        const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+        task.logs.push({ date: today, content: '✓ 완료' });
+      }
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+    }
+    window.cycleWorkTaskStatus = cycleWorkTaskStatus;
+
+    /**
+     * 작업 삭제
+     */
+    function deleteWorkTask(projectId, stageIdx, subcatIdx, taskIdx) {
+      if (!confirm('이 항목을 삭제하시겠습니까?')) return;
+
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.stages[stageIdx].subcategories[subcatIdx].tasks.splice(taskIdx, 1);
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+    }
+    window.deleteWorkTask = deleteWorkTask;
+
+    /**
+     * 진행 로그 추가
+     */
+    function addWorkLog(projectId, stageIdx, subcatIdx, taskIdx, content) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const task = project.stages[stageIdx].subcategories[subcatIdx].tasks[taskIdx];
+      const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+
+      task.logs.push({
+        date: today,
+        content: content
+      });
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast('기록 추가됨', 'success');
+    }
+
+    /**
+     * 로그 삭제
+     */
+    function deleteWorkLog(projectId, stageIdx, subcatIdx, taskIdx, logIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.stages[stageIdx].subcategories[subcatIdx].tasks[taskIdx].logs.splice(logIdx, 1);
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+    }
+    window.deleteWorkLog = deleteWorkLog;
+
+    /**
+     * 노션/슬랙용 복사
+     */
+    function copyWorkProjectToClipboard(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      let text = `📋 ${project.name}\n`;
+      text += `현재 단계: ${appState.workProjectStages[project.currentStage]}\n`;
+      text += `─────────────────\n\n`;
+
+      project.stages.forEach((stage, idx) => {
+        const hasContent = stage.subcategories && stage.subcategories.some(s => s.tasks.length > 0);
+        if (!hasContent) return;
+
+        const stageName = appState.workProjectStages[idx];
+        const isCurrent = idx === project.currentStage;
+        text += `${isCurrent ? '▶ ' : ''}${idx + 1}. ${stageName}\n`;
+
+        stage.subcategories.forEach(subcat => {
+          if (subcat.tasks.length === 0) return;
+          text += `\n  📁 ${subcat.name}\n`;
+
+          subcat.tasks.forEach(task => {
+            const statusIcon = task.status === 'completed' ? '✓' : task.status === 'in-progress' ? '→' : task.status === 'blocked' ? '⏸' : '○';
+            text += `    ${statusIcon} ${task.title}\n`;
+            task.logs.forEach(log => {
+              text += `       └ ${log.date}: ${log.content}\n`;
+            });
+          });
+        });
+        text += '\n';
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('클립보드에 복사됨!', 'success');
+      }).catch(err => {
+        console.error('복사 실패:', err);
+        showToast('복사 실패', 'error');
+      });
+    }
+    window.copyWorkProjectToClipboard = copyWorkProjectToClipboard;
+
+    /**
+     * 프로젝트 저장
+     */
+    function saveWorkProjects() {
+      localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+    }
+
+    /**
+     * 프로젝트 불러오기
+     */
+    function loadWorkProjects() {
+      const saved = localStorage.getItem('navigator-work-projects');
+      if (saved) {
+        try {
+          appState.workProjects = JSON.parse(saved);
+          // 첫 프로젝트 자동 선택
+          if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
+            appState.activeWorkProject = appState.workProjects[0].id;
+          }
+        } catch (e) {
+          console.error('프로젝트 로드 실패:', e);
+          appState.workProjects = [];
+        }
+      }
+    }
 
     // ============================================
     // PWA 및 알림 기능
