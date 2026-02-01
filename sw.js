@@ -1,5 +1,5 @@
-// Navigator Service Worker v5.8
-const CACHE_NAME = 'navigator-v5-8';
+// Navigator Service Worker v6.2
+const CACHE_NAME = 'navigator-v6-2';
 const urlsToCache = [
   './navigator-v5.html',
   './manifest.json'
@@ -29,28 +29,24 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 네트워크 요청 시 캐시 우선, 없으면 네트워크
+// 네트워크 우선 전략: 항상 최신 파일 가져오기
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request).then(response => {
-          // 유효한 응답만 캐시
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+        // 유효한 응답만 캐시 업데이트
+        if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME)
             .then(cache => cache.put(event.request, responseToCache));
-          return response;
-        });
+        }
+        return response;
       })
       .catch(() => {
-        // 오프라인이고 캐시도 없으면 기본 페이지 반환
-        return caches.match('./navigator-v5.html');
+        // 오프라인일 때만 캐시 사용
+        return caches.match(event.request).then(cachedResponse => {
+          return cachedResponse || caches.match('./navigator-v5.html');
+        });
       })
   );
 });
