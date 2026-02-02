@@ -1083,6 +1083,169 @@
     .progress-fill.일상 { background: #48bb78; }
     .progress-fill.가족 { background: #f6ad55; }
 
+    /* 수익 대시보드 */
+    .revenue-dashboard {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.1) 100%);
+    }
+
+    .revenue-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .revenue-card {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .revenue-card.total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .revenue-card.month {
+      border: 1px solid var(--border-color);
+    }
+
+    .revenue-card-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .revenue-card.total .revenue-card-label {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .revenue-card-value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .revenue-card-sub {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .revenue-chart-section {
+      margin-bottom: 20px;
+    }
+
+    .revenue-chart-title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .revenue-bar-chart {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 120px;
+      gap: 8px;
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .revenue-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .revenue-bar-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .revenue-bar {
+      width: 100%;
+      max-width: 40px;
+      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px 4px 0 0;
+      min-height: 5px;
+      position: relative;
+      transition: height 0.3s;
+    }
+
+    .revenue-bar-value {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .revenue-bar-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .revenue-category-section {
+      margin-top: 16px;
+    }
+
+    .revenue-category-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .revenue-category-item {
+      background: var(--bg-tertiary);
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .revenue-category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .revenue-category-amount {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .revenue-category-bar {
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .revenue-category-bar-fill {
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    .revenue-category-bar-fill.본업 { background: #667eea; }
+    .revenue-category-bar-fill.부업 { background: #f093fb; }
+    .revenue-category-bar-fill.일상 { background: #48bb78; }
+    .revenue-category-bar-fill.가족 { background: #f6ad55; }
+
+    .revenue-category-percent {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
     .urgent-list {
       display: grid;
       gap: 10px;
@@ -7322,6 +7485,76 @@
     }
 
     /**
+     * 수익 통계 계산 (월별/카테고리별)
+     */
+    function getRevenueStats() {
+      const completedTasks = appState.tasks.filter(t => t.completed && t.expectedRevenue);
+
+      // 월별 수익 (최근 6개월)
+      const monthlyRevenue = {};
+      const now = new Date();
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthlyRevenue[key] = { month: key, label: `${d.getMonth() + 1}월`, revenue: 0, count: 0 };
+      }
+
+      // 카테고리별 수익
+      const categoryRevenue = { '부업': 0, '본업': 0, '일상': 0, '가족': 0 };
+
+      // 총 수익
+      let totalRevenue = 0;
+      let thisMonthRevenue = 0;
+      const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+      completedTasks.forEach(task => {
+        const revenue = parseInt(task.expectedRevenue) || 0;
+        totalRevenue += revenue;
+
+        // 완료일 기준 월별 집계
+        const completedDate = task.completedAt ? new Date(task.completedAt) : new Date();
+        const monthKey = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}`;
+
+        if (monthlyRevenue[monthKey]) {
+          monthlyRevenue[monthKey].revenue += revenue;
+          monthlyRevenue[monthKey].count++;
+        }
+
+        if (monthKey === thisMonthKey) {
+          thisMonthRevenue += revenue;
+        }
+
+        // 카테고리별 집계
+        if (categoryRevenue.hasOwnProperty(task.category)) {
+          categoryRevenue[task.category] += revenue;
+        }
+      });
+
+      // 월별 데이터를 배열로 변환
+      const monthlyData = Object.values(monthlyRevenue);
+      const maxMonthlyRevenue = Math.max(...monthlyData.map(m => m.revenue), 1);
+
+      // 카테고리별 데이터를 배열로 변환
+      const categoryData = Object.entries(categoryRevenue)
+        .filter(([_, v]) => v > 0)
+        .map(([category, revenue]) => ({
+          category,
+          revenue,
+          percentage: totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 100) : 0
+        }))
+        .sort((a, b) => b.revenue - a.revenue);
+
+      return {
+        totalRevenue,
+        thisMonthRevenue,
+        monthlyData,
+        maxMonthlyRevenue,
+        categoryData,
+        taskCount: completedTasks.length
+      };
+    }
+
+    /**
      * 긴급 작업 목록 반환
      */
     function getUrgentTasks() {
@@ -8038,19 +8271,57 @@
     window.addFromTemplate = addFromTemplate;
 
     /**
-     * 빠른 추가 (제목만 입력)
+     * 카테고리 프리픽스 파싱 (#부업 제목 → 카테고리: 부업, 제목: 제목)
+     */
+    function parseCategoryPrefix(input) {
+      const categoryMap = {
+        '#부업': '부업',
+        '#본업': '본업',
+        '#일상': '일상',
+        '#가족': '가족',
+        '#크립토': '부업',
+        '#에어드랍': '부업',
+        '#이벤트': '부업'
+      };
+
+      let category = '부업';  // 기본값
+      let title = input.trim();
+
+      // 해시태그 패턴 매칭 (대소문자 무시)
+      for (const [prefix, cat] of Object.entries(categoryMap)) {
+        if (title.toLowerCase().startsWith(prefix.toLowerCase())) {
+          category = cat;
+          title = title.substring(prefix.length).trim();
+          break;
+        }
+      }
+
+      return { category, title };
+    }
+
+    /**
+     * 빠른 추가 (제목만 입력) - 카테고리 프리픽스 지원
+     * 사용법: "#부업 제목" 또는 "#본업 제목" 형식
      */
     function quickAdd() {
-      const title = appState.quickAddValue.trim();
+      const rawInput = appState.quickAddValue.trim();
+      if (!rawInput) {
+        showToast('제목을 입력하세요', 'error');
+        return;
+      }
+
+      // 카테고리 프리픽스 파싱
+      const { category, title } = parseCategoryPrefix(rawInput);
+
       if (!title) {
         showToast('제목을 입력하세요', 'error');
         return;
       }
-      
+
       appState.tasks.push({
         id: Date.now(),
         title: title,
-        category: '부업',
+        category: category,
         deadline: '',
         estimatedTime: 10,
         link: '',
@@ -8058,15 +8329,15 @@
         completed: false,
         createdAt: new Date().toISOString()
       });
-      
+
       appState.quickAddValue = '';
       const input = document.getElementById('quick-add-input');
       if (input) input.value = '';
-      
+
       saveState();
       renderStatic();
-      showToast('작업이 추가되었습니다', 'success');
-      
+      showToast(`[${category}] 작업이 추가되었습니다`, 'success');
+
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
@@ -10354,7 +10625,7 @@
                     type="text"
                     id="quick-add-input"
                     class="quick-add-input"
-                    placeholder="+ 새 작업 추가..."
+                    placeholder="+ 새 작업 (#부업 #본업 #일상)"
                     value="${appState.quickAddValue}"
                     onkeypress="if(event.key==='Enter') quickAdd()"
                   >
@@ -11034,6 +11305,70 @@
                 </div>
               </div>
             </div>
+
+            ${(() => {
+              const revenueStats = getRevenueStats();
+              if (revenueStats.totalRevenue === 0) return '';
+
+              const formatRevenue = (amount) => {
+                if (amount >= 10000) return Math.round(amount / 10000) + '만';
+                if (amount >= 1000) return Math.round(amount / 1000) + '천';
+                return amount.toLocaleString();
+              };
+
+              return \`
+                <div class="dashboard-section revenue-dashboard">
+                  <div class="dashboard-title">💰 수익 대시보드</div>
+                  <div class="revenue-summary">
+                    <div class="revenue-card total">
+                      <div class="revenue-card-label">총 수익</div>
+                      <div class="revenue-card-value">\${revenueStats.totalRevenue.toLocaleString()}원</div>
+                      <div class="revenue-card-sub">\${revenueStats.taskCount}개 완료</div>
+                    </div>
+                    <div class="revenue-card month">
+                      <div class="revenue-card-label">이번 달</div>
+                      <div class="revenue-card-value">\${revenueStats.thisMonthRevenue.toLocaleString()}원</div>
+                    </div>
+                  </div>
+
+                  <div class="revenue-chart-section">
+                    <div class="revenue-chart-title">📊 월별 수익 추이</div>
+                    <div class="revenue-bar-chart">
+                      \${revenueStats.monthlyData.map(m => \`
+                        <div class="revenue-bar-item">
+                          <div class="revenue-bar-wrapper">
+                            <div class="revenue-bar" style="height: \${Math.max((m.revenue / revenueStats.maxMonthlyRevenue) * 100, 5)}%">
+                              \${m.revenue > 0 ? \`<span class="revenue-bar-value">\${formatRevenue(m.revenue)}</span>\` : ''}
+                            </div>
+                          </div>
+                          <div class="revenue-bar-label">\${m.label}</div>
+                        </div>
+                      \`).join('')}
+                    </div>
+                  </div>
+
+                  \${revenueStats.categoryData.length > 0 ? \`
+                    <div class="revenue-category-section">
+                      <div class="revenue-chart-title">📂 카테고리별 수익</div>
+                      <div class="revenue-category-list">
+                        \${revenueStats.categoryData.map(c => \`
+                          <div class="revenue-category-item">
+                            <div class="revenue-category-header">
+                              <span class="category \${c.category}">\${c.category}</span>
+                              <span class="revenue-category-amount">\${c.revenue.toLocaleString()}원</span>
+                            </div>
+                            <div class="revenue-category-bar">
+                              <div class="revenue-category-bar-fill \${c.category}" style="width: \${c.percentage}%"></div>
+                            </div>
+                            <div class="revenue-category-percent">\${c.percentage}%</div>
+                          </div>
+                        \`).join('')}
+                      </div>
+                    </div>
+                  \` : ''}
+                </div>
+              \`;
+            })()}
 
             ${(() => {
               const report = getWeeklyReport();
@@ -13103,7 +13438,32 @@
 
         const deadline = new Date(task.deadline);
         const hoursLeft = (deadline - now) / (1000 * 60 * 60);
-        const taskNotifyKey = `${task.id}-${Math.floor(hoursLeft)}`;
+        const daysLeft = hoursLeft / 24;
+        const taskNotifyKey = `${task.id}`;
+
+        // D-1 알림 (마감 하루 전, 오전에 한 번)
+        if (daysLeft > 0.5 && daysLeft <= 1.5 && !notifiedTasks.includes(taskNotifyKey + '-d1')) {
+          const currentHour = now.getHours();
+          if (currentHour >= 8 && currentHour < 12) {  // 오전 8시~12시 사이
+            showNotification(
+              '📅 내일이 마감일!',
+              `"${task.title}" - D-1`
+            );
+            notifiedTasks.push(taskNotifyKey + '-d1');
+          }
+        }
+
+        // D-Day 알림 (마감 당일, 오전에 한 번)
+        if (daysLeft > 0 && daysLeft <= 0.5 && !notifiedTasks.includes(taskNotifyKey + '-dday')) {
+          const currentHour = now.getHours();
+          if (currentHour >= 8 && currentHour < 12) {  // 오전 8시~12시 사이
+            showNotification(
+              '🔥 오늘이 마감일!',
+              `"${task.title}" - D-Day`
+            );
+            notifiedTasks.push(taskNotifyKey + '-dday');
+          }
+        }
 
         // 3시간 전 알림 (한 번만)
         if (hoursLeft > 0 && hoursLeft <= 3 && !notifiedTasks.includes(taskNotifyKey + '-3h')) {
@@ -13679,6 +14039,9 @@
 
     // Firebase 인증 상태 리스너
     window.addEventListener('firebase-ready', () => {
+      // URL import 파라미터 확인 (telegram-event-bot 연동)
+      checkUrlImport();
+
       window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
         if (user) {
           appState.user = {
