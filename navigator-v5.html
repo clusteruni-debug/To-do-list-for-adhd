@@ -8221,6 +8221,11 @@
 
       saveState();
 
+      // telegram-event-bot 연동: 연결된 이벤트 상태 업데이트
+      if (task.source && task.source.type === 'telegram-event') {
+        updateLinkedEventStatus(task, true);
+      }
+
       // 완료 애니메이션 표시
       showCompletionAnimation(task.title, appState.todayStats.streak);
 
@@ -8573,10 +8578,18 @@
      * 작업 완료 취소
      */
     function uncompleteTask(id) {
-      appState.tasks = appState.tasks.map(t => 
+      const task = appState.tasks.find(t => t.id === id);
+
+      appState.tasks = appState.tasks.map(t =>
         t.id === id ? { ...t, completed: false } : t
       );
       saveState();
+
+      // telegram-event-bot 연동: 연결된 이벤트 상태 업데이트
+      if (task && task.source && task.source.type === 'telegram-event') {
+        updateLinkedEventStatus(task, false);
+      }
+
       renderStatic();
       showToast('완료 취소', 'success');
     }
@@ -13484,6 +13497,185 @@
 
     // 주간 리뷰 체크 (일요일 저녁)
     setTimeout(() => checkWeeklyReview(), 3000);
+
+    // ============================================
+    // telegram-event-bot 연동: URL 파라미터 import
+    // ============================================
+    function checkUrlImport() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const importData = urlParams.get('import');
+
+      if (importData) {
+        try {
+          const decoded = decodeURIComponent(atob(importData));
+          const taskData = JSON.parse(decoded);
+          showImportConfirmModal(taskData);
+
+          // URL에서 파라미터 제거 (히스토리 정리)
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+          console.error('Import 파싱 오류:', error);
+          showToast('잘못된 import 데이터입니다', 'error');
+        }
+      }
+    }
+
+    function showImportConfirmModal(taskData) {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.id = 'import-confirm-modal';
+      modal.innerHTML = \`
+        <div class="modal" style="max-width: 500px;">
+          <div class="modal-header">
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+              <span>📥</span> 이벤트에서 Task 추가
+            </h2>
+            <button class="modal-close" onclick="closeImportModal()">&times;</button>
+          </div>
+          <div class="modal-body" style="padding: 20px;">
+            <div style="background: var(--bg-secondary); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+              <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">제목</div>
+              <div style="font-size: 1.1rem; font-weight: bold;">\${escapeHtml(taskData.title || '제목 없음')}</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">카테고리</div>
+                <div>\${escapeHtml(taskData.category || '부업')}</div>
+              </div>
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">마감일</div>
+                <div>\${taskData.deadline || '없음'}</div>
+              </div>
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">예상 시간</div>
+                <div>\${taskData.estimatedTime || 10}분</div>
+              </div>
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">보상</div>
+                <div style="color: var(--accent-green);">\${taskData.expectedRevenue || '-'}</div>
+              </div>
+            </div>
+
+            \${taskData.description ? \`
+              <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">설명</div>
+                <div style="font-size: 0.9rem; max-height: 100px; overflow-y: auto;">\${escapeHtml(taskData.description)}</div>
+              </div>
+            \` : ''}
+
+            \${taskData.link ? \`
+              <div style="margin-bottom: 15px;">
+                <a href="\${escapeHtml(taskData.link)}" target="_blank" style="color: var(--accent-blue); font-size: 0.9rem;">
+                  🔗 \${escapeHtml(taskData.link.substring(0, 50))}...
+                </a>
+              </div>
+            \` : ''}
+
+            <div style="background: rgba(74, 158, 255, 0.1); border-radius: 8px; padding: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+              📢 출처: \${escapeHtml(taskData.source?.channel || 'telegram-event-bot')}
+            </div>
+          </div>
+          <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-secondary" onclick="closeImportModal()">취소</button>
+            <button class="btn btn-primary" onclick="confirmImportTask()">✅ Task 추가</button>
+          </div>
+        </div>
+      \`;
+
+      // 데이터 저장
+      modal.dataset.taskData = JSON.stringify(taskData);
+      document.body.appendChild(modal);
+
+      // 애니메이션
+      requestAnimationFrame(() => modal.classList.add('active'));
+    }
+
+    function closeImportModal() {
+      const modal = document.getElementById('import-confirm-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      }
+    }
+
+    async function confirmImportTask() {
+      const modal = document.getElementById('import-confirm-modal');
+      if (!modal) return;
+
+      try {
+        const taskData = JSON.parse(modal.dataset.taskData);
+
+        // 새 Task 생성
+        const newTask = {
+          id: Date.now(),
+          title: taskData.title || '이벤트 참여',
+          category: taskData.category || '부업',
+          estimatedTime: taskData.estimatedTime || 10,
+          expectedRevenue: taskData.expectedRevenue || null,
+          deadline: taskData.deadline || null,
+          link: taskData.link || null,
+          completed: false,
+          pinned: false,
+          // telegram-event-bot 연동 정보
+          source: taskData.source || null,
+          createdAt: new Date().toISOString()
+        };
+
+        appState.tasks.unshift(newTask);
+        saveState();
+        renderTasks();
+
+        closeImportModal();
+        showToast('✅ Task가 추가되었습니다!', 'success');
+
+        // Firebase 동기화
+        if (appState.user) {
+          syncToCloud();
+        }
+      } catch (error) {
+        console.error('Task 추가 오류:', error);
+        showToast('Task 추가 실패', 'error');
+      }
+    }
+
+    // Task 완료 시 연결된 이벤트 상태 업데이트
+    async function updateLinkedEventStatus(task, participated) {
+      if (!task.source || task.source.type !== 'telegram-event' || !appState.user) return;
+
+      try {
+        const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
+        const docSnap = await window.firebaseGetDoc(userDoc);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const events = data.events || [];
+
+          // 연결된 이벤트 찾기
+          const eventIndex = events.findIndex(e => e.id === task.source.eventId);
+          if (eventIndex !== -1) {
+            events[eventIndex].participated = participated;
+
+            // Firestore 업데이트
+            await window.firebaseSetDoc(userDoc, {
+              ...data,
+              events: events
+            });
+
+            console.log(\`이벤트 \${task.source.eventId} 참여 상태 업데이트: \${participated}\`);
+          }
+        }
+      } catch (error) {
+        console.error('이벤트 상태 업데이트 실패:', error);
+      }
+    }
+
+    // 전역 함수 노출
+    window.closeImportModal = closeImportModal;
+    window.confirmImportTask = confirmImportTask;
+
+    // URL import 체크 (Firebase 로드 후 실행)
+    setTimeout(checkUrlImport, 500);
 
     // Firebase 인증 상태 리스너
     window.addEventListener('firebase-ready', () => {
