@@ -6,6 +6,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#667eea">
+  <!-- 보안 헤더 -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="manifest" href="./manifest.json">
   <title>Navigator - 생존형 할일 관리</title>
 
@@ -19,6 +23,17 @@
     import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     // Firebase 설정
+    // ⚠️ 보안 참고: Firebase API 키는 클라이언트 측에서 사용되도록 설계되었습니다.
+    // 실제 보안은 Firebase Console의 Firestore Security Rules에서 관리됩니다.
+    // 권장 보안 규칙 (Firebase Console > Firestore > Rules):
+    // rules_version = '2';
+    // service cloud.firestore {
+    //   match /databases/{database}/documents {
+    //     match /users/{userId} {
+    //       allow read, write: if request.auth != null && request.auth.uid == userId;
+    //     }
+    //   }
+    // }
     const firebaseConfig = {
       apiKey: "AIzaSyDryb8MH0Mwkh1yP8yPCjdTbEvjr97mmmE",
       authDomain: "navigator-todo.firebaseapp.com",
@@ -6548,6 +6563,73 @@
 
   <script>
     // ============================================
+    // 🔐 보안 유틸리티
+    // ============================================
+
+    /**
+     * XSS 방지: HTML 이스케이핑
+     */
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    /**
+     * localStorage에서 JSON을 안전하게 파싱
+     */
+    function safeParseJSON(key, defaultValue) {
+      try {
+        const data = localStorage.getItem(key);
+        if (!data) return defaultValue;
+        const parsed = JSON.parse(data);
+        return parsed !== null ? parsed : defaultValue;
+      } catch (e) {
+        console.warn(`localStorage 파싱 실패 (${key}):`, e.message);
+        return defaultValue;
+      }
+    }
+
+    /**
+     * 작업(Task) 데이터 검증
+     */
+    function validateTask(task) {
+      if (!task || typeof task !== 'object') return null;
+
+      // 필수 필드 검증
+      if (typeof task.id !== 'number' && typeof task.id !== 'string') return null;
+      if (typeof task.title !== 'string' || task.title.trim().length === 0) return null;
+
+      // 안전한 객체 생성 (허용된 필드만)
+      return {
+        id: task.id,
+        title: String(task.title).trim().substring(0, 500),
+        category: ['본업', '부업', '일상', '공부', '크립토'].includes(task.category) ? task.category : '일상',
+        completed: Boolean(task.completed),
+        completedAt: task.completedAt || null,
+        deadline: typeof task.deadline === 'string' ? task.deadline : '',
+        estimatedTime: Math.min(Math.max(0, Number(task.estimatedTime) || 0), 1440),
+        actualTime: Math.min(Math.max(0, Number(task.actualTime) || 0), 1440),
+        expectedRevenue: task.expectedRevenue || '',
+        link: typeof task.link === 'string' ? task.link.substring(0, 2000) : '',
+        tags: Array.isArray(task.tags) ? task.tags.filter(t => typeof t === 'string').slice(0, 20) : [],
+        repeatType: ['none', 'daily', 'weekdays', 'weekends', 'weekly', 'custom', 'monthly'].includes(task.repeatType) ? task.repeatType : 'none',
+        repeatDays: Array.isArray(task.repeatDays) ? task.repeatDays.filter(d => Number.isInteger(d) && d >= 0 && d <= 6) : [],
+        createdAt: task.createdAt || new Date().toISOString(),
+        priority: typeof task.priority === 'number' ? Math.min(Math.max(0, task.priority), 100) : 0
+      };
+    }
+
+    /**
+     * 작업 배열 검증
+     */
+    function validateTasks(tasks) {
+      if (!Array.isArray(tasks)) return [];
+      return tasks.map(validateTask).filter(t => t !== null);
+    }
+
+    // ============================================
     // 앱 상태 관리
     // ============================================
     const appState = {
@@ -6676,13 +6758,16 @@
         const savedTasks = localStorage.getItem('navigator-tasks');
         const isFirstVisit = !savedTasks && !localStorage.getItem('navigator-visited');
 
+        // 🔐 작업 데이터 검증 후 로드
         if (savedTasks) {
-          appState.tasks = JSON.parse(savedTasks);
+          const parsedTasks = safeParseJSON('navigator-tasks', []);
+          appState.tasks = validateTasks(parsedTasks);
         }
 
+        // 🔐 boolean 검증
         const savedShuttle = localStorage.getItem('navigator-shuttle');
         if (savedShuttle) {
-          appState.shuttleSuccess = JSON.parse(savedShuttle);
+          appState.shuttleSuccess = Boolean(safeParseJSON('navigator-shuttle', false));
         }
 
         // 테마 로드
