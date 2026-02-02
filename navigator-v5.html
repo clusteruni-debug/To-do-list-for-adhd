@@ -319,6 +319,54 @@
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
 
+    /* 더보기 드롭다운 메뉴 */
+    .tab-more-dropdown {
+      position: relative;
+    }
+
+    .more-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px var(--shadow-color);
+      z-index: 200;
+      min-width: 120px;
+      overflow: hidden;
+    }
+
+    .more-menu.show {
+      display: block;
+    }
+
+    .more-menu-item {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all var(--transition-fast);
+    }
+
+    .more-menu-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .more-menu-item.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: #667eea;
+    }
+
     .tab-content {
       display: none;
     }
@@ -1118,6 +1166,41 @@
       background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.1) 100%);
     }
 
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-header .dashboard-title {
+      margin-bottom: 0;
+    }
+
+    .btn-export-asset {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .btn-export-asset:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+
+    .btn-export-asset:active {
+      transform: translateY(0);
+    }
+
     .revenue-summary {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1630,48 +1713,69 @@
       font-weight: 500;
     }
     
+    /* 버튼 시스템 - 통일된 스타일 */
     .btn {
-      padding: 16px 28px;
+      padding: var(--space-2) var(--space-3);
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
-      margin-bottom: 12px;
-      transition: transform 0.2s, opacity 0.2s;
+      margin-bottom: var(--space-2);
+      transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
       user-select: none;
       letter-spacing: -0.01em;
     }
-    
+
     .btn:active {
       transform: scale(0.98);
     }
-    
+
     .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--accent-primary) 0%, #764ba2 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: var(--shadow-md);
     }
 
     .btn-primary:hover {
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+      box-shadow: var(--shadow-lg);
       transform: translateY(-1px);
     }
 
     .btn-success {
-      background: #48bb78;
+      background: var(--accent-success);
       color: white;
-      box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+      box-shadow: var(--shadow-sm);
     }
 
     .btn-success:hover {
-      background: #38a169;
+      filter: brightness(0.9);
+    }
+
+    .btn-warning {
+      background: var(--accent-warning);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-warning:hover {
+      filter: brightness(0.9);
+    }
+
+    .btn-danger {
+      background: var(--accent-danger);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-danger:hover {
+      filter: brightness(0.9);
     }
 
     .btn-secondary {
       background: var(--bg-tertiary);
-      color: white;
+      color: var(--text-primary);
       border: 1px solid var(--border-color);
     }
 
@@ -1949,44 +2053,54 @@
     }
     
     .btn-small {
-      padding: 8px 14px;
+      padding: var(--space-1) 14px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 13px;
       cursor: pointer;
       background: var(--bg-tertiary);
-      color: white;
-      transition: transform 0.2s;
+      color: var(--text-primary);
+      transition: transform var(--transition-fast), filter var(--transition-fast);
       font-weight: 500;
       letter-spacing: -0.01em;
     }
-    
+
+    .btn-small:hover {
+      filter: brightness(1.1);
+    }
+
     .btn-small:active {
       transform: scale(0.95);
     }
-    
+
     .btn-small.delete {
-      background: #f5576c;
+      background: var(--accent-danger);
+      color: white;
     }
-    
+
     .btn-small.go {
-      background: #667eea;
+      background: var(--accent-primary);
+      color: white;
     }
-    
+
     .btn-small.complete {
-      background: #48bb78;
+      background: var(--accent-success);
+      color: white;
     }
 
     .btn-small.uncomplete {
-      background: #ff9500;
+      background: var(--accent-warning);
+      color: white;
     }
 
     .btn-small.edit {
-      background: #667eea;
+      background: var(--accent-primary);
+      color: white;
     }
 
     .btn-small.copy {
       background: #805ad5;
+      color: white;
     }
 
     .hidden-tasks {
@@ -6752,27 +6866,39 @@
     </div>
     <div class="shortcut-item">
       <span class="shortcut-desc">새 작업 추가</span>
-      <span class="shortcut-key">Ctrl+N</span>
+      <span class="shortcut-key">N</span>
     </div>
     <div class="shortcut-item">
       <span class="shortcut-desc">검색</span>
       <span class="shortcut-key">Ctrl+F</span>
     </div>
     <div class="shortcut-item">
-      <span class="shortcut-desc">Next Action 완료</span>
+      <span class="shortcut-desc">첫 Task 완료</span>
       <span class="shortcut-key">Ctrl+D</span>
     </div>
     <div class="shortcut-item">
-      <span class="shortcut-desc">실행 탭</span>
+      <span class="shortcut-desc">액션 탭</span>
       <span class="shortcut-key">1</span>
     </div>
     <div class="shortcut-item">
-      <span class="shortcut-desc">일정 탭</span>
+      <span class="shortcut-desc">업무 탭</span>
       <span class="shortcut-key">2</span>
     </div>
     <div class="shortcut-item">
-      <span class="shortcut-desc">대시보드 탭</span>
+      <span class="shortcut-desc">이벤트 탭</span>
       <span class="shortcut-key">3</span>
+    </div>
+    <div class="shortcut-item">
+      <span class="shortcut-desc">대시보드 탭</span>
+      <span class="shortcut-key">4</span>
+    </div>
+    <div class="shortcut-item">
+      <span class="shortcut-desc">전체 탭</span>
+      <span class="shortcut-key">5</span>
+    </div>
+    <div class="shortcut-item">
+      <span class="shortcut-desc">기록 탭</span>
+      <span class="shortcut-key">6</span>
     </div>
     <div class="shortcut-item">
       <span class="shortcut-desc">셔틀 토글</span>
@@ -7613,6 +7739,78 @@
         taskCount: completedTasks.length
       };
     }
+
+    /**
+     * 자산관리 앱으로 수익 내보내기
+     * 완료된 부업 Task의 수익을 자산관리 transaction 형식으로 변환
+     */
+    function exportToAssetManager() {
+      const completedTasks = appState.tasks.filter(t =>
+        t.completed &&
+        t.expectedRevenue &&
+        parseInt(t.expectedRevenue) > 0
+      );
+
+      if (completedTasks.length === 0) {
+        showToast('내보낼 수익 데이터가 없습니다', 'warning');
+        return;
+      }
+
+      // 자산관리 transaction 형식으로 변환
+      const transactions = completedTasks.map(task => {
+        const completedDate = task.completedAt ? new Date(task.completedAt) : new Date();
+        return {
+          type: 'income',
+          category: task.category === '부업' ? '에어드랍' : (task.category === '본업' ? '급여' : '기타수입'),
+          amount: parseInt(task.expectedRevenue),
+          title: task.title,
+          description: `[Navigator] ${task.category} - ${task.title}`,
+          date: completedDate.toISOString().split('T')[0],
+          tags: ['navigator', task.category.toLowerCase()],
+          source: 'navigator'
+        };
+      });
+
+      // JSON으로 변환
+      const exportData = {
+        source: 'navigator',
+        exportedAt: new Date().toISOString(),
+        summary: {
+          totalRevenue: transactions.reduce((sum, t) => sum + t.amount, 0),
+          taskCount: transactions.length
+        },
+        transactions: transactions
+      };
+
+      // 클립보드에 복사
+      const jsonStr = JSON.stringify(exportData, null, 2);
+
+      navigator.clipboard.writeText(jsonStr).then(() => {
+        showToast(`${transactions.length}개 수익 데이터가 클립보드에 복사되었습니다.\n자산관리 앱에서 가져오기 해주세요.`, 'success');
+      }).catch(() => {
+        // 클립보드 접근 실패 시 다운로드 제공
+        downloadAssetExport(exportData);
+      });
+    }
+
+    /**
+     * 수익 데이터 JSON 다운로드
+     */
+    function downloadAssetExport(data) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `navigator-revenue-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('수익 데이터 파일이 다운로드되었습니다', 'success');
+    }
+
+    // 전역 함수로 노출
+    window.exportToAssetManager = exportToAssetManager;
 
     /**
      * 긴급 작업 목록 반환
@@ -10479,7 +10677,7 @@
             </div>
           </div>
 
-          <!-- 탭 네비게이션 -->
+          <!-- 탭 네비게이션 (5개 + 더보기) -->
           <div class="tab-nav">
             <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')">
               🎯 오늘
@@ -10493,12 +10691,19 @@
             <button class="tab-btn ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
               📊 통계
             </button>
-            <button class="tab-btn ${appState.currentTab === 'all' ? 'active' : ''}" onclick="switchTab('all')">
-              📋 전체
-            </button>
-            <button class="tab-btn ${appState.currentTab === 'history' ? 'active' : ''}" onclick="switchTab('history')">
-              📅 히스토리
-            </button>
+            <div class="tab-more-dropdown">
+              <button class="tab-btn ${['all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu()">
+                📋 더보기 ▾
+              </button>
+              <div id="more-menu" class="more-menu">
+                <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="switchTab('all'); toggleMoreMenu();">
+                  📋 전체
+                </button>
+                <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="switchTab('history'); toggleMoreMenu();">
+                  📅 히스토리
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- 실행 탭 -->
@@ -11378,7 +11583,12 @@
 
               return \`
                 <div class="dashboard-section revenue-dashboard">
-                  <div class="dashboard-title">💰 수익 대시보드</div>
+                  <div class="dashboard-header">
+                    <div class="dashboard-title">💰 수익 대시보드</div>
+                    <button class="btn-export-asset" onclick="exportToAssetManager()" title="자산관리로 내보내기">
+                      📤 자산관리
+                    </button>
+                  </div>
                   <div class="revenue-summary">
                     <div class="revenue-card total">
                       <div class="revenue-card-label">총 수익</div>
@@ -13741,6 +13951,27 @@
     });
 
     window.toggleShortcutsHelp = toggleShortcutsHelp;
+
+    /**
+     * 더보기 메뉴 토글
+     */
+    function toggleMoreMenu() {
+      const moreMenu = document.getElementById('more-menu');
+      if (moreMenu) {
+        moreMenu.classList.toggle('show');
+      }
+    }
+
+    // 외부 클릭 시 더보기 메뉴 닫기
+    document.addEventListener('click', (e) => {
+      const dropdown = document.querySelector('.tab-more-dropdown');
+      const moreMenu = document.getElementById('more-menu');
+      if (dropdown && moreMenu && !dropdown.contains(e.target)) {
+        moreMenu.classList.remove('show');
+      }
+    });
+
+    window.toggleMoreMenu = toggleMoreMenu;
 
     // ============================================
     // 포모도로 타이머
