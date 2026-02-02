@@ -72,21 +72,51 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* 다크 테마 (기본) */
+    /* 다크 테마 (기본) - 부드러운 톤 */
     :root {
-      --bg-primary: #0a0a0a;
-      --bg-secondary: #151515;
-      --bg-tertiary: #1f1f1f;
-      --bg-card: #151515;
+      /* 8pt 스페이싱 그리드 */
+      --space-1: 8px;
+      --space-2: 16px;
+      --space-3: 24px;
+      --space-4: 32px;
+      --space-5: 40px;
+      --space-6: 48px;
+
+      /* 부드러운 다크 (#0a0a0a → #121218, 눈 피로 감소) */
+      --bg-primary: #121218;
+      --bg-secondary: #1a1a22;
+      --bg-tertiary: #22222a;
+      --bg-card: #1a1a22;
       --text-primary: #f5f5f5;
-      --text-secondary: #a0a0a0;
-      --text-muted: #707070;
-      --border-color: #2a2a2a;
-      --border-light: #1f1f1f;
-      --shadow-color: rgba(0, 0, 0, 0.4);
+      --text-secondary: #a0a0a8;
+      --text-muted: #707078;
+      --border-color: #2a2a32;
+      --border-light: #22222a;
+
+      /* 카테고리 색상 */
+      --cat-본업: #667eea;
+      --cat-부업: #f093fb;
+      --cat-일상: #48bb78;
+      --cat-가족: #f6ad55;
+
+      /* 액센트 색상 */
+      --accent-primary: #667eea;
+      --accent-success: #48bb78;
+      --accent-warning: #f6ad55;
+      --accent-danger: #f5576c;
+
+      /* 그림자 */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.25);
+      --shadow-color: rgba(0, 0, 0, 0.5);
+
+      /* Radius */
       --radius-sm: 8px;
       --radius-md: 12px;
       --radius-lg: 16px;
+
+      /* 트랜지션 */
       --transition-fast: 0.15s ease;
       --transition-normal: 0.25s ease;
     }
@@ -656,11 +686,11 @@
       border-radius: 3px;
     }
 
-    .pie-legend-color.본업 { background: #667eea; }
-    .pie-legend-color.부업 { background: #f093fb; }
-    .pie-legend-color.일상 { background: #4ecdc4; }
-    .pie-legend-color.가족 { background: #ffd93d; }
-    .pie-legend-color.기타 { background: #888; }
+    .pie-legend-color.본업 { background: var(--cat-본업); }
+    .pie-legend-color.부업 { background: var(--cat-부업); }
+    .pie-legend-color.일상 { background: var(--cat-일상); }
+    .pie-legend-color.가족 { background: var(--cat-가족); }
+    .pie-legend-color.기타 { background: var(--text-muted); }
 
     .pie-legend-value {
       margin-left: auto;
@@ -1078,10 +1108,10 @@
       transition: width 0.3s;
     }
 
-    .progress-fill.본업 { background: #667eea; }
-    .progress-fill.부업 { background: #f093fb; }
-    .progress-fill.일상 { background: #48bb78; }
-    .progress-fill.가족 { background: #f6ad55; }
+    .progress-fill.본업 { background: var(--cat-본업); }
+    .progress-fill.부업 { background: var(--cat-부업); }
+    .progress-fill.일상 { background: var(--cat-일상); }
+    .progress-fill.가족 { background: var(--cat-가족); }
 
     /* 수익 대시보드 */
     .revenue-dashboard {
@@ -1235,10 +1265,10 @@
       transition: width 0.3s;
     }
 
-    .revenue-category-bar-fill.본업 { background: #667eea; }
-    .revenue-category-bar-fill.부업 { background: #f093fb; }
-    .revenue-category-bar-fill.일상 { background: #48bb78; }
-    .revenue-category-bar-fill.가족 { background: #f6ad55; }
+    .revenue-category-bar-fill.본업 { background: var(--cat-본업); }
+    .revenue-category-bar-fill.부업 { background: var(--cat-부업); }
+    .revenue-category-bar-fill.일상 { background: var(--cat-일상); }
+    .revenue-category-bar-fill.가족 { background: var(--cat-가족); }
 
     .revenue-category-percent {
       font-size: 11px;
@@ -1584,10 +1614,10 @@
       letter-spacing: 0;
     }
     
-    .category.본업 { background: #667eea; }
-    .category.부업 { background: #f093fb; }
-    .category.일상 { background: #48bb78; }
-    .category.가족 { background: #f6ad55; }
+    .category.본업 { background: var(--cat-본업); }
+    .category.부업 { background: var(--cat-부업); }
+    .category.일상 { background: var(--cat-일상); }
+    .category.가족 { background: var(--cat-가족); }
     
     .meta-item {
       background: var(--bg-tertiary);
@@ -1886,6 +1916,36 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+
+    /* Task 카드 액션 간소화 - 기본적으로 숨김 */
+    .task-item-actions .btn-small.edit,
+    .task-item-actions .btn-small.delete,
+    .task-item-actions .btn-small[title="내일로 미루기"],
+    .task-item-actions .btn-small.copy {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    /* 호버 시 모든 버튼 표시 */
+    .task-item:hover .task-item-actions .btn-small.edit,
+    .task-item:hover .task-item-actions .btn-small.delete,
+    .task-item:hover .task-item-actions .btn-small[title="내일로 미루기"],
+    .task-item:hover .task-item-actions .btn-small.copy {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* 모바일에서는 항상 표시 */
+    @media (max-width: 768px) {
+      .task-item-actions .btn-small.edit,
+      .task-item-actions .btn-small.delete,
+      .task-item-actions .btn-small[title="내일로 미루기"],
+      .task-item-actions .btn-small.copy {
+        opacity: 1;
+        pointer-events: auto;
+      }
     }
     
     .btn-small {
@@ -13637,15 +13697,31 @@
       }
 
       // 단일 키
-      switch (e.key) {
+      switch (e.key.toLowerCase()) {
+        case 'n': // 새 작업 추가 (Ctrl 없이도 동작)
+          const quickInputN = document.getElementById('quick-add-input');
+          if (quickInputN) {
+            e.preventDefault();
+            quickInputN.focus();
+          }
+          break;
         case '1':
           switchTab('action');
           break;
         case '2':
-          switchTab('schedule');
+          switchTab('work');
           break;
         case '3':
+          switchTab('events');
+          break;
+        case '4':
           switchTab('dashboard');
+          break;
+        case '5':
+          switchTab('all');
+          break;
+        case '6':
+          switchTab('history');
           break;
         case 's':
           toggleShuttle();
@@ -13653,7 +13729,7 @@
         case '?':
           toggleShortcutsHelp();
           break;
-        case 'Escape':
+        case 'escape':
           if (showShortcutsHelp) {
             toggleShortcutsHelp();
           }
