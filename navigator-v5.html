@@ -3251,6 +3251,31 @@
       color: white;
     }
 
+    .work-general-delete-btn {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .work-general-item:hover .work-general-delete-btn {
+      opacity: 1;
+    }
+
+    .work-general-delete-btn:hover {
+      background: rgba(245, 87, 108, 0.15);
+      color: var(--danger);
+    }
+
     .work-general-item-title {
       flex: 1;
       font-size: 14px;
@@ -13845,6 +13870,7 @@
                           📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
                         </span>
                       ` : ''}
+                      <button class="work-general-delete-btn" onclick="deleteTask(${task.id})" title="삭제">×</button>
                     </div>
                     ${task.subtasks && task.subtasks.length > 0 && appState.expandedWorkGeneralSubtasks && appState.expandedWorkGeneralSubtasks[task.id] ? `
                       <div class="work-general-subtasks">
