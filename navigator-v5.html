@@ -3002,6 +3002,54 @@
     }
 
     /* 프로젝트 탭 네비게이션 */
+    .work-project-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .work-project-selector-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .work-project-select {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    .work-project-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .work-project-select optgroup {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .work-project-select option {
+      padding: 8px;
+    }
+
     .work-project-tabs {
       display: flex;
       gap: 8px;
@@ -3144,16 +3192,63 @@
       margin-bottom: 10px;
     }
 
+    .work-general-item-wrapper {
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .work-general-item-wrapper:last-child {
+      border-bottom: none;
+    }
+
     .work-general-item {
       display: flex;
       align-items: center;
       gap: 10px;
       padding: 8px 0;
-      border-bottom: 1px solid var(--border-light);
     }
 
-    .work-general-item:last-child {
-      border-bottom: none;
+    .work-general-subtasks {
+      padding: 8px 0 8px 32px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .work-general-subtask {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-general-subtask:hover {
+      background: var(--bg-secondary);
+    }
+
+    .work-general-subtask.completed {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .work-general-subtask .subtask-check {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .work-general-subtask.completed .subtask-check {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
     }
 
     .work-general-item-title {
@@ -10378,6 +10473,18 @@
     }
 
     /**
+     * 본업 일반 작업 세부작업 펼침/접힘
+     */
+    function toggleWorkGeneralSubtask(taskId) {
+      if (!appState.expandedWorkGeneralSubtasks) {
+        appState.expandedWorkGeneralSubtasks = {};
+      }
+      appState.expandedWorkGeneralSubtasks[taskId] = !appState.expandedWorkGeneralSubtasks[taskId];
+      renderStatic();
+    }
+    window.toggleWorkGeneralSubtask = toggleWorkGeneralSubtask;
+
+    /**
      * 반복 유형 변경 시 호출
      */
     function updateDetailedTaskRepeat(repeatType) {
@@ -13729,9 +13836,26 @@
               <div class="work-general-title">📋 일반 작업 (${workGeneralTasks.length})</div>
               <div class="work-general-list">
                 ${workGeneralTasks.slice(0, 5).map(task => `
-                  <div class="work-general-item">
-                    <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
-                    <span class="work-general-item-title" onclick="editTask(${task.id})">${task.title}</span>
+                  <div class="work-general-item-wrapper">
+                    <div class="work-general-item">
+                      <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                      <span class="work-general-item-title" onclick="editTask(${task.id})">${task.title}</span>
+                      ${task.subtasks && task.subtasks.length > 0 ? `
+                        <span class="subtask-badge" onclick="event.stopPropagation(); toggleWorkGeneralSubtask(${task.id})">
+                          📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
+                        </span>
+                      ` : ''}
+                    </div>
+                    ${task.subtasks && task.subtasks.length > 0 && appState.expandedWorkGeneralSubtasks && appState.expandedWorkGeneralSubtasks[task.id] ? `
+                      <div class="work-general-subtasks">
+                        ${task.subtasks.map((st, idx) => `
+                          <div class="work-general-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete(${task.id}, ${idx})">
+                            <span class="subtask-check">${st.completed ? '✓' : '○'}</span>
+                            <span>${st.text}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
                   </div>
                 `).join('')}
                 ${workGeneralTasks.length > 5 ? `<div class="work-general-more">+ ${workGeneralTasks.length - 5}개 더</div>` : ''}
@@ -13786,13 +13910,32 @@
             ` : ''}
           ` : `
             <!-- 상세 뷰 -->
-            <div class="work-project-tabs">
-              ${activeProjects.map(p => `
-                <button class="work-project-tab ${p.id === appState.activeWorkProject ? 'active' : ''}"
-                        onclick="selectWorkProject(${p.id})">
-                  ${p.name}
-                </button>
-              `).join('')}
+            <div class="work-project-selector">
+              <label class="work-project-selector-label">프로젝트 선택</label>
+              <select class="work-project-select" onchange="selectWorkProject(Number(this.value))">
+                <option value="" ${!appState.activeWorkProject ? 'selected' : ''}>-- 프로젝트 선택 --</option>
+                ${inProgressProjects.length > 0 ? `
+                  <optgroup label="🚀 진행중">
+                    ${inProgressProjects.map(p => `
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                    `).join('')}
+                  </optgroup>
+                ` : ''}
+                ${noDeadlineProjects.length > 0 ? `
+                  <optgroup label="📋 마감없음">
+                    ${noDeadlineProjects.map(p => `
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                    `).join('')}
+                  </optgroup>
+                ` : ''}
+                ${completedProjects.length > 0 ? `
+                  <optgroup label="✅ 완료">
+                    ${completedProjects.map(p => `
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                    `).join('')}
+                  </optgroup>
+                ` : ''}
+              </select>
             </div>
             ${activeProject && !activeProject.archived ? renderWorkProjectDetail(activeProject) : `
               <div style="text-align: center; padding: 40px; color: var(--text-muted);">
