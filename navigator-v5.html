@@ -2289,7 +2289,7 @@
     }
 
     .btn-small.copy {
-      background: #805ad5;
+      background: var(--cat-부업);
       color: white;
     }
 
@@ -6527,56 +6527,47 @@
       padding-top: 4px;
     }
 
-    .btn-small {
-      padding: 8px 14px;
-      font-size: 13px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s;
-      font-weight: 500;
-    }
-
+    /* 버튼 변형 - CSS 변수 사용 (통일) */
     .btn-link {
       background: transparent;
-      color: #667eea;
+      color: var(--accent-primary);
       text-decoration: none;
-      border: 1px solid #667eea44;
+      border: 1px solid rgba(102, 126, 234, 0.27);
     }
 
     .btn-link:hover {
-      background: #667eea22;
+      background: rgba(102, 126, 234, 0.13);
     }
 
     .btn-submit {
-      background: #48bb78;
+      background: var(--accent-success);
       color: white;
     }
 
     .btn-submit:hover {
-      background: #38a169;
+      filter: brightness(0.9);
       transform: scale(1.02);
     }
 
     .btn-edit {
       background: transparent;
-      color: #888;
+      color: var(--text-muted);
       padding: 8px 10px;
     }
 
     .btn-edit:hover {
-      color: white;
+      color: var(--text-primary);
     }
 
     .btn-undo {
       background: transparent;
-      color: #888;
+      color: var(--text-muted);
       border: 1px solid var(--border-color);
     }
 
     .btn-undo:hover {
-      border-color: #ff9500;
-      color: #ff9500;
+      border-color: var(--accent-warning);
+      color: var(--accent-warning);
     }
 
     .btn-delete {
@@ -6585,7 +6576,7 @@
     }
 
     .btn-delete:hover {
-      color: #f5576c;
+      color: var(--accent-danger);
     }
 
     .events-empty {
