@@ -8999,7 +8999,12 @@
       saveState();
       input.value = '';
       renderStatic();
-      showToast(`${category} 작업 추가됨`, 'success');
+
+      // 바로 수정 모달 열기 (상세 설정 기회 제공)
+      setTimeout(() => {
+        appState.quickEditTaskId = newTask.id;
+        showQuickEditModal(newTask);
+      }, 100);
     }
     window.quickAddLifeTask = quickAddLifeTask;
 
@@ -9032,7 +9037,12 @@
       saveState();
       input.value = '';
       renderStatic();
-      showToast('본업 작업 추가됨', 'success');
+
+      // 바로 수정 모달 열기 (상세 설정 기회 제공)
+      setTimeout(() => {
+        appState.quickEditTaskId = newTask.id;
+        showQuickEditModal(newTask);
+      }, 100);
     }
     window.quickAddWorkTask = quickAddWorkTask;
 
@@ -9076,7 +9086,12 @@
       saveState();
       input.value = '';
       renderStatic();
-      showToast('이벤트 추가됨', 'success');
+
+      // 바로 수정 모달 열기 (상세 설정 기회 제공)
+      setTimeout(() => {
+        appState.quickEditTaskId = newTask.id;
+        showQuickEditModal(newTask);
+      }, 100);
     }
     window.quickAddEvent = quickAddEvent;
 
