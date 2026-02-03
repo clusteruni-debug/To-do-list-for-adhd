@@ -5031,12 +5031,22 @@
       gap: 8px;
     }
 
+    .life-rhythm-buttons.six-items {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (min-width: 480px) {
+      .life-rhythm-buttons.six-items {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
     .life-rhythm-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
-      padding: 12px 8px;
+      gap: 2px;
+      padding: 10px 4px;
       background: var(--bg-tertiary);
       border: 2px solid var(--border-color);
       border-radius: 10px;
@@ -5066,19 +5076,43 @@
     }
 
     .life-rhythm-icon {
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .life-rhythm-label {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--text-muted);
+      white-space: nowrap;
     }
 
     .life-rhythm-time {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-secondary);
       font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .life-rhythm-stats {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rhythm-stat {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .rhythm-stat.total {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
+      font-weight: 500;
     }
 
     .life-rhythm-summary {
@@ -6774,13 +6808,26 @@
       margin-bottom: 12px;
     }
 
+    .rhythm-history-timeline.six-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    @media (min-width: 600px) {
+      .rhythm-history-timeline.six-items {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
     .rhythm-history-time {
       font-family: 'SF Mono', Monaco, monospace;
-      font-size: 14px;
+      font-size: 12px;
       cursor: pointer;
-      padding: 4px 8px;
+      padding: 4px 6px;
       border-radius: 6px;
       transition: background 0.2s;
+      text-align: center;
     }
 
     .rhythm-history-time:hover {
@@ -6798,9 +6845,21 @@
 
     .rhythm-history-summary {
       display: flex;
-      gap: 16px;
-      font-size: 13px;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 11px;
       color: var(--text-secondary);
+    }
+
+    .rhythm-history-summary span {
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .rhythm-history-summary span.total {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
     }
 
     @media (max-width: 480px) {
@@ -6810,7 +6869,6 @@
 
       .rhythm-history-summary {
         justify-content: center;
-        flex-wrap: wrap;
       }
     }
 
@@ -8155,16 +8213,18 @@
         streak: 0,                    // 연속 완료 (세션 내)
         lastCompletedDate: null       // 마지막 완료 날짜
       },
-      // 라이프 리듬 트래커
+      // 라이프 리듬 트래커 (6개 항목)
       lifeRhythm: {
         today: {
           date: null,                 // 오늘 날짜 (YYYY-MM-DD)
           wakeUp: null,               // 기상 시간 (HH:MM)
-          workStart: null,            // 출근 시간
-          workEnd: null,              // 퇴근 시간
+          homeDepart: null,           // 집 출발 시간
+          workArrive: null,           // 회사 도착 시간
+          workDepart: null,           // 회사 출발 시간
+          homeArrive: null,           // 집 도착 시간
           sleep: null                 // 취침 시간
         },
-        history: {},                  // 날짜별 기록 { 'YYYY-MM-DD': { wakeUp, workStart, workEnd, sleep } }
+        history: {},                  // 날짜별 기록
         settings: {
           targetSleep: 7,             // 목표 수면 시간
           workdays: [1, 2, 3, 4, 5]   // 근무일 (0=일, 1=월, ... 6=토)
@@ -12276,46 +12336,68 @@
 
                 <!-- 셔틀 상태는 헤더로 이동됨 -->
 
-                <!-- 라이프 리듬 트래커 -->
+                <!-- 라이프 리듬 트래커 (6개 항목) -->
                 ${(() => {
                   const today = new Date().toISOString().split('T')[0];
-                  const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, workStart: null, workEnd: null, sleep: null };
+                  const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
                   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
                   const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
+
+                  // 시간을 분으로 변환하는 헬퍼
+                  const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+                  const formatDur = (mins) => {
+                    if (!mins || mins <= 0) return null;
+                    const h = Math.floor(mins / 60);
+                    const m = mins % 60;
+                    return h + 'h ' + m + 'm';
+                  };
 
                   // 어제 수면 시간 계산
                   let sleepDuration = null;
                   if (yesterdayData.sleep && rhythm.wakeUp) {
-                    const sleepTime = parseInt(yesterdayData.sleep.split(':')[0]) * 60 + parseInt(yesterdayData.sleep.split(':')[1]);
-                    const wakeTime = parseInt(rhythm.wakeUp.split(':')[0]) * 60 + parseInt(rhythm.wakeUp.split(':')[1]);
+                    const sleepTime = toMins(yesterdayData.sleep);
+                    const wakeTime = toMins(rhythm.wakeUp);
                     let duration = wakeTime - sleepTime;
-                    if (duration < 0) duration += 24 * 60; // 자정 넘긴 경우
-                    if (sleepTime > 12 * 60) duration = wakeTime + (24 * 60 - sleepTime); // 밤에 잔 경우
-                    const hours = Math.floor(duration / 60);
-                    const mins = duration % 60;
-                    sleepDuration = hours + 'h ' + mins + 'm';
+                    if (duration < 0) duration += 24 * 60;
+                    if (sleepTime > 12 * 60) duration = wakeTime + (24 * 60 - sleepTime);
+                    sleepDuration = formatDur(duration);
                   }
 
-                  // 오늘 근무 시간 계산
+                  // 출근 통근시간 (집출발 → 회사도착)
+                  let commuteToWork = null;
+                  if (rhythm.homeDepart && rhythm.workArrive) {
+                    const dur = toMins(rhythm.workArrive) - toMins(rhythm.homeDepart);
+                    commuteToWork = formatDur(dur);
+                  }
+
+                  // 퇴근 통근시간 (회사출발 → 집도착)
+                  let commuteToHome = null;
+                  if (rhythm.workDepart && rhythm.homeArrive) {
+                    const dur = toMins(rhythm.homeArrive) - toMins(rhythm.workDepart);
+                    commuteToHome = formatDur(dur);
+                  }
+
+                  // 실제 근무 시간 (회사도착 → 회사출발)
                   let workDuration = null;
-                  if (rhythm.workStart && rhythm.workEnd) {
-                    const startTime = parseInt(rhythm.workStart.split(':')[0]) * 60 + parseInt(rhythm.workStart.split(':')[1]);
-                    const endTime = parseInt(rhythm.workEnd.split(':')[0]) * 60 + parseInt(rhythm.workEnd.split(':')[1]);
-                    const duration = endTime - startTime;
-                    if (duration > 0) {
-                      const hours = Math.floor(duration / 60);
-                      const mins = duration % 60;
-                      workDuration = hours + 'h ' + mins + 'm';
-                    }
+                  if (rhythm.workArrive && rhythm.workDepart) {
+                    const dur = toMins(rhythm.workDepart) - toMins(rhythm.workArrive);
+                    workDuration = formatDur(dur);
+                  }
+
+                  // 총 외출 시간 (집출발 → 집도착)
+                  let totalOutTime = null;
+                  if (rhythm.homeDepart && rhythm.homeArrive) {
+                    const dur = toMins(rhythm.homeArrive) - toMins(rhythm.homeDepart);
+                    totalOutTime = formatDur(dur);
                   }
 
                   return `
                     <div class="life-rhythm-tracker">
                       <div class="life-rhythm-header">
                         <span class="life-rhythm-title">📊 오늘의 리듬</span>
-                        ${sleepDuration ? '<span class="life-rhythm-sleep">💤 어제 수면 ' + sleepDuration + '</span>' : ''}
+                        ${sleepDuration ? '<span class="life-rhythm-sleep">💤 수면 ' + sleepDuration + '</span>' : ''}
                       </div>
-                      <div class="life-rhythm-buttons">
+                      <div class="life-rhythm-buttons six-items">
                         <button class="life-rhythm-btn ${rhythm.wakeUp ? 'recorded' : ''}"
                                 onclick="handleLifeRhythmClick('wakeUp', ${rhythm.wakeUp ? 'true' : 'false'})"
                                 title="${rhythm.wakeUp ? '클릭: 수정' : '클릭: 현재시간 기록'}">
@@ -12323,19 +12405,33 @@
                           <span class="life-rhythm-label">기상</span>
                           <span class="life-rhythm-time">${rhythm.wakeUp || '--:--'}</span>
                         </button>
-                        <button class="life-rhythm-btn ${rhythm.workStart ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('workStart', ${rhythm.workStart ? 'true' : 'false'})"
-                                title="${rhythm.workStart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
-                          <span class="life-rhythm-icon">🚌</span>
-                          <span class="life-rhythm-label">출근</span>
-                          <span class="life-rhythm-time">${rhythm.workStart || '--:--'}</span>
+                        <button class="life-rhythm-btn ${rhythm.homeDepart ? 'recorded' : ''}"
+                                onclick="handleLifeRhythmClick('homeDepart', ${rhythm.homeDepart ? 'true' : 'false'})"
+                                title="${rhythm.homeDepart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                          <span class="life-rhythm-icon">🚶</span>
+                          <span class="life-rhythm-label">집출발</span>
+                          <span class="life-rhythm-time">${rhythm.homeDepart || '--:--'}</span>
                         </button>
-                        <button class="life-rhythm-btn ${rhythm.workEnd ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('workEnd', ${rhythm.workEnd ? 'true' : 'false'})"
-                                title="${rhythm.workEnd ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                        <button class="life-rhythm-btn ${rhythm.workArrive ? 'recorded' : ''}"
+                                onclick="handleLifeRhythmClick('workArrive', ${rhythm.workArrive ? 'true' : 'false'})"
+                                title="${rhythm.workArrive ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                          <span class="life-rhythm-icon">🏢</span>
+                          <span class="life-rhythm-label">회사도착</span>
+                          <span class="life-rhythm-time">${rhythm.workArrive || '--:--'}</span>
+                        </button>
+                        <button class="life-rhythm-btn ${rhythm.workDepart ? 'recorded' : ''}"
+                                onclick="handleLifeRhythmClick('workDepart', ${rhythm.workDepart ? 'true' : 'false'})"
+                                title="${rhythm.workDepart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                          <span class="life-rhythm-icon">🚀</span>
+                          <span class="life-rhythm-label">회사출발</span>
+                          <span class="life-rhythm-time">${rhythm.workDepart || '--:--'}</span>
+                        </button>
+                        <button class="life-rhythm-btn ${rhythm.homeArrive ? 'recorded' : ''}"
+                                onclick="handleLifeRhythmClick('homeArrive', ${rhythm.homeArrive ? 'true' : 'false'})"
+                                title="${rhythm.homeArrive ? '클릭: 수정' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🏠</span>
-                          <span class="life-rhythm-label">퇴근</span>
-                          <span class="life-rhythm-time">${rhythm.workEnd || '--:--'}</span>
+                          <span class="life-rhythm-label">집도착</span>
+                          <span class="life-rhythm-time">${rhythm.homeArrive || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.sleep ? 'recorded' : ''}"
                                 onclick="handleLifeRhythmClick('sleep', ${rhythm.sleep ? 'true' : 'false'})"
@@ -12345,7 +12441,12 @@
                           <span class="life-rhythm-time">${rhythm.sleep || '--:--'}</span>
                         </button>
                       </div>
-                      ${workDuration ? '<div class="life-rhythm-summary">💼 오늘 근무 ' + workDuration + '</div>' : ''}
+                      <div class="life-rhythm-stats">
+                        ${commuteToWork ? '<span class="rhythm-stat">🚌 출근 ' + commuteToWork + '</span>' : ''}
+                        ${workDuration ? '<span class="rhythm-stat">💼 근무 ' + workDuration + '</span>' : ''}
+                        ${commuteToHome ? '<span class="rhythm-stat">🏠 퇴근 ' + commuteToHome + '</span>' : ''}
+                        ${totalOutTime ? '<span class="rhythm-stat total">📍 총 외출 ' + totalOutTime + '</span>' : ''}
+                      </div>
                     </div>
                   `;
                 })()}
@@ -14696,8 +14797,10 @@
         appState.lifeRhythm.today = {
           date: today,
           wakeUp: null,
-          workStart: null,
-          workEnd: null,
+          homeDepart: null,
+          workArrive: null,
+          workDepart: null,
+          homeArrive: null,
           sleep: null
         };
       }
@@ -14710,7 +14813,7 @@
       renderStatic();
 
       // 피드백
-      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
       showToast(labels[type] + ' 시간 기록: ' + timeStr, 'success');
 
       // 햅틱 피드백
@@ -14727,7 +14830,7 @@
       const today = new Date().toISOString().split('T')[0];
       const currentValue = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today[type] : null;
 
-      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
       const newTime = prompt(labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
 
       if (newTime === null) return; // 취소
@@ -14757,8 +14860,10 @@
           appState.lifeRhythm.today = {
             date: today,
             wakeUp: null,
-            workStart: null,
-            workEnd: null,
+            homeDepart: null,
+            workArrive: null,
+            workDepart: null,
+            homeArrive: null,
             sleep: null
           };
         }
@@ -14779,9 +14884,17 @@
       const today = new Date();
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const sleepData = [];
-      const workStartTimes = [];
-      const workEndTimes = [];
+      const homeDepartTimes = [];
+      const workArriveTimes = [];
+      const workDepartTimes = [];
+      const homeArriveTimes = [];
       const workHours = [];
+      const commuteToWorkTimes = [];
+      const commuteToHomeTimes = [];
+      const totalOutTimes = [];
+
+      // 시간을 분으로 변환하는 헬퍼
+      const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
 
       // 최근 7일 데이터 수집
       for (let i = 6; i >= 0; i--) {
@@ -14797,17 +14910,21 @@
           dayData = appState.lifeRhythm.history[dateStr] || {};
         }
 
+        // 기존 데이터 마이그레이션 (workStart → workArrive, workEnd → workDepart)
+        if (dayData.workStart && !dayData.workArrive) dayData.workArrive = dayData.workStart;
+        if (dayData.workEnd && !dayData.workDepart) dayData.workDepart = dayData.workEnd;
+
         // 수면 시간 계산 (전날 취침 ~ 당일 기상)
         const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
         const prevData = appState.lifeRhythm.history[prevDateStr] || {};
         let sleepHours = null;
 
         if (prevData.sleep && dayData.wakeUp) {
-          const sleepTime = parseInt(prevData.sleep.split(':')[0]) * 60 + parseInt(prevData.sleep.split(':')[1]);
-          const wakeTime = parseInt(dayData.wakeUp.split(':')[0]) * 60 + parseInt(dayData.wakeUp.split(':')[1]);
+          const sleepTime = toMins(prevData.sleep);
+          const wakeTime = toMins(dayData.wakeUp);
           let duration = wakeTime + (24 * 60 - sleepTime);
-          if (sleepTime < 12 * 60) duration = wakeTime - sleepTime; // 새벽에 잔 경우
-          if (duration > 0 && duration < 16 * 60) { // 16시간 이상은 이상치
+          if (sleepTime < 12 * 60) duration = wakeTime - sleepTime;
+          if (duration > 0 && duration < 16 * 60) {
             sleepHours = duration / 60;
           }
         }
@@ -14819,46 +14936,58 @@
           isToday: isToday
         });
 
-        // 근무 시간 수집
-        if (dayData.workStart) {
-          const [h, m] = dayData.workStart.split(':').map(Number);
-          workStartTimes.push(h * 60 + m);
+        // 시간 수집
+        if (dayData.homeDepart) homeDepartTimes.push(toMins(dayData.homeDepart));
+        if (dayData.workArrive) workArriveTimes.push(toMins(dayData.workArrive));
+        if (dayData.workDepart) workDepartTimes.push(toMins(dayData.workDepart));
+        if (dayData.homeArrive) homeArriveTimes.push(toMins(dayData.homeArrive));
+
+        // 근무 시간 계산
+        if (dayData.workArrive && dayData.workDepart) {
+          const dur = toMins(dayData.workDepart) - toMins(dayData.workArrive);
+          if (dur > 0) workHours.push(dur / 60);
         }
-        if (dayData.workEnd) {
-          const [h, m] = dayData.workEnd.split(':').map(Number);
-          workEndTimes.push(h * 60 + m);
+
+        // 출근 통근 시간
+        if (dayData.homeDepart && dayData.workArrive) {
+          const dur = toMins(dayData.workArrive) - toMins(dayData.homeDepart);
+          if (dur > 0 && dur < 180) commuteToWorkTimes.push(dur);
         }
-        if (dayData.workStart && dayData.workEnd) {
-          const start = parseInt(dayData.workStart.split(':')[0]) * 60 + parseInt(dayData.workStart.split(':')[1]);
-          const end = parseInt(dayData.workEnd.split(':')[0]) * 60 + parseInt(dayData.workEnd.split(':')[1]);
-          if (end > start) {
-            workHours.push((end - start) / 60);
-          }
+
+        // 퇴근 통근 시간
+        if (dayData.workDepart && dayData.homeArrive) {
+          const dur = toMins(dayData.homeArrive) - toMins(dayData.workDepart);
+          if (dur > 0 && dur < 180) commuteToHomeTimes.push(dur);
+        }
+
+        // 총 외출 시간
+        if (dayData.homeDepart && dayData.homeArrive) {
+          const dur = toMins(dayData.homeArrive) - toMins(dayData.homeDepart);
+          if (dur > 0) totalOutTimes.push(dur / 60);
         }
       }
 
-      // 평균 계산
+      // 평균 계산 헬퍼
+      const calcAvg = (arr) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
       const validSleepData = sleepData.filter(d => d.hours !== null);
-      const avgSleep = validSleepData.length > 0
-        ? validSleepData.reduce((sum, d) => sum + d.hours, 0) / validSleepData.length
-        : 0;
+      const avgSleep = calcAvg(validSleepData.map(d => d.hours)) || 0;
 
-      const avgWorkStart = workStartTimes.length > 0
-        ? Math.round(workStartTimes.reduce((a, b) => a + b, 0) / workStartTimes.length)
-        : null;
-      const avgWorkEnd = workEndTimes.length > 0
-        ? Math.round(workEndTimes.reduce((a, b) => a + b, 0) / workEndTimes.length)
-        : null;
-      const avgWorkHrs = workHours.length > 0
-        ? workHours.reduce((a, b) => a + b, 0) / workHours.length
-        : null;
+      const avgHomeDepart = calcAvg(homeDepartTimes);
+      const avgWorkArrive = calcAvg(workArriveTimes);
+      const avgWorkDepart = calcAvg(workDepartTimes);
+      const avgHomeArrive = calcAvg(homeArriveTimes);
+      const avgWorkHrs = calcAvg(workHours);
+      const avgCommuteToWork = calcAvg(commuteToWorkTimes);
+      const avgCommuteToHome = calcAvg(commuteToHomeTimes);
+      const avgTotalOut = calcAvg(totalOutTimes);
 
-      // 출근 시간 편차 계산
-      let workStartDeviation = null;
-      if (workStartTimes.length >= 2) {
-        const mean = workStartTimes.reduce((a, b) => a + b, 0) / workStartTimes.length;
-        const variance = workStartTimes.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / workStartTimes.length;
-        workStartDeviation = Math.round(Math.sqrt(variance));
+      // 집출발 시간 편차 계산
+      let homeDepartDeviation = null;
+      if (homeDepartTimes.length >= 2) {
+        const mean = calcAvg(homeDepartTimes);
+        const variance = homeDepartTimes.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / homeDepartTimes.length;
+        homeDepartDeviation = Math.round(Math.sqrt(variance));
       }
 
       // 인사이트 생성
@@ -14898,30 +15027,52 @@
         });
       }
 
-      if (workStartDeviation !== null && workStartDeviation <= 20) {
+      if (homeDepartDeviation !== null && homeDepartDeviation <= 15) {
         insights.push({
           type: 'positive',
           icon: '✨',
-          text: '출근 시간이 일정해요! 규칙적인 루틴이 유지되고 있습니다'
+          text: '출발 시간이 일정해요! 규칙적인 루틴이 유지되고 있습니다'
         });
+      }
+
+      // 통근시간 인사이트
+      if (avgCommuteToWork && avgCommuteToHome) {
+        const totalCommute = avgCommuteToWork + avgCommuteToHome;
+        if (totalCommute > 120) {
+          insights.push({
+            type: 'info',
+            icon: '🚌',
+            text: '하루 평균 통근 ' + Math.round(totalCommute) + '분. 이동 중 팟캐스트나 독서를 해보세요'
+          });
+        }
       }
 
       // 시간 포맷팅 헬퍼
       const formatTime = (mins) => {
         if (mins === null) return null;
         const h = Math.floor(mins / 60);
-        const m = mins % 60;
+        const m = Math.round(mins % 60);
         return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
       };
 
+      const formatDur = (mins) => {
+        if (mins === null) return null;
+        return Math.round(mins) + '분';
+      };
+
       return {
-        hasData: validSleepData.length > 0 || workStartTimes.length > 0,
+        hasData: validSleepData.length > 0 || homeDepartTimes.length > 0,
         sleepData,
         avgSleep,
-        avgWorkStart: formatTime(avgWorkStart),
-        avgWorkEnd: formatTime(avgWorkEnd),
+        avgHomeDepart: formatTime(avgHomeDepart),
+        avgWorkArrive: formatTime(avgWorkArrive),
+        avgWorkDepart: formatTime(avgWorkDepart),
+        avgHomeArrive: formatTime(avgHomeArrive),
         avgWorkHours: avgWorkHrs,
-        workStartDeviation,
+        avgCommuteToWork: formatDur(avgCommuteToWork),
+        avgCommuteToHome: formatDur(avgCommuteToHome),
+        avgTotalOut: avgTotalOut ? avgTotalOut.toFixed(1) + '시간' : null,
+        homeDepartDeviation,
         insights
       };
     }
@@ -14936,11 +15087,20 @@
     window.setHistoryView = setHistoryView;
 
     /**
-     * 라이프 리듬 히스토리 렌더링
+     * 라이프 리듬 히스토리 렌더링 (6개 항목)
      */
     function renderLifeRhythmHistory() {
       const today = new Date();
       const records = [];
+
+      // 시간을 분으로 변환
+      const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+      const formatDur = (mins) => {
+        if (!mins || mins <= 0) return null;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return h + 'h ' + m + 'm';
+      };
 
       // 최근 30일 기록 수집
       for (let i = 0; i < 30; i++) {
@@ -14956,35 +15116,57 @@
           dayData = appState.lifeRhythm.history[dateStr];
         }
 
-        if (dayData && (dayData.wakeUp || dayData.workStart || dayData.workEnd || dayData.sleep)) {
+        // 기존 데이터 마이그레이션
+        if (dayData) {
+          if (dayData.workStart && !dayData.workArrive) dayData.workArrive = dayData.workStart;
+          if (dayData.workEnd && !dayData.workDepart) dayData.workDepart = dayData.workEnd;
+        }
+
+        if (dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep)) {
           // 수면 시간 계산
           let sleepDuration = null;
           if (i < 29) {
             const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
             const prevData = appState.lifeRhythm.history[prevDateStr] || {};
             if (prevData.sleep && dayData.wakeUp) {
-              const sleepTime = parseInt(prevData.sleep.split(':')[0]) * 60 + parseInt(prevData.sleep.split(':')[1]);
-              const wakeTime = parseInt(dayData.wakeUp.split(':')[0]) * 60 + parseInt(dayData.wakeUp.split(':')[1]);
+              const sleepTime = toMins(prevData.sleep);
+              const wakeTime = toMins(dayData.wakeUp);
               let duration = wakeTime + (24 * 60 - sleepTime);
               if (sleepTime < 12 * 60) duration = wakeTime - sleepTime;
               if (duration > 0 && duration < 16 * 60) {
-                const hours = Math.floor(duration / 60);
-                const mins = duration % 60;
-                sleepDuration = hours + 'h ' + mins + 'm';
+                sleepDuration = formatDur(duration);
               }
             }
           }
 
           // 근무 시간 계산
           let workDuration = null;
-          if (dayData.workStart && dayData.workEnd) {
-            const start = parseInt(dayData.workStart.split(':')[0]) * 60 + parseInt(dayData.workStart.split(':')[1]);
-            const end = parseInt(dayData.workEnd.split(':')[0]) * 60 + parseInt(dayData.workEnd.split(':')[1]);
-            if (end > start) {
-              const hours = Math.floor((end - start) / 60);
-              const mins = (end - start) % 60;
-              workDuration = hours + 'h ' + mins + 'm';
-            }
+          const workArr = dayData.workArrive;
+          const workDep = dayData.workDepart;
+          if (workArr && workDep) {
+            const dur = toMins(workDep) - toMins(workArr);
+            if (dur > 0) workDuration = formatDur(dur);
+          }
+
+          // 출근 통근시간
+          let commuteToWork = null;
+          if (dayData.homeDepart && dayData.workArrive) {
+            const dur = toMins(dayData.workArrive) - toMins(dayData.homeDepart);
+            if (dur > 0 && dur < 180) commuteToWork = dur + '분';
+          }
+
+          // 퇴근 통근시간
+          let commuteToHome = null;
+          if (dayData.workDepart && dayData.homeArrive) {
+            const dur = toMins(dayData.homeArrive) - toMins(dayData.workDepart);
+            if (dur > 0 && dur < 180) commuteToHome = dur + '분';
+          }
+
+          // 총 외출시간
+          let totalOut = null;
+          if (dayData.homeDepart && dayData.homeArrive) {
+            const dur = toMins(dayData.homeArrive) - toMins(dayData.homeDepart);
+            if (dur > 0) totalOut = formatDur(dur);
           }
 
           // 완료한 작업 수
@@ -14998,25 +15180,54 @@
             dateLabel: (date.getMonth() + 1) + '/' + date.getDate(),
             isToday,
             wakeUp: dayData.wakeUp,
-            workStart: dayData.workStart,
-            workEnd: dayData.workEnd,
+            homeDepart: dayData.homeDepart,
+            workArrive: dayData.workArrive,
+            workDepart: dayData.workDepart,
+            homeArrive: dayData.homeArrive,
             sleep: dayData.sleep,
             sleepDuration,
             workDuration,
+            commuteToWork,
+            commuteToHome,
+            totalOut,
             completedTasks
           });
         }
       }
 
       if (records.length === 0) {
-        return '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 기상/출근/퇴근/취침을 기록해보세요</div></div>';
+        return '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
       }
 
-      return '<div class="rhythm-history-list">' + records.map(r => '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '"><div class="rhythm-history-date"><span class="rhythm-history-day">' + r.dayLabel + '</span><span class="rhythm-history-date-num">' + r.dateLabel + '</span>' + (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') + '</div><div class="rhythm-history-timeline"><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="클릭하여 수정">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workStart\')" title="클릭하여 수정">' + (r.workStart ? '🚌' + r.workStart : '<span class="empty">🚌--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workEnd\')" title="클릭하여 수정">' + (r.workEnd ? '🏠' + r.workEnd : '<span class="empty">🏠--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="클릭하여 수정">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span></div><div class="rhythm-history-summary">' + (r.sleepDuration ? '<span>💤 ' + r.sleepDuration + '</span>' : '') + (r.workDuration ? '<span>💼 ' + r.workDuration + '</span>' : '') + (r.completedTasks > 0 ? '<span>✅ ' + r.completedTasks + '개 완료</span>' : '') + '</div></div>').join('') + '</div>';
+      return '<div class="rhythm-history-list">' + records.map(r => {
+        return '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '">' +
+          '<div class="rhythm-history-date">' +
+            '<span class="rhythm-history-day">' + r.dayLabel + '</span>' +
+            '<span class="rhythm-history-date-num">' + r.dateLabel + '</span>' +
+            (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') +
+          '</div>' +
+          '<div class="rhythm-history-timeline six-items">' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
+            '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
+          '</div>' +
+          '<div class="rhythm-history-summary">' +
+            (r.sleepDuration ? '<span>💤' + r.sleepDuration + '</span>' : '') +
+            (r.commuteToWork ? '<span>🚌' + r.commuteToWork + '</span>' : '') +
+            (r.workDuration ? '<span>💼' + r.workDuration + '</span>' : '') +
+            (r.commuteToHome ? '<span>🏠' + r.commuteToHome + '</span>' : '') +
+            (r.totalOut ? '<span class="total">📍' + r.totalOut + '</span>' : '') +
+            (r.completedTasks > 0 ? '<span>✅' + r.completedTasks + '개</span>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('') + '</div>';
     }
 
     /**
-     * 과거 날짜 라이프 리듬 수정
+     * 과거 날짜 라이프 리듬 수정 (6개 항목)
      */
     function editLifeRhythmHistory(dateStr, type) {
       const today = new Date().toISOString().split('T')[0];
@@ -15028,7 +15239,7 @@
         currentValue = appState.lifeRhythm.history[dateStr]?.[type];
       }
 
-      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
       const newTime = prompt(dateStr + ' ' + labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
 
       if (newTime === null) return;
@@ -15049,12 +15260,12 @@
       // 저장
       if (dateStr === today) {
         if (appState.lifeRhythm.today.date !== today) {
-          appState.lifeRhythm.today = { date: today, wakeUp: null, workStart: null, workEnd: null, sleep: null };
+          appState.lifeRhythm.today = { date: today, wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
         }
         appState.lifeRhythm.today[type] = normalizedTime;
       } else {
         if (!appState.lifeRhythm.history[dateStr]) {
-          appState.lifeRhythm.history[dateStr] = { wakeUp: null, workStart: null, workEnd: null, sleep: null };
+          appState.lifeRhythm.history[dateStr] = { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
         }
         appState.lifeRhythm.history[dateStr][type] = normalizedTime;
       }
@@ -15073,13 +15284,43 @@
     }
 
     /**
-     * 라이프 리듬 불러오기
+     * 라이프 리듬 불러오기 (기존 데이터 마이그레이션 포함)
      */
     function loadLifeRhythm() {
       const saved = localStorage.getItem('navigator-life-rhythm');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
+
+          // 기존 데이터 마이그레이션 (workStart → workArrive, workEnd → workDepart)
+          const migrateData = (data) => {
+            if (!data) return data;
+            if (data.workStart && !data.workArrive) {
+              data.workArrive = data.workStart;
+              delete data.workStart;
+            }
+            if (data.workEnd && !data.workDepart) {
+              data.workDepart = data.workEnd;
+              delete data.workEnd;
+            }
+            // 새 필드 초기화
+            if (data.homeDepart === undefined) data.homeDepart = null;
+            if (data.homeArrive === undefined) data.homeArrive = null;
+            return data;
+          };
+
+          // today 마이그레이션
+          if (parsed.today) {
+            parsed.today = migrateData(parsed.today);
+          }
+
+          // history 마이그레이션
+          if (parsed.history) {
+            Object.keys(parsed.history).forEach(date => {
+              parsed.history[date] = migrateData(parsed.history[date]);
+            });
+          }
+
           appState.lifeRhythm = {
             ...appState.lifeRhythm,
             ...parsed,
@@ -15087,6 +15328,9 @@
             history: parsed.history || {},
             settings: { ...appState.lifeRhythm.settings, ...parsed.settings }
           };
+
+          // 마이그레이션된 데이터 저장
+          saveLifeRhythm();
         } catch (e) {
           console.error('라이프 리듬 데이터 로드 실패:', e);
         }
