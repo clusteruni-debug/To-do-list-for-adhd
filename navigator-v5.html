@@ -3244,6 +3244,41 @@
       margin-top: 4px;
     }
 
+    .life-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .life-item:hover .life-item-actions {
+      opacity: 1;
+    }
+
+    .life-action-btn {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .life-action-btn:hover {
+      background: var(--bg-secondary);
+      transform: scale(1.05);
+    }
+
+    .life-action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+    }
+
     .life-empty {
       text-align: center;
       padding: 40px;
@@ -8022,7 +8057,25 @@
      */
     function getFilteredTasks() {
       const mode = getCurrentMode();
-      let filtered = appState.tasks.filter(t => !t.completed);
+      const now = new Date();
+      const todayEnd = new Date(now);
+      todayEnd.setHours(23, 59, 59, 999);
+
+      let filtered = appState.tasks.filter(t => {
+        // 완료된 작업 제외
+        if (t.completed) return false;
+
+        // 반복 작업 중 미래 마감일(내일 이후)인 작업 제외
+        // 이렇게 해야 오늘 완료한 반복 작업의 "다음 회차"가 오늘 목록에 안 나옴
+        if (t.deadline && t.repeatType && t.repeatType !== 'none') {
+          const deadline = new Date(t.deadline);
+          if (deadline > todayEnd) {
+            return false; // 내일 이후 마감인 반복 작업은 숨김
+          }
+        }
+
+        return true;
+      });
 
       // 우선순위와 긴급도 계산
       filtered = filtered.map(t => ({
@@ -9605,37 +9658,76 @@
 
     /**
      * 다음 반복 작업 생성
+     * 반복 작업은 항상 다음 날짜를 기준으로 생성됨 (오늘 목록에 즉시 나타나지 않음)
      */
     function createNextRepeatTask(task) {
       const now = new Date();
       let nextDeadline = null;
 
-      if (task.deadline) {
-        const currentDeadline = new Date(task.deadline);
-        nextDeadline = new Date(currentDeadline);
+      // 마감일이 있으면 그 기준으로, 없으면 오늘 기준으로 다음 날짜 계산
+      const baseDate = task.deadline ? new Date(task.deadline) : new Date();
+      nextDeadline = new Date(baseDate);
 
-        switch (task.repeatType) {
-          case 'daily':
+      switch (task.repeatType) {
+        case 'daily':
+          nextDeadline.setDate(nextDeadline.getDate() + 1);
+          break;
+        case 'weekdays':
+          // 평일만: 금요일이면 월요일로, 아니면 다음 날
+          nextDeadline.setDate(nextDeadline.getDate() + 1);
+          while (nextDeadline.getDay() === 0 || nextDeadline.getDay() === 6) {
             nextDeadline.setDate(nextDeadline.getDate() + 1);
-            break;
-          case 'weekly':
-            nextDeadline.setDate(nextDeadline.getDate() + 7);
-            break;
-          case 'monthly':
-            nextDeadline.setMonth(nextDeadline.getMonth() + 1);
-            break;
-        }
+          }
+          break;
+        case 'weekends':
+          // 주말만: 토요일이면 일요일로, 일요일이면 토요일로
+          nextDeadline.setDate(nextDeadline.getDate() + 1);
+          while (nextDeadline.getDay() !== 0 && nextDeadline.getDay() !== 6) {
+            nextDeadline.setDate(nextDeadline.getDate() + 1);
+          }
+          break;
+        case 'weekly':
+          nextDeadline.setDate(nextDeadline.getDate() + 7);
+          break;
+        case 'monthly':
+          nextDeadline.setMonth(nextDeadline.getMonth() + 1);
+          break;
+        case 'custom':
+          // 특정 요일 반복: 다음 해당 요일 찾기
+          if (task.repeatDays && task.repeatDays.length > 0) {
+            let found = false;
+            for (let i = 1; i <= 7 && !found; i++) {
+              nextDeadline.setDate(nextDeadline.getDate() + 1);
+              if (task.repeatDays.includes(nextDeadline.getDay())) {
+                found = true;
+              }
+            }
+          } else {
+            nextDeadline.setDate(nextDeadline.getDate() + 1);
+          }
+          break;
+        default:
+          nextDeadline.setDate(nextDeadline.getDate() + 1);
+      }
+
+      // 시간은 원래 작업과 동일하게 (없으면 자정)
+      if (task.deadline) {
+        const originalTime = new Date(task.deadline);
+        nextDeadline.setHours(originalTime.getHours(), originalTime.getMinutes(), 0, 0);
+      } else {
+        nextDeadline.setHours(23, 59, 0, 0); // 마감일 없던 작업은 하루 끝으로
       }
 
       return {
         id: Date.now(),
         title: task.title,
         category: task.category,
-        deadline: nextDeadline ? nextDeadline.toISOString().slice(0, 16) : '',
+        deadline: nextDeadline.toISOString().slice(0, 16),
         estimatedTime: task.estimatedTime,
         link: task.link,
         expectedRevenue: task.expectedRevenue,
         repeatType: task.repeatType,
+        repeatDays: task.repeatDays, // 커스텀 요일 정보 유지
         completed: false,
         createdAt: now.toISOString()
       };
@@ -12161,8 +12253,20 @@
           <!-- 일상/가족 탭 -->
           <div class="tab-content ${appState.currentTab === 'life' ? 'active' : ''}">
             ${(() => {
+              const now = new Date();
+              const todayEnd = new Date(now);
+              todayEnd.setHours(23, 59, 59, 999);
+
               const lifeTasks = appState.tasks.filter(t => t.category === '일상' || t.category === '가족');
-              const pendingTasks = lifeTasks.filter(t => !t.completed).sort((a, b) => {
+              const pendingTasks = lifeTasks.filter(t => {
+                if (t.completed) return false;
+                // 반복 작업 중 미래 마감일(내일 이후)인 작업 제외
+                if (t.deadline && t.repeatType && t.repeatType !== 'none') {
+                  const deadline = new Date(t.deadline);
+                  if (deadline > todayEnd) return false;
+                }
+                return true;
+              }).sort((a, b) => {
                 if (!a.deadline) return 1;
                 if (!b.deadline) return -1;
                 return new Date(a.deadline) - new Date(b.deadline);
@@ -12210,9 +12314,16 @@
                       ${dailyTasks.map(task => `
                         <div class="life-item">
                           <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
-                          <div class="life-item-content" onclick="editTask(${task.id})">
-                            <div class="life-item-title">${task.title}</div>
-                            ${task.deadline ? `<div class="life-item-meta">${new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}</div>` : ''}
+                          <div class="life-item-content">
+                            <div class="life-item-title">${escapeHtml(task.title)}</div>
+                            <div class="life-item-meta">
+                              ${task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : ''}
+                              ${task.repeatType && task.repeatType !== 'none' ? ' 🔁' : ''}
+                            </div>
+                          </div>
+                          <div class="life-item-actions">
+                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정">✏️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
                           </div>
                         </div>
                       `).join('')}
@@ -12227,9 +12338,16 @@
                       ${familyTasks.map(task => `
                         <div class="life-item">
                           <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
-                          <div class="life-item-content" onclick="editTask(${task.id})">
-                            <div class="life-item-title">${task.title}</div>
-                            ${task.deadline ? `<div class="life-item-meta">${new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}</div>` : ''}
+                          <div class="life-item-content">
+                            <div class="life-item-title">${escapeHtml(task.title)}</div>
+                            <div class="life-item-meta">
+                              ${task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : ''}
+                              ${task.repeatType && task.repeatType !== 'none' ? ' 🔁' : ''}
+                            </div>
+                          </div>
+                          <div class="life-item-actions">
+                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정">✏️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
                           </div>
                         </div>
                       `).join('')}
