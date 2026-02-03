@@ -13544,7 +13544,7 @@
           <!-- 단계별 내용 -->
           <div class="work-stages">
             ${project.stages.map((stage, stageIdx) => {
-              const stageName = appState.workProjectStages[stageIdx];
+              const stageName = getStageName(project, stageIdx);
               const stageClass = stage.completed ? 'completed' : '';
               const subcategories = stage.subcategories || [];
 
@@ -13557,7 +13557,7 @@
                         ${stage.completed ? '✓' : ''}
                       </div>
                       <span class="work-stage-number">${stageIdx + 1}</span>
-                      ${stageName}
+                      <span class="work-stage-name" onclick="promptRenameStage(${project.id}, ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" style="cursor: pointer;" title="클릭하여 이름 변경">${stageName}</span>
                       ${(stage.startDate || stage.deadline) ? (() => {
                         const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
                         let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 12px; color: var(--text-muted);">';
@@ -13579,7 +13579,9 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})">📅</button>
+                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})" title="단계 일정 설정">📅</button>
+                      <button class="work-stage-add-task" onclick="promptRenameStage(${project.id}, ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경">✏️</button>
+                      <button class="work-stage-add-task" onclick="deleteProjectStage(${project.id}, ${stageIdx})" title="단계 삭제" style="color: var(--danger);">🗑️</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', ${project.id}, ${stageIdx})">+ 중분류</button>
                     </div>
                   </div>
@@ -13591,8 +13593,22 @@
                           <div class="work-subcategory-title">
                             📁 ${subcat.name}
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
+                            ${(subcat.startDate || subcat.endDate) ? (() => {
+                              const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
+                              let html = '<span class="work-subcat-date" style="margin-left: 8px; font-size: 11px; color: var(--text-muted);">';
+                              if (subcat.startDate && subcat.endDate) {
+                                html += fmtDate(subcat.startDate) + '~' + fmtDate(subcat.endDate);
+                              } else if (subcat.startDate) {
+                                html += fmtDate(subcat.startDate) + '~';
+                              } else {
+                                html += '~' + fmtDate(subcat.endDate);
+                              }
+                              html += '</span>';
+                              return html;
+                            })() : ''}
                           </div>
                           <div class="work-subcategory-actions">
+                            <button class="work-task-action" onclick="showWorkModal('subcat-deadline', ${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 일정">📅</button>
                             <button class="work-task-action" onclick="showWorkModal('task', ${project.id}, ${stageIdx}, ${subcatIdx})">+ 항목</button>
                             <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})">삭제</button>
                           </div>
@@ -13608,6 +13624,13 @@
                 </div>
               `;
             }).join('')}
+
+            <!-- 새 단계 추가 버튼 -->
+            <div class="work-stage-add-new" style="margin-top: 12px; padding: 12px; border: 2px dashed var(--border); border-radius: var(--radius-md); text-align: center;">
+              <button class="work-stage-add-task" onclick="promptAddStage(${project.id})" style="width: 100%; padding: 10px;">
+                + 새 단계 추가
+              </button>
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 16px;">
@@ -13863,14 +13886,29 @@
         case 'stage-deadline':
           titleText = '📅 단계 일정';
           const stageData = project?.stages[stageIdx] || {};
+          const stageNameForModal = getStageName(project, stageIdx);
           bodyHtml = `
             <div class="work-modal-field">
-              <label class="work-modal-label">${appState.workProjectStages[stageIdx]} 시작일</label>
+              <label class="work-modal-label">${stageNameForModal} 시작일</label>
               <input type="date" class="work-modal-input" id="work-input-startdate" value="${stageData.startDate || ''}">
             </div>
             <div class="work-modal-field">
-              <label class="work-modal-label">${appState.workProjectStages[stageIdx]} 마감일</label>
+              <label class="work-modal-label">${stageNameForModal} 마감일</label>
               <input type="date" class="work-modal-input" id="work-input-deadline" value="${stageData.deadline || ''}">
+            </div>
+          `;
+          break;
+        case 'subcat-deadline':
+          titleText = '📅 중분류 일정';
+          const subcatData = project?.stages[stageIdx]?.subcategories[subcatIdx] || {};
+          bodyHtml = `
+            <div class="work-modal-field">
+              <label class="work-modal-label">${subcatData.name || '중분류'} 시작일</label>
+              <input type="date" class="work-modal-input" id="work-input-startdate" value="${subcatData.startDate || ''}">
+            </div>
+            <div class="work-modal-field">
+              <label class="work-modal-label">${subcatData.name || '중분류'} 종료일</label>
+              <input type="date" class="work-modal-input" id="work-input-deadline" value="${subcatData.endDate || ''}">
             </div>
           `;
           break;
@@ -14010,6 +14048,20 @@
           }
           break;
         }
+        case 'subcat-deadline': {
+          const startDate = document.getElementById('work-input-startdate').value || null;
+          const endDate = document.getElementById('work-input-deadline').value || null;
+          const project = appState.workProjects.find(p => p.id === projectId);
+          if (project && project.stages[stageIdx]?.subcategories[subcategoryIdx]) {
+            project.stages[stageIdx].subcategories[subcategoryIdx].startDate = startDate;
+            project.stages[stageIdx].subcategories[subcategoryIdx].endDate = endDate;
+            project.updatedAt = new Date().toISOString();
+            saveWorkProjects();
+            renderStatic();
+            showToast('중분류 일정 설정됨', 'success');
+          }
+          break;
+        }
         case 'participant': {
           const goal = parseInt(document.getElementById('work-input-goal').value) || null;
           const count = parseInt(document.getElementById('work-input-count').value) || 0;
@@ -14082,12 +14134,21 @@
      * 프로젝트 추가
      */
     function addWorkProject(name, deadline = null) {
+      // 기본 단계 (프로젝트별로 커스터마이징 가능)
+      const defaultStages = appState.workProjectStages.map(stageName => ({
+        name: stageName,
+        completed: false,
+        subcategories: [],
+        startDate: null,
+        endDate: null
+      }));
+
       const newProject = {
         id: Date.now(),
         name: name,
         currentStage: 0,
         deadline: deadline,
-        stages: appState.workProjectStages.map(() => ({ completed: false, subcategories: [] })),
+        stages: defaultStages,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -14099,6 +14160,97 @@
       renderStatic();
       showToast(`프로젝트 "${name}" 생성됨`, 'success');
     }
+
+    /**
+     * 프로젝트 단계 추가
+     */
+    function addProjectStage(projectId, stageName) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project || !stageName.trim()) return;
+
+      project.stages.push({
+        name: stageName.trim(),
+        completed: false,
+        subcategories: [],
+        startDate: null,
+        endDate: null
+      });
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(`"${stageName}" 단계 추가됨`, 'success');
+    }
+    window.addProjectStage = addProjectStage;
+
+    /**
+     * 프로젝트 단계 이름 수정
+     */
+    function renameProjectStage(projectId, stageIdx, newName) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project || !project.stages[stageIdx] || !newName.trim()) return;
+
+      project.stages[stageIdx].name = newName.trim();
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+    }
+    window.renameProjectStage = renameProjectStage;
+
+    /**
+     * 프로젝트 단계 삭제
+     */
+    function deleteProjectStage(projectId, stageIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project || !project.stages[stageIdx]) return;
+
+      const stageName = project.stages[stageIdx].name;
+      if (!confirm(`"${stageName}" 단계를 삭제하시겠습니까?\n하위 중분류/작업도 모두 삭제됩니다.`)) return;
+
+      project.stages.splice(stageIdx, 1);
+      if (project.currentStage >= project.stages.length) {
+        project.currentStage = Math.max(0, project.stages.length - 1);
+      }
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(`"${stageName}" 단계 삭제됨`, 'success');
+    }
+    window.deleteProjectStage = deleteProjectStage;
+
+    /**
+     * 단계 이름 가져오기 (기존 프로젝트 호환)
+     */
+    function getStageName(project, stageIdx) {
+      const stage = project.stages[stageIdx];
+      if (!stage) return '';
+      // 새 구조: name 필드가 있음
+      if (stage.name) return stage.name;
+      // 기존 구조: 전역 배열에서 가져옴
+      return appState.workProjectStages[stageIdx] || `단계 ${stageIdx + 1}`;
+    }
+    window.getStageName = getStageName;
+
+    /**
+     * 새 단계 추가 프롬프트
+     */
+    function promptAddStage(projectId) {
+      const name = prompt('새 단계 이름을 입력하세요:');
+      if (name && name.trim()) {
+        addProjectStage(projectId, name.trim());
+      }
+    }
+    window.promptAddStage = promptAddStage;
+
+    /**
+     * 단계 이름 변경 프롬프트
+     */
+    function promptRenameStage(projectId, stageIdx, currentName) {
+      const newName = prompt('단계 이름을 변경하세요:', currentName);
+      if (newName && newName.trim() && newName.trim() !== currentName) {
+        renameProjectStage(projectId, stageIdx, newName.trim());
+      }
+    }
+    window.promptRenameStage = promptRenameStage;
 
     /**
      * 중분류 추가
@@ -14327,6 +14479,25 @@
       if (saved) {
         try {
           appState.workProjects = JSON.parse(saved);
+
+          // 기존 프로젝트 마이그레이션: 단계에 name 필드 추가
+          let needsSave = false;
+          appState.workProjects.forEach(project => {
+            if (project.stages) {
+              project.stages.forEach((stage, idx) => {
+                if (!stage.name) {
+                  // 기존 프로젝트: 전역 배열에서 이름 가져오기
+                  stage.name = appState.workProjectStages[idx] || `단계 ${idx + 1}`;
+                  needsSave = true;
+                }
+              });
+            }
+          });
+          if (needsSave) {
+            saveWorkProjects();
+            console.log('프로젝트 단계 마이그레이션 완료');
+          }
+
           // 첫 프로젝트 자동 선택
           if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
             appState.activeWorkProject = appState.workProjects[0].id;
