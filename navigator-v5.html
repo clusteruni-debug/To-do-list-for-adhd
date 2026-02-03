@@ -11581,7 +11581,7 @@
                 return amount.toLocaleString();
               };
 
-              return \`
+              return `
                 <div class="dashboard-section revenue-dashboard">
                   <div class="dashboard-header">
                     <div class="dashboard-title">💰 수익 대시보드</div>
@@ -11592,52 +11592,52 @@
                   <div class="revenue-summary">
                     <div class="revenue-card total">
                       <div class="revenue-card-label">총 수익</div>
-                      <div class="revenue-card-value">\${revenueStats.totalRevenue.toLocaleString()}원</div>
-                      <div class="revenue-card-sub">\${revenueStats.taskCount}개 완료</div>
+                      <div class="revenue-card-value">${revenueStats.totalRevenue.toLocaleString()}원</div>
+                      <div class="revenue-card-sub">${revenueStats.taskCount}개 완료</div>
                     </div>
                     <div class="revenue-card month">
                       <div class="revenue-card-label">이번 달</div>
-                      <div class="revenue-card-value">\${revenueStats.thisMonthRevenue.toLocaleString()}원</div>
+                      <div class="revenue-card-value">${revenueStats.thisMonthRevenue.toLocaleString()}원</div>
                     </div>
                   </div>
 
                   <div class="revenue-chart-section">
                     <div class="revenue-chart-title">📊 월별 수익 추이</div>
                     <div class="revenue-bar-chart">
-                      \${revenueStats.monthlyData.map(m => \`
+                      ${revenueStats.monthlyData.map(m => `
                         <div class="revenue-bar-item">
                           <div class="revenue-bar-wrapper">
-                            <div class="revenue-bar" style="height: \${Math.max((m.revenue / revenueStats.maxMonthlyRevenue) * 100, 5)}%">
-                              \${m.revenue > 0 ? \`<span class="revenue-bar-value">\${formatRevenue(m.revenue)}</span>\` : ''}
+                            <div class="revenue-bar" style="height: ${Math.max((m.revenue / revenueStats.maxMonthlyRevenue) * 100, 5)}%">
+                              ${m.revenue > 0 ? `<span class="revenue-bar-value">${formatRevenue(m.revenue)}</span>` : ''}
                             </div>
                           </div>
-                          <div class="revenue-bar-label">\${m.label}</div>
+                          <div class="revenue-bar-label">${m.label}</div>
                         </div>
-                      \`).join('')}
+                      `).join('')}
                     </div>
                   </div>
 
-                  \${revenueStats.categoryData.length > 0 ? \`
+                  ${revenueStats.categoryData.length > 0 ? `
                     <div class="revenue-category-section">
                       <div class="revenue-chart-title">📂 카테고리별 수익</div>
                       <div class="revenue-category-list">
-                        \${revenueStats.categoryData.map(c => \`
+                        ${revenueStats.categoryData.map(c => `
                           <div class="revenue-category-item">
                             <div class="revenue-category-header">
-                              <span class="category \${c.category}">\${c.category}</span>
-                              <span class="revenue-category-amount">\${c.revenue.toLocaleString()}원</span>
+                              <span class="category ${c.category}">${c.category}</span>
+                              <span class="revenue-category-amount">${c.revenue.toLocaleString()}원</span>
                             </div>
                             <div class="revenue-category-bar">
-                              <div class="revenue-category-bar-fill \${c.category}" style="width: \${c.percentage}%"></div>
+                              <div class="revenue-category-bar-fill ${c.category}" style="width: ${c.percentage}%"></div>
                             </div>
-                            <div class="revenue-category-percent">\${c.percentage}%</div>
+                            <div class="revenue-category-percent">${c.percentage}%</div>
                           </div>
-                        \`).join('')}
+                        `).join('')}
                       </div>
                     </div>
-                  \` : ''}
+                  ` : ''}
                 </div>
-              \`;
+              `;
             })()}
 
             ${(() => {
@@ -14191,7 +14191,7 @@
       const modal = document.createElement('div');
       modal.className = 'modal-overlay';
       modal.id = 'import-confirm-modal';
-      modal.innerHTML = \`
+      modal.innerHTML = `
         <div class="modal" style="max-width: 500px;">
           <div class="modal-header">
             <h2 style="display: flex; align-items: center; gap: 10px;">
@@ -14202,45 +14202,45 @@
           <div class="modal-body" style="padding: 20px;">
             <div style="background: var(--bg-secondary); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
               <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">제목</div>
-              <div style="font-size: 1.1rem; font-weight: bold;">\${escapeHtml(taskData.title || '제목 없음')}</div>
+              <div style="font-size: 1.1rem; font-weight: bold;">${escapeHtml(taskData.title || '제목 없음')}</div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">카테고리</div>
-                <div>\${escapeHtml(taskData.category || '부업')}</div>
+                <div>${escapeHtml(taskData.category || '부업')}</div>
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">마감일</div>
-                <div>\${taskData.deadline || '없음'}</div>
+                <div>${taskData.deadline || '없음'}</div>
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">예상 시간</div>
-                <div>\${taskData.estimatedTime || 10}분</div>
+                <div>${taskData.estimatedTime || 10}분</div>
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">보상</div>
-                <div style="color: var(--accent-green);">\${taskData.expectedRevenue || '-'}</div>
+                <div style="color: var(--accent-green);">${taskData.expectedRevenue || '-'}</div>
               </div>
             </div>
 
-            \${taskData.description ? \`
+            ${taskData.description ? `
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px; margin-bottom: 15px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px;">설명</div>
-                <div style="font-size: 0.9rem; max-height: 100px; overflow-y: auto;">\${escapeHtml(taskData.description)}</div>
+                <div style="font-size: 0.9rem; max-height: 100px; overflow-y: auto;">${escapeHtml(taskData.description)}</div>
               </div>
-            \` : ''}
+            ` : ''}
 
-            \${taskData.link ? \`
+            ${taskData.link ? `
               <div style="margin-bottom: 15px;">
-                <a href="\${escapeHtml(taskData.link)}" target="_blank" style="color: var(--accent-blue); font-size: 0.9rem;">
-                  🔗 \${escapeHtml(taskData.link.substring(0, 50))}...
+                <a href="${escapeHtml(taskData.link)}" target="_blank" style="color: var(--accent-blue); font-size: 0.9rem;">
+                  🔗 ${escapeHtml(taskData.link.substring(0, 50))}...
                 </a>
               </div>
-            \` : ''}
+            ` : ''}
 
             <div style="background: rgba(74, 158, 255, 0.1); border-radius: 8px; padding: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-              📢 출처: \${escapeHtml(taskData.source?.channel || 'telegram-event-bot')}
+              📢 출처: ${escapeHtml(taskData.source?.channel || 'telegram-event-bot')}
             </div>
           </div>
           <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
@@ -14248,7 +14248,7 @@
             <button class="btn btn-primary" onclick="confirmImportTask()">✅ Task 추가</button>
           </div>
         </div>
-      \`;
+      `;
 
       // 데이터 저장
       modal.dataset.taskData = JSON.stringify(taskData);
@@ -14329,7 +14329,7 @@
               events: events
             });
 
-            console.log(\`이벤트 \${task.source.eventId} 참여 상태 업데이트: \${participated}\`);
+            console.log(`이벤트 ${task.source.eventId} 참여 상태 업데이트: ${participated}`);
           }
         }
       } catch (error) {
