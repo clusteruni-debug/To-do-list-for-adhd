@@ -282,7 +282,7 @@
       background: var(--bg-secondary);
       padding: 8px;
       border-radius: var(--radius-md);
-      overflow-x: auto;
+      overflow: visible; /* 드롭다운 메뉴가 잘리지 않도록 */
       position: sticky;
       top: 0;
       z-index: 100;
@@ -322,21 +322,22 @@
     /* 더보기 드롭다운 메뉴 */
     .tab-more-dropdown {
       position: relative;
+      /* 드롭다운이 부모의 overflow에 의해 잘리지 않도록 */
+      z-index: 150;
     }
 
     .more-menu {
       display: none;
       position: absolute;
-      top: 100%;
+      top: calc(100% + 4px);
       right: 0;
-      margin-top: 4px;
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      box-shadow: 0 4px 12px var(--shadow-color);
-      z-index: 200;
-      min-width: 120px;
-      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      min-width: 140px;
+      overflow: visible;
     }
 
     .more-menu.show {
@@ -14859,15 +14860,19 @@
     function toggleMoreMenu(e) {
       if (e) e.stopPropagation();
       appState.moreMenuOpen = !appState.moreMenuOpen;
-      renderStatic();
+      const menu = document.getElementById('more-menu');
+      if (menu) {
+        menu.classList.toggle('show', appState.moreMenuOpen);
+      }
     }
 
     // 외부 클릭 시 더보기 메뉴 닫기
     document.addEventListener('click', (e) => {
       const dropdown = document.querySelector('.tab-more-dropdown');
+      const menu = document.getElementById('more-menu');
       if (appState.moreMenuOpen && dropdown && !dropdown.contains(e.target)) {
         appState.moreMenuOpen = false;
-        renderStatic();
+        if (menu) menu.classList.remove('show');
       }
     });
 
