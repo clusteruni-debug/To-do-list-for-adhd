@@ -3118,6 +3118,24 @@
       gap: 6px;
     }
 
+    .work-section-title.clickable {
+      cursor: pointer;
+      padding: 8px 12px;
+      margin: -8px -12px 12px -12px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .work-section-title.clickable:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-section-toggle {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 12px;
+    }
+
     .work-project-add-btn {
       padding: 8px 16px;
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -13805,10 +13823,19 @@
       const activeProjects = appState.workProjects.filter(p => !p.archived);
       const archivedProjects = appState.workProjects.filter(p => p.archived);
 
-      // 활성 프로젝트를 3가지로 분류
-      const inProgressProjects = activeProjects.filter(p => p.deadline && !isProjectCompleted(p));
-      const completedProjects = activeProjects.filter(p => isProjectCompleted(p));
-      const noDeadlineProjects = activeProjects.filter(p => !p.deadline && !isProjectCompleted(p));
+      // 최근 활동순 정렬 헬퍼
+      const sortByRecent = (projects) => {
+        return [...projects].sort((a, b) => {
+          const aDate = new Date(a.updatedAt || a.createdAt || 0);
+          const bDate = new Date(b.updatedAt || b.createdAt || 0);
+          return bDate - aDate; // 최신순
+        });
+      };
+
+      // 활성 프로젝트를 3가지로 분류 (최근 활동순 정렬)
+      const inProgressProjects = sortByRecent(activeProjects.filter(p => p.deadline && !isProjectCompleted(p)));
+      const completedProjects = sortByRecent(activeProjects.filter(p => isProjectCompleted(p)));
+      const noDeadlineProjects = sortByRecent(activeProjects.filter(p => !p.deadline && !isProjectCompleted(p)));
 
       if (appState.workProjects.length === 0) {
         return `
@@ -13911,19 +13938,29 @@
               </div>
             ` : ''}
             ${noDeadlineProjects.length > 0 ? `
-              <div class="work-section" style="margin-top: 20px;">
-                <div class="work-section-title" style="color: var(--text-muted);">📋 마감없음 (${noDeadlineProjects.length})</div>
-                <div class="work-dashboard">
-                  ${noDeadlineProjects.map(p => renderWorkDashboardCard(p)).join('')}
+              <div class="work-section collapsible" style="margin-top: 20px;">
+                <div class="work-section-title clickable" style="color: var(--text-muted);" onclick="toggleWorkSection('noDeadline')">
+                  <span class="work-section-toggle">${appState.workSectionExpanded?.noDeadline ? '▼' : '▶'}</span>
+                  📋 마감없음 (${noDeadlineProjects.length})
                 </div>
+                ${appState.workSectionExpanded?.noDeadline ? `
+                  <div class="work-dashboard">
+                    ${noDeadlineProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                  </div>
+                ` : ''}
               </div>
             ` : ''}
             ${completedProjects.length > 0 ? `
-              <div class="work-section" style="margin-top: 20px;">
-                <div class="work-section-title" style="color: var(--success);">✅ 완료 (${completedProjects.length})</div>
-                <div class="work-dashboard">
-                  ${completedProjects.map(p => renderWorkDashboardCard(p)).join('')}
+              <div class="work-section collapsible" style="margin-top: 20px;">
+                <div class="work-section-title clickable" style="color: var(--success);" onclick="toggleWorkSection('completed')">
+                  <span class="work-section-toggle">${appState.workSectionExpanded?.completed ? '▼' : '▶'}</span>
+                  ✅ 완료 (${completedProjects.length})
                 </div>
+                ${appState.workSectionExpanded?.completed ? `
+                  <div class="work-dashboard">
+                    ${completedProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                  </div>
+                ` : ''}
               </div>
             ` : ''}
             ${appState.showArchivedProjects && archivedProjects.length > 0 ? `
@@ -13997,6 +14034,18 @@
       renderStatic();
     }
     window.toggleArchivedProjects = toggleArchivedProjects;
+
+    /**
+     * 대시보드 섹션 펼침/접힘
+     */
+    function toggleWorkSection(section) {
+      if (!appState.workSectionExpanded) {
+        appState.workSectionExpanded = {};
+      }
+      appState.workSectionExpanded[section] = !appState.workSectionExpanded[section];
+      renderStatic();
+    }
+    window.toggleWorkSection = toggleWorkSection;
 
     /**
      * 대시보드 카드 렌더링
