@@ -7307,6 +7307,25 @@
     </div>
   </div>
 
+  <!-- 빠른 수정 모달 (탭 이동 없이) -->
+  <div id="quick-edit-modal" class="work-modal">
+    <div class="work-modal-content" style="max-width: 400px;">
+      <div class="work-modal-title">✏️ 작업 수정</div>
+      <div id="quick-edit-body">
+        <!-- 동적으로 채워짐 -->
+      </div>
+      <div class="work-modal-actions">
+        <button class="cancel" onclick="closeQuickEditModal()">취소</button>
+        <button class="confirm" onclick="saveQuickEdit()">저장</button>
+      </div>
+      <div style="text-align: center; margin-top: 12px;">
+        <button class="btn-small" onclick="openFullEdit()" style="background: var(--bg-tertiary); color: var(--text-secondary);">
+          📝 상세 편집으로 이동
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- 키보드 단축키 도움말 (PC) -->
   <button class="shortcuts-toggle" onclick="toggleShortcutsHelp()" title="단축키 도움말">⌨️</button>
   <div id="shortcuts-help" class="shortcuts-help">
@@ -7459,6 +7478,7 @@
       },
       availableTags: ['긴급', '회의', '전화', '외출', '대기중', '검토필요'],  // 사용 가능한 태그
       editingTaskId: null,            // 수정 중인 작업 ID (null이면 새로 추가)
+      quickEditTaskId: null,          // 빠른 수정 모달용 작업 ID
       touchStart: null,               // 스와이프 시작 지점
       touchingTaskId: null,           // 스와이프 중인 작업 ID
       notificationPermission: 'default', // 알림 권한 상태
@@ -9782,19 +9802,130 @@
     }
 
     /**
-     * 작업 수정 모드 진입
+     * 작업 수정 모드 진입 (빠른 수정 모달로 변경)
      */
     function editTask(id) {
       const task = appState.tasks.find(t => t.id === id);
       if (!task) return;
-      
+
+      // 빠른 수정 모달 열기 (탭 이동 없음)
+      appState.quickEditTaskId = id;
+      showQuickEditModal(task);
+    }
+
+    /**
+     * 빠른 수정 모달 표시
+     */
+    function showQuickEditModal(task) {
+      const modal = document.getElementById('quick-edit-modal');
+      const body = document.getElementById('quick-edit-body');
+
+      body.innerHTML = `
+        <div class="work-modal-field">
+          <label class="work-modal-label">제목</label>
+          <input type="text" class="work-modal-input" id="quick-edit-title" value="${escapeHtml(task.title)}" autofocus>
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">카테고리</label>
+          <select class="work-modal-input" id="quick-edit-category">
+            <option value="본업" ${task.category === '본업' ? 'selected' : ''}>💼 본업</option>
+            <option value="부업" ${task.category === '부업' ? 'selected' : ''}>💰 부업</option>
+            <option value="일상" ${task.category === '일상' ? 'selected' : ''}>🌅 일상</option>
+            <option value="가족" ${task.category === '가족' ? 'selected' : ''}>👨‍👩‍👧 가족</option>
+          </select>
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">마감일</label>
+          <input type="datetime-local" class="work-modal-input" id="quick-edit-deadline" value="${task.deadline || ''}">
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">예상 시간 (분)</label>
+          <input type="number" class="work-modal-input" id="quick-edit-time" value="${task.estimatedTime || ''}" min="1">
+        </div>
+        ${task.category === '부업' ? `
+          <div class="work-modal-field">
+            <label class="work-modal-label">예상 수익 (원)</label>
+            <input type="number" class="work-modal-input" id="quick-edit-revenue" value="${task.expectedRevenue || ''}">
+          </div>
+        ` : ''}
+      `;
+
+      modal.classList.add('show');
+
+      // 엔터키로 저장
+      body.querySelector('#quick-edit-title').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') saveQuickEdit();
+      });
+    }
+
+    /**
+     * 빠른 수정 모달 닫기
+     */
+    function closeQuickEditModal() {
+      const modal = document.getElementById('quick-edit-modal');
+      modal.classList.remove('show');
+      appState.quickEditTaskId = null;
+    }
+    window.closeQuickEditModal = closeQuickEditModal;
+
+    /**
+     * 빠른 수정 저장
+     */
+    function saveQuickEdit() {
+      const id = appState.quickEditTaskId;
+      if (!id) return;
+
+      const title = document.getElementById('quick-edit-title').value.trim();
+      if (!title) {
+        showToast('제목을 입력하세요', 'error');
+        return;
+      }
+
+      const category = document.getElementById('quick-edit-category').value;
+      const deadline = document.getElementById('quick-edit-deadline').value;
+      const estimatedTime = parseInt(document.getElementById('quick-edit-time').value) || null;
+      const revenueEl = document.getElementById('quick-edit-revenue');
+      const expectedRevenue = revenueEl ? parseInt(revenueEl.value) || null : null;
+
+      appState.tasks = appState.tasks.map(t => {
+        if (t.id === id) {
+          return {
+            ...t,
+            title,
+            category,
+            deadline,
+            estimatedTime,
+            expectedRevenue: expectedRevenue !== null ? expectedRevenue : t.expectedRevenue
+          };
+        }
+        return t;
+      });
+
+      saveState();
+      closeQuickEditModal();
+      renderStatic();
+      showToast('수정 완료', 'success');
+    }
+    window.saveQuickEdit = saveQuickEdit;
+
+    /**
+     * 상세 편집으로 이동
+     */
+    function openFullEdit() {
+      const id = appState.quickEditTaskId;
+      if (!id) return;
+
+      const task = appState.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      closeQuickEditModal();
+
       appState.detailedTask = { ...task };
       appState.showDetailedAdd = true;
       appState.editingTaskId = id;
-      appState.currentTab = 'action'; // 실행 탭으로 이동
+      appState.currentTab = 'action';
       renderStatic();
-      
-      // 폼으로 스크롤
+
       setTimeout(() => {
         const formEl = document.querySelector('.add-task-section');
         if (formEl) {
@@ -9802,6 +9933,7 @@
         }
       }, 100);
     }
+    window.openFullEdit = openFullEdit;
 
     /**
      * 수정 취소
