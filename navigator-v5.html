@@ -2730,6 +2730,43 @@
     }
 
     /* 서브태스크 진행률 바 */
+    .subtask-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin-left: 8px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
+      color: var(--primary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subtask-badge:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.25), rgba(118, 75, 162, 0.25));
+      transform: scale(1.05);
+    }
+
+    .subtask-preview {
+      margin-top: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: rgba(102, 126, 234, 0.08);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 6px 6px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subtask-preview:hover {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--text-primary);
+    }
+
     .subtask-progress-bar {
       display: flex;
       align-items: center;
@@ -2737,6 +2774,7 @@
       margin-top: 8px;
       padding: 8px 10px;
       background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.2s;
@@ -12058,7 +12096,14 @@
                           <div class="swipe-actions right">× 삭제</div>
 
                           <div class="task-item-header">
-                            <div class="task-item-title">${index + 1}. ${task.title}</div>
+                            <div class="task-item-title">
+                              ${index + 1}. ${task.title}
+                              ${task.subtasks && task.subtasks.length > 0 ? `
+                                <span class="subtask-badge" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
+                                  📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
+                                </span>
+                              ` : ''}
+                            </div>
                           </div>
                           <div class="task-item-meta">
                             <span class="category ${task.category}">${task.category}</span>
@@ -12082,6 +12127,8 @@
                               const totalCount = task.subtasks.length;
                               const percentage = Math.round((completedCount / totalCount) * 100);
                               const isExpanded = appState.expandedSubtasks && appState.expandedSubtasks[task.id];
+                              const nextSubtask = task.subtasks.find(s => !s.completed);
+                              const previewText = nextSubtask ? nextSubtask.text : '모두 완료!';
                               return `
                                 <div class="subtask-progress-bar" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
                                   <div class="subtask-progress-bar-fill-container">
@@ -12090,6 +12137,11 @@
                                   <span class="subtask-progress-bar-text">${completedCount}/${totalCount} 완료</span>
                                   <span class="subtask-progress-toggle ${isExpanded ? 'expanded' : ''}">▼</span>
                                 </div>
+                                ${!isExpanded ? `
+                                  <div class="subtask-preview" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
+                                    ${nextSubtask ? '▸ 다음: ' : '🎉 '}${previewText.length > 30 ? previewText.substring(0, 30) + '...' : previewText}
+                                  </div>
+                                ` : ''}
                                 ${isExpanded ? `
                                   <div class="subtask-list-expanded">
                                     ${task.subtasks.map((subtask, idx) => `
