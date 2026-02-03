@@ -8812,6 +8812,9 @@
       const task = appState.tasks.find(t => t.id === id);
       if (!task) return;
 
+      // 이미 완료된 작업이면 무시 (중복 클릭 방지)
+      if (task.completed) return;
+
       const now = new Date();
       const completedAt = now.toISOString();
 
@@ -10287,23 +10290,23 @@
       toast.innerHTML = `
         <span class="toast-undo-text">✓ "${taskTitle.substring(0, 15)}${taskTitle.length > 15 ? '...' : ''}" 완료</span>
         <button class="toast-undo-btn" onclick="undoComplete(${taskId})">↩ 실행취소</button>
-        <span class="toast-undo-timer">3</span>
+        <span class="toast-undo-timer">5</span>
       `;
       document.body.appendChild(toast);
 
-      // 카운트다운
-      let countdown = 3;
+      // 카운트다운 (5초)
+      let countdown = 5;
       const timerEl = toast.querySelector('.toast-undo-timer');
       const interval = setInterval(() => {
         countdown--;
         if (timerEl) timerEl.textContent = countdown;
       }, 1000);
 
-      // 3초 후 자동 제거
+      // 5초 후 자동 제거
       undoToastTimeout = setTimeout(() => {
         clearInterval(interval);
         toast.remove();
-      }, 3000);
+      }, 5000);
     }
 
     /**
