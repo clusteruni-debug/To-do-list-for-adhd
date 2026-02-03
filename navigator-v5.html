@@ -8386,6 +8386,10 @@
         localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
         localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
 
+        // 본업 프로젝트 저장
+        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+
         // Firebase 동기화 (로그인된 경우)
         if (appState.user) {
           syncToFirebase();
@@ -8496,6 +8500,8 @@
           streak: appState.streak,
           templates: appState.templates,
           availableTags: appState.availableTags,
+          workProjects: appState.workProjects,
+          workTemplates: appState.workTemplates,
           lastUpdated: new Date().toISOString()
         });
 
@@ -8550,10 +8556,22 @@
           if (data.availableTags) {
             appState.availableTags = data.availableTags;
           }
+          if (data.workProjects) {
+            appState.workProjects = data.workProjects;
+            if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
+              const activeProject = appState.workProjects.find(p => !p.archived);
+              appState.activeWorkProject = activeProject ? activeProject.id : null;
+            }
+          }
+          if (data.workTemplates) {
+            appState.workTemplates = data.workTemplates;
+          }
 
           // 로컬에도 저장
           localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
           localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+          localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+          localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
 
           appState.syncStatus = 'synced';
         } else {
