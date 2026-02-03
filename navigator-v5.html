@@ -5026,11 +5026,13 @@
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s;
+      color: var(--text-primary);
     }
 
     .life-rhythm-btn:hover {
       background: var(--bg-primary);
       border-color: var(--primary);
+      color: var(--text-primary);
     }
 
     .life-rhythm-btn:active {
@@ -12299,33 +12301,29 @@
                       </div>
                       <div class="life-rhythm-buttons">
                         <button class="life-rhythm-btn ${rhythm.wakeUp ? 'recorded' : ''}"
-                                onclick="recordLifeRhythm('wakeUp')"
-                                oncontextmenu="event.preventDefault(); editLifeRhythm('wakeUp');"
-                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                                onclick="handleLifeRhythmClick('wakeUp', ${rhythm.wakeUp ? 'true' : 'false'})"
+                                title="${rhythm.wakeUp ? '클릭: 수정' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">☀️</span>
                           <span class="life-rhythm-label">기상</span>
                           <span class="life-rhythm-time">${rhythm.wakeUp || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.workStart ? 'recorded' : ''}"
-                                onclick="recordLifeRhythm('workStart')"
-                                oncontextmenu="event.preventDefault(); editLifeRhythm('workStart');"
-                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                                onclick="handleLifeRhythmClick('workStart', ${rhythm.workStart ? 'true' : 'false'})"
+                                title="${rhythm.workStart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🚌</span>
                           <span class="life-rhythm-label">출근</span>
                           <span class="life-rhythm-time">${rhythm.workStart || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.workEnd ? 'recorded' : ''}"
-                                onclick="recordLifeRhythm('workEnd')"
-                                oncontextmenu="event.preventDefault(); editLifeRhythm('workEnd');"
-                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                                onclick="handleLifeRhythmClick('workEnd', ${rhythm.workEnd ? 'true' : 'false'})"
+                                title="${rhythm.workEnd ? '클릭: 수정' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🏠</span>
                           <span class="life-rhythm-label">퇴근</span>
                           <span class="life-rhythm-time">${rhythm.workEnd || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.sleep ? 'recorded' : ''}"
-                                onclick="recordLifeRhythm('sleep')"
-                                oncontextmenu="event.preventDefault(); editLifeRhythm('sleep');"
-                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                                onclick="handleLifeRhythmClick('sleep', ${rhythm.sleep ? 'true' : 'false'})"
+                                title="${rhythm.sleep ? '클릭: 수정' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🌙</span>
                           <span class="life-rhythm-label">취침</span>
                           <span class="life-rhythm-time">${rhythm.sleep || '--:--'}</span>
@@ -14648,6 +14646,20 @@
     // ============================================
     // 라이프 리듬 트래커 함수
     // ============================================
+
+    /**
+     * 라이프 리듬 버튼 클릭 핸들러
+     * - 기록 없으면: 현재 시간 기록
+     * - 기록 있으면: 수정 모드
+     */
+    function handleLifeRhythmClick(type, hasRecord) {
+      if (hasRecord) {
+        editLifeRhythm(type);
+      } else {
+        recordLifeRhythm(type);
+      }
+    }
+    window.handleLifeRhythmClick = handleLifeRhythmClick;
 
     /**
      * 라이프 리듬 기록 (현재 시간)
