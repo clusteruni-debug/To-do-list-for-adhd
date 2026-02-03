@@ -9738,14 +9738,42 @@
      */
     function uncompleteTask(id) {
       const task = appState.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      // 오늘 완료한 작업인지 확인
+      const wasCompletedToday = task.completedAt &&
+        new Date(task.completedAt).toDateString() === new Date().toDateString();
 
       appState.tasks = appState.tasks.map(t =>
-        t.id === id ? { ...t, completed: false } : t
+        t.id === id ? { ...t, completed: false, completedAt: null } : t
       );
+
+      // 오늘 완료한 작업이었다면 통계 감소
+      if (wasCompletedToday) {
+        appState.todayStats.completedToday = Math.max(0, appState.todayStats.completedToday - 1);
+        appState.todayStats.streak = Math.max(0, appState.todayStats.streak - 1);
+      }
+
+      // 반복 작업이었다면 자동 생성된 다음 회차 작업 제거
+      if (task.repeatType && task.repeatType !== 'none') {
+        // 같은 제목의 미완료 작업 중 방금 생성된 것 제거
+        const recentTasks = appState.tasks.filter(t =>
+          t.title === task.title &&
+          !t.completed &&
+          t.id !== id &&
+          t.createdAt &&
+          (new Date() - new Date(t.createdAt)) < 60000 // 1분 이내 생성된 것
+        );
+        if (recentTasks.length > 0) {
+          const removeId = recentTasks[recentTasks.length - 1].id;
+          appState.tasks = appState.tasks.filter(t => t.id !== removeId);
+        }
+      }
+
       saveState();
 
       // telegram-event-bot 연동: 연결된 이벤트 상태 업데이트
-      if (task && task.source && task.source.type === 'telegram-event') {
+      if (task.source && task.source.type === 'telegram-event') {
         updateLinkedEventStatus(task, false);
       }
 
@@ -12359,6 +12387,27 @@
                   <div class="life-empty">
                     <div class="life-empty-icon">🏡</div>
                     <div class="life-empty-text">일상/가족 작업이 없습니다</div>
+                  </div>
+                ` : ''}
+
+                ${completedTasks.length > 0 ? `
+                  <div class="life-section" style="margin-top: 24px; opacity: 0.7;">
+                    <div class="life-section-title">✓ 완료됨 (${completedTasks.length})</div>
+                    <div class="life-list">
+                      ${completedTasks.slice(0, 5).map(task => `
+                        <div class="life-item completed" style="opacity: 0.6;">
+                          <div class="task-check-btn checked" style="color: #48bb78;">✓</div>
+                          <div class="life-item-content" style="text-decoration: line-through;">
+                            <div class="life-item-title">${escapeHtml(task.title)}</div>
+                          </div>
+                          <div class="life-item-actions" style="opacity: 1;">
+                            <button class="life-action-btn" onclick="uncompleteTask(${task.id})" title="되돌리기">↩️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
+                          </div>
+                        </div>
+                      `).join('')}
+                      ${completedTasks.length > 5 ? `<div style="text-align: center; color: var(--text-muted); font-size: 12px; padding: 8px;">+ ${completedTasks.length - 5}개 더</div>` : ''}
+                    </div>
                   </div>
                 ` : ''}
               `;
