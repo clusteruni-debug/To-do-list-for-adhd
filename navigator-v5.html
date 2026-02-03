@@ -6663,6 +6663,139 @@
       color: var(--text-secondary);
     }
 
+    /* 히스토리 뷰 탭 */
+    .history-view-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .history-view-tab {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-view-tab:hover {
+      background: var(--bg-secondary);
+    }
+
+    .history-view-tab.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* 라이프 리듬 히스토리 */
+    .rhythm-history-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .rhythm-history-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .rhythm-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .rhythm-history-item {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .rhythm-history-item.today {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.1) 100%);
+    }
+
+    .rhythm-history-date {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .rhythm-history-day {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .rhythm-history-date-num {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .rhythm-history-today-badge {
+      font-size: 11px;
+      background: var(--primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .rhythm-history-timeline {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .rhythm-history-time {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .rhythm-history-time:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-history-time .empty {
+      color: var(--text-muted);
+    }
+
+    .rhythm-history-arrow {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .rhythm-history-summary {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 480px) {
+      .rhythm-history-timeline {
+        justify-content: center;
+      }
+
+      .rhythm-history-summary {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
     /* 주간 요약 카드 */
     .week-summary {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -8026,6 +8159,7 @@
         selectedDate: null,           // 선택된 날짜 (YYYY-MM-DD)
         expandedDates: {}             // 펼쳐진 날짜 그룹
       },
+      historyView: 'tasks',           // 히스토리 뷰: tasks / rhythm
       // 사용자 설정
       settings: {
         targetWakeTime: '07:00',      // 목표 기상 시간
@@ -13736,6 +13870,17 @@
                   <div class="history-summary">총 ${totalCompleted}개 완료</div>
                 </div>
 
+                <!-- 뷰 전환 탭 -->
+                <div class="history-view-tabs">
+                  <button class="history-view-tab ${appState.historyView !== 'rhythm' ? 'active' : ''}" onclick="setHistoryView('tasks')">
+                    📋 작업 기록
+                  </button>
+                  <button class="history-view-tab ${appState.historyView === 'rhythm' ? 'active' : ''}" onclick="setHistoryView('rhythm')">
+                    😴 라이프 리듬
+                  </button>
+                </div>
+
+                ${appState.historyView === 'rhythm' ? renderLifeRhythmHistory() : `
                 <!-- 주간 요약 -->
                 <div class="week-summary">
                   <div class="week-summary-title">📊 이번 주 요약</div>
@@ -13789,6 +13934,7 @@
                   <div class="dashboard-title">📜 최근 기록</div>
                   ${renderRecentHistory()}
                 </div>
+                `}
               `;
             })()}
           </div>
@@ -14751,6 +14897,145 @@
         insights
       };
     }
+
+    /**
+     * 히스토리 뷰 전환
+     */
+    function setHistoryView(view) {
+      appState.historyView = view;
+      renderStatic();
+    }
+    window.setHistoryView = setHistoryView;
+
+    /**
+     * 라이프 리듬 히스토리 렌더링
+     */
+    function renderLifeRhythmHistory() {
+      const today = new Date();
+      const records = [];
+
+      // 최근 30일 기록 수집
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const isToday = i === 0;
+
+        let dayData;
+        if (isToday && appState.lifeRhythm.today.date === dateStr) {
+          dayData = appState.lifeRhythm.today;
+        } else {
+          dayData = appState.lifeRhythm.history[dateStr];
+        }
+
+        if (dayData && (dayData.wakeUp || dayData.workStart || dayData.workEnd || dayData.sleep)) {
+          // 수면 시간 계산
+          let sleepDuration = null;
+          if (i < 29) {
+            const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
+            const prevData = appState.lifeRhythm.history[prevDateStr] || {};
+            if (prevData.sleep && dayData.wakeUp) {
+              const sleepTime = parseInt(prevData.sleep.split(':')[0]) * 60 + parseInt(prevData.sleep.split(':')[1]);
+              const wakeTime = parseInt(dayData.wakeUp.split(':')[0]) * 60 + parseInt(dayData.wakeUp.split(':')[1]);
+              let duration = wakeTime + (24 * 60 - sleepTime);
+              if (sleepTime < 12 * 60) duration = wakeTime - sleepTime;
+              if (duration > 0 && duration < 16 * 60) {
+                const hours = Math.floor(duration / 60);
+                const mins = duration % 60;
+                sleepDuration = hours + 'h ' + mins + 'm';
+              }
+            }
+          }
+
+          // 근무 시간 계산
+          let workDuration = null;
+          if (dayData.workStart && dayData.workEnd) {
+            const start = parseInt(dayData.workStart.split(':')[0]) * 60 + parseInt(dayData.workStart.split(':')[1]);
+            const end = parseInt(dayData.workEnd.split(':')[0]) * 60 + parseInt(dayData.workEnd.split(':')[1]);
+            if (end > start) {
+              const hours = Math.floor((end - start) / 60);
+              const mins = (end - start) % 60;
+              workDuration = hours + 'h ' + mins + 'm';
+            }
+          }
+
+          // 완료한 작업 수
+          const completedTasks = appState.tasks.filter(t =>
+            t.completed && t.completedAt && t.completedAt.startsWith(dateStr)
+          ).length;
+
+          records.push({
+            date: dateStr,
+            dayLabel: ['일', '월', '화', '수', '목', '금', '토'][date.getDay()],
+            dateLabel: (date.getMonth() + 1) + '/' + date.getDate(),
+            isToday,
+            wakeUp: dayData.wakeUp,
+            workStart: dayData.workStart,
+            workEnd: dayData.workEnd,
+            sleep: dayData.sleep,
+            sleepDuration,
+            workDuration,
+            completedTasks
+          });
+        }
+      }
+
+      if (records.length === 0) {
+        return '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 기상/출근/퇴근/취침을 기록해보세요</div></div>';
+      }
+
+      return '<div class="rhythm-history-list">' + records.map(r => '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '"><div class="rhythm-history-date"><span class="rhythm-history-day">' + r.dayLabel + '</span><span class="rhythm-history-date-num">' + r.dateLabel + '</span>' + (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') + '</div><div class="rhythm-history-timeline"><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="클릭하여 수정">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workStart\')" title="클릭하여 수정">' + (r.workStart ? '🚌' + r.workStart : '<span class="empty">🚌--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workEnd\')" title="클릭하여 수정">' + (r.workEnd ? '🏠' + r.workEnd : '<span class="empty">🏠--:--</span>') + '</span><span class="rhythm-history-arrow">→</span><span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="클릭하여 수정">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span></div><div class="rhythm-history-summary">' + (r.sleepDuration ? '<span>💤 ' + r.sleepDuration + '</span>' : '') + (r.workDuration ? '<span>💼 ' + r.workDuration + '</span>' : '') + (r.completedTasks > 0 ? '<span>✅ ' + r.completedTasks + '개 완료</span>' : '') + '</div></div>').join('') + '</div>';
+    }
+
+    /**
+     * 과거 날짜 라이프 리듬 수정
+     */
+    function editLifeRhythmHistory(dateStr, type) {
+      const today = new Date().toISOString().split('T')[0];
+      let currentValue;
+
+      if (dateStr === today && appState.lifeRhythm.today.date === today) {
+        currentValue = appState.lifeRhythm.today[type];
+      } else {
+        currentValue = appState.lifeRhythm.history[dateStr]?.[type];
+      }
+
+      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      const newTime = prompt(dateStr + ' ' + labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
+
+      if (newTime === null) return;
+
+      // 시간 형식 검증
+      if (newTime && !/^\d{1,2}:\d{2}$/.test(newTime)) {
+        showToast('올바른 시간 형식이 아닙니다 (예: 07:30)', 'error');
+        return;
+      }
+
+      // 시간 정규화
+      let normalizedTime = null;
+      if (newTime) {
+        const [h, m] = newTime.split(':');
+        normalizedTime = h.padStart(2, '0') + ':' + m;
+      }
+
+      // 저장
+      if (dateStr === today) {
+        if (appState.lifeRhythm.today.date !== today) {
+          appState.lifeRhythm.today = { date: today, wakeUp: null, workStart: null, workEnd: null, sleep: null };
+        }
+        appState.lifeRhythm.today[type] = normalizedTime;
+      } else {
+        if (!appState.lifeRhythm.history[dateStr]) {
+          appState.lifeRhythm.history[dateStr] = { wakeUp: null, workStart: null, workEnd: null, sleep: null };
+        }
+        appState.lifeRhythm.history[dateStr][type] = normalizedTime;
+      }
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast(labels[type] + ' 시간이 수정되었습니다', 'success');
+    }
+    window.editLifeRhythmHistory = editLifeRhythmHistory;
 
     /**
      * 라이프 리듬 저장
