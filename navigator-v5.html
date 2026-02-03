@@ -7937,32 +7937,40 @@
     function calculatePriority(task) {
       let score = 0;
       const now = new Date();
-      
+      const hasDeadline = !!task.deadline;
+
       // 1. 마감시간 기반 점수 (가장 중요)
-      if (task.deadline) {
+      if (hasDeadline) {
         const deadline = new Date(task.deadline);
         const hoursLeft = (deadline - now) / (1000 * 60 * 60);
-        
+
         if (hoursLeft < 0) score -= 100;      // 이미 지남: 패널티
         else if (hoursLeft < 3) score += 100; // 3시간 내: 최우선
         else if (hoursLeft < 24) score += 70; // 하루 내: 높은 우선순위
         else if (hoursLeft < 72) score += 40; // 3일 내: 중간 우선순위
+        else score += 20;                     // 마감 있지만 여유 있음
       }
-      
-      // 2. 카테고리 기본 점수
-      if (task.category === '본업') score += 40;
-      else if (task.category === '부업') score += 35;
-      else if (task.category === '일상') score += 25;
-      
+
+      // 2. 카테고리 기본 점수 (마감 유무에 따라 차등)
+      if (task.category === '본업') {
+        score += hasDeadline ? 40 : 15;  // 마감 없으면 하단으로
+      } else if (task.category === '부업') {
+        score += hasDeadline ? 35 : 12;
+      } else if (task.category === '일상') {
+        score += hasDeadline ? 25 : 10;
+      } else if (task.category === '가족') {
+        score += hasDeadline ? 25 : 10;
+      }
+
       // 3. 부업의 경우 ROI 계산 (수익/시간)
       if (task.category === '부업' && task.expectedRevenue) {
         const roi = task.expectedRevenue / task.estimatedTime;
         score += Math.min(roi * 0.1, 30); // 최대 30점까지
       }
-      
+
       // 4. 짧은 작업 우대 (빠른 성취감)
       if (task.estimatedTime <= 10) score += 10;
-      
+
       return score;
     }
 
