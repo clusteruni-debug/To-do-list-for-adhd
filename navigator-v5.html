@@ -1426,6 +1426,18 @@
       color: #667eea;
     }
 
+    .quick-template-btn.secondary {
+      background: transparent;
+      border-style: dashed;
+      color: var(--text-tertiary);
+    }
+
+    .quick-template-btn.secondary:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--text-secondary);
+      color: var(--text-secondary);
+    }
+
     /* 다른 작업 섹션 */
     .other-tasks-section {
       background: var(--bg-secondary);
@@ -4137,11 +4149,45 @@
       font-weight: bold;
     }
 
+    /* 퀵 필터 섹션 */
+    .quick-filter-section {
+      margin: 16px 0;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .quick-filter-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .quick-filter-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .quick-filter-help {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+    }
+
     /* 퀵 필터 버튼들 */
     .quick-filters {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
@@ -4699,6 +4745,56 @@
         transform: translateX(-50%) translateY(0);
         opacity: 1;
       }
+    }
+
+    /* 실행취소 토스트 */
+    .toast-undo {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a2e;
+      border: 1px solid var(--accent-green);
+      color: white;
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 1001;
+      animation: slideUp 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 90%;
+    }
+
+    .toast-undo-text {
+      font-size: 14px;
+      color: var(--accent-green);
+      font-weight: 500;
+    }
+
+    .toast-undo-btn {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .toast-undo-btn:hover {
+      background: #5a6fd6;
+      transform: scale(1.05);
+    }
+
+    .toast-undo-timer {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      min-width: 16px;
+      text-align: center;
     }
 
     .toast.success {
@@ -8759,6 +8855,9 @@
       // 완료 애니메이션 표시
       showCompletionAnimation(task.title, appState.todayStats.streak);
 
+      // 실행취소 토스트 표시 (3초)
+      showUndoToast(id, task.title);
+
       // 마일스톤 체크 (ADHD 특화 - 도파민 보상)
       checkMilestone();
 
@@ -10173,6 +10272,54 @@
       }, 2000);
     }
 
+    /**
+     * 실행취소 토스트 표시 (완료 후 3초간)
+     */
+    let undoToastTimeout = null;
+    function showUndoToast(taskId, taskTitle) {
+      // 기존 토스트 제거
+      const existingToast = document.querySelector('.toast-undo');
+      if (existingToast) existingToast.remove();
+      if (undoToastTimeout) clearTimeout(undoToastTimeout);
+
+      const toast = document.createElement('div');
+      toast.className = 'toast-undo';
+      toast.innerHTML = `
+        <span class="toast-undo-text">✓ "${taskTitle.substring(0, 15)}${taskTitle.length > 15 ? '...' : ''}" 완료</span>
+        <button class="toast-undo-btn" onclick="undoComplete(${taskId})">↩ 실행취소</button>
+        <span class="toast-undo-timer">3</span>
+      `;
+      document.body.appendChild(toast);
+
+      // 카운트다운
+      let countdown = 3;
+      const timerEl = toast.querySelector('.toast-undo-timer');
+      const interval = setInterval(() => {
+        countdown--;
+        if (timerEl) timerEl.textContent = countdown;
+      }, 1000);
+
+      // 3초 후 자동 제거
+      undoToastTimeout = setTimeout(() => {
+        clearInterval(interval);
+        toast.remove();
+      }, 3000);
+    }
+
+    /**
+     * 실행취소 (토스트에서 호출)
+     */
+    function undoComplete(taskId) {
+      // 토스트 즉시 제거
+      const toast = document.querySelector('.toast-undo');
+      if (toast) toast.remove();
+      if (undoToastTimeout) clearTimeout(undoToastTimeout);
+
+      // 완료 취소 처리
+      uncompleteTask(taskId);
+    }
+    window.undoComplete = undoComplete;
+
     // ============================================
     // 온보딩 & 스트릭 & 포커스 모드
     // ============================================
@@ -10900,28 +11047,34 @@
 
                 <!-- 빠른 템플릿 -->
                 <div class="quick-templates">
-                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="글쓰기 템플릿">
-                    ✍️ 글쓰기
+                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿">
+                    ✍️ 글쓰기 템플릿
                   </button>
-                  <button class="quick-template-btn" onclick="toggleDetailedAdd()" title="상세 입력">
-                    📝 상세 입력
+                  <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="마감일, 예상수익 등 상세 정보 입력">
+                    ➕ 직접 추가
                   </button>
                 </div>
 
-                <!-- 퀵 필터 -->
-                <div class="quick-filters">
-                  <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')">
-                    ⚡ 2분 룰
-                    <span class="filter-count">${getQuickFilterCount('2min')}</span>
-                  </button>
-                  <button class="quick-filter-btn ${appState.quickFilter === '5min' ? 'active' : ''}" onclick="setQuickFilter('5min')">
-                    🚀 5분 이하
-                    <span class="filter-count">${getQuickFilterCount('5min')}</span>
-                  </button>
-                  <button class="quick-filter-btn ${appState.quickFilter === 'urgent' ? 'active' : ''}" onclick="setQuickFilter('urgent')">
-                    🔥 24시간 내
-                    <span class="filter-count">${getQuickFilterCount('urgent')}</span>
-                  </button>
+                <!-- 퀵 필터 섹션 -->
+                <div class="quick-filter-section">
+                  <div class="quick-filter-header">
+                    <span class="quick-filter-title">⏱️ 빠르게 처리할 작업</span>
+                    <span class="quick-filter-help" title="작업 시간/마감 기준으로 필터링">?</span>
+                  </div>
+                  <div class="quick-filters">
+                    <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')" title="2분 안에 끝나는 작업만 보기 (GTD 2분 룰)">
+                      ⚡ 2분 룰
+                      <span class="filter-count">${getQuickFilterCount('2min')}</span>
+                    </button>
+                    <button class="quick-filter-btn ${appState.quickFilter === '5min' ? 'active' : ''}" onclick="setQuickFilter('5min')" title="5분 이하로 끝나는 작업만 보기">
+                      🚀 5분 이하
+                      <span class="filter-count">${getQuickFilterCount('5min')}</span>
+                    </button>
+                    <button class="quick-filter-btn ${appState.quickFilter === 'urgent' ? 'active' : ''}" onclick="setQuickFilter('urgent')" title="마감이 24시간 내인 긴급 작업">
+                      🔥 24시간 내
+                      <span class="filter-count">${getQuickFilterCount('urgent')}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <!-- 다른 작업 목록 (접기/펼치기) -->
