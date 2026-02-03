@@ -3538,6 +3538,17 @@
       gap: 8px;
     }
 
+    .work-subcategory-name {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-subcategory-name:hover {
+      background: var(--bg-tertiary);
+    }
+
     .work-subcategory-toggle {
       font-size: 10px;
       color: var(--text-muted);
@@ -3997,6 +4008,14 @@
     .work-task-title {
       flex: 1;
       font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-task-title:hover {
+      background: var(--bg-tertiary);
     }
 
     .work-task-title.completed {
@@ -14252,7 +14271,7 @@
                       <div class="work-subcategory">
                         <div class="work-subcategory-header">
                           <div class="work-subcategory-title">
-                            📁 ${subcat.name}
+                            📁 <span class="work-subcategory-name" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${subcat.name}</span>
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
@@ -14269,6 +14288,7 @@
                             })() : ''}
                           </div>
                           <div class="work-subcategory-actions">
+                            <button class="work-task-action" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">✏️</button>
                             <button class="work-task-action" onclick="showWorkModal('subcat-deadline', ${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 일정">📅</button>
                             <button class="work-task-action" onclick="showWorkModal('task', ${project.id}, ${stageIdx}, ${subcatIdx})">+ 항목</button>
                             <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})">삭제</button>
@@ -14438,8 +14458,11 @@
                   title="클릭하여 상태 변경">
               ${statusInfo.label}
             </span>
-            <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}">${task.title}</span>
+            <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
+                  onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')"
+                  title="클릭하여 이름 변경">${task.title}</span>
             <div class="work-task-actions">
+              <button class="work-task-action" onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
               <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">+ 기록</button>
               <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">삭제</button>
             </div>
@@ -14912,6 +14935,64 @@
       }
     }
     window.promptRenameStage = promptRenameStage;
+
+    /**
+     * 중분류 이름 변경 프롬프트
+     */
+    function promptRenameSubcategory(projectId, stageIdx, subcatIdx, currentName) {
+      const newName = prompt('중분류 이름을 변경하세요:', currentName);
+      if (newName && newName.trim() && newName.trim() !== currentName) {
+        renameSubcategory(projectId, stageIdx, subcatIdx, newName.trim());
+      }
+    }
+    window.promptRenameSubcategory = promptRenameSubcategory;
+
+    /**
+     * 중분류 이름 변경
+     */
+    function renameSubcategory(projectId, stageIdx, subcatIdx, newName) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const subcat = project.stages[stageIdx]?.subcategories?.[subcatIdx];
+      if (subcat) {
+        subcat.name = newName;
+        project.updatedAt = new Date().toISOString();
+        saveWorkProjects();
+        renderStatic();
+        showToast('중분류 이름이 변경되었습니다', 'success');
+      }
+    }
+    window.renameSubcategory = renameSubcategory;
+
+    /**
+     * 소분류(항목) 이름 변경 프롬프트
+     */
+    function promptRenameWorkTask(projectId, stageIdx, subcatIdx, taskIdx, currentName) {
+      const newName = prompt('항목 이름을 변경하세요:', currentName);
+      if (newName && newName.trim() && newName.trim() !== currentName) {
+        renameWorkTask(projectId, stageIdx, subcatIdx, taskIdx, newName.trim());
+      }
+    }
+    window.promptRenameWorkTask = promptRenameWorkTask;
+
+    /**
+     * 소분류(항목) 이름 변경
+     */
+    function renameWorkTask(projectId, stageIdx, subcatIdx, taskIdx, newName) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const task = project.stages[stageIdx]?.subcategories?.[subcatIdx]?.tasks?.[taskIdx];
+      if (task) {
+        task.title = newName;
+        project.updatedAt = new Date().toISOString();
+        saveWorkProjects();
+        renderStatic();
+        showToast('항목 이름이 변경되었습니다', 'success');
+      }
+    }
+    window.renameWorkTask = renameWorkTask;
 
     /**
      * 중분류 추가
