@@ -13961,9 +13961,16 @@
                     `).join('')}
                   </optgroup>
                 ` : ''}
+                ${archivedProjects.length > 0 ? `
+                  <optgroup label="📦 아카이브">
+                    ${archivedProjects.map(p => `
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                    `).join('')}
+                  </optgroup>
+                ` : ''}
               </select>
             </div>
-            ${activeProject && !activeProject.archived ? renderWorkProjectDetail(activeProject) : `
+            ${activeProject ? renderWorkProjectDetail(activeProject) : `
               <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                 프로젝트를 선택하세요
               </div>
