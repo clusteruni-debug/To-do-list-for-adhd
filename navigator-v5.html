@@ -3023,6 +3023,15 @@
       font-weight: 600;
     }
 
+    .work-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .work-project-add-btn {
       padding: 8px 16px;
       background: linear-gradient(135deg, #667eea, #764ba2);
@@ -13603,8 +13612,19 @@
      * 프로젝트 목록 렌더링
      */
     function renderWorkProjects() {
+      // 프로젝트 완료 여부 판단 헬퍼
+      const isProjectCompleted = (p) => {
+        if (p.stages.length === 0) return false;
+        return p.stages.every(s => s.completed);
+      };
+
       const activeProjects = appState.workProjects.filter(p => !p.archived);
       const archivedProjects = appState.workProjects.filter(p => p.archived);
+
+      // 활성 프로젝트를 3가지로 분류
+      const inProgressProjects = activeProjects.filter(p => p.deadline && !isProjectCompleted(p));
+      const completedProjects = activeProjects.filter(p => isProjectCompleted(p));
+      const noDeadlineProjects = activeProjects.filter(p => !p.deadline && !isProjectCompleted(p));
 
       if (appState.workProjects.length === 0) {
         return `
@@ -13680,12 +13700,33 @@
 
           ${appState.workView === 'dashboard' ? `
             <!-- 대시보드 뷰 -->
-            <div class="work-dashboard">
-              ${activeProjects.map(p => renderWorkDashboardCard(p)).join('')}
-            </div>
+            ${inProgressProjects.length > 0 ? `
+              <div class="work-section">
+                <div class="work-section-title">🚀 진행중 (${inProgressProjects.length})</div>
+                <div class="work-dashboard">
+                  ${inProgressProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${noDeadlineProjects.length > 0 ? `
+              <div class="work-section" style="margin-top: 20px;">
+                <div class="work-section-title" style="color: var(--text-muted);">📋 마감없음 (${noDeadlineProjects.length})</div>
+                <div class="work-dashboard">
+                  ${noDeadlineProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                </div>
+              </div>
+            ` : ''}
+            ${completedProjects.length > 0 ? `
+              <div class="work-section" style="margin-top: 20px;">
+                <div class="work-section-title" style="color: var(--success);">✅ 완료 (${completedProjects.length})</div>
+                <div class="work-dashboard">
+                  ${completedProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                </div>
+              </div>
+            ` : ''}
             ${appState.showArchivedProjects && archivedProjects.length > 0 ? `
-              <div style="margin-top: 20px;">
-                <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">📦 아카이브</div>
+              <div class="work-section" style="margin-top: 20px;">
+                <div class="work-section-title">📦 아카이브 (${archivedProjects.length})</div>
                 <div class="work-dashboard">
                   ${archivedProjects.map(p => renderWorkDashboardCard(p)).join('')}
                 </div>
