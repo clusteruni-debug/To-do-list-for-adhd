@@ -2407,14 +2407,32 @@
       border-color: #667eea;
     }
 
-    .header-btn.shuttle-mini.success {
-      background: rgba(72, 187, 120, 0.15);
-      border-color: #48bb78;
+    /* 셔틀 토글 버튼 */
+    .header-btn.shuttle-toggle {
+      width: auto;
+      padding: 0 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      gap: 4px;
     }
 
-    .header-btn.shuttle-mini.failed {
+    .header-btn.shuttle-toggle.on {
+      background: rgba(72, 187, 120, 0.2);
+      border-color: #48bb78;
+      color: #48bb78;
+    }
+
+    .header-btn.shuttle-toggle.off {
       background: rgba(245, 87, 108, 0.15);
       border-color: #f5576c;
+      color: #f5576c;
+    }
+
+    /* 헤더 날짜 */
+    .header-date {
+      font-size: 12px;
+      color: var(--text-secondary);
     }
 
     .header-streak {
@@ -3018,6 +3036,226 @@
     .work-project-add-btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 본업 빠른 추가 */
+    .work-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .work-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .work-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .work-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: #667eea;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-quick-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* 본업 일반 작업 */
+    .work-general-tasks {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .work-general-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .work-general-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .work-general-item:last-child {
+      border-bottom: none;
+    }
+
+    .work-general-item-title {
+      flex: 1;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .work-general-item-title:hover {
+      color: #667eea;
+    }
+
+    .work-general-more {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    /* 일상/가족 탭 스타일 */
+    .life-header {
+      margin-bottom: 16px;
+    }
+
+    .life-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .life-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .life-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .life-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: #48bb78;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .life-summary {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .life-summary-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-summary-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .life-summary-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .life-section {
+      margin-bottom: 20px;
+    }
+
+    .life-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .life-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-item-content {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .life-item-title {
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+
+    .life-item-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .life-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .life-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .life-empty-text {
+      font-size: 14px;
     }
 
     .work-project-list {
@@ -5497,6 +5735,86 @@
       font-weight: 600;
       letter-spacing: -0.02em;
       white-space: nowrap;
+    }
+
+    /* 텔레그램 연동 상태 */
+    .telegram-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .telegram-status.connected {
+      background: rgba(72, 187, 120, 0.15);
+      border-color: #48bb78;
+      color: #48bb78;
+    }
+
+    .telegram-icon {
+      font-size: 14px;
+    }
+
+    /* 이벤트 빠른 추가 */
+    .events-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .events-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+
+    .events-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .events-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .events-quick-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .events-detail-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .events-detail-btn:hover {
+      background: var(--bg-secondary);
     }
 
     .events-section {
@@ -8550,7 +8868,123 @@
     }
 
     /**
-     * 부업 이벤트 추가 (부업 탭에서 호출)
+     * 일상/가족 빠른 추가
+     */
+    function quickAddLifeTask() {
+      const input = document.getElementById('life-quick-input');
+      if (!input || !input.value.trim()) return;
+
+      let title = input.value.trim();
+      let category = '일상';
+
+      // #가족 태그 감지
+      if (title.includes('#가족')) {
+        category = '가족';
+        title = title.replace('#가족', '').trim();
+      }
+
+      const newTask = {
+        id: Date.now(),
+        title: title,
+        category: category,
+        completed: false,
+        deadline: '',
+        estimatedTime: 15,
+        link: '',
+        expectedRevenue: '',
+        repeatType: 'none',
+        tags: [],
+        subtasks: [],
+        createdAt: new Date().toISOString()
+      };
+
+      appState.tasks.push(newTask);
+      saveState();
+      input.value = '';
+      renderStatic();
+      showToast(`${category} 작업 추가됨`, 'success');
+    }
+    window.quickAddLifeTask = quickAddLifeTask;
+
+    /**
+     * 본업 빠른 추가 (프로젝트 없이)
+     */
+    function quickAddWorkTask() {
+      const input = document.getElementById('work-quick-input');
+      if (!input || !input.value.trim()) return;
+
+      const newTask = {
+        id: Date.now(),
+        title: input.value.trim(),
+        category: '본업',
+        completed: false,
+        deadline: '',
+        estimatedTime: 30,
+        link: '',
+        expectedRevenue: '',
+        repeatType: 'none',
+        tags: [],
+        subtasks: [],
+        workProjectId: null,
+        workStageIdx: null,
+        workSubcatIdx: null,
+        createdAt: new Date().toISOString()
+      };
+
+      appState.tasks.push(newTask);
+      saveState();
+      input.value = '';
+      renderStatic();
+      showToast('본업 작업 추가됨', 'success');
+    }
+    window.quickAddWorkTask = quickAddWorkTask;
+
+    /**
+     * 이벤트 빠른 추가 (이벤트 탭에서 바로)
+     */
+    function quickAddEvent() {
+      const input = document.getElementById('event-quick-input');
+      if (!input || !input.value.trim()) return;
+
+      const title = input.value.trim();
+
+      // 주최자 자동 감지 (불개미, 코같투, 맨틀 등)
+      const organizers = ['불개미', '코같투', '맨틀', '핀테크', '길드'];
+      let organizer = '';
+      for (const org of organizers) {
+        if (title.includes(org)) {
+          organizer = org;
+          break;
+        }
+      }
+
+      const newTask = {
+        id: Date.now(),
+        title: title,
+        category: '부업',
+        completed: false,
+        deadline: '',
+        estimatedTime: 10,
+        link: '',
+        expectedRevenue: '',
+        organizer: organizer,
+        eventType: '',
+        repeatType: 'none',
+        tags: [],
+        subtasks: [],
+        createdAt: new Date().toISOString()
+      };
+
+      appState.tasks.push(newTask);
+      saveState();
+      input.value = '';
+      renderStatic();
+      showToast('이벤트 추가됨', 'success');
+    }
+    window.quickAddEvent = quickAddEvent;
+
+    /**
+     * 부업 이벤트 상세 추가 (부업 탭에서 호출)
      */
     function addNewEvent() {
       appState.detailedTask = {
@@ -10803,11 +11237,11 @@
           <div class="header">
             <div class="header-left">
               <h1>⚡ Navigator</h1>
-              <p>생존형 할일 관리 ${appState.streak.current > 0 ? `<span class="header-streak">🔥${appState.streak.current}</span>` : ''}</p>
+              <p class="header-date">${now.getMonth() + 1}월 ${now.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일 ${appState.streak.current > 0 ? `<span class="header-streak">🔥${appState.streak.current}</span>` : ''}</p>
             </div>
             <div class="header-actions">
-              <button class="header-btn shuttle-mini ${appState.shuttleSuccess ? 'success' : 'failed'}" onclick="toggleShuttle()" title="${appState.shuttleSuccess ? '셔틀 탑승 성공' : '셔틀 놓침 (클릭하여 변경)'}">
-                ${appState.shuttleSuccess ? '🚌' : '😴'}
+              <button class="header-btn shuttle-toggle ${appState.shuttleSuccess ? 'on' : 'off'}" onclick="toggleShuttle()" title="${appState.shuttleSuccess ? '셔틀 탑승 성공 ✓' : '셔틀 놓침 ✗ (클릭하여 변경)'}">
+                ${appState.shuttleSuccess ? '🚌 ON' : '😴 OFF'}
               </button>
               <button class="header-btn" onclick="toggleTheme()" title="테마 전환">
                 ${appState.theme === 'dark' ? '☀️' : '🌙'}
@@ -10839,14 +11273,17 @@
             <button class="tab-btn ${appState.currentTab === 'events' ? 'active' : ''}" onclick="switchTab('events')">
               💰 이벤트
             </button>
-            <button class="tab-btn ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="switchTab('dashboard')">
-              📊 통계
+            <button class="tab-btn ${appState.currentTab === 'life' ? 'active' : ''}" onclick="switchTab('life')">
+              🏠 일상
             </button>
             <div class="tab-more-dropdown">
-              <button class="tab-btn ${['all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)">
+              <button class="tab-btn ${['dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)">
                 📋 더보기 ▾
               </button>
               <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}">
+                <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');">
+                  📊 통계
+                </button>
                 <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');">
                   📋 전체
                 </button>
@@ -11615,12 +12052,29 @@
                 return d !== null && d <= 3;
               }).length;
 
+              // 텔레그램 연동 작업 수 확인
+              const telegramLinkedCount = eventTasks.filter(t => t.source && t.source.type === 'telegram-event').length;
+
               return `
                 <div class="events-header">
                   <div class="events-title">💰 이벤트</div>
-                  <button class="btn btn-primary" onclick="addNewEvent()">
-                    + 새 이벤트
-                  </button>
+                  <div class="telegram-status ${telegramLinkedCount > 0 ? 'connected' : ''}">
+                    <span class="telegram-icon">🤖</span>
+                    <span class="telegram-text">${telegramLinkedCount > 0 ? '텔레그램 연동 ' + telegramLinkedCount + '개' : '텔레그램 미연동'}</span>
+                  </div>
+                </div>
+
+                <!-- 이벤트 빠른 추가 -->
+                <div class="events-quick-add">
+                  <input
+                    type="text"
+                    class="events-quick-input"
+                    placeholder="이벤트명 입력 후 Enter (예: 불개미 AMA)"
+                    id="event-quick-input"
+                    onkeypress="if(event.key==='Enter') quickAddEvent()"
+                  >
+                  <button class="events-quick-btn" onclick="quickAddEvent()">+</button>
+                  <button class="events-detail-btn" onclick="addNewEvent()" title="상세 입력">📝</button>
                 </div>
 
                 <div class="events-summary">
@@ -11697,6 +12151,95 @@
                         </div>
                       `).join('')}
                     </div>
+                  </div>
+                ` : ''}
+              `;
+            })()}
+          </div>
+
+          <!-- 일상/가족 탭 -->
+          <div class="tab-content ${appState.currentTab === 'life' ? 'active' : ''}">
+            ${(() => {
+              const lifeTasks = appState.tasks.filter(t => t.category === '일상' || t.category === '가족');
+              const pendingTasks = lifeTasks.filter(t => !t.completed).sort((a, b) => {
+                if (!a.deadline) return 1;
+                if (!b.deadline) return -1;
+                return new Date(a.deadline) - new Date(b.deadline);
+              });
+              const completedTasks = lifeTasks.filter(t => t.completed);
+              const dailyTasks = pendingTasks.filter(t => t.category === '일상');
+              const familyTasks = pendingTasks.filter(t => t.category === '가족');
+
+              return `
+                <div class="life-header">
+                  <div class="life-title">🏠 일상 & 가족</div>
+                </div>
+
+                <!-- 빠른 추가 -->
+                <div class="life-quick-add">
+                  <input
+                    type="text"
+                    class="life-quick-input"
+                    placeholder="일상/가족 작업 추가 (#가족 붙이면 가족으로)"
+                    id="life-quick-input"
+                    onkeypress="if(event.key==='Enter') quickAddLifeTask()"
+                  >
+                  <button class="life-quick-btn" onclick="quickAddLifeTask()">+</button>
+                </div>
+
+                <div class="life-summary">
+                  <div class="life-summary-item">
+                    <div class="life-summary-value">${dailyTasks.length}</div>
+                    <div class="life-summary-label">🌅 일상</div>
+                  </div>
+                  <div class="life-summary-item">
+                    <div class="life-summary-value">${familyTasks.length}</div>
+                    <div class="life-summary-label">👨‍👩‍👧 가족</div>
+                  </div>
+                  <div class="life-summary-item">
+                    <div class="life-summary-value" style="color: #48bb78">${completedTasks.length}</div>
+                    <div class="life-summary-label">✓ 완료</div>
+                  </div>
+                </div>
+
+                ${dailyTasks.length > 0 ? `
+                  <div class="life-section">
+                    <div class="life-section-title">🌅 일상 (${dailyTasks.length})</div>
+                    <div class="life-list">
+                      ${dailyTasks.map(task => `
+                        <div class="life-item">
+                          <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                          <div class="life-item-content" onclick="editTask(${task.id})">
+                            <div class="life-item-title">${task.title}</div>
+                            ${task.deadline ? `<div class="life-item-meta">${new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}</div>` : ''}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+
+                ${familyTasks.length > 0 ? `
+                  <div class="life-section">
+                    <div class="life-section-title">👨‍👩‍👧 가족 (${familyTasks.length})</div>
+                    <div class="life-list">
+                      ${familyTasks.map(task => `
+                        <div class="life-item">
+                          <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                          <div class="life-item-content" onclick="editTask(${task.id})">
+                            <div class="life-item-title">${task.title}</div>
+                            ${task.deadline ? `<div class="life-item-meta">${new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}</div>` : ''}
+                          </div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+
+                ${pendingTasks.length === 0 ? `
+                  <div class="life-empty">
+                    <div class="life-empty-icon">🏡</div>
+                    <div class="life-empty-text">일상/가족 작업이 없습니다</div>
                   </div>
                 ` : ''}
               `;
@@ -12738,11 +13281,14 @@
 
       const activeProject = appState.workProjects.find(p => p.id === appState.activeWorkProject);
 
+      // 본업 일반 작업 (프로젝트 미연결)
+      const workGeneralTasks = appState.tasks.filter(t => t.category === '본업' && !t.workProjectId && !t.completed);
+
       return `
         <div class="work-projects-container">
           <!-- 헤더 -->
           <div class="work-projects-header">
-            <div class="work-projects-title">💼 본업 프로젝트</div>
+            <div class="work-projects-title">💼 본업</div>
             <div style="display: flex; gap: 8px;">
               <button class="work-project-add-btn" onclick="showWorkModal('project')">+ 새 프로젝트</button>
               ${appState.workTemplates.length > 0 ? `
@@ -12750,6 +13296,33 @@
               ` : ''}
             </div>
           </div>
+
+          <!-- 본업 빠른 추가 (프로젝트 없이) -->
+          <div class="work-quick-add">
+            <input
+              type="text"
+              class="work-quick-input"
+              placeholder="프로젝트 없이 본업 작업 추가 (Enter)"
+              id="work-quick-input"
+              onkeypress="if(event.key==='Enter') quickAddWorkTask()"
+            >
+            <button class="work-quick-btn" onclick="quickAddWorkTask()">+</button>
+          </div>
+
+          ${workGeneralTasks.length > 0 ? `
+            <div class="work-general-tasks">
+              <div class="work-general-title">📋 일반 작업 (${workGeneralTasks.length})</div>
+              <div class="work-general-list">
+                ${workGeneralTasks.slice(0, 5).map(task => `
+                  <div class="work-general-item">
+                    <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                    <span class="work-general-item-title" onclick="editTask(${task.id})">${task.title}</span>
+                  </div>
+                `).join('')}
+                ${workGeneralTasks.length > 5 ? `<div class="work-general-more">+ ${workGeneralTasks.length - 5}개 더</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
 
           <!-- 뷰 전환 -->
           <div class="work-view-tabs">
