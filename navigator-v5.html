@@ -1360,6 +1360,183 @@
       text-align: right;
     }
 
+    /* 라이프 리듬 통계 */
+    .life-rhythm-stats {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.05) 100%);
+    }
+
+    .rhythm-chart-section {
+      margin-bottom: 20px;
+    }
+
+    .rhythm-chart-title {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .rhythm-bar-chart {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 120px;
+      padding: 0 8px;
+      gap: 8px;
+    }
+
+    .rhythm-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .rhythm-bar-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .rhythm-bar {
+      width: 100%;
+      max-width: 32px;
+      min-height: 4px;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      transition: height 0.3s ease;
+    }
+
+    .rhythm-bar.good {
+      background: linear-gradient(180deg, #48bb78, #38a169);
+    }
+
+    .rhythm-bar.ok {
+      background: linear-gradient(180deg, #ecc94b, #d69e2e);
+    }
+
+    .rhythm-bar.bad {
+      background: linear-gradient(180deg, #f56565, #e53e3e);
+    }
+
+    .rhythm-bar-value {
+      font-size: 10px;
+      color: white;
+      font-weight: 600;
+      margin-top: 4px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .rhythm-bar-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .rhythm-bar-label.today {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .rhythm-summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .rhythm-summary-row .good {
+      color: var(--success);
+    }
+
+    .rhythm-summary-row .bad {
+      color: var(--danger);
+    }
+
+    .rhythm-work-section {
+      margin-bottom: 20px;
+    }
+
+    .rhythm-work-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .rhythm-work-stat {
+      background: var(--bg-tertiary);
+      padding: 12px 8px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .rhythm-work-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .rhythm-work-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .rhythm-work-value.good {
+      color: var(--success);
+    }
+
+    .rhythm-insights {
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .rhythm-insights .rhythm-chart-title {
+      margin-bottom: 8px;
+    }
+
+    .rhythm-insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .rhythm-insight-item:last-child {
+      border-bottom: none;
+    }
+
+    .rhythm-insight-item.positive {
+      color: var(--text-primary);
+    }
+
+    .rhythm-insight-item.warning {
+      color: var(--warning);
+    }
+
+    .rhythm-insight-icon {
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .rhythm-work-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     .urgent-list {
       display: grid;
       gap: 10px;
@@ -13109,6 +13286,76 @@
             })()}
 
             ${(() => {
+              const rhythmStats = getLifeRhythmStats();
+              if (!rhythmStats.hasData) return '';
+
+              return `
+                <div class="dashboard-section life-rhythm-stats">
+                  <div class="dashboard-title">😴 라이프 리듬 (최근 7일)</div>
+
+                  <!-- 수면 패턴 차트 -->
+                  <div class="rhythm-chart-section">
+                    <div class="rhythm-chart-title">💤 수면 패턴</div>
+                    <div class="rhythm-bar-chart">
+                      ${rhythmStats.sleepData.map(d => `
+                        <div class="rhythm-bar-item">
+                          <div class="rhythm-bar-wrapper">
+                            <div class="rhythm-bar ${d.hours >= 7 ? 'good' : d.hours >= 6 ? 'ok' : 'bad'}"
+                                 style="height: ${d.hours ? Math.max((d.hours / 10) * 100, 10) : 0}%"
+                                 title="${d.date}: ${d.hours ? d.hours.toFixed(1) + '시간' : '기록없음'}">
+                              ${d.hours ? '<span class="rhythm-bar-value">' + d.hours.toFixed(1) + 'h</span>' : ''}
+                            </div>
+                          </div>
+                          <div class="rhythm-bar-label ${d.isToday ? 'today' : ''}">${d.dayLabel}</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                    <div class="rhythm-summary-row">
+                      <span>평균 수면: <strong>${rhythmStats.avgSleep.toFixed(1)}시간</strong></span>
+                      <span>목표 대비: <strong class="${rhythmStats.avgSleep >= 7 ? 'good' : 'bad'}">${rhythmStats.avgSleep >= 7 ? '+' : ''}${(rhythmStats.avgSleep - 7).toFixed(1)}시간</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- 근무 패턴 -->
+                  <div class="rhythm-work-section">
+                    <div class="rhythm-chart-title">💼 근무 패턴</div>
+                    <div class="rhythm-work-stats">
+                      <div class="rhythm-work-stat">
+                        <span class="rhythm-work-label">평균 출근</span>
+                        <span class="rhythm-work-value">${rhythmStats.avgWorkStart || '--:--'}</span>
+                      </div>
+                      <div class="rhythm-work-stat">
+                        <span class="rhythm-work-label">평균 퇴근</span>
+                        <span class="rhythm-work-value">${rhythmStats.avgWorkEnd || '--:--'}</span>
+                      </div>
+                      <div class="rhythm-work-stat">
+                        <span class="rhythm-work-label">평균 근무</span>
+                        <span class="rhythm-work-value">${rhythmStats.avgWorkHours ? rhythmStats.avgWorkHours.toFixed(1) + 'h' : '--'}</span>
+                      </div>
+                      <div class="rhythm-work-stat">
+                        <span class="rhythm-work-label">출근 편차</span>
+                        <span class="rhythm-work-value ${rhythmStats.workStartDeviation <= 30 ? 'good' : ''}">${rhythmStats.workStartDeviation ? '±' + rhythmStats.workStartDeviation + '분' : '--'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 인사이트 -->
+                  ${rhythmStats.insights.length > 0 ? `
+                    <div class="rhythm-insights">
+                      <div class="rhythm-chart-title">💡 인사이트</div>
+                      ${rhythmStats.insights.map(insight => `
+                        <div class="rhythm-insight-item ${insight.type}">
+                          <span class="rhythm-insight-icon">${insight.icon}</span>
+                          <span class="rhythm-insight-text">${insight.text}</span>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            })()}
+
+            ${(() => {
               const report = getWeeklyReport();
               const now = new Date();
               const weekStart = new Date(now);
@@ -14350,6 +14597,160 @@
       showToast(labels[type] + ' 시간이 수정되었습니다', 'success');
     }
     window.editLifeRhythm = editLifeRhythm;
+
+    /**
+     * 라이프 리듬 통계 계산 (최근 7일)
+     */
+    function getLifeRhythmStats() {
+      const today = new Date();
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const sleepData = [];
+      const workStartTimes = [];
+      const workEndTimes = [];
+      const workHours = [];
+
+      // 최근 7일 데이터 수집
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        const isToday = i === 0;
+
+        let dayData;
+        if (isToday && appState.lifeRhythm.today.date === dateStr) {
+          dayData = appState.lifeRhythm.today;
+        } else {
+          dayData = appState.lifeRhythm.history[dateStr] || {};
+        }
+
+        // 수면 시간 계산 (전날 취침 ~ 당일 기상)
+        const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
+        const prevData = appState.lifeRhythm.history[prevDateStr] || {};
+        let sleepHours = null;
+
+        if (prevData.sleep && dayData.wakeUp) {
+          const sleepTime = parseInt(prevData.sleep.split(':')[0]) * 60 + parseInt(prevData.sleep.split(':')[1]);
+          const wakeTime = parseInt(dayData.wakeUp.split(':')[0]) * 60 + parseInt(dayData.wakeUp.split(':')[1]);
+          let duration = wakeTime + (24 * 60 - sleepTime);
+          if (sleepTime < 12 * 60) duration = wakeTime - sleepTime; // 새벽에 잔 경우
+          if (duration > 0 && duration < 16 * 60) { // 16시간 이상은 이상치
+            sleepHours = duration / 60;
+          }
+        }
+
+        sleepData.push({
+          date: dateStr,
+          dayLabel: dayNames[date.getDay()],
+          hours: sleepHours,
+          isToday: isToday
+        });
+
+        // 근무 시간 수집
+        if (dayData.workStart) {
+          const [h, m] = dayData.workStart.split(':').map(Number);
+          workStartTimes.push(h * 60 + m);
+        }
+        if (dayData.workEnd) {
+          const [h, m] = dayData.workEnd.split(':').map(Number);
+          workEndTimes.push(h * 60 + m);
+        }
+        if (dayData.workStart && dayData.workEnd) {
+          const start = parseInt(dayData.workStart.split(':')[0]) * 60 + parseInt(dayData.workStart.split(':')[1]);
+          const end = parseInt(dayData.workEnd.split(':')[0]) * 60 + parseInt(dayData.workEnd.split(':')[1]);
+          if (end > start) {
+            workHours.push((end - start) / 60);
+          }
+        }
+      }
+
+      // 평균 계산
+      const validSleepData = sleepData.filter(d => d.hours !== null);
+      const avgSleep = validSleepData.length > 0
+        ? validSleepData.reduce((sum, d) => sum + d.hours, 0) / validSleepData.length
+        : 0;
+
+      const avgWorkStart = workStartTimes.length > 0
+        ? Math.round(workStartTimes.reduce((a, b) => a + b, 0) / workStartTimes.length)
+        : null;
+      const avgWorkEnd = workEndTimes.length > 0
+        ? Math.round(workEndTimes.reduce((a, b) => a + b, 0) / workEndTimes.length)
+        : null;
+      const avgWorkHrs = workHours.length > 0
+        ? workHours.reduce((a, b) => a + b, 0) / workHours.length
+        : null;
+
+      // 출근 시간 편차 계산
+      let workStartDeviation = null;
+      if (workStartTimes.length >= 2) {
+        const mean = workStartTimes.reduce((a, b) => a + b, 0) / workStartTimes.length;
+        const variance = workStartTimes.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / workStartTimes.length;
+        workStartDeviation = Math.round(Math.sqrt(variance));
+      }
+
+      // 인사이트 생성
+      const insights = [];
+
+      // 수면 vs 완료율 상관관계
+      const completionByDay = {};
+      appState.tasks.forEach(task => {
+        if (task.completed && task.completedAt) {
+          const completedDate = task.completedAt.split('T')[0];
+          completionByDay[completedDate] = (completionByDay[completedDate] || 0) + 1;
+        }
+      });
+
+      const goodSleepDays = sleepData.filter(d => d.hours && d.hours >= 7);
+      const badSleepDays = sleepData.filter(d => d.hours && d.hours < 6);
+
+      if (goodSleepDays.length >= 2 && badSleepDays.length >= 1) {
+        const goodSleepCompletion = goodSleepDays.reduce((sum, d) => sum + (completionByDay[d.date] || 0), 0) / goodSleepDays.length;
+        const badSleepCompletion = badSleepDays.reduce((sum, d) => sum + (completionByDay[d.date] || 0), 0) / badSleepDays.length;
+
+        if (goodSleepCompletion > badSleepCompletion * 1.2) {
+          const diff = Math.round((goodSleepCompletion / Math.max(badSleepCompletion, 0.1) - 1) * 100);
+          insights.push({
+            type: 'positive',
+            icon: '📈',
+            text: '7시간 이상 수면한 날, 작업 완료가 ' + diff + '% 더 많았어요'
+          });
+        }
+      }
+
+      if (avgSleep > 0 && avgSleep < 6) {
+        insights.push({
+          type: 'warning',
+          icon: '⚠️',
+          text: '평균 수면이 6시간 미만이에요. 충분한 수면이 생산성에 도움됩니다'
+        });
+      }
+
+      if (workStartDeviation !== null && workStartDeviation <= 20) {
+        insights.push({
+          type: 'positive',
+          icon: '✨',
+          text: '출근 시간이 일정해요! 규칙적인 루틴이 유지되고 있습니다'
+        });
+      }
+
+      // 시간 포맷팅 헬퍼
+      const formatTime = (mins) => {
+        if (mins === null) return null;
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      };
+
+      return {
+        hasData: validSleepData.length > 0 || workStartTimes.length > 0,
+        sleepData,
+        avgSleep,
+        avgWorkStart: formatTime(avgWorkStart),
+        avgWorkEnd: formatTime(avgWorkEnd),
+        avgWorkHours: avgWorkHrs,
+        workStartDeviation,
+        insights
+      };
+    }
 
     /**
      * 라이프 리듬 저장
