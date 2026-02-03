@@ -7026,6 +7026,7 @@
         lastActiveDate: null
       },
       showOnboarding: false,           // 온보딩 모달 표시
+      moreMenuOpen: false,             // 더보기 메뉴 열림 상태
       // 포모도로 상태
       pomodoro: {
         isRunning: false,
@@ -10692,14 +10693,14 @@
               📊 통계
             </button>
             <div class="tab-more-dropdown">
-              <button class="tab-btn ${['all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu()">
+              <button class="tab-btn ${['all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)">
                 📋 더보기 ▾
               </button>
-              <div id="more-menu" class="more-menu">
-                <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="switchTab('all'); toggleMoreMenu();">
+              <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}">
+                <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');">
                   📋 전체
                 </button>
-                <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="switchTab('history'); toggleMoreMenu();">
+                <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('history');">
                   📅 히스토리
                 </button>
               </div>
@@ -13955,19 +13956,18 @@
     /**
      * 더보기 메뉴 토글
      */
-    function toggleMoreMenu() {
-      const moreMenu = document.getElementById('more-menu');
-      if (moreMenu) {
-        moreMenu.classList.toggle('show');
-      }
+    function toggleMoreMenu(e) {
+      if (e) e.stopPropagation();
+      appState.moreMenuOpen = !appState.moreMenuOpen;
+      renderStatic();
     }
 
     // 외부 클릭 시 더보기 메뉴 닫기
     document.addEventListener('click', (e) => {
       const dropdown = document.querySelector('.tab-more-dropdown');
-      const moreMenu = document.getElementById('more-menu');
-      if (dropdown && moreMenu && !dropdown.contains(e.target)) {
-        moreMenu.classList.remove('show');
+      if (appState.moreMenuOpen && dropdown && !dropdown.contains(e.target)) {
+        appState.moreMenuOpen = false;
+        renderStatic();
       }
     });
 
