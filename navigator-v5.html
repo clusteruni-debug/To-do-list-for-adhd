@@ -4802,6 +4802,105 @@
       font-size: 16px;
     }
 
+    /* 라이프 리듬 트래커 */
+    .life-rhythm-tracker {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .life-rhythm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .life-rhythm-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .life-rhythm-sleep {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .life-rhythm-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .life-rhythm-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .life-rhythm-btn:hover {
+      background: var(--bg-primary);
+      border-color: var(--primary);
+    }
+
+    .life-rhythm-btn:active {
+      transform: scale(0.95);
+    }
+
+    .life-rhythm-btn.recorded {
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+      border-color: var(--success);
+    }
+
+    .life-rhythm-btn.recorded .life-rhythm-time {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .life-rhythm-icon {
+      font-size: 20px;
+    }
+
+    .life-rhythm-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .life-rhythm-time {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .life-rhythm-summary {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .life-rhythm-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
     /* 오늘의 명언 */
     .daily-quote {
       background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
@@ -7728,6 +7827,21 @@
         streak: 0,                    // 연속 완료 (세션 내)
         lastCompletedDate: null       // 마지막 완료 날짜
       },
+      // 라이프 리듬 트래커
+      lifeRhythm: {
+        today: {
+          date: null,                 // 오늘 날짜 (YYYY-MM-DD)
+          wakeUp: null,               // 기상 시간 (HH:MM)
+          workStart: null,            // 출근 시간
+          workEnd: null,              // 퇴근 시간
+          sleep: null                 // 취침 시간
+        },
+        history: {},                  // 날짜별 기록 { 'YYYY-MM-DD': { wakeUp, workStart, workEnd, sleep } }
+        settings: {
+          targetSleep: 7,             // 목표 수면 시간
+          workdays: [1, 2, 3, 4, 5]   // 근무일 (0=일, 1=월, ... 6=토)
+        }
+      },
       // 히스토리/캘린더 상태
       historyState: {
         viewingYear: new Date().getFullYear(),
@@ -7859,6 +7973,9 @@
         if (savedWorkTemplates) {
           appState.workTemplates = JSON.parse(savedWorkTemplates);
         }
+
+        // 라이프 리듬 로드
+        loadLifeRhythm();
 
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
@@ -11830,6 +11947,84 @@
 
                 <!-- 셔틀 상태는 헤더로 이동됨 -->
 
+                <!-- 라이프 리듬 트래커 -->
+                ${(() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, workStart: null, workEnd: null, sleep: null };
+                  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                  const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
+
+                  // 어제 수면 시간 계산
+                  let sleepDuration = null;
+                  if (yesterdayData.sleep && rhythm.wakeUp) {
+                    const sleepTime = parseInt(yesterdayData.sleep.split(':')[0]) * 60 + parseInt(yesterdayData.sleep.split(':')[1]);
+                    const wakeTime = parseInt(rhythm.wakeUp.split(':')[0]) * 60 + parseInt(rhythm.wakeUp.split(':')[1]);
+                    let duration = wakeTime - sleepTime;
+                    if (duration < 0) duration += 24 * 60; // 자정 넘긴 경우
+                    if (sleepTime > 12 * 60) duration = wakeTime + (24 * 60 - sleepTime); // 밤에 잔 경우
+                    const hours = Math.floor(duration / 60);
+                    const mins = duration % 60;
+                    sleepDuration = hours + 'h ' + mins + 'm';
+                  }
+
+                  // 오늘 근무 시간 계산
+                  let workDuration = null;
+                  if (rhythm.workStart && rhythm.workEnd) {
+                    const startTime = parseInt(rhythm.workStart.split(':')[0]) * 60 + parseInt(rhythm.workStart.split(':')[1]);
+                    const endTime = parseInt(rhythm.workEnd.split(':')[0]) * 60 + parseInt(rhythm.workEnd.split(':')[1]);
+                    const duration = endTime - startTime;
+                    if (duration > 0) {
+                      const hours = Math.floor(duration / 60);
+                      const mins = duration % 60;
+                      workDuration = hours + 'h ' + mins + 'm';
+                    }
+                  }
+
+                  return `
+                    <div class="life-rhythm-tracker">
+                      <div class="life-rhythm-header">
+                        <span class="life-rhythm-title">📊 오늘의 리듬</span>
+                        ${sleepDuration ? '<span class="life-rhythm-sleep">💤 어제 수면 ' + sleepDuration + '</span>' : ''}
+                      </div>
+                      <div class="life-rhythm-buttons">
+                        <button class="life-rhythm-btn ${rhythm.wakeUp ? 'recorded' : ''}"
+                                onclick="recordLifeRhythm('wakeUp')"
+                                oncontextmenu="event.preventDefault(); editLifeRhythm('wakeUp');"
+                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                          <span class="life-rhythm-icon">☀️</span>
+                          <span class="life-rhythm-label">기상</span>
+                          <span class="life-rhythm-time">${rhythm.wakeUp || '--:--'}</span>
+                        </button>
+                        <button class="life-rhythm-btn ${rhythm.workStart ? 'recorded' : ''}"
+                                onclick="recordLifeRhythm('workStart')"
+                                oncontextmenu="event.preventDefault(); editLifeRhythm('workStart');"
+                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                          <span class="life-rhythm-icon">🚌</span>
+                          <span class="life-rhythm-label">출근</span>
+                          <span class="life-rhythm-time">${rhythm.workStart || '--:--'}</span>
+                        </button>
+                        <button class="life-rhythm-btn ${rhythm.workEnd ? 'recorded' : ''}"
+                                onclick="recordLifeRhythm('workEnd')"
+                                oncontextmenu="event.preventDefault(); editLifeRhythm('workEnd');"
+                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                          <span class="life-rhythm-icon">🏠</span>
+                          <span class="life-rhythm-label">퇴근</span>
+                          <span class="life-rhythm-time">${rhythm.workEnd || '--:--'}</span>
+                        </button>
+                        <button class="life-rhythm-btn ${rhythm.sleep ? 'recorded' : ''}"
+                                onclick="recordLifeRhythm('sleep')"
+                                oncontextmenu="event.preventDefault(); editLifeRhythm('sleep');"
+                                title="탭: 현재시간 기록 / 우클릭: 수정">
+                          <span class="life-rhythm-icon">🌙</span>
+                          <span class="life-rhythm-label">취침</span>
+                          <span class="life-rhythm-time">${rhythm.sleep || '--:--'}</span>
+                        </button>
+                      </div>
+                      ${workDuration ? '<div class="life-rhythm-summary">💼 오늘 근무 ' + workDuration + '</div>' : ''}
+                    </div>
+                  `;
+                })()}
+
                 <!-- 오늘의 명언 -->
                 ${(() => {
                   const quote = getDailyQuote();
@@ -14057,6 +14252,133 @@
     /**
      * 대시보드 섹션 펼침/접힘
      */
+    // ============================================
+    // 라이프 리듬 트래커 함수
+    // ============================================
+
+    /**
+     * 라이프 리듬 기록 (현재 시간)
+     */
+    function recordLifeRhythm(type) {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const timeStr = now.toTimeString().slice(0, 5); // HH:MM
+
+      // 오늘 날짜 확인 및 초기화
+      if (appState.lifeRhythm.today.date !== today) {
+        // 어제 기록을 히스토리로 이동
+        if (appState.lifeRhythm.today.date) {
+          appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
+          delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
+        }
+        // 오늘 초기화
+        appState.lifeRhythm.today = {
+          date: today,
+          wakeUp: null,
+          workStart: null,
+          workEnd: null,
+          sleep: null
+        };
+      }
+
+      // 시간 기록
+      appState.lifeRhythm.today[type] = timeStr;
+
+      // 저장 및 렌더링
+      saveLifeRhythm();
+      renderStatic();
+
+      // 피드백
+      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      showToast(labels[type] + ' 시간 기록: ' + timeStr, 'success');
+
+      // 햅틱 피드백
+      if (navigator.vibrate) {
+        navigator.vibrate(30);
+      }
+    }
+    window.recordLifeRhythm = recordLifeRhythm;
+
+    /**
+     * 라이프 리듬 수정 (시간 직접 입력)
+     */
+    function editLifeRhythm(type) {
+      const today = new Date().toISOString().split('T')[0];
+      const currentValue = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today[type] : null;
+
+      const labels = { wakeUp: '기상', workStart: '출근', workEnd: '퇴근', sleep: '취침' };
+      const newTime = prompt(labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
+
+      if (newTime === null) return; // 취소
+
+      // 시간 형식 검증
+      if (newTime && !/^\d{1,2}:\d{2}$/.test(newTime)) {
+        showToast('올바른 시간 형식이 아닙니다 (예: 07:30)', 'error');
+        return;
+      }
+
+      // 빈 값이면 삭제
+      if (!newTime) {
+        if (appState.lifeRhythm.today.date === today) {
+          appState.lifeRhythm.today[type] = null;
+        }
+      } else {
+        // 시간 정규화 (7:30 → 07:30)
+        const [h, m] = newTime.split(':');
+        const normalizedTime = h.padStart(2, '0') + ':' + m;
+
+        // 오늘 날짜 확인 및 초기화
+        if (appState.lifeRhythm.today.date !== today) {
+          if (appState.lifeRhythm.today.date) {
+            appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
+            delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
+          }
+          appState.lifeRhythm.today = {
+            date: today,
+            wakeUp: null,
+            workStart: null,
+            workEnd: null,
+            sleep: null
+          };
+        }
+
+        appState.lifeRhythm.today[type] = normalizedTime;
+      }
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast(labels[type] + ' 시간이 수정되었습니다', 'success');
+    }
+    window.editLifeRhythm = editLifeRhythm;
+
+    /**
+     * 라이프 리듬 저장
+     */
+    function saveLifeRhythm() {
+      localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+    }
+
+    /**
+     * 라이프 리듬 불러오기
+     */
+    function loadLifeRhythm() {
+      const saved = localStorage.getItem('navigator-life-rhythm');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState.lifeRhythm = {
+            ...appState.lifeRhythm,
+            ...parsed,
+            today: parsed.today || appState.lifeRhythm.today,
+            history: parsed.history || {},
+            settings: { ...appState.lifeRhythm.settings, ...parsed.settings }
+          };
+        } catch (e) {
+          console.error('라이프 리듬 데이터 로드 실패:', e);
+        }
+      }
+    }
+
     function toggleWorkSection(section) {
       if (!appState.workSectionExpanded) {
         appState.workSectionExpanded = {};
