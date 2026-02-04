@@ -8569,40 +8569,30 @@
         applyTheme();
 
         // 태그 로드
-        const savedTags = localStorage.getItem('navigator-tags');
-        if (savedTags) {
-          appState.availableTags = JSON.parse(savedTags);
-        }
+        const parsedTags = safeParseJSON('navigator-tags', null);
+        if (parsedTags) appState.availableTags = parsedTags;
 
         // 스트릭 로드
-        const savedStreak = localStorage.getItem('navigator-streak');
-        if (savedStreak) {
-          appState.streak = JSON.parse(savedStreak);
-        }
+        const parsedStreak = safeParseJSON('navigator-streak', null);
+        if (parsedStreak) appState.streak = parsedStreak;
         updateStreak();
 
         // 설정 로드
-        const savedSettings = localStorage.getItem('navigator-settings');
-        if (savedSettings) {
-          appState.settings = { ...appState.settings, ...JSON.parse(savedSettings) };
-        }
+        const parsedSettings = safeParseJSON('navigator-settings', null);
+        if (parsedSettings) appState.settings = { ...appState.settings, ...parsedSettings };
 
         // 템플릿 로드
-        const savedTemplates = localStorage.getItem('navigator-templates');
-        if (savedTemplates) {
-          appState.templates = JSON.parse(savedTemplates);
-        }
+        const parsedTemplates = safeParseJSON('navigator-templates', null);
+        if (parsedTemplates) appState.templates = parsedTemplates;
 
         // 주간 계획 로드
-        const savedWeeklyPlan = localStorage.getItem('navigator-weekly-plan');
-        if (savedWeeklyPlan) {
-          appState.weeklyPlan = { ...appState.weeklyPlan, ...JSON.parse(savedWeeklyPlan) };
-        }
+        const parsedWeeklyPlan = safeParseJSON('navigator-weekly-plan', null);
+        if (parsedWeeklyPlan) appState.weeklyPlan = { ...appState.weeklyPlan, ...parsedWeeklyPlan };
 
         // 본업 프로젝트 로드
-        const savedWorkProjects = localStorage.getItem('navigator-work-projects');
-        if (savedWorkProjects) {
-          appState.workProjects = JSON.parse(savedWorkProjects);
+        const parsedWorkProjects = safeParseJSON('navigator-work-projects', null);
+        if (parsedWorkProjects) {
+          appState.workProjects = parsedWorkProjects;
           // 첫 프로젝트 자동 선택
           if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
             const activeProject = appState.workProjects.find(p => !p.archived);
@@ -8611,10 +8601,8 @@
         }
 
         // 본업 템플릿 로드
-        const savedWorkTemplates = localStorage.getItem('navigator-work-templates');
-        if (savedWorkTemplates) {
-          appState.workTemplates = JSON.parse(savedWorkTemplates);
-        }
+        const parsedWorkTemplates = safeParseJSON('navigator-work-templates', null);
+        if (parsedWorkTemplates) appState.workTemplates = parsedWorkTemplates;
 
         // 라이프 리듬 로드
         loadLifeRhythm();
@@ -9536,7 +9524,7 @@
           amount: parseInt(task.expectedRevenue),
           title: task.title,
           description: `[Navigator] ${task.category} - ${task.title}`,
-          date: completedDate.toISOString().split('T')[0],
+          date: getLocalDateStr(completedDate),
           tags: ['navigator', task.category.toLowerCase()],
           source: 'navigator'
         };
@@ -9572,7 +9560,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `navigator-revenue-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `navigator-revenue-${getLocalDateStr()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -9728,7 +9716,7 @@
       const map = {};
       appState.tasks.forEach(t => {
         if (t.completed && t.completedAt) {
-          const dateKey = new Date(t.completedAt).toISOString().split('T')[0];
+          const dateKey = getLocalDateStr(new Date(t.completedAt));
           map[dateKey] = (map[dateKey] || 0) + 1;
         }
       });
@@ -9758,9 +9746,9 @@
       for (let i = 0; i < 7; i++) {
         const day = new Date(weekStart);
         day.setDate(weekStart.getDate() + i);
-        const dayStr = day.toISOString().split('T')[0];
+        const dayStr = getLocalDateStr(day);
         const count = completedThisWeek.filter(t =>
-          new Date(t.completedAt).toISOString().split('T')[0] === dayStr
+          getLocalDateStr(new Date(t.completedAt)) === dayStr
         ).length;
         dailyCounts.push(count);
       }
@@ -9837,7 +9825,7 @@
       const startDayOfWeek = firstDay.getDay();
 
       const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
+      const todayStr = getLocalDateStr(today);
 
       const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월',
                           '7월', '8월', '9월', '10월', '11월', '12월'];
@@ -9986,7 +9974,7 @@
       // 날짜별 그룹화
       const grouped = {};
       completedTasks.forEach(t => {
-        const dateKey = new Date(t.completedAt).toISOString().split('T')[0];
+        const dateKey = getLocalDateStr(new Date(t.completedAt));
         if (!grouped[dateKey]) grouped[dateKey] = [];
         grouped[dateKey].push(t);
       });
@@ -10003,8 +9991,8 @@
             );
             const date = new Date(dateStr);
             const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
-            const isYesterday = dateStr === new Date(Date.now() - 86400000).toISOString().split('T')[0];
+            const isToday = dateStr === getLocalDateStr();
+            const isYesterday = dateStr === getLocalDateStr(new Date(Date.now() - 86400000));
 
             let dateTitle;
             if (isToday) dateTitle = '오늘';
@@ -10205,6 +10193,10 @@
     function saveTemplates() {
       try {
         localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
+        // Firebase 동기화 (로그인된 경우)
+        if (appState.user) {
+          syncToFirebase();
+        }
       } catch (e) {
         console.error('템플릿 저장 실패:', e);
       }
@@ -10759,9 +10751,9 @@
       const popup = document.createElement('div');
       popup.className = 'achievement-popup';
       popup.innerHTML = `
-        <div class="achievement-icon">${icon}</div>
-        <div class="achievement-title">${title}</div>
-        <div class="achievement-desc">${description}</div>
+        <div class="achievement-icon">${escapeHtml(icon)}</div>
+        <div class="achievement-title">${escapeHtml(title)}</div>
+        <div class="achievement-desc">${escapeHtml(description)}</div>
       `;
       document.body.appendChild(popup);
 
@@ -12072,7 +12064,7 @@
       for (let i = 0; i < 7; i++) {
         const date = new Date(now);
         date.setDate(date.getDate() + i);
-        const dateKey = date.toISOString().split('T')[0];
+        const dateKey = getLocalDateStr(date);
         grouped[dateKey] = {
           date: date,
           dayName: getDayName(date),
@@ -12084,7 +12076,7 @@
 
       // 작업을 날짜별로 분류
       tasks.forEach(task => {
-        const taskDate = new Date(task.deadline).toISOString().split('T')[0];
+        const taskDate = getLocalDateStr(new Date(task.deadline));
         if (grouped[taskDate]) {
           grouped[taskDate].tasks.push(task);
         }
@@ -12214,7 +12206,7 @@
 
         const a = document.createElement('a');
         a.href = url;
-        a.download = `navigator-backup-${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `navigator-backup-${getLocalDateStr()}.json`;
         a.click();
 
         URL.revokeObjectURL(url);
@@ -12364,7 +12356,7 @@
       const toast = document.createElement('div');
       toast.className = 'toast-undo';
       toast.innerHTML = `
-        <span class="toast-undo-text">✓ "${taskTitle.substring(0, 15)}${taskTitle.length > 15 ? '...' : ''}" 완료</span>
+        <span class="toast-undo-text">✓ "${escapeHtml(taskTitle.substring(0, 15))}${taskTitle.length > 15 ? '...' : ''}" 완료</span>
         <button class="toast-undo-btn" onclick="undoComplete(${taskId})">↩ 실행취소</button>
         <span class="toast-undo-timer">5</span>
       `;
@@ -12628,7 +12620,7 @@
       const data = [];
 
       // 오늘 날짜 문자열
-      const todayStr = now.toISOString().split('T')[0];
+      const todayStr = getLocalDateStr(now);
 
       // 완료 맵 생성
       const completionMap = getCompletionMap();
@@ -12639,7 +12631,7 @@
         for (let day = 0; day < 7; day++) {
           const date = new Date(now);
           date.setDate(now.getDate() - (week * 7 + (6 - day)) - now.getDay());
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = getLocalDateStr(date);
           const count = completionMap[dateStr] || 0;
 
           // 레벨 계산
@@ -13264,33 +13256,32 @@
                   <button class="quick-add-btn" onclick="quickAdd()">+</button>
                 </div>
 
-                <!-- 빠른 템플릿 -->
+                <!-- 빠른 추가 버튼 -->
                 <div class="quick-templates">
-                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿">
-                    ✍️ 글쓰기 템플릿
+                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿으로 빠르게 추가">
+                    ✍️ 글쓰기
                   </button>
-                  <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="마감일, 예상수익 등 상세 정보 입력">
-                    ➕ 직접 추가
+                  <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="카테고리, 마감일, 예상수익 등 상세 정보 입력">
+                    📝 상세 추가
                   </button>
                 </div>
 
                 <!-- 퀵 필터 섹션 -->
                 <div class="quick-filter-section">
                   <div class="quick-filter-header">
-                    <span class="quick-filter-title">⏱️ 빠르게 처리할 작업</span>
-                    <span class="quick-filter-help" title="작업 시간/마감 기준으로 필터링">?</span>
+                    <span class="quick-filter-title">⏱️ 소요시간·마감 필터</span>
                   </div>
                   <div class="quick-filters">
-                    <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')" title="2분 안에 끝나는 작업만 보기 (GTD 2분 룰)">
-                      ⚡ 2분 룰
+                    <button class="quick-filter-btn ${appState.quickFilter === '2min' ? 'active' : ''}" onclick="setQuickFilter('2min')" title="예상 소요시간 2분 이내인 작업만 표시">
+                      ⚡ 2분 이내
                       <span class="filter-count">${getQuickFilterCount('2min')}</span>
                     </button>
-                    <button class="quick-filter-btn ${appState.quickFilter === '5min' ? 'active' : ''}" onclick="setQuickFilter('5min')" title="5분 이하로 끝나는 작업만 보기">
-                      🚀 5분 이하
+                    <button class="quick-filter-btn ${appState.quickFilter === '5min' ? 'active' : ''}" onclick="setQuickFilter('5min')" title="예상 소요시간 5분 이내인 작업만 표시">
+                      🚀 5분 이내
                       <span class="filter-count">${getQuickFilterCount('5min')}</span>
                     </button>
-                    <button class="quick-filter-btn ${appState.quickFilter === 'urgent' ? 'active' : ''}" onclick="setQuickFilter('urgent')" title="마감이 24시간 내인 긴급 작업">
-                      🔥 24시간 내
+                    <button class="quick-filter-btn ${appState.quickFilter === 'urgent' ? 'active' : ''}" onclick="setQuickFilter('urgent')" title="마감이 24시간 내로 다가온 긴급 작업">
+                      🔥 마감 임박
                       <span class="filter-count">${getQuickFilterCount('urgent')}</span>
                     </button>
                   </div>
@@ -13339,7 +13330,7 @@
 
                 ${appState.showDetailedAdd ? `
                   <div class="add-task-section">
-                    <h3>${appState.editingTaskId ? '✏️ 작업 수정' : '➕ 상세 입력'}</h3>
+                    <h3>${appState.editingTaskId ? '✏️ 작업 수정' : '📝 상세 추가'}</h3>
                     <div class="form-group">
                       <label class="form-label">카테고리</label>
                       <select class="form-select" id="detailed-category" onchange="updateDetailedTaskCategory(this.value)">

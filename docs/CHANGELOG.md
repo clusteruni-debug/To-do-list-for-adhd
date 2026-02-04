@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 8)
+
+### 작업 내용
+- **UTC 날짜 버그 전수 수정**: 캘린더, 히스토리, 자산 내보내기, 백업 파일명 등 14곳의 `toISOString().split('T')[0]` → `getLocalDateStr()` 교체
+- **JSON.parse 크래시 방지**: `loadState()`의 7개 bare `JSON.parse()` → `safeParseJSON()` 적용
+- **saveTemplates() Firebase 동기화 추가**: 템플릿 저장 시 Firebase 누락 수정
+- **XSS 방어 강화**: `showAchievement()`, `showUndoToast()`에 `escapeHtml()` 적용
+- **홈 버튼/섹션 UX 정리**:
+  - "글쓰기 템플릿" → "글쓰기", "직접 추가" → "📝 상세 추가" (명확한 라벨)
+  - "2분 룰" → "2분 이내", "24시간 내" → "마감 임박" (직관적 필터명)
+  - 필터 섹션 제목 "빠르게 처리할 작업" → "소요시간·마감 필터"
+  - "?" 도움말 아이콘 제거, title 속성에 설명 통합
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- DB 변경: 없음
+
+### 다음에 할 것
+- SVG 아이콘 교체 (P2)
+- 접근성 개선 (P2)
+- 포모도로 통합 (P2)
+
 ## [2026-02-04] (세션 7)
 
 ### 작업 내용
