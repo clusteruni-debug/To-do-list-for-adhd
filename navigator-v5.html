@@ -8544,6 +8544,10 @@
           availableTags: appState.availableTags,
           workProjects: appState.workProjects,
           workTemplates: appState.workTemplates,
+          lifeRhythm: appState.lifeRhythm,
+          weeklyPlan: appState.weeklyPlan,
+          shuttleSuccess: appState.shuttleSuccess,
+          theme: appState.theme,
           lastUpdated: new Date().toISOString()
         });
 
@@ -8641,6 +8645,36 @@
           if (data.workTemplates) {
             appState.workTemplates = data.workTemplates;
           }
+          // 라이프 리듬 병합 (히스토리 합집합, 오늘 데이터는 최신 기준)
+          if (data.lifeRhythm) {
+            const cloudRhythm = data.lifeRhythm;
+            const localRhythm = appState.lifeRhythm;
+            // 히스토리 합치기 (같은 날짜는 기록이 더 많은 쪽 우선)
+            const mergedHistory = { ...(localRhythm.history || {}), ...(cloudRhythm.history || {}) };
+            // 오늘 데이터: 기록된 항목이 더 많은 쪽 사용
+            const localToday = localRhythm.today || {};
+            const cloudToday = cloudRhythm.today || {};
+            const localCount = Object.values(localToday).filter(v => v && v !== localToday.date).length;
+            const cloudCount = Object.values(cloudToday).filter(v => v && v !== cloudToday.date).length;
+            appState.lifeRhythm = {
+              ...localRhythm,
+              history: mergedHistory,
+              today: cloudCount >= localCount ? cloudToday : localToday,
+              settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
+            };
+            saveLifeRhythm();
+          }
+          // 주간 계획 병합
+          if (data.weeklyPlan) {
+            appState.weeklyPlan = data.weeklyPlan;
+          }
+          // 셔틀/테마 동기화
+          if (data.shuttleSuccess !== undefined) {
+            appState.shuttleSuccess = data.shuttleSuccess;
+          }
+          if (data.theme) {
+            appState.theme = data.theme;
+          }
 
           // 로컬에도 저장
           localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
@@ -8648,6 +8682,9 @@
           localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
           localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
           localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+          localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+          localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
+          localStorage.setItem('navigator-theme', appState.theme);
 
           appState.syncStatus = 'synced';
 
@@ -8714,6 +8751,32 @@
             if (data.workTemplates) {
               appState.workTemplates = data.workTemplates;
               localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+            }
+            // 라이프 리듬 병합
+            if (data.lifeRhythm) {
+              const cloudRhythm = data.lifeRhythm;
+              const localRhythm = appState.lifeRhythm;
+              const mergedHistory = { ...(localRhythm.history || {}), ...(cloudRhythm.history || {}) };
+              const localToday = localRhythm.today || {};
+              const cloudToday = cloudRhythm.today || {};
+              const localCount = Object.values(localToday).filter(v => v && v !== localToday.date).length;
+              const cloudCount = Object.values(cloudToday).filter(v => v && v !== cloudToday.date).length;
+              appState.lifeRhythm = {
+                ...localRhythm,
+                history: mergedHistory,
+                today: cloudCount >= localCount ? cloudToday : localToday,
+                settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
+              };
+              saveLifeRhythm();
+            }
+            if (data.weeklyPlan) {
+              appState.weeklyPlan = data.weeklyPlan;
+            }
+            if (data.shuttleSuccess !== undefined) {
+              appState.shuttleSuccess = data.shuttleSuccess;
+            }
+            if (data.theme) {
+              appState.theme = data.theme;
             }
 
             appState.lastSyncTime = cloudUpdated;
@@ -11764,7 +11827,7 @@
     function exportData() {
       try {
         const data = {
-          version: '2.1',
+          version: '2.2',
           exportDate: new Date().toISOString(),
           tasks: appState.tasks,
           shuttleSuccess: appState.shuttleSuccess,
@@ -11774,7 +11837,9 @@
           settings: appState.settings,
           templates: appState.templates,
           workProjects: appState.workProjects,
-          workTemplates: appState.workTemplates
+          workTemplates: appState.workTemplates,
+          lifeRhythm: appState.lifeRhythm,
+          weeklyPlan: appState.weeklyPlan
         };
 
         const json = JSON.stringify(data, null, 2);
@@ -11869,6 +11934,22 @@
             }
             if (data.settings) {
               appState.settings = { ...appState.settings, ...data.settings };
+            }
+            // 라이프 리듬 병합
+            if (data.lifeRhythm) {
+              const importRhythm = data.lifeRhythm;
+              const localRhythm = appState.lifeRhythm;
+              appState.lifeRhythm = {
+                ...localRhythm,
+                history: { ...(localRhythm.history || {}), ...(importRhythm.history || {}) },
+                today: importRhythm.today || localRhythm.today,
+                settings: { ...(localRhythm.settings || {}), ...(importRhythm.settings || {}) }
+              };
+              saveLifeRhythm();
+            }
+            // 주간 계획 병합
+            if (data.weeklyPlan) {
+              appState.weeklyPlan = data.weeklyPlan;
             }
             saveState();
             recomputeTodayStats();
@@ -15460,6 +15541,10 @@
      */
     function saveLifeRhythm() {
       localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+      // 라이프 리듬 변경 시 Firebase에도 동기화
+      if (appState.user) {
+        syncToFirebase();
+      }
     }
 
     /**
