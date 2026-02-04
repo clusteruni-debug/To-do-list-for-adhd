@@ -90,9 +90,10 @@ local.properties
 # ================================
 # Project specific
 # ================================
-# 백업 파일 (너무 많으면)
+# 백업 파일
 backups/
 *.backup.json
+navigator-backup*.json
 
 # 개인 노트 (공유 안 할 것)
 notes.md

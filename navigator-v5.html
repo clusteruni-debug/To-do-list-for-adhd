@@ -15027,9 +15027,8 @@
             <div class="work-projects-title">💼 본업</div>
             <div style="display: flex; gap: 8px;">
               <button class="work-project-add-btn" onclick="showWorkModal('project')">+ 새 프로젝트</button>
-              ${appState.workTemplates.length > 0 ? `
-                <button class="work-project-action-btn" onclick="showWorkModal('template-select')">📋 템플릿</button>
-              ` : ''}
+              <button class="work-project-action-btn" onclick="showWorkModal('template-select')">📋 템플릿</button>
+              <button class="work-project-action-btn" onclick="showWorkModal('template-import')">📥 가져오기</button>
             </div>
           </div>
 
@@ -16668,23 +16667,50 @@
           break;
         case 'template-select': {
           titleText = '📋 템플릿 선택';
-          // 내장 템플릿 + 사용자 템플릿 합치기
           const allTemplates = appState.workTemplates;
           const totalTaskCount = (t) => t.stages.reduce((sum, s) => sum + (s.subcategories || []).reduce((ss, sub) => ss + sub.tasks.length, 0), 0);
+          if (allTemplates.length === 0) {
+            bodyHtml = `
+              <div class="work-modal-field" style="text-align: center; padding: 20px; color: var(--text-muted);">
+                <div style="font-size: 14px; margin-bottom: 12px;">저장된 템플릿이 없습니다</div>
+                <div style="font-size: 12px;">📥 가져오기 버튼으로 JSON 템플릿을 추가하거나,<br>프로젝트 상세에서 "템플릿으로 저장"을 이용하세요.</div>
+              </div>
+            `;
+          } else {
+            bodyHtml = `
+              <div class="work-modal-field">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  ${allTemplates.map(t => `
+                    <div style="display: flex; align-items: stretch; gap: 4px;">
+                      <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px; flex: 1;">
+                        <div style="font-weight: 500;">${escapeHtml(t.name)}</div>
+                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                          ${(t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → ')}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-muted);">
+                          ${totalTaskCount(t)}개 항목
+                        </div>
+                      </button>
+                      <button type="button" class="work-project-action-btn" onclick="exportTemplate(${t.id})" title="JSON 내보내기" style="padding: 8px; font-size: 14px;">📤</button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+          break;
+        }
+        case 'template-import': {
+          titleText = '📥 템플릿 가져오기';
           bodyHtml = `
             <div class="work-modal-field">
-              <div style="display: flex; flex-direction: column; gap: 8px;">
-                ${allTemplates.map(t => `
-                  <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px;">
-                    <div style="font-weight: 500;">${t.builtin ? '📌 ' : ''}${t.name}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                      ${(t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → ')}
-                    </div>
-                    <div style="font-size: 11px; color: var(--text-muted);">
-                      ${totalTaskCount(t)}개 항목
-                    </div>
-                  </button>
-                `).join('')}
+              <label class="work-modal-label">JSON 템플릿 붙여넣기</label>
+              <textarea class="work-modal-input" id="work-input-template-json" rows="10"
+                placeholder='{"name": "템플릿 이름", "stageNames": ["단계1", ...], "stages": [{"subcategories": [{"name": "분류", "tasks": [{"title": "작업"}]}]}]}'
+                style="font-family: monospace; font-size: 12px; resize: vertical; min-height: 150px;"></textarea>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+                프로젝트에서 📤 내보내기한 JSON을 붙여넣으세요.<br>
+                가져온 템플릿은 모든 기기에서 자동 동기화됩니다.
               </div>
             </div>
           `;
@@ -16825,10 +16851,66 @@
         case 'template-select': {
           const selected = document.querySelector('.template-option.selected');
           if (selected) {
-            const rawId = selected.dataset.templateId;
-            // 내장 템플릿은 문자열 ID, 사용자 템플릿은 숫자 ID
-            const templateId = parseInt(rawId);
+            const templateId = parseInt(selected.dataset.templateId);
             applyTemplate(templateId);
+          }
+          break;
+        }
+        case 'template-import': {
+          const jsonText = document.getElementById('work-input-template-json').value.trim();
+          if (!jsonText) { showToast('JSON을 입력하세요', 'error'); return; }
+
+          try {
+            const parsed = JSON.parse(jsonText);
+
+            // 검증: 필수 필드
+            if (!parsed.name || typeof parsed.name !== 'string') {
+              showToast('name 필드가 필요합니다', 'error'); return;
+            }
+            if (!Array.isArray(parsed.stages) || parsed.stages.length === 0) {
+              showToast('stages 배열이 필요합니다', 'error'); return;
+            }
+
+            // 검증: stages 구조
+            for (let i = 0; i < parsed.stages.length; i++) {
+              const stage = parsed.stages[i];
+              if (!stage.subcategories || !Array.isArray(stage.subcategories)) {
+                showToast(`stages[${i}]에 subcategories 배열이 필요합니다`, 'error'); return;
+              }
+              for (const sub of stage.subcategories) {
+                if (!sub.name || !Array.isArray(sub.tasks)) {
+                  showToast('subcategories에 name과 tasks가 필요합니다', 'error'); return;
+                }
+                for (const task of sub.tasks) {
+                  if (!task.title) {
+                    showToast('tasks에 title이 필요합니다', 'error'); return;
+                  }
+                }
+              }
+            }
+
+            // 템플릿 생성
+            const template = {
+              id: Date.now(),
+              name: parsed.name,
+              stageNames: parsed.stageNames || null,
+              stages: parsed.stages.map(stage => ({
+                subcategories: stage.subcategories.map(sub => ({
+                  name: sub.name,
+                  tasks: sub.tasks.map(t => ({ title: t.title }))
+                }))
+              })),
+              participantGoal: parsed.participantGoal || null,
+              createdAt: new Date().toISOString()
+            };
+
+            appState.workTemplates.push(template);
+            localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+            syncToFirebase();
+            showToast(`"${escapeHtml(template.name)}" 템플릿 가져오기 완료`, 'success');
+            renderStatic();
+          } catch (e) {
+            showToast('JSON 파싱 오류: ' + e.message, 'error'); return;
           }
           break;
         }
@@ -16886,6 +16968,36 @@
       renderStatic();
       showToast(`"${projectName}" 생성됨`, 'success');
     }
+
+    /**
+     * 템플릿 JSON 내보내기 (클립보드 복사)
+     */
+    function exportTemplate(templateId) {
+      const template = appState.workTemplates.find(t => t.id === templateId);
+      if (!template) return;
+
+      // 내보내기용 JSON (id, createdAt 등 내부 필드 제외)
+      const exportData = {
+        name: template.name,
+        stageNames: template.stageNames || null,
+        stages: template.stages.map(stage => ({
+          subcategories: (stage.subcategories || []).map(sub => ({
+            name: sub.name,
+            tasks: sub.tasks.map(t => ({ title: t.title }))
+          }))
+        })),
+        participantGoal: template.participantGoal || null
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      navigator.clipboard.writeText(json).then(() => {
+        showToast(`"${escapeHtml(template.name)}" 템플릿 JSON 복사됨`, 'success');
+      }).catch(() => {
+        // 클립보드 실패 시 프롬프트로 표시
+        prompt('아래 JSON을 복사하세요:', json);
+      });
+    }
+    window.exportTemplate = exportTemplate;
 
     /**
      * 프로젝트 추가
