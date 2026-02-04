@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [2026-02-05] (세션 8 - 추가 개선)
+## [2026-02-05] (세션 8 - 전면 개선)
 
 ### 작업 내용
 - **XSS 잔여 3곳 수정**: subcatData.name, sub.name, stageName confirm에 escapeHtml 적용
@@ -17,6 +17,11 @@
 - **터치 타겟 보장**: btn-small(44px), work-task-action(44px), work-task-log-action(36px)
 - **PWA 개선**: SW v6.3, 앱 업데이트 감지 토스트 추가
 - **색상 대비 개선**: 다크모드 text-muted #707078 → #8a8a92, 라이트모드 #9aa0a6 → #72787e
+- **전역 함수 네임스페이스 정리**: window.Nav 객체로 142개 함수 그룹화
+- **favicon + apple-touch-icon 추가**: SVG data URI 아이콘
+- **온보딩 기능 투어**: 4-step 하이라이트 투어 + 설정에서 "기능 가이드" 버튼
+- **주간/월간 리포트**: 대시보드에 주간/월간 완료수, 수익, 카테고리별 통계, 일평균 표시
+- **포모도로 타이머 UI 연결**: 오늘 탭에 25분 집중/5분 휴식 포모도로 UI 표시 (기존 로직 활용)
 
 ### 이슈/메모
 - 수정 파일: navigator-v5.html, sw.js, docs/CHANGELOG.md

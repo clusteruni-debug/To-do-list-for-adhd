@@ -11,6 +11,8 @@
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23667eea' width='100' height='100' rx='20'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect fill='%23667eea' width='180' height='180' rx='36'/%3E%3Ctext x='90' y='122' font-size='90' text-anchor='middle' fill='white'%3E⚡%3C/text%3E%3C/svg%3E">
   <title>Navigator - 생존형 할일 관리</title>
 
   <!-- Pretendard 폰트 -->
@@ -5685,6 +5687,28 @@
       font-size: 12px;
       color: var(--text-muted);
       text-align: right;
+    }
+
+    /* 기능 투어 */
+    .tour-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7); z-index: 10000;
+    }
+    .tour-tooltip {
+      position: fixed; z-index: 10001;
+      background: var(--bg-card); color: var(--text-primary);
+      border-radius: 12px; padding: 20px; max-width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: fadeIn 0.3s ease;
+    }
+    .tour-tooltip h4 { margin: 0 0 8px; font-size: 16px; }
+    .tour-tooltip p { margin: 0 0 16px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; }
+    .tour-tooltip .tour-actions { display: flex; gap: 8px; justify-content: space-between; }
+    .tour-tooltip .tour-step { font-size: 12px; color: var(--text-muted); }
+    .tour-highlight {
+      position: relative; z-index: 10001;
+      box-shadow: 0 0 0 4px var(--primary), 0 0 0 8px rgba(102, 126, 234, 0.3);
+      border-radius: 8px;
     }
 
     /* 빈 상태 개선 */
@@ -13638,6 +13662,45 @@
                   </button>
                 </div>
 
+                <!-- 포모도로 타이머 -->
+                ${(() => {
+                  const pomo = appState.pomodoro;
+                  const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
+                  if (!pomo.isRunning && !pomo.isBreak && pomo.completedPomodoros === 0) {
+                    // 비활성 상태: 시작 버튼만
+                    return `
+                      <div class="pomodoro-section" style="margin-bottom: 12px;">
+                        <button class="btn btn-secondary" onclick="startPomodoro()" style="width: 100%; padding: 10px;" aria-label="포모도로 시작">
+                          🍅 포모도로 25분 집중 시작
+                        </button>
+                      </div>
+                    `;
+                  }
+                  // 활성/휴식 상태
+                  return `
+                    <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">
+                      <div class="pomodoro-title">${pomo.isBreak ? '☕ 휴식 중' : '🍅 포모도로'}</div>
+                      <div class="pomodoro-time" id="pomodoro-time">${formatPomodoroTime(pomo.timeLeft)}</div>
+                      ${currentTask ? `<div class="pomodoro-task">${escapeHtml(currentTask.title)}</div>` : ''}
+                      <div class="pomodoro-controls">
+                        ${pomo.isRunning ? `
+                          <button class="pomodoro-btn pause" onclick="pausePomodoro()" aria-label="일시정지">⏸ 일시정지</button>
+                        ` : `
+                          <button class="pomodoro-btn start" onclick="resumePomodoro()" aria-label="재개">▶ 재개</button>
+                        `}
+                        <button class="pomodoro-btn stop" onclick="stopPomodoro()" aria-label="중지">⏹ 중지</button>
+                        ${pomo.isBreak ? `<button class="pomodoro-btn skip" onclick="skipBreak()" aria-label="휴식 건너뛰기">⏭ 건너뛰기</button>` : ''}
+                      </div>
+                      <div class="pomodoro-stats">
+                        <div class="pomodoro-stat">
+                          <div class="pomodoro-stat-value">${pomo.completedPomodoros}</div>
+                          <div>완료</div>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                })()}
+
                 <!-- 퀵 필터 섹션 -->
                 <div class="quick-filter-section">
                   <div class="quick-filter-header">
@@ -14869,6 +14932,59 @@
                 ` : ''}
               </div>
             ` : ''}
+
+            ${(() => {
+              // 주간/월간 리포트
+              const today = new Date();
+              const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+              const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate() - 30);
+
+              const allTasks = appState.tasks || [];
+              const weekCompleted = allTasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= weekAgo);
+              const monthCompleted = allTasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= monthAgo);
+
+              const weekRevenue = weekCompleted.reduce((sum, t) => sum + (t.estimatedRevenue || 0), 0);
+              const monthRevenue = monthCompleted.reduce((sum, t) => sum + (t.estimatedRevenue || 0), 0);
+
+              // 카테고리별 분포
+              const weekCats = {};
+              weekCompleted.forEach(t => { weekCats[t.category] = (weekCats[t.category] || 0) + 1; });
+
+              const formatKRW = (n) => n >= 10000 ? Math.round(n/10000) + '만원' : n.toLocaleString() + '원';
+
+              return `
+                <div class="dashboard-section">
+                  <div class="dashboard-title">📋 주간/월간 리포트</div>
+                  <div class="stats" style="margin-bottom: 12px;">
+                    <div class="stat-card">
+                      <div class="stat-value" style="color: #667eea">${weekCompleted.length}</div>
+                      <div class="stat-label">주간 완료</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-value" style="color: #48bb78">${monthCompleted.length}</div>
+                      <div class="stat-label">월간 완료</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-value" style="color: #f093fb">${weekRevenue > 0 ? formatKRW(weekRevenue) : '-'}</div>
+                      <div class="stat-label">주간 수익</div>
+                    </div>
+                    <div class="stat-card">
+                      <div class="stat-value" style="color: #f5576c">${monthRevenue > 0 ? formatKRW(monthRevenue) : '-'}</div>
+                      <div class="stat-label">월간 수익</div>
+                    </div>
+                  </div>
+                  ${Object.keys(weekCats).length > 0 ? `
+                    <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
+                      <strong>주간 카테고리:</strong>
+                      ${Object.entries(weekCats).map(([cat, cnt]) => `<span class="category ${cat}" style="margin-left:6px;">${cat} ${cnt}건</span>`).join('')}
+                    </div>
+                  ` : ''}
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+                    일평균: ${(weekCompleted.length / 7).toFixed(1)}건/일 (주간) · ${(monthCompleted.length / 30).toFixed(1)}건/일 (월간)
+                  </div>
+                </div>
+              `;
+            })()}
           </div>
 
           <!-- 전체 목록 탭 -->
@@ -15326,7 +15442,10 @@
                     </div>
                   </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: center;">
+                  <button class="btn btn-secondary" onclick="closeSettings(); startFeatureTour();">
+                    📖 기능 가이드
+                  </button>
                   <button class="btn btn-primary" onclick="closeSettings()">
                     ✓ 완료
                   </button>
@@ -15442,68 +15561,41 @@
     }
 
     // ============================================
-    // 전역 함수 등록 (HTML에서 호출 가능하게)
+    // 전역 함수 등록 (Nav 네임스페이스 + window 호환)
     // ============================================
-    window.switchTab = switchTab;
-    window.addNewEvent = addNewEvent;
-    window.toggleShuttle = toggleShuttle;
-    window.quickAdd = quickAdd;
-    window.detailedAdd = detailedAdd;
-    window.completeTask = completeTask;
-    window.uncompleteTask = uncompleteTask;
-    window.editTask = editTask;
-    window.cancelEdit = cancelEdit;
-    window.deleteTask = deleteTask;
-    window.handleGo = handleGo;
-    window.toggleTaskList = toggleTaskList;
-    window.toggleCompletedTasks = toggleCompletedTasks;
-    window.toggleDetailedAdd = toggleDetailedAdd;
-    window.updateDetailedTaskCategory = updateDetailedTaskCategory;
-    window.updateDetailedTaskRepeat = updateDetailedTaskRepeat;
-    window.handleTouchStart = handleTouchStart;
-    window.handleTouchMove = handleTouchMove;
-    window.handleTouchEnd = handleTouchEnd;
-    window.exportData = exportData;
-    window.importData = importData;
-    window.getRepeatLabel = getRepeatLabel;
-    window.setScheduleFilter = setScheduleFilter;
-    window.getTasksByDate = getTasksByDate;
-    window.formatTime = formatTime;
-    window.setSearchQuery = setSearchQuery;
-    window.clearSearch = clearSearch;
-    window.setCategoryFilter = setCategoryFilter;
-    window.toggleSubtaskComplete = toggleSubtaskComplete;
-    window.toggleSubtaskExpand = toggleSubtaskExpand;
-    window.toggleDetailedSubtask = toggleDetailedSubtask;
-    window.addSubtask = addSubtask;
-    window.removeSubtask = removeSubtask;
-    window.showWeeklyReview = showWeeklyReview;
-    window.closeWeeklyReview = closeWeeklyReview;
-    window.toggleFocusTask = toggleFocusTask;
-    window.saveWeeklyPlan = saveWeeklyPlan;
-    window.dismissMondayReminder = dismissMondayReminder;
-    window.setQuickFilter = setQuickFilter;
-    window.postponeTask = postponeTask;
-    window.showTimeInputModal = showTimeInputModal;
-    window.saveActualTime = saveActualTime;
-    window.closeTimeInputModal = closeTimeInputModal;
-
-    // 히스토리/캘린더 함수
-    window.prevMonth = prevMonth;
-    window.nextMonth = nextMonth;
-    window.selectDate = selectDate;
-    window.toggleHistoryDate = toggleHistoryDate;
-
-    // 설정 함수
-    window.openSettings = openSettings;
-    window.closeSettings = closeSettings;
-    window.updateSetting = updateSetting;
-
-    // 템플릿 함수
-    window.saveAsTemplate = saveAsTemplate;
-    window.deleteTemplate = deleteTemplate;
-    window.addFromTemplate = addFromTemplate;
-    window.saveCurrentAsTemplate = saveCurrentAsTemplate;
+    const _navFunctions = {
+      // 탭/네비게이션
+      switchTab, addNewEvent, toggleShuttle,
+      // 작업 CRUD
+      quickAdd, detailedAdd, completeTask, uncompleteTask, editTask, cancelEdit, deleteTask,
+      handleGo, toggleTaskList, toggleCompletedTasks, toggleDetailedAdd,
+      updateDetailedTaskCategory, updateDetailedTaskRepeat,
+      // 터치/스와이프
+      handleTouchStart, handleTouchMove, handleTouchEnd,
+      // 백업/데이터
+      exportData, importData,
+      // 유틸
+      getRepeatLabel, setScheduleFilter, getTasksByDate, formatTime,
+      setSearchQuery, clearSearch, setCategoryFilter,
+      // 서브태스크
+      toggleSubtaskComplete, toggleSubtaskExpand, toggleDetailedSubtask, addSubtask, removeSubtask,
+      // 주간 리뷰
+      showWeeklyReview, closeWeeklyReview,
+      // 포커스/단축키
+      toggleFocusTask, saveWeeklyPlan, dismissMondayReminder,
+      setQuickFilter, postponeTask,
+      showTimeInputModal, saveActualTime, closeTimeInputModal,
+      // 히스토리/캘린더
+      prevMonth, nextMonth, selectDate, toggleHistoryDate,
+      // 설정
+      openSettings, closeSettings, updateSetting,
+      // 템플릿
+      saveAsTemplate, deleteTemplate, addFromTemplate, saveCurrentAsTemplate,
+    };
+    // 네임스페이스 객체
+    window.Nav = _navFunctions;
+    // HTML onclick 호환용 전역 등록
+    Object.assign(window, _navFunctions);
 
     // UX 함수
     function dismissSwipeHint() {
@@ -15511,6 +15603,83 @@
       renderStatic();
     }
     window.dismissSwipeHint = dismissSwipeHint;
+
+    // 기능 투어
+    const tourSteps = [
+      { selector: '.quick-add-container', title: '⚡ 빠른 추가', desc: '여기에 작업명을 입력하고 Enter! #부업 처럼 카테고리도 지정 가능합니다.' },
+      { selector: '.tab-nav', title: '📋 탭 네비게이션', desc: '오늘/본업/이벤트/일상 탭으로 전환. 더보기에서 통계/전체/히스토리도 볼 수 있습니다.' },
+      { selector: '.header', title: '⚙️ 헤더 버튼', desc: '셔틀 상태, 테마 전환, 동기화 상태, 마감 알림, 설정을 빠르게 접근합니다.' },
+      { selector: '.quick-filter-section, .quick-templates', title: '🎯 빠른 필터 & 템플릿', desc: '소요시간/마감 필터로 작업을 걸러보고, 글쓰기/상세 추가로 빠르게 작업을 만드세요.' },
+    ];
+    let tourIdx = -1;
+
+    function startFeatureTour() {
+      tourIdx = 0;
+      showTourStep();
+    }
+    function showTourStep() {
+      // 이전 정리
+      document.querySelectorAll('.tour-overlay, .tour-tooltip').forEach(el => el.remove());
+      document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+      if (tourIdx >= tourSteps.length) { tourIdx = -1; return; }
+
+      const step = tourSteps[tourIdx];
+      const target = document.querySelector(step.selector);
+
+      // 오버레이
+      const overlay = document.createElement('div');
+      overlay.className = 'tour-overlay';
+      overlay.onclick = () => endTour();
+      document.body.appendChild(overlay);
+
+      // 하이라이트
+      if (target) {
+        target.classList.add('tour-highlight');
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // 툴팁
+      const tooltip = document.createElement('div');
+      tooltip.className = 'tour-tooltip';
+      tooltip.onclick = (e) => e.stopPropagation();
+      tooltip.innerHTML = `
+        <h4>${step.title}</h4>
+        <p>${step.desc}</p>
+        <div class="tour-actions">
+          <span class="tour-step">${tourIdx + 1} / ${tourSteps.length}</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-small" onclick="endTour()" style="min-height:36px;">건너뛰기</button>
+            <button class="btn btn-primary btn-small" onclick="nextTourStep()" style="min-height:36px;">${tourIdx < tourSteps.length - 1 ? '다음 →' : '완료 ✓'}</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(tooltip);
+
+      // 위치 조정
+      if (target) {
+        const rect = target.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+        let top = rect.bottom + 12;
+        let left = Math.max(16, rect.left);
+        if (top + tooltipRect.height > window.innerHeight) top = rect.top - tooltipRect.height - 12;
+        if (left + tooltipRect.width > window.innerWidth) left = window.innerWidth - tooltipRect.width - 16;
+        tooltip.style.top = top + 'px';
+        tooltip.style.left = left + 'px';
+      } else {
+        tooltip.style.top = '50%';
+        tooltip.style.left = '50%';
+        tooltip.style.transform = 'translate(-50%, -50%)';
+      }
+    }
+    function nextTourStep() { tourIdx++; showTourStep(); }
+    function endTour() {
+      document.querySelectorAll('.tour-overlay, .tour-tooltip').forEach(el => el.remove());
+      document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+      tourIdx = -1;
+    }
+    window.startFeatureTour = startFeatureTour;
+    window.nextTourStep = nextTourStep;
+    window.endTour = endTour;
 
     // ============================================
     // 본업 프로젝트 관리
