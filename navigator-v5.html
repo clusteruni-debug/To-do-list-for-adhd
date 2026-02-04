@@ -8100,10 +8100,10 @@
       if (typeof task.title !== 'string' || task.title.trim().length === 0) return null;
 
       // 안전한 객체 생성 (허용된 필드만)
-      return {
+      const validated = {
         id: task.id,
         title: String(task.title).trim().substring(0, 500),
-        category: ['본업', '부업', '일상', '공부', '크립토'].includes(task.category) ? task.category : '일상',
+        category: ['본업', '부업', '일상', '가족', '공부', '크립토'].includes(task.category) ? task.category : '일상',
         completed: Boolean(task.completed),
         completedAt: task.completedAt || null,
         deadline: typeof task.deadline === 'string' ? task.deadline : '',
@@ -8115,8 +8115,21 @@
         repeatType: ['none', 'daily', 'weekdays', 'weekends', 'weekly', 'custom', 'monthly'].includes(task.repeatType) ? task.repeatType : 'none',
         repeatDays: Array.isArray(task.repeatDays) ? task.repeatDays.filter(d => Number.isInteger(d) && d >= 0 && d <= 6) : [],
         createdAt: task.createdAt || new Date().toISOString(),
-        priority: typeof task.priority === 'number' ? Math.min(Math.max(0, task.priority), 100) : 0
+        priority: typeof task.priority === 'number' ? Math.min(Math.max(0, task.priority), 100) : 0,
+        // 동기화 시 소실 방지: 추가 필드 보존
+        updatedAt: task.updatedAt || task.completedAt || task.createdAt || new Date().toISOString()
       };
+
+      // 선택적 필드 보존 (본업 프로젝트 관련)
+      if (task.workProjectId) validated.workProjectId = task.workProjectId;
+      if (typeof task.workStageIdx === 'number') validated.workStageIdx = task.workStageIdx;
+      if (typeof task.workSubcatIdx === 'number') validated.workSubcatIdx = task.workSubcatIdx;
+      if (Array.isArray(task.subtasks)) validated.subtasks = task.subtasks;
+      if (task.organizer) validated.organizer = task.organizer;
+      if (task.eventType) validated.eventType = task.eventType;
+      if (task.repeatMonthDay) validated.repeatMonthDay = task.repeatMonthDay;
+
+      return validated;
     }
 
     /**
@@ -8484,6 +8497,35 @@
     window.logout = logout;
 
     /**
+     * 수동 동기화 갱신 - 클라우드에서 최신 데이터를 가져와 병합 후 다시 업로드
+     */
+    async function forceSync() {
+      if (!appState.user) {
+        showToast('로그인이 필요합니다', 'info');
+        return;
+      }
+      if (isSyncing) {
+        showToast('동기화 진행 중입니다', 'info');
+        return;
+      }
+
+      try {
+        showToast('🔄 동기화 갱신 중...', 'info');
+        // 로컬 변경사항 먼저 저장
+        saveStateImmediate();
+        // 클라우드에서 가져와 병합
+        await loadFromFirebase();
+        recomputeTodayStats();
+        renderStatic();
+        showToast('✅ 동기화 완료!', 'success');
+      } catch (error) {
+        console.error('수동 동기화 실패:', error);
+        showToast('동기화에 실패했습니다', 'error');
+      }
+    }
+    window.forceSync = forceSync;
+
+    /**
      * Firebase에 데이터 저장
      */
     async function syncToFirebase() {
@@ -8520,6 +8562,36 @@
     /**
      * Firebase에서 데이터 로드
      */
+    /**
+     * 태스크별 타임스탬프 기반 병합
+     * - 같은 ID: updatedAt이 더 최신인 쪽을 사용
+     * - 한쪽에만 있는 태스크: 그대로 보존
+     */
+    function mergeTasks(localTasks, cloudTasks) {
+      const localMap = new Map(localTasks.map(t => [t.id, t]));
+      const cloudMap = new Map(cloudTasks.map(t => [t.id, t]));
+      const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
+      const merged = [];
+
+      for (const id of allIds) {
+        const local = localMap.get(id);
+        const cloud = cloudMap.get(id);
+
+        if (local && !cloud) {
+          merged.push(local);
+        } else if (cloud && !local) {
+          merged.push(cloud);
+        } else {
+          // 양쪽 다 있으면 updatedAt 기준으로 최신 선택
+          const localTime = new Date(local.updatedAt || local.completedAt || local.createdAt || 0).getTime();
+          const cloudTime = new Date(cloud.updatedAt || cloud.completedAt || cloud.createdAt || 0).getTime();
+          merged.push(cloudTime >= localTime ? cloud : local);
+        }
+      }
+
+      return merged;
+    }
+
     async function loadFromFirebase() {
       if (!appState.user) return;
 
@@ -8531,30 +8603,33 @@
         if (docSnap.exists()) {
           const data = docSnap.data();
 
-          // 클라우드 데이터가 더 최신이면 로드
-          const cloudTasks = validateTasks(data.tasks || []); // 검증 추가
+          const cloudTasks = validateTasks(data.tasks || []);
           const localTasks = appState.tasks || [];
 
-          // 병합: 클라우드 데이터로 교체 (더 많은 데이터 기준)
-          if (cloudTasks.length > 0) {
-            // 로컬에만 있는 새 작업 보존
-            const cloudIds = new Set(cloudTasks.map(t => t.id));
-            const localOnlyTasks = localTasks.filter(t => !cloudIds.has(t.id));
-
-            appState.tasks = [...cloudTasks, ...localOnlyTasks];
-          }
+          // 태스크별 타임스탬프 기반 병합
+          appState.tasks = mergeTasks(localTasks, cloudTasks);
 
           if (data.settings) {
             appState.settings = { ...appState.settings, ...data.settings };
           }
           if (data.streak) {
-            appState.streak = data.streak;
+            // 스트릭은 더 높은 값 보존
+            const cloudStreak = data.streak;
+            appState.streak = {
+              lastActiveDate: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
+                ? appState.streak.lastActiveDate : cloudStreak.lastActiveDate,
+              best: Math.max(appState.streak.best || 0, cloudStreak.best || 0),
+              current: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
+                ? appState.streak.current : cloudStreak.current
+            };
           }
           if (data.templates) {
             appState.templates = data.templates;
           }
           if (data.availableTags) {
-            appState.availableTags = data.availableTags;
+            // 태그 병합 (양쪽 합집합)
+            const mergedTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
+            appState.availableTags = mergedTags;
           }
           if (data.workProjects) {
             appState.workProjects = data.workProjects;
@@ -8572,8 +8647,12 @@
           localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
           localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
           localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+          localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
 
           appState.syncStatus = 'synced';
+
+          // 병합된 데이터를 클라우드에도 반영
+          await syncToFirebase();
         } else {
           // 클라우드에 데이터 없으면 현재 로컬 데이터 업로드
           await syncToFirebase();
@@ -8603,14 +8682,38 @@
           // 클라우드가 더 최신이면 업데이트
           if (!localUpdated || cloudUpdated > localUpdated) {
             if (data.tasks) {
-              appState.tasks = validateTasks(data.tasks); // 검증 추가
+              // 태스크별 병합 (덮어쓰기 대신)
+              const cloudTasks = validateTasks(data.tasks);
+              appState.tasks = mergeTasks(appState.tasks, cloudTasks);
               localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
             }
             if (data.settings) {
               appState.settings = { ...appState.settings, ...data.settings };
             }
             if (data.streak) {
-              appState.streak = data.streak;
+              const cloudStreak = data.streak;
+              appState.streak = {
+                lastActiveDate: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
+                  ? appState.streak.lastActiveDate : cloudStreak.lastActiveDate,
+                best: Math.max(appState.streak.best || 0, cloudStreak.best || 0),
+                current: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
+                  ? appState.streak.current : cloudStreak.current
+              };
+            }
+            // 누락되었던 데이터 타입 추가
+            if (data.templates) {
+              appState.templates = data.templates;
+            }
+            if (data.availableTags) {
+              appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
+            }
+            if (data.workProjects) {
+              appState.workProjects = data.workProjects;
+              localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+            }
+            if (data.workTemplates) {
+              appState.workTemplates = data.workTemplates;
+              localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
             }
 
             appState.lastSyncTime = cloudUpdated;
@@ -9614,6 +9717,7 @@
       const template = appState.templates.find(t => t.id === templateId);
       if (!template) return;
 
+      const now = new Date().toISOString();
       appState.tasks.push({
         id: Date.now(),
         title: template.title,
@@ -9624,7 +9728,8 @@
         expectedRevenue: '',
         tags: template.tags || [],
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       });
 
       saveState();
@@ -9719,7 +9824,8 @@
         repeatType: 'none',
         tags: [],
         subtasks: [],
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       appState.tasks.push(newTask);
@@ -9757,7 +9863,8 @@
         workProjectId: null,
         workStageIdx: null,
         workSubcatIdx: null,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       appState.tasks.push(newTask);
@@ -9881,11 +9988,13 @@
         return;
       }
 
+      const now = new Date().toISOString();
       appState.tasks.push({
         id: Date.now(),
         ...template,
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       });
 
       saveState();
@@ -9946,6 +10055,7 @@
         return;
       }
 
+      const now = new Date().toISOString();
       appState.tasks.push({
         id: Date.now(),
         title: title,
@@ -9955,7 +10065,8 @@
         link: '',
         expectedRevenue: '',
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       });
 
       appState.quickAddValue = '';
@@ -10032,17 +10143,19 @@
         // 수정 모드
         appState.tasks = appState.tasks.map(t =>
           t.id === appState.editingTaskId
-            ? { ...task, id: t.id, completed: t.completed, createdAt: t.createdAt }
+            ? { ...task, id: t.id, completed: t.completed, createdAt: t.createdAt, updatedAt: new Date().toISOString() }
             : t
         );
         showToast('작업이 수정되었습니다', 'success');
       } else {
         // 추가 모드
+        const now = new Date().toISOString();
         appState.tasks.push({
           id: Date.now(),
           ...task,
           completed: false,
-          createdAt: new Date().toISOString()
+          createdAt: now,
+          updatedAt: now
         });
         showToast('작업이 추가되었습니다', 'success');
       }
@@ -10093,7 +10206,7 @@
 
       // 완료 처리
       appState.tasks = appState.tasks.map(t =>
-        t.id === id ? { ...t, completed: true, completedAt: completedAt } : t
+        t.id === id ? { ...t, completed: true, completedAt: completedAt, updatedAt: completedAt } : t
       );
 
       // 완료 히스토리 저장
@@ -10514,7 +10627,8 @@
         repeatType: task.repeatType,
         repeatDays: task.repeatDays, // 커스텀 요일 정보 유지
         completed: false,
-        createdAt: now.toISOString()
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString()
       };
     }
 
@@ -10530,7 +10644,7 @@
         new Date(task.completedAt).toDateString() === new Date().toDateString();
 
       appState.tasks = appState.tasks.map(t =>
-        t.id === id ? { ...t, completed: false, completedAt: null } : t
+        t.id === id ? { ...t, completed: false, completedAt: null, updatedAt: new Date().toISOString() } : t
       );
 
       // 오늘 완료한 작업이었다면 통계 감소
@@ -10660,7 +10774,8 @@
             category,
             deadline,
             estimatedTime,
-            expectedRevenue: expectedRevenue !== null ? expectedRevenue : t.expectedRevenue
+            expectedRevenue: expectedRevenue !== null ? expectedRevenue : t.expectedRevenue,
+            updatedAt: new Date().toISOString()
           };
         }
         return t;
@@ -10743,12 +10858,14 @@
       const task = appState.tasks.find(t => t.id === id);
       if (!task) return;
 
+      const now = new Date().toISOString();
       const newTask = {
         ...task,
         id: Date.now(),
         title: task.title + ' (복사)',
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       };
 
       appState.tasks.push(newTask);
@@ -11647,17 +11764,21 @@
     function exportData() {
       try {
         const data = {
-          version: '2.0',
+          version: '2.1',
           exportDate: new Date().toISOString(),
           tasks: appState.tasks,
           shuttleSuccess: appState.shuttleSuccess,
           availableTags: appState.availableTags,
           streak: appState.streak,
-          theme: appState.theme
+          theme: appState.theme,
+          settings: appState.settings,
+          templates: appState.templates,
+          workProjects: appState.workProjects,
+          workTemplates: appState.workTemplates
         };
 
         const json = JSON.stringify(data, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
+        const blob = new Blob(['\uFEFF' + json], { type: 'application/json;charset=utf-8' });
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement('a');
@@ -11691,32 +11812,76 @@
     function handleFileImport(e) {
       const file = e.target.files[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = function(event) {
         try {
-          const data = JSON.parse(event.target.result);
-          
+          // BOM 제거 후 파싱
+          let text = event.target.result;
+          if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+          const data = JSON.parse(text);
+
           // 데이터 유효성 검사
           if (!data.tasks || !Array.isArray(data.tasks)) {
             throw new Error('잘못된 파일 형식입니다');
           }
 
-          // 데이터 복원 (검증 포함)
-          if (confirm('현재 데이터를 덮어쓰시겠습니까?')) {
-            appState.tasks = validateTasks(data.tasks);
-            appState.shuttleSuccess = data.shuttleSuccess || false;
+          const importedTasks = validateTasks(data.tasks);
+          const choice = confirm(
+            `${importedTasks.length}개의 태스크를 가져옵니다.\n\n` +
+            `[확인] = 기존 데이터와 병합 (추천)\n` +
+            `[취소] = 가져오기 취소`
+          );
+
+          if (choice) {
+            // 병합 (태스크별 타임스탬프 기반)
+            appState.tasks = mergeTasks(appState.tasks, importedTasks);
+            if (data.shuttleSuccess !== undefined) {
+              appState.shuttleSuccess = data.shuttleSuccess;
+            }
+            if (data.availableTags) {
+              appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
+            }
+            if (data.streak) {
+              appState.streak = {
+                lastActiveDate: appState.streak.lastActiveDate > data.streak.lastActiveDate
+                  ? appState.streak.lastActiveDate : data.streak.lastActiveDate,
+                best: Math.max(appState.streak.best || 0, data.streak.best || 0),
+                current: appState.streak.lastActiveDate > data.streak.lastActiveDate
+                  ? appState.streak.current : data.streak.current
+              };
+            }
+            // 본업 프로젝트/템플릿 병합
+            if (data.workProjects && Array.isArray(data.workProjects)) {
+              const localProjectIds = new Set((appState.workProjects || []).map(p => p.id));
+              const newProjects = data.workProjects.filter(p => !localProjectIds.has(p.id));
+              appState.workProjects = [...(appState.workProjects || []), ...newProjects];
+            }
+            if (data.workTemplates && Array.isArray(data.workTemplates)) {
+              const localTemplateIds = new Set((appState.workTemplates || []).map(t => t.id));
+              const newTemplates = data.workTemplates.filter(t => !localTemplateIds.has(t.id));
+              appState.workTemplates = [...(appState.workTemplates || []), ...newTemplates];
+            }
+            if (data.templates && Array.isArray(data.templates)) {
+              const localTplIds = new Set((appState.templates || []).map(t => t.id));
+              const newTpls = data.templates.filter(t => !localTplIds.has(t.id));
+              appState.templates = [...(appState.templates || []), ...newTpls];
+            }
+            if (data.settings) {
+              appState.settings = { ...appState.settings, ...data.settings };
+            }
             saveState();
+            recomputeTodayStats();
             renderStatic();
-            showToast('데이터를 복원했습니다', 'success');
+            showToast(`${importedTasks.length}개 태스크를 병합했습니다`, 'success');
           }
         } catch (error) {
           console.error('가져오기 실패:', error);
           showToast('파일을 읽을 수 없습니다', 'error');
         }
       };
-      reader.readAsText(file);
-      
+      reader.readAsText(file, 'UTF-8');
+
       // 인풋 초기화 (같은 파일 다시 선택 가능하게)
       e.target.value = '';
     }
@@ -14136,7 +14301,12 @@
                         </div>
                         <button class="logout-btn" onclick="logout()">로그아웃</button>
                       </div>
-                      <div style="font-size: 12px; color: var(--text-secondary); text-align: center;">
+                      <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button onclick="forceSync()" style="flex: 1; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 500;">
+                          🔄 동기화 갱신
+                        </button>
+                      </div>
+                      <div style="font-size: 12px; color: var(--text-secondary); text-align: center; margin-top: 8px;">
                         다른 기기에서 같은 계정으로 로그인하면 자동 동기화됩니다
                       </div>
                     ` : `
@@ -17114,7 +17284,8 @@
 
       if (importData) {
         try {
-          const decoded = decodeURIComponent(atob(importData));
+          // Unicode 안전한 Base64 디코딩
+          const decoded = decodeURIComponent(escape(atob(importData)));
           const taskData = JSON.parse(decoded);
           showImportConfirmModal(taskData);
 
