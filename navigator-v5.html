@@ -193,6 +193,11 @@
         top: 80px;
       }
 
+      /* 4번째 컬럼: 기본 숨김, 4K에서만 표시 */
+      .pc-column-tasklist {
+        display: none;
+      }
+
       .shuttle-status {
         padding: 24px;
       }
@@ -341,12 +346,69 @@
       }
 
       .pc-layout {
-        grid-template-columns: 1fr 1fr 520px;
+        grid-template-columns: 1fr 1fr 380px 1fr;
         gap: 40px;
       }
 
       .pc-column-right {
         top: 100px;
+      }
+
+      /* 4K: 4번째 컬럼 - 전체 작업 목록 */
+      .pc-column-tasklist {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
+      }
+
+      .pc-column-tasklist .tasklist-4k-header {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      .pc-column-tasklist .task-item-mini {
+        padding: 12px 16px;
+        font-size: 15px;
+      }
+
+      .pc-column-tasklist .task-item-mini-category {
+        font-size: 13px;
+        padding: 4px 10px;
+      }
+
+      .pc-column-tasklist .task-check-btn {
+        width: 24px;
+        height: 24px;
+        font-size: 13px;
+      }
+
+      .pc-column-tasklist .search-input {
+        padding: 14px 18px;
+        font-size: 16px;
+      }
+
+      /* 4K: 중앙 컬럼의 접이식 목록 숨김 */
+      .pc-column-center .other-tasks-section {
+        display: none;
+      }
+
+      /* 4K: 전체 목록 스크롤바 */
+      .pc-column-tasklist::-webkit-scrollbar {
+        width: 6px;
+      }
+      .pc-column-tasklist::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+      }
+      .pc-column-tasklist::-webkit-scrollbar-track {
+        background: transparent;
       }
 
       .next-action {
@@ -13934,6 +13996,55 @@
                   </div>
                 </div>
 
+              </div>
+
+              <!-- 4K 전용: 전체 작업 목록 (4번째 컬럼) -->
+              <div class="pc-column-tasklist">
+                <div class="tasklist-4k-header">📋 전체 작업 (${filteredTasks.filter(t => !t.completed).length})</div>
+                <div class="search-simple">
+                  <input
+                    type="text"
+                    class="search-input"
+                    placeholder="🔍 검색..."
+                    value="${appState.searchQuery}"
+                    oninput="setSearchQuery(this.value)"
+                  >
+                  ${appState.searchQuery ? `<button class="search-clear" onclick="clearSearch()">×</button>` : ''}
+                </div>
+                <div class="task-list-inner">
+                  ${filteredTasks
+                    .filter(t => !t.completed)
+                    .map(task => `
+                      <div class="task-item-mini" onclick="editTask(${task.id})">
+                        <div class="task-item-mini-left">
+                          <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})">○</button>
+                          <span class="task-item-mini-title">${task.title}</span>
+                        </div>
+                        <span class="task-item-mini-category ${task.category}">${task.category}</span>
+                      </div>
+                    `).join('')}
+                </div>
+                ${filteredTasks.filter(t => t.completed).length > 0 ? `
+                  <details class="completed-tasks-4k" style="margin-top: 8px;">
+                    <summary style="cursor: pointer; font-size: 14px; color: var(--text-secondary); padding: 8px 0;">
+                      ✅ 완료 ${filteredTasks.filter(t => t.completed).length}개
+                    </summary>
+                    <div class="task-list-inner" style="opacity: 0.6;">
+                      ${filteredTasks
+                        .filter(t => t.completed)
+                        .slice(0, 20)
+                        .map(task => `
+                          <div class="task-item-mini" onclick="editTask(${task.id})" style="text-decoration: line-through;">
+                            <div class="task-item-mini-left">
+                              <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" style="border-color: #48bb78; color: #48bb78;">✓</button>
+                              <span class="task-item-mini-title">${task.title}</span>
+                            </div>
+                            <span class="task-item-mini-category ${task.category}">${task.category}</span>
+                          </div>
+                        `).join('')}
+                    </div>
+                  </details>
+                ` : ''}
               </div>
             </div>
           </div>
