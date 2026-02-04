@@ -16110,6 +16110,7 @@
               </div>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button class="work-project-action-btn" onclick="copyProjectToSlack(${project.id})">💬 슬랙복사</button>
               <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})">📋 복제</button>
               <button class="work-project-action-btn" onclick="holdWorkProject(${project.id})">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
               <button class="work-project-action-btn" onclick="archiveWorkProject(${project.id})">${project.archived ? '📤 복원' : '📦 보관'}</button>
@@ -16293,6 +16294,88 @@
     window.duplicateWorkProject = duplicateWorkProject;
 
     /**
+     * 프로젝트 슬랙 형식으로 클립보드 복사
+     * - 슬랙에 붙여넣기 용도의 체크리스트 텍스트 생성
+     */
+    function copyProjectToSlack(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const statusLabel = {
+        'not-started': '',
+        'in-progress': '[진행중]',
+        'completed': '[완료]',
+        'blocked': '[보류]'
+      };
+
+      let lines = [];
+      lines.push('[ ' + project.name + ' 진행 리스트 ]');
+      lines.push('');
+
+      project.stages.forEach((stage, stageIdx) => {
+        const stageName = getStageName(project, stageIdx);
+        const subcats = stage.subcategories || [];
+        if (subcats.length === 0) return;
+
+        // 단계별 완료율 계산
+        const total = subcats.reduce((s, sub) => s + sub.tasks.length, 0);
+        const done = subcats.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
+        const stageStatus = total > 0 && done === total ? ' ✅' : '';
+
+        lines.push('■ ' + stageName + stageStatus);
+
+        subcats.forEach(sub => {
+          // 중분류명이 "일반"이면 생략하고 작업만 나열
+          const isGeneral = sub.name === '일반';
+
+          if (!isGeneral) {
+            // 중분류에 작업이 있으면 중분류명을 상위 항목으로 표시
+            const subDone = sub.tasks.filter(t => t.status === 'completed').length;
+            const subStatus = sub.tasks.length > 0 && subDone === sub.tasks.length ? ' [완료]' : '';
+            lines.push(sub.name + ':' + subStatus);
+
+            sub.tasks.forEach(task => {
+              const status = statusLabel[task.status] || '';
+              // 최신 로그가 있으면 메모로 추가
+              const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
+              let line = '  ' + task.title;
+              if (status) line += ' ' + status;
+              if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
+              lines.push(line);
+            });
+          } else {
+            // "일반" 중분류: 작업을 최상위로 나열
+            sub.tasks.forEach(task => {
+              const status = statusLabel[task.status] || '';
+              const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
+              let line = task.title;
+              if (status) line += ': ' + status;
+              if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
+              lines.push(line);
+            });
+          }
+        });
+
+        lines.push(''); // 단계 사이 빈 줄
+      });
+
+      const text = lines.join('\n').trim();
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('슬랙용 진행 리스트 복사됨', 'success');
+      }).catch(() => {
+        // 클립보드 API 실패 시 fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('슬랙용 진행 리스트 복사됨', 'success');
+      });
+    }
+    window.copyProjectToSlack = copyProjectToSlack;
+
+    /**
      * 프로젝트 아카이브
      */
     function archiveWorkProject(projectId) {
@@ -16342,6 +16425,7 @@
       const template = {
         id: Date.now(),
         name: templateName,
+        stageNames: project.stages.map(s => s.name || ''),
         stages: project.stages.map(stage => ({
           subcategories: (stage.subcategories || []).map(sub => ({
             name: sub.name,
@@ -16539,25 +16623,30 @@
             </div>
           `;
           break;
-        case 'template-select':
+        case 'template-select': {
           titleText = '📋 템플릿 선택';
+          // 내장 템플릿 + 사용자 템플릿 합치기
+          const allTemplates = appState.workTemplates;
+          const totalTaskCount = (t) => t.stages.reduce((sum, s) => sum + (s.subcategories || []).reduce((ss, sub) => ss + sub.tasks.length, 0), 0);
           bodyHtml = `
             <div class="work-modal-field">
-              ${appState.workTemplates.length > 0 ? `
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                  ${appState.workTemplates.map(t => `
-                    <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px;">
-                      <div style="font-weight: 500;">${t.name}</div>
-                      <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                        ${t.stages.filter(s => s.subcategories.length > 0).length}개 단계에 항목 포함
-                      </div>
-                    </button>
-                  `).join('')}
-                </div>
-              ` : '<div style="color: var(--text-muted);">저장된 템플릿이 없습니다</div>'}
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                ${allTemplates.map(t => `
+                  <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px;">
+                    <div style="font-weight: 500;">${t.builtin ? '📌 ' : ''}${t.name}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                      ${(t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → ')}
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-muted);">
+                      ${totalTaskCount(t)}개 항목
+                    </div>
+                  </button>
+                `).join('')}
+              </div>
             </div>
           `;
           break;
+        }
       }
 
       title.textContent = titleText;
@@ -16693,7 +16782,9 @@
         case 'template-select': {
           const selected = document.querySelector('.template-option.selected');
           if (selected) {
-            const templateId = parseInt(selected.dataset.templateId);
+            const rawId = selected.dataset.templateId;
+            // 내장 템플릿은 문자열 ID, 사용자 템플릿은 숫자 ID
+            const templateId = parseInt(rawId);
             applyTemplate(templateId);
           }
           break;
@@ -16714,15 +16805,24 @@
       const projectName = prompt('프로젝트 이름을 입력하세요:', template.name.replace(' 템플릿', ''));
       if (!projectName) return;
 
+      // 템플릿에 stageNames가 있으면 그것 사용, 없으면 전역 기본값 사용
+      const stageSource = template.stageNames || appState.workProjectStages;
+      const stageCount = Math.max(stageSource.length, template.stages.length);
+
       const newProject = {
         id: Date.now(),
         name: projectName,
         currentStage: 0,
-        stages: appState.workProjectStages.map((_, idx) => ({
+        stages: Array.from({ length: stageCount }, (_, idx) => ({
+          name: stageSource[idx] || ('단계 ' + (idx + 1)),
           completed: false,
+          startDate: null,
+          endDate: null,
           subcategories: template.stages[idx]?.subcategories?.map(sub => ({
             id: Date.now() + Math.random() * 1000,
             name: sub.name,
+            startDate: null,
+            endDate: null,
             tasks: sub.tasks.map(t => ({
               id: Date.now() + Math.random() * 1000,
               title: t.title,
