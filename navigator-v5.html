@@ -8748,7 +8748,7 @@
             appState.lifeRhythm = {
               ...localRhythm,
               history: mergedHistory,
-              today: cloudCount >= localCount ? cloudToday : localToday,
+              today: cloudCount > localCount ? cloudToday : localToday,
               settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
             };
             // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
@@ -8854,7 +8854,7 @@
               appState.lifeRhythm = {
                 ...localRhythm,
                 history: mergedHistory,
-                today: cloudCount >= localCount ? cloudToday : localToday,
+                today: cloudCount > localCount ? cloudToday : localToday,
                 settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
               };
               // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
@@ -12699,9 +12699,9 @@
 
                 <!-- 라이프 리듬 트래커 (6개 항목) -->
                 ${(() => {
-                  const today = new Date().toISOString().split('T')[0];
+                  const today = getLocalDateStr();
                   const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
-                  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                  const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
                   const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
 
                   // 시간을 분으로 변환하는 헬퍼
@@ -15167,12 +15167,18 @@
     }
     window.handleLifeRhythmClick = handleLifeRhythmClick;
 
+    // 로컬 타임존 기준 날짜 문자열 (YYYY-MM-DD) - UTC 변환 방지
+    function getLocalDateStr(d) {
+      const dt = d || new Date();
+      return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    }
+
     /**
      * 라이프 리듬 기록 (현재 시간)
      */
     function recordLifeRhythm(type) {
       const now = new Date();
-      const today = now.toISOString().split('T')[0];
+      const today = getLocalDateStr(now);
       const timeStr = now.toTimeString().slice(0, 5); // HH:MM
 
       // 오늘 날짜 확인 및 초기화
@@ -15216,7 +15222,7 @@
      * 라이프 리듬 수정 (시간 직접 입력)
      */
     function editLifeRhythm(type) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateStr();
       const currentValue = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today[type] : null;
 
       const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
@@ -15289,7 +15295,7 @@
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = getLocalDateStr(date);
         const isToday = i === 0;
 
         let dayData;
@@ -15304,7 +15310,9 @@
         if (dayData.workEnd && !dayData.workDepart) dayData.workDepart = dayData.workEnd;
 
         // 수면 시간 계산 (전날 취침 ~ 당일 기상)
-        const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
+        const prevDate = new Date(date);
+        prevDate.setDate(prevDate.getDate() - 1);
+        const prevDateStr = getLocalDateStr(prevDate);
         const prevData = appState.lifeRhythm.history[prevDateStr] || {};
         let sleepHours = null;
 
@@ -15495,7 +15503,7 @@
       for (let i = 0; i < 30; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
+        const dateStr = getLocalDateStr(date);
         const isToday = i === 0;
 
         let dayData;
@@ -15515,7 +15523,9 @@
           // 수면 시간 계산
           let sleepDuration = null;
           if (i < 29) {
-            const prevDateStr = new Date(date.getTime() - 86400000).toISOString().split('T')[0];
+            const prevDate = new Date(date);
+            prevDate.setDate(prevDate.getDate() - 1);
+            const prevDateStr = getLocalDateStr(prevDate);
             const prevData = appState.lifeRhythm.history[prevDateStr] || {};
             if (prevData.sleep && dayData.wakeUp) {
               const sleepTime = toMins(prevData.sleep);
@@ -15619,7 +15629,7 @@
      * 과거 날짜 라이프 리듬 수정 (6개 항목)
      */
     function editLifeRhythmHistory(dateStr, type) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateStr();
       let currentValue;
 
       if (dateStr === today && appState.lifeRhythm.today.date === today) {
@@ -15712,6 +15722,24 @@
             Object.keys(parsed.history).forEach(date => {
               parsed.history[date] = migrateData(parsed.history[date]);
             });
+          }
+
+          // UTC→로컬 날짜 보정: 저장된 today.date가 오늘 로컬 날짜와 다르지만
+          // 데이터가 있으면 로컬 날짜로 보정 (UTC 날짜 저장 버그 수정)
+          if (parsed.today && parsed.today.date) {
+            const localToday = getLocalDateStr();
+            const savedDate = parsed.today.date;
+            if (savedDate !== localToday) {
+              // 저장된 날짜가 어제(로컬)인지 확인 - UTC 버그로 하루 차이 나는 경우
+              const yesterdayLocal = new Date();
+              yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
+              const yesterdayStr = getLocalDateStr(yesterdayLocal);
+              const hasData = Object.values(parsed.today).some(v => v && v !== savedDate);
+              if (savedDate === yesterdayStr && hasData) {
+                // 어제 UTC 날짜로 저장된 오늘 데이터 → 로컬 날짜로 보정
+                parsed.today.date = localToday;
+              }
+            }
           }
 
           appState.lifeRhythm = {
