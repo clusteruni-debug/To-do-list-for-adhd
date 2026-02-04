@@ -8882,13 +8882,14 @@
     }
 
     /**
-     * 본업 프로젝트 병합 (ID 기반, updatedAt 기준)
+     * ID 기반 배열 병합 (범용)
      * - 한쪽에만 있으면 그대로 보존
      * - 양쪽 다 있으면 updatedAt이 더 최신인 쪽 사용
+     * workProjects, templates, workTemplates 등에 사용
      */
-    function mergeWorkProjects(localProjects, cloudProjects) {
-      const localMap = new Map((localProjects || []).map(p => [p.id, p]));
-      const cloudMap = new Map((cloudProjects || []).map(p => [p.id, p]));
+    function mergeById(localArr, cloudArr) {
+      const localMap = new Map((localArr || []).map(p => [p.id, p]));
+      const cloudMap = new Map((cloudArr || []).map(p => [p.id, p]));
       const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
       const merged = [];
 
@@ -8901,10 +8902,37 @@
         } else if (cloud && !local) {
           merged.push(cloud);
         } else {
-          const localTime = new Date(local.updatedAt || 0).getTime();
-          const cloudTime = new Date(cloud.updatedAt || 0).getTime();
+          const localTime = new Date(local.updatedAt || local.createdAt || 0).getTime();
+          const cloudTime = new Date(cloud.updatedAt || cloud.createdAt || 0).getTime();
           merged.push(cloudTime >= localTime ? cloud : local);
         }
+      }
+
+      return merged;
+    }
+
+    /**
+     * 라이프 리듬 히스토리 병합 (날짜별 + 필드별)
+     * 같은 날짜의 기록은 필드별로 병합 (값이 있는 쪽 우선)
+     */
+    function mergeRhythmHistory(localHistory, cloudHistory) {
+      const local = localHistory || {};
+      const cloud = cloudHistory || {};
+      const allDates = new Set([...Object.keys(local), ...Object.keys(cloud)]);
+      const merged = {};
+
+      for (const date of allDates) {
+        const l = local[date] || {};
+        const c = cloud[date] || {};
+        // 필드별로 값이 있는 쪽 우선, 양쪽 다 있으면 타임스탬프 비교 불가하므로 나중에 기록된 값(cloud) 우선
+        merged[date] = {
+          wakeUp: l.wakeUp || c.wakeUp || null,
+          homeDepart: l.homeDepart || c.homeDepart || null,
+          workArrive: l.workArrive || c.workArrive || null,
+          workDepart: l.workDepart || c.workDepart || null,
+          homeArrive: l.homeArrive || c.homeArrive || null,
+          sleep: l.sleep || c.sleep || null
+        };
       }
 
       return merged;
@@ -8941,38 +8969,43 @@
                 ? appState.streak.current : cloudStreak.current
             };
           }
-          if (data.templates) {
-            appState.templates = data.templates;
-          }
+          // 템플릿: ID 기반 병합 (덮어쓰기 방지)
+          appState.templates = mergeById(appState.templates, data.templates);
           if (data.availableTags) {
             // 태그 병합 (양쪽 합집합)
             const mergedTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
             appState.availableTags = mergedTags;
           }
           // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
-          appState.workProjects = mergeWorkProjects(appState.workProjects, data.workProjects);
+          appState.workProjects = mergeById(appState.workProjects, data.workProjects);
           if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
             const activeProject = appState.workProjects.find(p => !p.archived);
             appState.activeWorkProject = activeProject ? activeProject.id : null;
           }
-          if (data.workTemplates) {
-            appState.workTemplates = data.workTemplates;
-          }
-          // 라이프 리듬 병합 (히스토리 합집합, 오늘 데이터는 최신 기준)
+          // 본업 템플릿: ID 기반 병합 (덮어쓰기 방지)
+          appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates);
+          // 라이프 리듬 병합 (히스토리 필드별 병합, 오늘 데이터도 필드별)
           if (data.lifeRhythm) {
             const cloudRhythm = data.lifeRhythm;
             const localRhythm = appState.lifeRhythm;
-            // 히스토리 합치기 (같은 날짜는 기록이 더 많은 쪽 우선)
-            const mergedHistory = { ...(localRhythm.history || {}), ...(cloudRhythm.history || {}) };
-            // 오늘 데이터: 기록된 항목이 더 많은 쪽 사용
+            // 히스토리: 날짜별 + 필드별 병합 (양쪽 기록 보존)
+            const mergedHistory = mergeRhythmHistory(localRhythm.history, cloudRhythm.history);
+            // 오늘 데이터: 필드별 병합 (양쪽 값 보존)
             const localToday = localRhythm.today || {};
             const cloudToday = cloudRhythm.today || {};
-            const localCount = Object.values(localToday).filter(v => v && v !== localToday.date).length;
-            const cloudCount = Object.values(cloudToday).filter(v => v && v !== cloudToday.date).length;
+            const mergedToday = {
+              date: localToday.date || cloudToday.date,
+              wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
+              homeDepart: localToday.homeDepart || cloudToday.homeDepart || null,
+              workArrive: localToday.workArrive || cloudToday.workArrive || null,
+              workDepart: localToday.workDepart || cloudToday.workDepart || null,
+              homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
+              sleep: localToday.sleep || cloudToday.sleep || null
+            };
             appState.lifeRhythm = {
               ...localRhythm,
               history: mergedHistory,
-              today: cloudCount > localCount ? cloudToday : localToday,
+              today: mergedToday,
               settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
             };
             // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
@@ -9051,33 +9084,37 @@
                   ? appState.streak.current : cloudStreak.current
               };
             }
-            // 누락되었던 데이터 타입 추가
-            if (data.templates) {
-              appState.templates = data.templates;
-            }
+            // 템플릿: ID 기반 병합 (덮어쓰기 방지)
+            appState.templates = mergeById(appState.templates, data.templates);
             if (data.availableTags) {
               appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
             }
             // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
-            appState.workProjects = mergeWorkProjects(appState.workProjects, data.workProjects);
+            appState.workProjects = mergeById(appState.workProjects, data.workProjects);
             localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-            if (data.workTemplates) {
-              appState.workTemplates = data.workTemplates;
-              localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-            }
-            // 라이프 리듬 병합
+            // 본업 템플릿: ID 기반 병합 (덮어쓰기 방지)
+            appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates);
+            localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+            // 라이프 리듬 병합 (필드별)
             if (data.lifeRhythm) {
               const cloudRhythm = data.lifeRhythm;
               const localRhythm = appState.lifeRhythm;
-              const mergedHistory = { ...(localRhythm.history || {}), ...(cloudRhythm.history || {}) };
+              const mergedHistory = mergeRhythmHistory(localRhythm.history, cloudRhythm.history);
               const localToday = localRhythm.today || {};
               const cloudToday = cloudRhythm.today || {};
-              const localCount = Object.values(localToday).filter(v => v && v !== localToday.date).length;
-              const cloudCount = Object.values(cloudToday).filter(v => v && v !== cloudToday.date).length;
+              const mergedToday = {
+                date: localToday.date || cloudToday.date,
+                wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
+                homeDepart: localToday.homeDepart || cloudToday.homeDepart || null,
+                workArrive: localToday.workArrive || cloudToday.workArrive || null,
+                workDepart: localToday.workDepart || cloudToday.workDepart || null,
+                homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
+                sleep: localToday.sleep || cloudToday.sleep || null
+              };
               appState.lifeRhythm = {
                 ...localRhythm,
                 history: mergedHistory,
-                today: cloudCount > localCount ? cloudToday : localToday,
+                today: mergedToday,
                 settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
               };
               // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
