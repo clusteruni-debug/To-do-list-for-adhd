@@ -17599,6 +17599,10 @@
      */
     function saveWorkProjects() {
       localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+      // Firebase 동기화 (로그인된 경우)
+      if (appState.user) {
+        syncToFirebase();
+      }
     }
 
     /**
