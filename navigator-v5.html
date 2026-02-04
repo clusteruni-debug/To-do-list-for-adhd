@@ -346,19 +346,34 @@
       }
 
       .pc-layout {
-        grid-template-columns: 1fr 1fr 380px 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 40px;
       }
 
-      .pc-column-right {
-        top: 100px;
+      /* 4K 3열: 통계를 좌측 컬럼 아래에 배치 */
+      .pc-column-left {
+        grid-column: 1;
+        grid-row: 1;
       }
 
-      /* 4K: 4번째 컬럼 - 전체 작업 목록 */
+      .pc-column-center {
+        grid-column: 2;
+        grid-row: 1 / 3;
+      }
+
+      .pc-column-right {
+        grid-column: 1;
+        grid-row: 2;
+        position: static;
+      }
+
+      /* 4K: 3번째 컬럼 - 전체 작업 목록 */
       .pc-column-tasklist {
         display: flex;
         flex-direction: column;
         gap: 20px;
+        grid-column: 3;
+        grid-row: 1 / 3;
         position: sticky;
         top: 100px;
         max-height: calc(100vh - 140px);
