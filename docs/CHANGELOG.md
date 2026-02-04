@@ -15,16 +15,26 @@
 - **4K/대형 모니터 레이아웃 최적화**:
   - 1920px+: max-width 1800px, 폰트/패딩 확대, 그리드 간격 30px
   - 2560px+: max-width 2400px, 폰트 20px 기준, 전체 UI 요소 스케일업
+  - 2560px+ 3열 레이아웃 (상태+필터 | 추가+액션 | 전체 작업목록)
+  - 3200px+ zoom: 1.4 (4K 100% DPI 대응)
   - 본업 카드, 이벤트, 수익, 캘린더, 리듬, 토스트 등 모든 컴포넌트 대응
+- **XSS 전수 방어**: innerHTML 템플릿의 사용자 입력 35곳에 `escapeHtml()` 적용
+  - task.title, project.name, subtask.text, subcat.name, tag 등 전체 커버
+- **반복 Task 마감일 UTC 버그 수정**: `getLocalDateTimeStr()` 헬퍼 추가, 4곳의 `toISOString().slice(0,16)` 교체
+- **접근성 기초 개선**:
+  - 헤더 버튼 6개에 aria-label 추가 (셔틀, 테마, 동기화, 알림, 설정)
+  - task-check-btn 5곳에 aria-label="작업 완료" 추가
+  - Escape 키로 모달/드롭다운 닫기 기능 추가
 
 ### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`, `CLAUDE.md`
 - DB 변경: 없음
+- JSON.parse 전수 점검 결과 10곳 모두 이미 try-catch 적용 완료
 
 ### 다음에 할 것
 - SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
 - 포모도로 통합 (P2)
+- 온보딩 가이드 (P1)
 
 ## [2026-02-04] (세션 7)
 

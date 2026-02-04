@@ -10286,7 +10286,7 @@
                   <div class="day-task-item">
                     <div class="day-task-time">${timeStr}</div>
                     <div class="day-task-content">
-                      <div class="day-task-title completed">${task.title}</div>
+                      <div class="day-task-title completed">${escapeHtml(task.title)}</div>
                       <div class="day-task-meta">
                         <span class="category ${task.category}">${task.category}</span>
                         ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
@@ -10369,7 +10369,7 @@
                     return `
                       <div class="history-task">
                         <span class="history-task-check">✓</span>
-                        <span class="history-task-title">${task.title}</span>
+                        <span class="history-task-title">${escapeHtml(task.title)}</span>
                         <span class="history-task-time">${time}</span>
                       </div>
                     `;
@@ -11395,7 +11395,7 @@
         id: Date.now(),
         title: task.title,
         category: task.category,
-        deadline: nextDeadline.toISOString().slice(0, 16),
+        deadline: getLocalDateTimeStr(nextDeadline),
         estimatedTime: task.estimatedTime,
         link: task.link,
         expectedRevenue: task.expectedRevenue,
@@ -12113,7 +12113,7 @@
                 <div class="weekly-plan-check">
                   ${appState.weeklyPlan.focusTasks.includes(task.id) ? '✓' : ''}
                 </div>
-                <div class="weekly-plan-item-title">${task.title}</div>
+                <div class="weekly-plan-item-title">${escapeHtml(task.title)}</div>
                 <div class="weekly-plan-item-category">${task.category}</div>
               </div>
             `).join('')}
@@ -12241,7 +12241,7 @@
       if (task.deadline) {
         const deadline = new Date(task.deadline);
         deadline.setDate(deadline.getDate() + 1);
-        task.deadline = deadline.toISOString().slice(0, 16);
+        task.deadline = getLocalDateTimeStr(deadline);
       }
 
       saveState();
@@ -12789,7 +12789,7 @@
             title: '오늘 할 일 정리하기',
             category: '일상',
             estimatedTime: 10,
-            deadline: tomorrow.toISOString().slice(0, 16),
+            deadline: getLocalDateTimeStr(tomorrow),
             tags: [],
             subtasks: [],
             completed: false,
@@ -12800,7 +12800,7 @@
             title: '주간 목표 세우기',
             category: '본업',
             estimatedTime: 15,
-            deadline: nextWeek.toISOString().slice(0, 16),
+            deadline: getLocalDateTimeStr(nextWeek),
             tags: ['회의'],
             subtasks: [],
             completed: false,
@@ -13224,24 +13224,24 @@
               <p class="header-date">${now.getMonth() + 1}월 ${now.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][now.getDay()]}요일 ${appState.streak.current > 0 ? `<span class="header-streak">🔥${appState.streak.current}</span>` : ''}</p>
             </div>
             <div class="header-actions">
-              <button class="header-btn shuttle-toggle ${appState.shuttleSuccess ? 'on' : 'off'}" onclick="toggleShuttle()" title="${appState.shuttleSuccess ? '셔틀 탑승 성공 ✓' : '셔틀 놓침 ✗ (클릭하여 변경)'}">
+              <button class="header-btn shuttle-toggle ${appState.shuttleSuccess ? 'on' : 'off'}" onclick="toggleShuttle()" title="${appState.shuttleSuccess ? '셔틀 탑승 성공 ✓' : '셔틀 놓침 ✗ (클릭하여 변경)'}" aria-label="셔틀 상태 토글">
                 ${appState.shuttleSuccess ? '🚌 ON' : '😴 OFF'}
               </button>
-              <button class="header-btn" onclick="toggleTheme()" title="테마 전환">
+              <button class="header-btn" onclick="toggleTheme()" title="테마 전환" aria-label="테마 전환">
                 ${appState.theme === 'dark' ? '☀️' : '🌙'}
               </button>
               ${appState.user ? `
-                <button class="header-btn" onclick="openSettings()" title="동기화: ${appState.syncStatus}" style="position: relative;">
+                <button class="header-btn" onclick="openSettings()" title="동기화: ${appState.syncStatus}" aria-label="동기화 상태" style="position: relative;">
                   ${appState.syncStatus === 'syncing' ? '🔄' : appState.syncStatus === 'synced' ? '☁️' : appState.syncStatus === 'error' ? '⚠️' : '☁️'}
                   <span style="position: absolute; bottom: 2px; right: 2px; width: 8px; height: 8px; background: ${appState.syncStatus === 'synced' ? '#48bb78' : appState.syncStatus === 'error' ? '#f5576c' : '#667eea'}; border-radius: 50%; border: 1px solid var(--bg-primary);"></span>
                 </button>
               ` : `
-                <button class="header-btn" onclick="openSettings()" title="로그인하여 동기화">
+                <button class="header-btn" onclick="openSettings()" title="로그인하여 동기화" aria-label="로그인하여 동기화">
                   ☁️
                 </button>
               `}
               <div class="notification-dropdown-wrapper">
-                <button class="header-btn" onclick="toggleNotificationDropdown(event)" title="마감 알림" style="position: relative;">
+                <button class="header-btn" onclick="toggleNotificationDropdown(event)" title="마감 알림" aria-label="마감 알림" style="position: relative;">
                   🔔
                   ${appState.notificationPermission === 'granted' ? '<span class="notif-dot" style="background: #48bb78;"></span>' : appState.notificationPermission === 'denied' ? '<span class="notif-dot" style="background: #f5576c;"></span>' : ''}
                 </button>
@@ -13266,7 +13266,7 @@
                   ` : ''}
                 </div>
               </div>
-              <button class="header-btn" onclick="openSettings()" title="설정">
+              <button class="header-btn" onclick="openSettings()" title="설정" aria-label="설정">
                 ⚙️
               </button>
             </div>
@@ -13472,7 +13472,7 @@
                         ${focusTasks.map((task, idx) => `
                           <div class="monday-reminder-task" onclick="editTask(${task.id})">
                             <span class="monday-reminder-task-num">${idx + 1}</span>
-                            <span>${task.title}</span>
+                            <span>${escapeHtml(task.title)}</span>
                           </div>
                         `).join('')}
                       </div>
@@ -13669,8 +13669,8 @@
                         .map(task => `
                           <div class="task-item-mini" onclick="editTask(${task.id})">
                             <div class="task-item-mini-left">
-                              <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})">○</button>
-                              <span class="task-item-mini-title">${task.title}</span>
+                              <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" aria-label="작업 완료">○</button>
+                              <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
                             </div>
                             <span class="task-item-mini-category ${task.category}">${task.category}</span>
                           </div>
@@ -13702,7 +13702,7 @@
                           <select class="form-select" id="detailed-work-project" onchange="updateWorkProjectLink(this.value)">
                             <option value="">연결 안함 (일반 할일)</option>
                             ${appState.workProjects.filter(p => !p.archived).map(p => `
-                              <option value="${p.id}" ${appState.detailedTask.workProjectId === p.id ? 'selected' : ''}>${p.name}</option>
+                              <option value="${p.id}" ${appState.detailedTask.workProjectId === p.id ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                             `).join('')}
                           </select>
                         </div>
@@ -13750,12 +13750,12 @@
                       <div class="tags-input-container">
                         <div class="selected-tags">
                           ${(appState.detailedTask.tags || []).map(tag => `
-                            <span class="tag selected" onclick="removeTagFromTask('${tag}')">${tag} ×</span>
+                            <span class="tag selected" onclick="removeTagFromTask('${tag}')">${escapeHtml(tag)} ×</span>
                           `).join('')}
                         </div>
                         <div class="available-tags">
                           ${appState.availableTags.filter(tag => !(appState.detailedTask.tags || []).includes(tag)).map(tag => `
-                            <span class="tag" onclick="addTagToTask('${tag}')">${tag}</span>
+                            <span class="tag" onclick="addTagToTask('${tag}')">${escapeHtml(tag)}</span>
                           `).join('')}
                         </div>
                         <div class="new-tag-input">
@@ -13771,7 +13771,7 @@
                         ${(appState.detailedTask.subtasks || []).map((subtask, index) => `
                           <div class="subtask-item ${subtask.completed ? 'completed' : ''}">
                             <span class="subtask-list-check" onclick="toggleDetailedSubtask(${index})" style="cursor:pointer">${subtask.completed ? '✓' : index + 1}</span>
-                            <span class="subtask-text ${subtask.completed ? 'completed' : ''}" style="${subtask.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${subtask.text}</span>
+                            <span class="subtask-text ${subtask.completed ? 'completed' : ''}" style="${subtask.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${escapeHtml(subtask.text)}</span>
                             <button class="subtask-remove" onclick="removeSubtask(${index})">×</button>
                           </div>
                         `).join('')}
@@ -13879,7 +13879,7 @@
 
                           <div class="task-item-header">
                             <div class="task-item-title">
-                              ${index + 1}. ${task.title}
+                              ${index + 1}. ${escapeHtml(task.title)}
                               <span class="task-item-inline-cat ${task.category}">${task.category}</span>
                               ${task.subtasks && task.subtasks.length > 0 ? `
                                 <span class="subtask-badge" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
@@ -13901,7 +13901,7 @@
                           </div>
                           ${task.tags && task.tags.length > 0 ? `
                             <div class="task-tags">
-                              ${task.tags.map(tag => `<span class="task-tag">#${tag}</span>`).join('')}
+                              ${task.tags.map(tag => `<span class="task-tag">#${escapeHtml(tag)}</span>`).join('')}
                             </div>
                           ` : ''}
                           ${task.subtasks && task.subtasks.length > 0 ? `
@@ -13930,7 +13930,7 @@
                                     ${task.subtasks.map((subtask, idx) => `
                                       <div class="subtask-list-item ${subtask.completed ? 'completed' : ''}" onclick="event.stopPropagation(); toggleSubtaskComplete(${task.id}, ${idx})">
                                         <span class="subtask-list-check">${subtask.completed ? '✓' : ''}</span>
-                                        <span class="subtask-list-text">${subtask.text}</span>
+                                        <span class="subtask-list-text">${escapeHtml(subtask.text)}</span>
                                       </div>
                                     `).join('')}
                                     ${completedCount === totalCount && totalCount > 0 ? `
@@ -13966,7 +13966,7 @@
                       ${completedTasks.map((task, index) => `
                         <div id="task-completed-${task.id}" class="task-item completed">
                           <div class="task-item-header">
-                            <div class="task-item-title completed">${index + 1}. ${task.title}</div>
+                            <div class="task-item-title completed">${index + 1}. ${escapeHtml(task.title)}</div>
                           </div>
                           <div class="task-item-meta">
                             <span class="category ${task.category}">${task.category}</span>
@@ -13999,7 +13999,7 @@
                     <div class="urgent-list">
                       ${urgentTasks.slice(0, 3).map(task => `
                         <div class="urgent-item">
-                          <div class="urgent-item-title">${task.title}</div>
+                          <div class="urgent-item-title">${escapeHtml(task.title)}</div>
                           <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
                         </div>
                       `).join('')}
@@ -14039,8 +14039,8 @@
                     .map(task => `
                       <div class="task-item-mini" onclick="editTask(${task.id})">
                         <div class="task-item-mini-left">
-                          <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})">○</button>
-                          <span class="task-item-mini-title">${task.title}</span>
+                          <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" aria-label="작업 완료">○</button>
+                          <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
                         </div>
                         <span class="task-item-mini-category ${task.category}">${task.category}</span>
                       </div>
@@ -14059,7 +14059,7 @@
                           <div class="task-item-mini" onclick="editTask(${task.id})" style="text-decoration: line-through;">
                             <div class="task-item-mini-left">
                               <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" style="border-color: #48bb78; color: #48bb78;">✓</button>
-                              <span class="task-item-mini-title">${task.title}</span>
+                              <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
                             </div>
                             <span class="task-item-mini-category ${task.category}">${task.category}</span>
                           </div>
@@ -14099,7 +14099,7 @@
                     ${day.tasks.length > 0 ? day.tasks.map(task => `
                       <div class="schedule-task">
                         <span class="schedule-task-time">${formatTime(task.deadline)}</span>
-                        <span class="schedule-task-title">${task.title}</span>
+                        <span class="schedule-task-title">${escapeHtml(task.title)}</span>
                         <span class="schedule-task-category category ${task.category}">${task.category}</span>
                       </div>
                     `).join('') : `
@@ -14119,7 +14119,7 @@
                   ${appState.tasks.filter(t => !t.completed && !t.deadline).map((task, index) => `
                     <div class="task-item">
                       <div class="task-item-header">
-                        <div class="task-item-title">${index + 1}. ${task.title}</div>
+                        <div class="task-item-title">${index + 1}. ${escapeHtml(task.title)}</div>
                       </div>
                       <div class="task-item-meta">
                         <span class="category ${task.category}">${task.category}</span>
@@ -14224,7 +14224,7 @@
                         const dateStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
                         return `
                           <div class="event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}">
-                            <div class="event-title">${task.title}</div>
+                            <div class="event-title">${escapeHtml(task.title)}</div>
                             ${dateStr ? `<span class="event-compact-date">${dateStr}</span>` : ''}
                             <div class="event-actions">
                               ${task.link ? `<a href="${task.link}" target="_blank" class="btn btn-small btn-link">🔗</a>` : ''}
@@ -14253,7 +14253,7 @@
                     <div class="events-list submitted-list">
                       ${submittedEvents.map(task => `
                         <div class="event-card completed">
-                          <div class="event-title">${task.title}</div>
+                          <div class="event-title">${escapeHtml(task.title)}</div>
                           <div class="event-actions">
                             <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})">↩</button>
                             <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})">🗑</button>
@@ -14330,7 +14330,7 @@
                     <div class="life-list">
                       ${dailyTasks.map(task => `
                         <div class="life-item">
-                          <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                          <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <div class="life-item-content">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
                             <div class="life-item-meta">
@@ -14354,7 +14354,7 @@
                     <div class="life-list">
                       ${familyTasks.map(task => `
                         <div class="life-item">
-                          <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
+                          <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <div class="life-item-content">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
                             <div class="life-item-meta">
@@ -14674,7 +14674,7 @@
                 <div class="urgent-list">
                   ${urgentTasks.slice(0, 5).map(task => `
                     <div class="urgent-item">
-                      <div class="urgent-item-title">${task.title}</div>
+                      <div class="urgent-item-title">${escapeHtml(task.title)}</div>
                       <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
                     </div>
                   `).join('')}
@@ -14800,7 +14800,7 @@
                       class="task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}"
                     >
                       <div class="task-item-header">
-                        <div class="task-item-title">${index + 1}. ${task.title}</div>
+                        <div class="task-item-title">${index + 1}. ${escapeHtml(task.title)}</div>
                       </div>
                       <div class="task-item-meta">
                         <span class="category ${task.category}">${task.category}</span>
@@ -14832,7 +14832,7 @@
                   ${completedTasks.slice(0, 10).map((task, index) => `
                     <div class="task-item completed">
                       <div class="task-item-header">
-                        <div class="task-item-title completed">${index + 1}. ${task.title}</div>
+                        <div class="task-item-title completed">${index + 1}. ${escapeHtml(task.title)}</div>
                       </div>
                       <div class="task-item-meta">
                         <span class="category ${task.category}">${task.category}</span>
@@ -14883,7 +14883,7 @@
                         return `
                           <div class="all-task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}">
                             <div class="all-task-content">
-                              <div class="all-task-title">${task.title}</div>
+                              <div class="all-task-title">${escapeHtml(task.title)}</div>
                               <div class="all-task-meta">
                                 ${task.estimatedTime ? `⏱️ ${task.estimatedTime}분` : ''}
                                 ${task.deadline ? ` · ${formatDeadline(task.deadline)}` : ''}
@@ -14913,7 +14913,7 @@
                         ${completedTasks.slice(0, 5).map(task => `
                           <div class="all-task-item completed">
                             <div class="all-task-content">
-                              <div class="all-task-title completed">${task.title}</div>
+                              <div class="all-task-title completed">${escapeHtml(task.title)}</div>
                             </div>
                             <div class="all-task-actions">
                               <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})">↩️</button>
@@ -15588,8 +15588,8 @@
                 ${workGeneralTasks.slice(0, 5).map(task => `
                   <div class="work-general-item-wrapper">
                     <div class="work-general-item">
-                      <button class="task-check-btn" onclick="completeTask(${task.id})">○</button>
-                      <span class="work-general-item-title" onclick="editTask(${task.id})">${task.title}</span>
+                      <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
+                      <span class="work-general-item-title" onclick="editTask(${task.id})">${escapeHtml(task.title)}</span>
                       ${task.subtasks && task.subtasks.length > 0 ? `
                         <span class="subtask-badge" onclick="event.stopPropagation(); toggleWorkGeneralSubtask(${task.id})">
                           📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
@@ -15691,35 +15691,35 @@
                 ${inProgressProjects.length > 0 ? `
                   <optgroup label="🚀 진행중">
                     ${inProgressProjects.map(p => `
-                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                     `).join('')}
                   </optgroup>
                 ` : ''}
                 ${noDeadlineProjects.length > 0 ? `
                   <optgroup label="📋 마감없음">
                     ${noDeadlineProjects.map(p => `
-                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                     `).join('')}
                   </optgroup>
                 ` : ''}
                 ${onHoldProjects.length > 0 ? `
                   <optgroup label="⏸ 보류">
                     ${onHoldProjects.map(p => `
-                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                     `).join('')}
                   </optgroup>
                 ` : ''}
                 ${completedProjects.length > 0 ? `
                   <optgroup label="✅ 완료">
                     ${completedProjects.map(p => `
-                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                     `).join('')}
                   </optgroup>
                 ` : ''}
                 ${archivedProjects.length > 0 ? `
                   <optgroup label="📦 아카이브">
                     ${archivedProjects.map(p => `
-                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${escapeHtml(p.name)}</option>
                     `).join('')}
                   </optgroup>
                 ` : ''}
@@ -15852,6 +15852,12 @@
     function getLocalDateStr(d) {
       const dt = d || new Date();
       return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    }
+
+    // 로컬 시간 기준 datetime-local 문자열 (YYYY-MM-DDTHH:mm)
+    function getLocalDateTimeStr(d) {
+      const dt = d || new Date();
+      return getLocalDateStr(dt) + 'T' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
     }
 
     /**
@@ -16570,7 +16576,7 @@
              onclick="selectWorkProject(${project.id}); setWorkView('detail');">
           <div class="work-dashboard-header">
             <div class="work-dashboard-name">
-              ${project.name}
+              ${escapeHtml(project.name)}
               ${project.archived ? '<span class="work-archived-badge">아카이브</span>' : ''}
               ${project.onHold ? '<span class="work-onhold-badge">보류</span>' : ''}
             </div>
@@ -16656,7 +16662,7 @@
           <div class="work-projects-header">
             <div>
               <div class="work-projects-title" style="display: flex; align-items: center; gap: 12px;">
-                ${project.name}
+                ${escapeHtml(project.name)}
               </div>
               ${scheduleHtml}
               <div class="work-project-progress" style="margin-top: 8px;">
@@ -16747,7 +16753,7 @@
                                  onclick="toggleSubcategoryComplete(${project.id}, ${stageIdx}, ${subcatIdx})">
                               ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? '✓' : ''}
                             </div>
-                            <span class="work-subcategory-name" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${subcat.name}</span>
+                            <span class="work-subcategory-name" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
@@ -17060,7 +17066,7 @@
             </span>
             <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
                   onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')"
-                  title="클릭하여 이름 변경">${task.title}</span>
+                  title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
             ${deadlineHtml}
             <div class="work-task-actions">
               <button class="work-task-action" onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
@@ -18357,13 +18363,21 @@
      * 키보드 이벤트 핸들러
      */
     document.addEventListener('keydown', (e) => {
+      // Escape 키: 모달/드롭다운 닫기 (어디서든 동작)
+      if (e.key === 'Escape') {
+        if (appState.showSettings) { closeSettings(); render(); return; }
+        if (appState.showOnboarding) { appState.showOnboarding = false; render(); return; }
+        if (appState.showDetailedAdd) { appState.showDetailedAdd = false; appState.editingTaskId = null; render(); return; }
+        // 알림 드롭다운 닫기
+        const notifDropdown = document.getElementById('notification-dropdown');
+        if (notifDropdown && notifDropdown.classList.contains('show')) { notifDropdown.classList.remove('show'); return; }
+        // 입력 필드에서 blur
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') { e.target.blur(); }
+        return;
+      }
+
       // 입력 필드에서는 단축키 비활성화
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
-        // Escape는 입력 필드에서도 동작
-        if (e.key === 'Escape') {
-          e.target.blur();
-          return;
-        }
         return;
       }
 
