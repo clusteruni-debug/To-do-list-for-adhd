@@ -8151,6 +8151,48 @@
       }).length;
     }
 
+    /**
+     * 오늘 완료된 태스크만 필터링 (UI 표시용)
+     * 히스토리/캘린더/수익 통계와 무관하게, 탭의 "완료됨" 섹션에 오늘 것만 표시
+     */
+    function getTodayCompletedTasks(tasks) {
+      const today = new Date().toDateString();
+      return tasks.filter(t => {
+        if (!t.completed || !t.completedAt) return false;
+        return new Date(t.completedAt).toDateString() === today;
+      });
+    }
+
+    /**
+     * 오래된 완료 태스크 자동 정리
+     * - 반복 태스크: 7일 경과 시 제거 (이미 다음 회차 생성됨)
+     * - 비반복 태스크: 30일 경과 시 제거
+     * - 히스토리/캘린더는 별도 데이터를 사용하지 않으므로,
+     *   정리 후에도 해당 기간 내 데이터는 유지됨
+     */
+    function cleanupOldCompletedTasks() {
+      const now = Date.now();
+      const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+      const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+      const before = appState.tasks.length;
+      appState.tasks = appState.tasks.filter(t => {
+        if (!t.completed || !t.completedAt) return true; // 미완료 태스크는 유지
+        const elapsed = now - new Date(t.completedAt).getTime();
+        // 반복 태스크: 7일 후 제거
+        if (t.repeatType && t.repeatType !== 'none') {
+          return elapsed < SEVEN_DAYS;
+        }
+        // 비반복 태스크: 30일 후 제거
+        return elapsed < THIRTY_DAYS;
+      });
+
+      const removed = before - appState.tasks.length;
+      if (removed > 0) {
+        console.log(`[cleanup] 오래된 완료 태스크 ${removed}개 정리됨`);
+      }
+    }
+
     // ============================================
     // 앱 상태 관리
     // ============================================
@@ -8373,6 +8415,9 @@
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
 
+        // 오래된 완료 태스크 정리
+        cleanupOldCompletedTasks();
+
         // 첫 방문 시 온보딩
         if (isFirstVisit) {
           setTimeout(() => showOnboarding(), 500);
@@ -8440,6 +8485,8 @@
 
     let unsubscribeSnapshot = null;
     let isSyncing = false;
+    let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
+    let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
 
     /**
      * Google 로그인
@@ -8554,6 +8601,13 @@
         appState.syncStatus = 'synced';
         appState.lastSyncTime = new Date();
         updateSyncIndicator();
+
+        // 동기화 성공 토스트 (30초 간격 제한)
+        const now = Date.now();
+        if (now - lastSyncToastTime > 30000) {
+          lastSyncToastTime = now;
+          showToast('☁️ 클라우드 동기화 완료', 'success');
+        }
       } catch (error) {
         console.error('동기화 실패:', error);
         appState.syncStatus = 'error';
@@ -8782,11 +8836,19 @@
             appState.lastSyncTime = cloudUpdated;
             appState.syncStatus = 'synced';
 
-            // 오늘 통계 재계산
+            // 오늘 통계 재계산 + 오래된 완료 태스크 정리
             recomputeTodayStats();
+            cleanupOldCompletedTasks();
 
             renderStatic();
             updateSyncIndicator();
+
+            // 다른 기기에서 변경사항 수신 토스트 (첫 로드 시 미표시)
+            if (isFirstRealtimeLoad) {
+              isFirstRealtimeLoad = false;
+            } else {
+              showToast('📲 다른 기기에서 변경사항 수신됨', 'success');
+            }
           }
         }
       });
@@ -12371,11 +12433,11 @@
       
       const stats = {
         total: appState.tasks.length,
-        completed: appState.tasks.filter(t => t.completed).length,
+        completed: getTodayCompletedTasks(appState.tasks).length,
         remaining: appState.tasks.filter(t => !t.completed).length
       };
-      
-      const completedTasks = appState.tasks.filter(t => t.completed);
+
+      const completedTasks = getTodayCompletedTasks(appState.tasks);
       const hiddenCount = appState.tasks.filter(t => !t.completed).length - filteredTasks.length;
       
       const bedtime = new Date(now);
@@ -13580,7 +13642,7 @@
                 if (!b.deadline) return -1;
                 return new Date(a.deadline) - new Date(b.deadline);
               });
-              const completedTasks = lifeTasks.filter(t => t.completed);
+              const completedTasks = getTodayCompletedTasks(lifeTasks);
               const dailyTasks = pendingTasks.filter(t => t.category === '일상');
               const familyTasks = pendingTasks.filter(t => t.category === '가족');
 
@@ -14144,14 +14206,14 @@
             <div class="all-tasks-header">
               <h2>📋 전체 작업 목록</h2>
               <div class="all-tasks-summary">
-                총 ${appState.tasks.length}개 · 진행 중 ${appState.tasks.filter(t => !t.completed).length}개 · 완료 ${appState.tasks.filter(t => t.completed).length}개
+                총 ${appState.tasks.length}개 · 진행 중 ${appState.tasks.filter(t => !t.completed).length}개 · 오늘 완료 ${getTodayCompletedTasks(appState.tasks).length}개
               </div>
             </div>
 
             ${['본업', '부업', '일상', '가족'].map(category => {
               const categoryTasks = appState.tasks.filter(t => t.category === category);
               const pendingTasks = categoryTasks.filter(t => !t.completed);
-              const completedTasks = categoryTasks.filter(t => t.completed);
+              const completedTasks = getTodayCompletedTasks(categoryTasks);
 
               if (categoryTasks.length === 0) return '';
 
