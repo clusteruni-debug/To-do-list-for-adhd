@@ -5085,6 +5085,50 @@
       font-weight: 600;
     }
 
+    /* 리듬 기록 액션 메뉴 (수정/삭제) */
+    .rhythm-action-menu {
+      position: fixed;
+      z-index: 1000;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      min-width: 120px;
+    }
+
+    .rhythm-action-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .rhythm-action-menu button:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-action-menu button:active {
+      background: var(--bg-primary);
+    }
+
+    .rhythm-action-menu button.danger {
+      color: var(--danger);
+    }
+
+    .rhythm-action-menu-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 999;
+    }
+
     .life-rhythm-icon {
       font-size: 18px;
     }
@@ -12760,43 +12804,43 @@
                       </div>
                       <div class="life-rhythm-buttons six-items">
                         <button class="life-rhythm-btn ${rhythm.wakeUp ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('wakeUp', ${rhythm.wakeUp ? 'true' : 'false'})"
-                                title="${rhythm.wakeUp ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('wakeUp', ${rhythm.wakeUp ? 'true' : 'false'}, event)"
+                                title="${rhythm.wakeUp ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">☀️</span>
                           <span class="life-rhythm-label">기상</span>
                           <span class="life-rhythm-time">${rhythm.wakeUp || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.homeDepart ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('homeDepart', ${rhythm.homeDepart ? 'true' : 'false'})"
-                                title="${rhythm.homeDepart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('homeDepart', ${rhythm.homeDepart ? 'true' : 'false'}, event)"
+                                title="${rhythm.homeDepart ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🚶</span>
                           <span class="life-rhythm-label">집출발</span>
                           <span class="life-rhythm-time">${rhythm.homeDepart || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.workArrive ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('workArrive', ${rhythm.workArrive ? 'true' : 'false'})"
-                                title="${rhythm.workArrive ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('workArrive', ${rhythm.workArrive ? 'true' : 'false'}, event)"
+                                title="${rhythm.workArrive ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🏢</span>
                           <span class="life-rhythm-label">회사도착</span>
                           <span class="life-rhythm-time">${rhythm.workArrive || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.workDepart ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('workDepart', ${rhythm.workDepart ? 'true' : 'false'})"
-                                title="${rhythm.workDepart ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('workDepart', ${rhythm.workDepart ? 'true' : 'false'}, event)"
+                                title="${rhythm.workDepart ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🚀</span>
                           <span class="life-rhythm-label">회사출발</span>
                           <span class="life-rhythm-time">${rhythm.workDepart || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.homeArrive ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('homeArrive', ${rhythm.homeArrive ? 'true' : 'false'})"
-                                title="${rhythm.homeArrive ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('homeArrive', ${rhythm.homeArrive ? 'true' : 'false'}, event)"
+                                title="${rhythm.homeArrive ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🏠</span>
                           <span class="life-rhythm-label">집도착</span>
                           <span class="life-rhythm-time">${rhythm.homeArrive || '--:--'}</span>
                         </button>
                         <button class="life-rhythm-btn ${rhythm.sleep ? 'recorded' : ''}"
-                                onclick="handleLifeRhythmClick('sleep', ${rhythm.sleep ? 'true' : 'false'})"
-                                title="${rhythm.sleep ? '클릭: 수정' : '클릭: 현재시간 기록'}">
+                                onclick="handleLifeRhythmClick('sleep', ${rhythm.sleep ? 'true' : 'false'}, event)"
+                                title="${rhythm.sleep ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                           <span class="life-rhythm-icon">🌙</span>
                           <span class="life-rhythm-label">취침</span>
                           <span class="life-rhythm-time">${rhythm.sleep || '--:--'}</span>
@@ -13922,8 +13966,14 @@
                     </div>
                     <div class="rhythm-summary-row">
                       <span>평균 수면: <strong>${rhythmStats.avgSleep.toFixed(1)}시간</strong></span>
-                      <span>목표 대비: <strong class="${rhythmStats.avgSleep >= 7 ? 'good' : 'bad'}">${rhythmStats.avgSleep >= 7 ? '+' : ''}${(rhythmStats.avgSleep - 7).toFixed(1)}시간</strong></span>
+                      <span>목표 대비: <strong class="${rhythmStats.avgSleep >= rhythmStats.targetSleepHours ? 'good' : 'bad'}">${rhythmStats.avgSleep >= rhythmStats.targetSleepHours ? '+' : ''}${(rhythmStats.avgSleep - rhythmStats.targetSleepHours).toFixed(1)}시간</strong></span>
                     </div>
+                    ${rhythmStats.avgWakeUp || rhythmStats.avgBedtime ? `
+                    <div class="rhythm-summary-row">
+                      ${rhythmStats.avgWakeUp ? `<span>평균 기상: <strong>${rhythmStats.avgWakeUp}</strong> ${rhythmStats.wakeTimeDiff !== null ? '<strong class="' + (Math.abs(rhythmStats.wakeTimeDiff) <= 15 ? 'good' : 'bad') + '">' + (rhythmStats.wakeTimeDiff > 0 ? '+' : '') + rhythmStats.wakeTimeDiff + '분</strong>' : ''}</span>` : ''}
+                      ${rhythmStats.avgBedtime ? `<span>평균 취침: <strong>${rhythmStats.avgBedtime}</strong> ${rhythmStats.bedtimeDiff !== null ? '<strong class="' + (Math.abs(rhythmStats.bedtimeDiff) <= 15 ? 'good' : 'bad') + '">' + (rhythmStats.bedtimeDiff > 0 ? '+' : '') + rhythmStats.bedtimeDiff + '분</strong>' : ''}</span>` : ''}
+                    </div>
+                    ` : ''}
                   </div>
 
                   <!-- 근무 패턴 -->
@@ -13932,11 +13982,11 @@
                     <div class="rhythm-work-stats">
                       <div class="rhythm-work-stat">
                         <span class="rhythm-work-label">평균 출근</span>
-                        <span class="rhythm-work-value">${rhythmStats.avgWorkStart || '--:--'}</span>
+                        <span class="rhythm-work-value">${rhythmStats.avgWorkArrive || '--:--'}</span>
                       </div>
                       <div class="rhythm-work-stat">
                         <span class="rhythm-work-label">평균 퇴근</span>
-                        <span class="rhythm-work-value">${rhythmStats.avgWorkEnd || '--:--'}</span>
+                        <span class="rhythm-work-value">${rhythmStats.avgWorkDepart || '--:--'}</span>
                       </div>
                       <div class="rhythm-work-stat">
                         <span class="rhythm-work-label">평균 근무</span>
@@ -13944,7 +13994,7 @@
                       </div>
                       <div class="rhythm-work-stat">
                         <span class="rhythm-work-label">출근 편차</span>
-                        <span class="rhythm-work-value ${rhythmStats.workStartDeviation <= 30 ? 'good' : ''}">${rhythmStats.workStartDeviation ? '±' + rhythmStats.workStartDeviation + '분' : '--'}</span>
+                        <span class="rhythm-work-value ${rhythmStats.homeDepartDeviation <= 30 ? 'good' : ''}">${rhythmStats.homeDepartDeviation ? '±' + rhythmStats.homeDepartDeviation + '분' : '--'}</span>
                       </div>
                     </div>
                   </div>
@@ -15158,19 +15208,140 @@
      * - 기록 없으면: 현재 시간 기록
      * - 기록 있으면: 수정 모드
      */
-    function handleLifeRhythmClick(type, hasRecord) {
+    function handleLifeRhythmClick(type, hasRecord, event) {
       if (hasRecord) {
-        editLifeRhythm(type);
+        showRhythmActionMenu(type, event);
       } else {
         recordLifeRhythm(type);
       }
     }
     window.handleLifeRhythmClick = handleLifeRhythmClick;
 
+    /**
+     * 리듬 기록 액션 메뉴 표시 (수정/삭제)
+     */
+    function showRhythmActionMenu(type, event) {
+      // 기존 메뉴 제거
+      hideRhythmActionMenu();
+
+      const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+
+      // 오버레이 (메뉴 바깥 클릭 시 닫기)
+      const overlay = document.createElement('div');
+      overlay.className = 'rhythm-action-menu-overlay';
+      overlay.onclick = hideRhythmActionMenu;
+
+      // 메뉴
+      const menu = document.createElement('div');
+      menu.className = 'rhythm-action-menu';
+      menu.id = 'rhythm-action-menu';
+      menu.innerHTML = `
+        <button onclick="hideRhythmActionMenu(); editLifeRhythm('${type}')">✏️ 시간 수정</button>
+        <button class="danger" onclick="hideRhythmActionMenu(); deleteLifeRhythm('${type}')">🗑️ 기록 삭제</button>
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(menu);
+
+      // 버튼 기준 위치 계산
+      const btn = event.currentTarget;
+      const rect = btn.getBoundingClientRect();
+      const menuHeight = 96; // 대략적인 메뉴 높이
+      const menuWidth = 140;
+
+      // 화면 아래 공간 부족 시 위로 표시
+      let top = rect.bottom + 4;
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - 4;
+      }
+
+      // 가로 위치 (버튼 중앙 기준)
+      let left = rect.left + rect.width / 2 - menuWidth / 2;
+      if (left < 8) left = 8;
+      if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - 8 - menuWidth;
+
+      menu.style.top = top + 'px';
+      menu.style.left = left + 'px';
+    }
+    window.showRhythmActionMenu = showRhythmActionMenu;
+
+    /**
+     * 리듬 액션 메뉴 닫기
+     */
+    function hideRhythmActionMenu() {
+      const menu = document.getElementById('rhythm-action-menu');
+      if (menu) menu.remove();
+      const overlay = document.querySelector('.rhythm-action-menu-overlay');
+      if (overlay) overlay.remove();
+    }
+    window.hideRhythmActionMenu = hideRhythmActionMenu;
+
+    /**
+     * 리듬 기록 삭제
+     */
+    function deleteLifeRhythm(type) {
+      const today = getLocalDateStr();
+      if (appState.lifeRhythm.today.date === today) {
+        const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+        appState.lifeRhythm.today[type] = null;
+        saveLifeRhythm();
+        renderStatic();
+        showToast(labels[type] + ' 기록이 삭제되었습니다', 'success');
+      }
+    }
+    window.deleteLifeRhythm = deleteLifeRhythm;
+
     // 로컬 타임존 기준 날짜 문자열 (YYYY-MM-DD) - UTC 변환 방지
     function getLocalDateStr(d) {
       const dt = d || new Date();
       return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+    }
+
+    /**
+     * 기상/취침 기록 시 목표 대비 차이 메시지 생성
+     * - 취침 자정 넘김 처리 (00:00~05:00은 전날 밤 기준)
+     */
+    function getTimeDiffMessage(type, timeStr) {
+      const icons = { wakeUp: '☀️', sleep: '🌙' };
+      const typeLabels = { wakeUp: '기상', sleep: '취침' };
+      let targetTime = null;
+
+      if (type === 'wakeUp') {
+        targetTime = appState.settings.targetWakeTime || '07:00';
+      } else if (type === 'sleep') {
+        targetTime = appState.settings.targetBedtime || '23:00';
+      } else {
+        // 기상/취침 외에는 기존 메시지 유지
+        return null;
+      }
+
+      const [tH, tM] = targetTime.split(':').map(Number);
+      const [aH, aM] = timeStr.split(':').map(Number);
+
+      let targetMins = tH * 60 + tM;
+      let actualMins = aH * 60 + aM;
+
+      // 취침 자정 넘김 처리: 00:00~05:00 기록은 +24시간으로 환산
+      if (type === 'sleep') {
+        if (targetMins >= 18 * 60 && actualMins < 5 * 60) {
+          actualMins += 24 * 60;
+        }
+        if (actualMins >= 18 * 60 && targetMins < 5 * 60) {
+          targetMins += 24 * 60;
+        }
+      }
+
+      const diff = actualMins - targetMins;
+      const absDiff = Math.abs(diff);
+      const icon = icons[type];
+
+      if (absDiff <= 5) {
+        return icon + ' ' + typeLabels[type] + ' ' + timeStr + ' (목표 시간 딱 맞춰요! 👏)';
+      } else if (diff > 0) {
+        return icon + ' ' + typeLabels[type] + ' ' + timeStr + ' (목표보다 ' + absDiff + '분 늦음)';
+      } else {
+        return icon + ' ' + typeLabels[type] + ' ' + timeStr + ' (목표보다 ' + absDiff + '분 일찍 👍)';
+      }
     }
 
     /**
@@ -15207,9 +15378,10 @@
       saveLifeRhythm();
       renderStatic();
 
-      // 피드백
+      // 피드백 (기상/취침은 목표 대비 차이 포함)
       const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
-      showToast(labels[type] + ' 시간 기록: ' + timeStr, 'success');
+      const diffMsg = getTimeDiffMessage(type, timeStr);
+      showToast(diffMsg || labels[type] + ' 시간 기록: ' + timeStr, 'success');
 
       // 햅틱 피드백
       if (navigator.vibrate) {
@@ -15287,6 +15459,8 @@
       const commuteToWorkTimes = [];
       const commuteToHomeTimes = [];
       const totalOutTimes = [];
+      const wakeUpTimes = [];
+      const bedtimes = [];
 
       // 시간을 분으로 변환하는 헬퍼
       const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
@@ -15338,6 +15512,13 @@
         if (dayData.workArrive) workArriveTimes.push(toMins(dayData.workArrive));
         if (dayData.workDepart) workDepartTimes.push(toMins(dayData.workDepart));
         if (dayData.homeArrive) homeArriveTimes.push(toMins(dayData.homeArrive));
+        if (dayData.wakeUp) wakeUpTimes.push(toMins(dayData.wakeUp));
+        // 취침: 자정 넘김 처리 (00:00~05:00은 +24시간)
+        if (dayData.sleep) {
+          let sleepMins = toMins(dayData.sleep);
+          if (sleepMins < 5 * 60) sleepMins += 24 * 60;
+          bedtimes.push(sleepMins);
+        }
 
         // 근무 시간 계산
         if (dayData.workArrive && dayData.workDepart) {
@@ -15386,6 +15567,26 @@
         const variance = homeDepartTimes.reduce((sum, t) => sum + Math.pow(t - mean, 2), 0) / homeDepartTimes.length;
         homeDepartDeviation = Math.round(Math.sqrt(variance));
       }
+
+      // 기상/취침 평균 및 목표 대비 계산
+      const avgWakeUpMins = calcAvg(wakeUpTimes);
+      const avgBedtimeMins = calcAvg(bedtimes);
+
+      const targetWakeMins = (() => {
+        const t = appState.settings.targetWakeTime || '07:00';
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+      })();
+      const targetBedMins = (() => {
+        const t = appState.settings.targetBedtime || '23:00';
+        const [h, m] = t.split(':').map(Number);
+        // 자정 넘김 기준 통일 (목표가 00:00~05:00이면 +24시간)
+        return (h < 5) ? h * 60 + m + 24 * 60 : h * 60 + m;
+      })();
+
+      // 목표 대비 차이 (양수 = 늦음, 음수 = 일찍)
+      const wakeTimeDiff = avgWakeUpMins !== null ? Math.round(avgWakeUpMins - targetWakeMins) : null;
+      const bedtimeDiff = avgBedtimeMins !== null ? Math.round(avgBedtimeMins - targetBedMins) : null;
 
       // 인사이트 생성
       const insights = [];
@@ -15470,6 +15671,16 @@
         avgCommuteToHome: formatDur(avgCommuteToHome),
         avgTotalOut: avgTotalOut ? avgTotalOut.toFixed(1) + '시간' : null,
         homeDepartDeviation,
+        avgWakeUp: formatTime(avgWakeUpMins),
+        avgBedtime: formatTime(avgBedtimeMins !== null && avgBedtimeMins >= 24 * 60 ? avgBedtimeMins - 24 * 60 : avgBedtimeMins),
+        wakeTimeDiff,
+        bedtimeDiff,
+        targetSleepHours: (() => {
+          // 설정 기반 목표 수면 시간 (기상 - 취침, 자정 넘김 처리)
+          let dur = targetWakeMins - targetBedMins;
+          if (dur <= 0) dur += 24 * 60;
+          return dur / 60;
+        })(),
         insights
       };
     }

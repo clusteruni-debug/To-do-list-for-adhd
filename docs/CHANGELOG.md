@@ -1,5 +1,38 @@
 # CHANGELOG
 
+## [2026-02-04] (세션 3)
+
+### 작업 내용
+- **대시보드 속성명 불일치 버그 수정**
+  - 평균 출근/퇴근/출근편차가 항상 `--:--`로 표시되던 버그 수정
+  - `avgWorkStart` → `avgWorkArrive`, `avgWorkEnd` → `avgWorkDepart`, `workStartDeviation` → `homeDepartDeviation`
+
+- **라이프 리듬 기록 UX 개선 — 수정/삭제 액션 메뉴**
+  - 기록된 버튼 클릭 시 `prompt()` 직행 → 수정/삭제 팝업 메뉴로 변경
+  - `showRhythmActionMenu()`, `hideRhythmActionMenu()`, `deleteLifeRhythm()` 추가
+  - 모바일 터치 친화적 CSS (`.rhythm-action-menu`)
+
+- **기상/취침 기록 시 목표 대비 즉시 피드백**
+  - `getTimeDiffMessage()` 헬퍼 함수 추가
+  - 토스트 예시: "☀️ 기상 07:15 (목표보다 15분 늦음)", "🌙 취침 22:50 (목표보다 10분 일찍 👍)"
+  - 취침 자정 넘김 처리 (00:00~05:00 기록 시 전날 밤 기준)
+
+- **대시보드에 기상/취침 목표 대비 통계 추가**
+  - `getLifeRhythmStats()` 확장: `avgWakeUp`, `avgBedtime`, `wakeTimeDiff`, `bedtimeDiff`, `targetSleepHours`
+  - 수면 섹션에 "평균 기상/취침 + 목표 대비 ±분" 행 추가
+  - ±15분 이내 = 녹색(good), 그 외 = 빨강(bad)
+  - "목표 대비" 수면 시간: 7시간 하드코딩 → 설정 기반 `targetSleepHours`로 개선
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html` (단일 파일)
+- DB 변경: 없음
+
+### 다음에 할 것
+- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
+- SVG 아이콘 교체 (P2)
+- 접근성 개선 (P2)
+- 포모도로 통합 (P2)
+
 ## [2026-02-04] (세션 2)
 
 ### 작업 내용
