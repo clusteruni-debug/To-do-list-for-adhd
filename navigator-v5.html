@@ -8881,6 +8881,35 @@
       return merged;
     }
 
+    /**
+     * 본업 프로젝트 병합 (ID 기반, updatedAt 기준)
+     * - 한쪽에만 있으면 그대로 보존
+     * - 양쪽 다 있으면 updatedAt이 더 최신인 쪽 사용
+     */
+    function mergeWorkProjects(localProjects, cloudProjects) {
+      const localMap = new Map((localProjects || []).map(p => [p.id, p]));
+      const cloudMap = new Map((cloudProjects || []).map(p => [p.id, p]));
+      const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
+      const merged = [];
+
+      for (const id of allIds) {
+        const local = localMap.get(id);
+        const cloud = cloudMap.get(id);
+
+        if (local && !cloud) {
+          merged.push(local);
+        } else if (cloud && !local) {
+          merged.push(cloud);
+        } else {
+          const localTime = new Date(local.updatedAt || 0).getTime();
+          const cloudTime = new Date(cloud.updatedAt || 0).getTime();
+          merged.push(cloudTime >= localTime ? cloud : local);
+        }
+      }
+
+      return merged;
+    }
+
     async function loadFromFirebase() {
       if (!appState.user) return;
 
@@ -8920,12 +8949,11 @@
             const mergedTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
             appState.availableTags = mergedTags;
           }
-          if (data.workProjects) {
-            appState.workProjects = data.workProjects;
-            if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
-              const activeProject = appState.workProjects.find(p => !p.archived);
-              appState.activeWorkProject = activeProject ? activeProject.id : null;
-            }
+          // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
+          appState.workProjects = mergeWorkProjects(appState.workProjects, data.workProjects);
+          if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
+            const activeProject = appState.workProjects.find(p => !p.archived);
+            appState.activeWorkProject = activeProject ? activeProject.id : null;
           }
           if (data.workTemplates) {
             appState.workTemplates = data.workTemplates;
@@ -9030,10 +9058,9 @@
             if (data.availableTags) {
               appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
             }
-            if (data.workProjects) {
-              appState.workProjects = data.workProjects;
-              localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-            }
+            // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
+            appState.workProjects = mergeWorkProjects(appState.workProjects, data.workProjects);
+            localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
             if (data.workTemplates) {
               appState.workTemplates = data.workTemplates;
               localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
