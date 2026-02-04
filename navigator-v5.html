@@ -2241,6 +2241,74 @@
         pointer-events: auto;
       }
     }
+
+    /* 오늘 탭 전체 목록 - 컴팩트 한 줄 모드 */
+    .task-list .task-item {
+      padding: 8px 16px;
+      margin-bottom: 2px;
+    }
+    .task-list .task-item .task-item-header {
+      margin-bottom: 0;
+    }
+    .task-list .task-item .task-item-meta,
+    .task-list .task-item .task-tags,
+    .task-list .task-item .subtask-progress-bar,
+    .task-list .task-item .subtask-preview,
+    .task-list .task-item .subtask-list-expanded,
+    .task-list .task-item .swipe-actions {
+      display: none;
+    }
+    .task-list .task-item .task-item-actions {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      flex-wrap: nowrap;
+      gap: 4px;
+      background: var(--bg-secondary);
+      padding: 4px 8px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      margin-bottom: 0;
+    }
+    .task-list .task-item:hover .task-item-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .task-list .task-item .task-item-actions .btn-small {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+    }
+
+    /* 인라인 카테고리 뱃지 (컴팩트 목록용) */
+    .task-item-inline-cat {
+      font-size: 11px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 6px;
+      font-weight: 500;
+      vertical-align: middle;
+    }
+    .task-item-inline-cat.본업 { background: rgba(102, 126, 234, 0.2); color: #667eea; }
+    .task-item-inline-cat.부업 { background: rgba(240, 147, 251, 0.2); color: #f093fb; }
+    .task-item-inline-cat.일상 { background: rgba(72, 187, 120, 0.2); color: #48bb78; }
+    .task-item-inline-cat.가족 { background: rgba(246, 173, 85, 0.2); color: #f6ad55; }
+
+    @media (max-width: 768px) {
+      .task-list .task-item .task-item-actions {
+        opacity: 1;
+        pointer-events: auto;
+        position: static;
+        transform: none;
+        background: none;
+        box-shadow: none;
+        padding: 0;
+        margin-top: 6px;
+      }
+    }
     
     .btn-small {
       padding: var(--space-1) 14px;
@@ -5794,6 +5862,41 @@
       border-radius: 6px;
     }
 
+    /* 마감 알림 드롭다운 (헤더) */
+    .notification-dropdown-wrapper {
+      position: relative;
+      display: inline-flex;
+    }
+    .notification-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      min-width: 240px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .notification-dropdown.show {
+      display: block;
+    }
+    .notification-dropdown .notification-title {
+      margin-bottom: 10px;
+    }
+    .header-btn .notif-dot {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid var(--bg-primary);
+    }
+
     /* 검색 & 필터 스타일 */
     .search-filter-section {
       background: var(--bg-secondary);
@@ -6520,16 +6623,18 @@
     .event-card {
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
-      padding: 16px 18px;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
       transition: all var(--transition-normal);
-      box-shadow: 0 2px 8px var(--shadow-color);
+      box-shadow: 0 1px 4px var(--shadow-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
 
     .event-card:hover {
       border-color: rgba(102, 126, 234, 0.5);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 16px var(--shadow-color);
+      box-shadow: 0 2px 8px var(--shadow-color);
     }
 
     .event-card.urgent {
@@ -6548,29 +6653,35 @@
     }
 
     .event-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-light);
+      display: none;
     }
 
     .event-title {
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       flex: 1;
-      margin-right: 12px;
-      line-height: 1.4;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .event-compact-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .event-dday {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: bold;
-      padding: 4px 10px;
-      border-radius: 6px;
+      padding: 2px 8px;
+      border-radius: 4px;
       background: var(--bg-tertiary);
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .event-card.urgent .event-dday {
@@ -6584,12 +6695,7 @@
     }
 
     .event-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: #888;
+      display: none;
     }
 
     .event-meta-divider {
@@ -6622,9 +6728,9 @@
 
     .event-actions {
       display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      padding-top: 4px;
+      gap: 6px;
+      flex-shrink: 0;
+      padding-top: 0;
     }
 
     /* 버튼 변형 - CSS 변수 사용 (통일) */
@@ -12724,6 +12830,32 @@
                   ☁️
                 </button>
               `}
+              <div class="notification-dropdown-wrapper">
+                <button class="header-btn" onclick="toggleNotificationDropdown(event)" title="마감 알림" style="position: relative;">
+                  🔔
+                  ${appState.notificationPermission === 'granted' ? '<span class="notif-dot" style="background: #48bb78;"></span>' : appState.notificationPermission === 'denied' ? '<span class="notif-dot" style="background: #f5576c;"></span>' : ''}
+                </button>
+                <div id="notification-dropdown" class="notification-dropdown">
+                  <div class="notification-title">🔔 마감 알림</div>
+                  <div class="notification-status">
+                    ${appState.notificationPermission === 'granted' ? `
+                      <span class="notification-text granted">✓ 활성화됨</span>
+                      <button class="notification-btn granted" disabled>ON</button>
+                    ` : appState.notificationPermission === 'denied' ? `
+                      <span class="notification-text denied">✕ 차단됨</span>
+                      <button class="notification-btn denied" onclick="showToast('브라우저 설정에서 알림을 허용해주세요 (주소창 왼쪽 🔒 클릭)', 'info')">설정</button>
+                    ` : `
+                      <span class="notification-text">알림 받기</span>
+                      <button class="notification-btn" onclick="requestNotificationPermission()">켜기</button>
+                    `}
+                  </div>
+                  ${appState.notificationPermission === 'denied' ? `
+                    <div class="notification-help">
+                      💡 주소창 왼쪽의 🔒를 클릭하여 알림을 허용으로 변경하세요
+                    </div>
+                  ` : ''}
+                </div>
+              </div>
               <button class="header-btn" onclick="openSettings()" title="설정">
                 ⚙️
               </button>
@@ -13339,6 +13471,7 @@
                           <div class="task-item-header">
                             <div class="task-item-title">
                               ${index + 1}. ${task.title}
+                              <span class="task-item-inline-cat ${task.category}">${task.category}</span>
                               ${task.subtasks && task.subtasks.length > 0 ? `
                                 <span class="subtask-badge" onclick="event.stopPropagation(); toggleSubtaskExpand(${task.id})">
                                   📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
@@ -13451,49 +13584,6 @@
 
               <!-- 오른쪽 컬럼: 통계 + 설정 -->
               <div class="pc-column-right">
-                <!-- 오늘의 진행률 -->
-                <div class="today-progress">
-                  <div class="today-progress-header">
-                    <span class="today-progress-title">오늘의 진행률</span>
-                    <span class="today-progress-score">${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
-                  </div>
-                  <div class="progress-bar-large">
-                    <div class="progress-bar-fill" style="width: ${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%"></div>
-                  </div>
-                  <div class="today-stats-row">
-                    <div class="today-stat">
-                      <div class="today-stat-value completed">${stats.completed}</div>
-                      <div class="today-stat-label">완료</div>
-                    </div>
-                    <div class="today-stat">
-                      <div class="today-stat-value remaining">${stats.remaining}</div>
-                      <div class="today-stat-label">남음</div>
-                    </div>
-                    <div class="today-stat">
-                      <div class="today-stat-value streak">${appState.todayStats.streak > 0 ? '🔥' + appState.todayStats.streak : '-'}</div>
-                      <div class="today-stat-label">연속</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 카테고리별 현황 (PC에서만 표시) -->
-                <div class="dashboard-section">
-                  <div class="dashboard-title">📊 카테고리별</div>
-                  <div class="category-stats">
-                    ${categoryStats.map(stat => `
-                      <div class="category-stat">
-                        <div class="category-stat-header">
-                          <span class="category ${stat.category}">${stat.category}</span>
-                          <span class="category-progress">${stat.completed}/${stat.total + stat.completed}</span>
-                        </div>
-                        <div class="progress-bar">
-                          <div class="progress-fill ${stat.category}" style="width: ${stat.percentage}%"></div>
-                        </div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-
                 ${urgentTasks.length > 0 ? `
                   <div class="dashboard-section">
                     <div class="dashboard-title">🚨 마감 임박</div>
@@ -13517,28 +13607,6 @@
                     <button class="install-banner-btn" onclick="installPWA()">설치</button>
                     <button class="install-banner-close" onclick="closeInstallBanner()">×</button>
                   </div>
-                </div>
-
-                <!-- 알림 설정 -->
-                <div class="notification-section">
-                  <div class="notification-title">🔔 마감 알림</div>
-                  <div class="notification-status">
-                    ${appState.notificationPermission === 'granted' ? `
-                      <span class="notification-text granted">✓ 활성화됨</span>
-                      <button class="notification-btn granted" disabled>ON</button>
-                    ` : appState.notificationPermission === 'denied' ? `
-                      <span class="notification-text denied">✕ 차단됨</span>
-                      <button class="notification-btn denied" onclick="showToast('브라우저 설정에서 알림을 허용해주세요 (주소창 왼쪽 🔒 클릭)', 'info')">설정</button>
-                    ` : `
-                      <span class="notification-text">알림 받기</span>
-                      <button class="notification-btn" onclick="requestNotificationPermission()">켜기</button>
-                    `}
-                  </div>
-                  ${appState.notificationPermission === 'denied' ? `
-                    <div class="notification-help">
-                      💡 주소창 왼쪽의 🔒를 클릭하여 알림을 허용으로 변경하세요
-                    </div>
-                  ` : ''}
                 </div>
 
               </div>
@@ -13695,26 +13763,18 @@
                     <div class="events-list">
                       ${pendingEvents.map(task => {
                         const days = getDaysLeft(task.deadline);
-                        const metaParts = [
-                          task.organizer || '',
-                          task.eventType || '',
-                          task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : ''
-                        ].filter(Boolean);
+                        const dateStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
                         return `
                           <div class="event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}">
-                            <div class="event-card-header">
-                              <div class="event-title">${task.title}</div>
-                              <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
-                            </div>
-                            <div class="event-meta">
-                              ${metaParts.join(' · ')}
-                            </div>
+                            <div class="event-title">${task.title}</div>
+                            ${dateStr ? `<span class="event-compact-date">${dateStr}</span>` : ''}
                             <div class="event-actions">
-                              ${task.link ? `<a href="${task.link}" target="_blank" class="btn btn-small btn-link">🔗 링크</a>` : ''}
-                              <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})">✓ 제출완료</button>
+                              ${task.link ? `<a href="${task.link}" target="_blank" class="btn btn-small btn-link">🔗</a>` : ''}
+                              <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})">✓</button>
                               <button class="btn btn-small btn-edit" onclick="editTask(${task.id})">✏️</button>
                               <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})">🗑️</button>
                             </div>
+                            <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
                           </div>
                         `;
                       }).join('')}
@@ -13735,15 +13795,9 @@
                     <div class="events-list submitted-list">
                       ${submittedEvents.map(task => `
                         <div class="event-card completed">
-                          <div class="event-card-header">
-                            <div class="event-title">${task.title}</div>
-                          </div>
-                          <div class="event-meta">
-                            ${task.organizer ? `<span class="event-tag organizer">${task.organizer}</span>` : ''}
-                            ${task.eventType ? `<span class="event-tag type">${task.eventType}</span>` : ''}
-                          </div>
+                          <div class="event-title">${task.title}</div>
                           <div class="event-actions">
-                            <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})">↩ 취소</button>
+                            <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})">↩</button>
                             <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})">🗑</button>
                           </div>
                         </div>
@@ -16559,15 +16613,25 @@
           </div>
           ${task.logs && task.logs.length > 0 ? `
             <div class="work-task-logs">
-              ${task.logs.map((log, logIdx) => `
-                <div class="work-task-log">
-                  <span class="work-task-log-date">${log.date}</span>
-                  <span class="work-task-log-content">${log.content}</span>
-                  <div class="work-task-log-actions">
-                    <button class="work-task-log-action" onclick="deleteWorkLog(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, ${logIdx})">×</button>
-                  </div>
-                </div>
-              `).join('')}
+              ${(() => {
+                // 완료 로그 압축: "✓ 완료" 로그는 하나로 요약
+                const completionLogs = task.logs.filter(l => l.content === '✓ 완료');
+                const otherLogs = task.logs.filter(l => l.content !== '✓ 완료');
+                let html = '';
+                if (completionLogs.length > 0) {
+                  const lastDate = completionLogs[completionLogs.length - 1].date;
+                  if (completionLogs.length === 1) {
+                    html += '<div class="work-task-log"><span class="work-task-log-date" style="color: #48bb78;">✓ 완료 (' + lastDate + ')</span></div>';
+                  } else {
+                    html += '<div class="work-task-log"><span class="work-task-log-date" style="color: #48bb78;">✓ ' + completionLogs.length + '회 완료 (최근: ' + lastDate + ')</span></div>';
+                  }
+                }
+                otherLogs.forEach(log => {
+                  const actualIdx = task.logs.indexOf(log);
+                  html += '<div class="work-task-log"><span class="work-task-log-date">' + log.date + '</span><span class="work-task-log-content">' + log.content + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(' + projectId + ', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')">×</button></div></div>';
+                });
+                return html;
+              })()}
             </div>
           ` : ''}
         </div>
@@ -17942,6 +18006,25 @@
     });
 
     window.toggleMoreMenu = toggleMoreMenu;
+
+    // 마감 알림 드롭다운 토글
+    function toggleNotificationDropdown(e) {
+      if (e) e.stopPropagation();
+      const dropdown = document.getElementById('notification-dropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('show');
+      }
+    }
+    window.toggleNotificationDropdown = toggleNotificationDropdown;
+
+    // 외부 클릭 시 알림 드롭다운 닫기
+    document.addEventListener('click', (e) => {
+      const wrapper = document.querySelector('.notification-dropdown-wrapper');
+      const dropdown = document.getElementById('notification-dropdown');
+      if (dropdown && dropdown.classList.contains('show') && wrapper && !wrapper.contains(e.target)) {
+        dropdown.classList.remove('show');
+      }
+    });
 
     // ============================================
     // 포모도로 타이머
