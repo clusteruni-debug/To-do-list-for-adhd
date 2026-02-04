@@ -4226,6 +4226,27 @@
       color: var(--text-muted);
     }
 
+    .work-task-deadline {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .work-task-deadline.soon {
+      color: #e67e22;
+      background: rgba(230, 126, 34, 0.1);
+    }
+
+    .work-task-deadline.overdue {
+      color: var(--danger);
+      background: rgba(245, 87, 108, 0.1);
+    }
+
     .work-task-actions {
       display: flex;
       gap: 6px;
@@ -16308,6 +16329,13 @@
         'blocked': '[보류]'
       };
 
+      // 마감일 포맷 헬퍼
+      const fmtDeadline = (task) => {
+        if (!task.deadline) return '';
+        const d = new Date(task.deadline);
+        return ' ~' + (d.getMonth() + 1) + '/' + d.getDate();
+      };
+
       let lines = [];
       lines.push('[ ' + project.name + ' 진행 리스트 ]');
       lines.push('');
@@ -16336,10 +16364,11 @@
 
             sub.tasks.forEach(task => {
               const status = statusLabel[task.status] || '';
-              // 최신 로그가 있으면 메모로 추가
+              const deadline = fmtDeadline(task);
               const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
               let line = '  ' + task.title;
               if (status) line += ' ' + status;
+              if (deadline) line += deadline;
               if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
               lines.push(line);
             });
@@ -16347,9 +16376,11 @@
             // "일반" 중분류: 작업을 최상위로 나열
             sub.tasks.forEach(task => {
               const status = statusLabel[task.status] || '';
+              const deadline = fmtDeadline(task);
               const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
               let line = task.title;
               if (status) line += ': ' + status;
+              if (deadline) line += deadline;
               if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
               lines.push(line);
             });
@@ -16465,6 +16496,16 @@
     function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
       const statusInfo = WORK_STATUS[task.status] || WORK_STATUS['not-started'];
 
+      // 작업 마감일 표시
+      let deadlineHtml = '';
+      if (task.deadline) {
+        const d = new Date(task.deadline);
+        const daysLeft = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+        const deadlineClass = daysLeft < 0 ? 'overdue' : daysLeft <= 2 ? 'soon' : '';
+        const dateStr = (d.getMonth() + 1) + '/' + d.getDate();
+        deadlineHtml = `<span class="work-task-deadline ${deadlineClass}" onclick="event.stopPropagation(); promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="클릭하여 마감일 변경">~${dateStr}</span>`;
+      }
+
       return `
         <div class="work-task-item">
           <div class="work-task-header">
@@ -16475,7 +16516,9 @@
             <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
                   onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')"
                   title="클릭하여 이름 변경">${task.title}</span>
+            ${deadlineHtml}
             <div class="work-task-actions">
+              <button class="work-task-action" onclick="promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정">📅</button>
               <button class="work-task-action" onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
               <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">+ 기록</button>
               <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">삭제</button>
@@ -17023,6 +17066,52 @@
       }
     }
     window.renameWorkTask = renameWorkTask;
+
+    /**
+     * 소분류(항목) 마감일 설정
+     * - prompt 대신 date input 사용 (모바일 날짜 선택기 활용)
+     */
+    function promptTaskDeadline(projectId, stageIdx, subcatIdx, taskIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+      const task = project.stages[stageIdx]?.subcategories?.[subcatIdx]?.tasks?.[taskIdx];
+      if (!task) return;
+
+      // date input을 동적으로 생성하여 날짜 선택기 호출
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.value = task.deadline || '';
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      input.style.top = '50%';
+      input.style.left = '50%';
+      document.body.appendChild(input);
+
+      input.addEventListener('change', function() {
+        task.deadline = this.value || null;
+        project.updatedAt = new Date().toISOString();
+        saveWorkProjects();
+        renderStatic();
+        if (this.value) {
+          const d = new Date(this.value);
+          showToast('마감일 설정: ' + (d.getMonth() + 1) + '/' + d.getDate(), 'success');
+        } else {
+          showToast('마감일 삭제됨', 'success');
+        }
+        document.body.removeChild(input);
+      });
+
+      input.addEventListener('blur', function() {
+        // 변경 없이 닫힌 경우 정리
+        if (document.body.contains(input)) {
+          document.body.removeChild(input);
+        }
+      });
+
+      input.focus();
+      input.showPicker?.();
+    }
+    window.promptTaskDeadline = promptTaskDeadline;
 
     /**
      * 중분류 추가
