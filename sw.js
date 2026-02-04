@@ -1,5 +1,5 @@
-// Navigator Service Worker v6.2
-const CACHE_NAME = 'navigator-v6-2';
+// Navigator Service Worker v6.3
+const CACHE_NAME = 'navigator-v6-3';
 const urlsToCache = [
   './navigator-v5.html',
   './manifest.json'

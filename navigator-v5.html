@@ -89,7 +89,7 @@
       --bg-card: #1a1a22;
       --text-primary: #f5f5f5;
       --text-secondary: #a0a0a8;
-      --text-muted: #707078;
+      --text-muted: #8a8a92;
       --border-color: #2a2a32;
       --border-light: #22222a;
 
@@ -129,7 +129,7 @@
       --bg-card: #ffffff;
       --text-primary: #1a1a1a;
       --text-secondary: #5f6368;
-      --text-muted: #9aa0a6;
+      --text-muted: #72787e;
       --border-color: #e0e0e0;
       --border-light: #f1f3f4;
       --shadow-color: rgba(0, 0, 0, 0.08);
@@ -2675,6 +2675,11 @@
       transition: transform var(--transition-fast), filter var(--transition-fast);
       font-weight: 500;
       letter-spacing: -0.01em;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .btn-small:hover {
@@ -4708,6 +4713,11 @@
       font-size: 12px;
       cursor: pointer;
       transition: all 0.2s;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .work-task-action:hover {
@@ -4757,6 +4767,8 @@
       border: none;
       border-radius: 4px;
       color: var(--text-muted);
+      min-height: 36px;
+      min-width: 36px;
       font-size: 10px;
       cursor: pointer;
     }
@@ -9285,6 +9297,7 @@
 
       try {
         appState.syncStatus = 'syncing';
+        updateSyncIndicator();
         const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
         const docSnap = await window.firebaseGetDoc(userDoc);
 
@@ -13073,6 +13086,11 @@
      * 전체 화면 렌더링 (상태 변경 시 호출)
      */
     function renderStatic() {
+      // 스크롤/포커스 보존
+      const _scrollY = window.scrollY;
+      const _activeId = document.activeElement?.id || '';
+      const _activeClass = document.activeElement?.className || '';
+
       const now = new Date();
       const hour = now.getHours();
       const filteredTasks = getFilteredTasks();
@@ -13274,30 +13292,30 @@
 
           <!-- 탭 네비게이션 (5개 + 더보기) -->
           <div class="tab-nav">
-            <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')">
+            <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')" aria-label="오늘 탭">
               🎯 오늘
             </button>
-            <button class="tab-btn ${appState.currentTab === 'work' ? 'active' : ''}" onclick="switchTab('work')">
+            <button class="tab-btn ${appState.currentTab === 'work' ? 'active' : ''}" onclick="switchTab('work')" aria-label="본업 탭">
               💼 본업
             </button>
-            <button class="tab-btn ${appState.currentTab === 'events' ? 'active' : ''}" onclick="switchTab('events')">
+            <button class="tab-btn ${appState.currentTab === 'events' ? 'active' : ''}" onclick="switchTab('events')" aria-label="이벤트 탭">
               💰 이벤트
             </button>
-            <button class="tab-btn ${appState.currentTab === 'life' ? 'active' : ''}" onclick="switchTab('life')">
+            <button class="tab-btn ${appState.currentTab === 'life' ? 'active' : ''}" onclick="switchTab('life')" aria-label="일상 탭">
               🏠 일상
             </button>
             <div class="tab-more-dropdown">
-              <button class="tab-btn ${['dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)">
+              <button class="tab-btn ${['dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
                 📋 더보기 ▾
               </button>
-              <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}">
-                <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');">
+              <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}" role="menu">
+                <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');" role="menuitem" aria-label="통계 탭">
                   📊 통계
                 </button>
-                <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');">
+                <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');" role="menuitem" aria-label="전체 탭">
                   📋 전체
                 </button>
-                <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('history');">
+                <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('history');" role="menuitem" aria-label="히스토리 탭">
                   📅 히스토리
                 </button>
               </div>
@@ -13551,7 +13569,7 @@
                       <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
                         ${nextAction.link ? '🚀 GO' : '시작하기'}
                       </button>
-                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})">
+                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
                         ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
                           Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
                           '5분 집중'}</span>
@@ -13607,15 +13625,15 @@
                     value="${appState.quickAddValue}"
                     onkeypress="if(event.key==='Enter') quickAdd()"
                   >
-                  <button class="quick-add-btn" onclick="quickAdd()">+</button>
+                  <button class="quick-add-btn" onclick="quickAdd()" aria-label="빠른 작업 추가">+</button>
                 </div>
 
                 <!-- 빠른 추가 버튼 -->
                 <div class="quick-templates">
-                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿으로 빠르게 추가">
+                  <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿으로 빠르게 추가" aria-label="글쓰기 템플릿으로 추가">
                     ✍️ 글쓰기
                   </button>
-                  <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="카테고리, 마감일, 예상수익 등 상세 정보 입력">
+                  <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="카테고리, 마감일, 예상수익 등 상세 정보 입력" aria-label="상세 작업 추가">
                     📝 상세 추가
                   </button>
                 </div>
@@ -13725,7 +13743,7 @@
                                   <label class="form-label">📂 중분류</label>
                                   <select class="form-select" id="detailed-work-subcat" onchange="updateWorkSubcatLink(this.value)">
                                     ${subcats.map((sub, idx) => `
-                                      <option value="${idx}" ${appState.detailedTask.workSubcatIdx === idx ? 'selected' : ''}>${sub.name}</option>
+                                      <option value="${idx}" ${appState.detailedTask.workSubcatIdx === idx ? 'selected' : ''}>${escapeHtml(sub.name)}</option>
                                     `).join('')}
                                   </select>
                                 </div>
@@ -13945,10 +13963,10 @@
                           ` : ''}
                           <div class="task-item-actions">
                             ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
-                            <button class="btn-small complete" onclick="completeTask(${task.id})">✓</button>
-                            <button class="btn-small" onclick="postponeTask(${task.id})" title="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
-                            <button class="btn-small edit" onclick="editTask(${task.id})">✏️</button>
-                            <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
+                            <button class="btn-small complete" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                            <button class="btn-small" onclick="postponeTask(${task.id})" title="내일로 미루기" aria-label="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
+                            <button class="btn-small edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
+                            <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
                           </div>
                         </div>
                       `).join('')}
@@ -13973,7 +13991,7 @@
                             ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                           </div>
                           <div class="task-item-actions">
-                            <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})">↩️ 되돌리기</button>
+                            <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})" aria-label="완료 되돌리기">↩️ 되돌리기</button>
                             <button class="btn-small delete" onclick="deleteTask(${task.id})">× 삭제</button>
                           </div>
                         </div>
@@ -14127,7 +14145,7 @@
                       </div>
                       <div class="task-item-actions">
                         <button class="btn-small edit" onclick="editTask(${task.id})">✏️ 마감 추가</button>
-                        <button class="btn-small complete" onclick="completeTask(${task.id})">✓</button>
+                        <button class="btn-small complete" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
                       </div>
                     </div>
                   `).join('')}
@@ -14228,9 +14246,9 @@
                             ${dateStr ? `<span class="event-compact-date">${dateStr}</span>` : ''}
                             <div class="event-actions">
                               ${task.link ? `<a href="${task.link}" target="_blank" class="btn btn-small btn-link">🔗</a>` : ''}
-                              <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})">✓</button>
-                              <button class="btn btn-small btn-edit" onclick="editTask(${task.id})">✏️</button>
-                              <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})">🗑️</button>
+                              <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                              <button class="btn btn-small btn-edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
+                              <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">🗑️</button>
                             </div>
                             <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
                           </div>
@@ -14255,8 +14273,8 @@
                         <div class="event-card completed">
                           <div class="event-title">${escapeHtml(task.title)}</div>
                           <div class="event-actions">
-                            <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})">↩</button>
-                            <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})">🗑</button>
+                            <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})" aria-label="완료 되돌리기">↩</button>
+                            <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">🗑</button>
                           </div>
                         </div>
                       `).join('')}
@@ -14339,8 +14357,8 @@
                             </div>
                           </div>
                           <div class="life-item-actions">
-                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정">✏️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
+                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정" aria-label="작업 수정">✏️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제" aria-label="작업 삭제">🗑️</button>
                           </div>
                         </div>
                       `).join('')}
@@ -14363,8 +14381,8 @@
                             </div>
                           </div>
                           <div class="life-item-actions">
-                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정">✏️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
+                            <button class="life-action-btn" onclick="editTask(${task.id})" title="수정" aria-label="작업 수정">✏️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제" aria-label="작업 삭제">🗑️</button>
                           </div>
                         </div>
                       `).join('')}
@@ -14390,8 +14408,8 @@
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
                           </div>
                           <div class="life-item-actions" style="opacity: 1;">
-                            <button class="life-action-btn" onclick="uncompleteTask(${task.id})" title="되돌리기">↩️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제">🗑️</button>
+                            <button class="life-action-btn" onclick="uncompleteTask(${task.id})" title="되돌리기" aria-label="완료 되돌리기">↩️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제" aria-label="작업 삭제">🗑️</button>
                           </div>
                         </div>
                       `).join('')}
@@ -14809,10 +14827,10 @@
                       </div>
                       <div class="task-item-actions">
                         ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
-                        <button class="btn-small complete" onclick="completeTask(${task.id})">✓</button>
-                        <button class="btn-small edit" onclick="editTask(${task.id})">✏️</button>
+                        <button class="btn-small complete" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                        <button class="btn-small edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
                         <button class="btn-small copy" onclick="copyTask(${task.id})">📋</button>
-                        <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
+                        <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
                       </div>
                     </div>
                   `}).join('')}
@@ -14838,8 +14856,8 @@
                         <span class="category ${task.category}">${task.category}</span>
                       </div>
                       <div class="task-item-actions">
-                        <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})">↩️</button>
-                        <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
+                        <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})" aria-label="완료 되돌리기">↩️</button>
+                        <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
                       </div>
                     </div>
                   `).join('')}
@@ -14893,10 +14911,10 @@
                             </div>
                             <div class="all-task-actions">
                               ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
-                              <button class="btn-small complete" onclick="completeTask(${task.id})">✓</button>
-                              <button class="btn-small edit" onclick="editTask(${task.id})">✏️</button>
+                              <button class="btn-small complete" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                              <button class="btn-small edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
                               <button class="btn-small copy" onclick="copyTask(${task.id})">📋</button>
-                              <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
+                              <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
                             </div>
                           </div>
                         `;
@@ -14916,8 +14934,8 @@
                               <div class="all-task-title completed">${escapeHtml(task.title)}</div>
                             </div>
                             <div class="all-task-actions">
-                              <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})">↩️</button>
-                              <button class="btn-small delete" onclick="deleteTask(${task.id})">×</button>
+                              <button class="btn-small uncomplete" onclick="uncompleteTask(${task.id})" aria-label="완료 되돌리기">↩️</button>
+                              <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
                             </div>
                           </div>
                         `).join('')}
@@ -15412,6 +15430,15 @@
         const mode = getCurrentMode();
         modeTimeEl.textContent = getModeTimeRemaining(mode, hour, now);
       }
+
+      // 스크롤/포커스 복원
+      requestAnimationFrame(() => {
+        window.scrollTo(0, _scrollY);
+        if (_activeId) {
+          const el = document.getElementById(_activeId);
+          if (el) el.focus();
+        }
+      });
     }
 
     // ============================================
@@ -15595,7 +15622,7 @@
                           📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
                         </span>
                       ` : ''}
-                      <button class="work-general-delete-btn" onclick="deleteTask(${task.id})" title="삭제">×</button>
+                      <button class="work-general-delete-btn" onclick="deleteTask(${task.id})" title="삭제" aria-label="작업 삭제">×</button>
                     </div>
                     ${task.subtasks && task.subtasks.length > 0 && appState.expandedWorkGeneralSubtasks && appState.expandedWorkGeneralSubtasks[task.id] ? `
                       <div class="work-general-subtasks">
@@ -16673,12 +16700,12 @@
               </div>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button class="work-project-action-btn" onclick="copyProjectToSlack(${project.id})">💬 슬랙복사</button>
-              <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})">📋 복제</button>
-              <button class="work-project-action-btn" onclick="holdWorkProject(${project.id})">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
-              <button class="work-project-action-btn" onclick="archiveWorkProject(${project.id})">${project.archived ? '📤 복원' : '📦 보관'}</button>
-              <button class="work-project-action-btn" onclick="saveAsTemplate(${project.id})">💾 템플릿</button>
-              <button class="work-project-action-btn delete" onclick="deleteWorkProject(${project.id})">🗑️ 삭제</button>
+              <button class="work-project-action-btn" onclick="copyProjectToSlack(${project.id})" aria-label="슬랙에 복사">💬 슬랙복사</button>
+              <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})" aria-label="프로젝트 복제">📋 복제</button>
+              <button class="work-project-action-btn" onclick="holdWorkProject(${project.id})" aria-label="${project.onHold ? '프로젝트 재개' : '프로젝트 보류'}">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
+              <button class="work-project-action-btn" onclick="archiveWorkProject(${project.id})" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
+              <button class="work-project-action-btn" onclick="saveAsTemplate(${project.id})" aria-label="템플릿으로 저장">💾 템플릿</button>
+              <button class="work-project-action-btn delete" onclick="deleteWorkProject(${project.id})" aria-label="프로젝트 삭제">🗑️ 삭제</button>
             </div>
           </div>
 
@@ -16737,9 +16764,9 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="promptRenameStage(${project.id}, ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경">✏️</button>
-                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})" title="단계 일정 설정">📅</button>
-                      <button class="work-stage-add-task" onclick="deleteProjectStage(${project.id}, ${stageIdx})" title="단계 삭제" style="color: var(--danger);">🗑️</button>
+                      <button class="work-stage-add-task" onclick="promptRenameStage(${project.id}, ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">✏️</button>
+                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
+                      <button class="work-stage-add-task" onclick="deleteProjectStage(${project.id}, ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">🗑️</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', ${project.id}, ${stageIdx})">+ 중분류</button>
                     </div>
                   </div>
@@ -16771,7 +16798,7 @@
                           </div>
                           <div class="work-subcategory-actions">
                             <button class="work-task-action" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">✏️</button>
-                            <button class="work-task-action" onclick="showWorkModal('subcat-deadline', ${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 일정">📅</button>
+                            <button class="work-task-action" onclick="showWorkModal('subcat-deadline', ${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 일정" aria-label="중분류 일정 설정">📅</button>
                             <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">🗑️</button>
                             <button class="work-task-action" onclick="showWorkModal('task', ${project.id}, ${stageIdx}, ${subcatIdx})">+ 항목</button>
                           </div>
@@ -17070,9 +17097,9 @@
             ${deadlineHtml}
             <div class="work-task-actions">
               <button class="work-task-action" onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
-              <button class="work-task-action" onclick="promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정">📅</button>
-              <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">+ 기록</button>
-              <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" style="color: var(--danger);">🗑️</button>
+              <button class="work-task-action" onclick="promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정" aria-label="마감일 설정">📅</button>
+              <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" aria-label="기록 추가">+ 기록</button>
+              <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--danger);">🗑️</button>
             </div>
           </div>
           ${task.logs && task.logs.length > 0 ? `
@@ -17092,7 +17119,7 @@
                 }
                 otherLogs.forEach(log => {
                   const actualIdx = task.logs.indexOf(log);
-                  html += '<div class="work-task-log"><span class="work-task-log-date">' + log.date + '</span><span class="work-task-log-content">' + log.content + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(' + projectId + ', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')">×</button></div></div>';
+                  html += '<div class="work-task-log"><span class="work-task-log-date">' + log.date + '</span><span class="work-task-log-content">' + log.content + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(' + projectId + ', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button></div></div>';
                 });
                 return html;
               })()}
@@ -17205,11 +17232,11 @@
           const subcatData = project?.stages[stageIdx]?.subcategories[subcatIdx] || {};
           bodyHtml = `
             <div class="work-modal-field">
-              <label class="work-modal-label">${subcatData.name || '중분류'} 시작일</label>
+              <label class="work-modal-label">${escapeHtml(subcatData.name) || '중분류'} 시작일</label>
               <input type="date" class="work-modal-input" id="work-input-startdate" value="${subcatData.startDate || ''}">
             </div>
             <div class="work-modal-field">
-              <label class="work-modal-label">${subcatData.name || '중분류'} 종료일</label>
+              <label class="work-modal-label">${escapeHtml(subcatData.name) || '중분류'} 종료일</label>
               <input type="date" class="work-modal-input" id="work-input-deadline" value="${subcatData.endDate || ''}">
             </div>
           `;
@@ -17635,7 +17662,7 @@
       if (!project || !project.stages[stageIdx]) return;
 
       const stageName = project.stages[stageIdx].name;
-      if (!confirm(`"${stageName}" 단계를 삭제하시겠습니까?\n하위 중분류/작업도 모두 삭제됩니다.`)) return;
+      if (!confirm(`"${escapeHtml(stageName)}" 단계를 삭제하시겠습니까?\n하위 중분류/작업도 모두 삭제됩니다.`)) return;
 
       project.stages.splice(stageIdx, 1);
       if (project.currentStage >= project.stages.length) {
@@ -18005,6 +18032,7 @@
      * 로그 삭제
      */
     function deleteWorkLog(projectId, stageIdx, subcatIdx, taskIdx, logIdx) {
+      if (!confirm('이 기록을 삭제하시겠습니까?')) return;
       const project = appState.workProjects.find(p => p.id === projectId);
       if (!project) return;
 
@@ -18121,6 +18149,17 @@
         try {
           const registration = await navigator.serviceWorker.register('./sw.js');
           console.log('Service Worker 등록 성공:', registration.scope);
+          // SW 업데이트 감지 시 알림
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+                  showToast('앱이 업데이트되었습니다. 새로고침하면 반영됩니다.', 'success');
+                }
+              });
+            }
+          });
         } catch (error) {
           console.error('Service Worker 등록 실패:', error);
         }
@@ -18360,9 +18399,30 @@
     }
 
     /**
+     * 모달 포커스 트랩 - Tab 키가 모달 내부에서만 순환
+     */
+    function trapFocusInModal(modal, e) {
+      const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+
+    /**
      * 키보드 이벤트 핸들러
      */
     document.addEventListener('keydown', (e) => {
+      // Tab 키: 모달 포커스 트랩
+      if (e.key === 'Tab') {
+        const activeModal = document.querySelector('.modal-overlay') || document.querySelector('.work-modal.show');
+        if (activeModal) { trapFocusInModal(activeModal, e); return; }
+      }
+
       // Escape 키: 모달/드롭다운 닫기 (어디서든 동작)
       if (e.key === 'Escape') {
         if (appState.showSettings) { closeSettings(); render(); return; }
@@ -18681,8 +18741,18 @@
       }
     }
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('online', () => {
+      updateOnlineStatus();
+      // 온라인 복귀 시 자동 동기화
+      if (appState.user) {
+        showToast('온라인 복귀 - 동기화 중...', 'success');
+        syncToFirebase();
+      }
+    });
+    window.addEventListener('offline', () => {
+      updateOnlineStatus();
+      showToast('오프라인 모드 - 변경사항은 기기에 저장됩니다', 'warning');
+    });
     updateOnlineStatus();
 
     // 페이지 종료 시 즉시 저장 (디바운스된 저장이 남아있을 수 있음)

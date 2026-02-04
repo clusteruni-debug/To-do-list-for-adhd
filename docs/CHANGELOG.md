@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 8 - 추가 개선)
+
+### 작업 내용
+- **XSS 잔여 3곳 수정**: subcatData.name, sub.name, stageName confirm에 escapeHtml 적용
+- **접근성 대폭 강화**:
+  - 65개 aria-label 추가 (삭제, 완료, 편집, 미루기, 탭, 더보기 메뉴 등)
+  - 더보기 메뉴에 role="menu"/menuitem, aria-expanded, aria-haspopup 추가
+  - 모달 포커스 트랩 구현 (Tab 키 모달 내부 순환)
+- **renderStatic 스크롤/포커스 보존**: 렌더링 후 스크롤 위치 + 포커스 자동 복원
+- **Firebase 오프라인/온라인 피드백**:
+  - 동기화 시작 시 인디케이터 즉시 업데이트
+  - 온라인 복귀 시 자동 동기화 + 토스트 알림
+  - 오프라인 전환 시 경고 토스트
+- **삭제 안전성**: deleteWorkLog에 confirm 추가
+- **터치 타겟 보장**: btn-small(44px), work-task-action(44px), work-task-log-action(36px)
+- **PWA 개선**: SW v6.3, 앱 업데이트 감지 토스트 추가
+- **색상 대비 개선**: 다크모드 text-muted #707078 → #8a8a92, 라이트모드 #9aa0a6 → #72787e
+
+### 이슈/메모
+- 수정 파일: navigator-v5.html, sw.js, docs/CHANGELOG.md
+- DB 변경: 없음
+
+---
+
 ## [2026-02-05] (세션 8)
 
 ### 작업 내용
