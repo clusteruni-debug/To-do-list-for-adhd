@@ -3941,6 +3941,16 @@
       margin-left: 8px;
     }
 
+    /* 보류 뱃지 */
+    .work-onhold-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+      border-radius: 8px;
+      margin-left: 8px;
+    }
+
     /* 뷰 전환 탭 */
     .work-view-tabs {
       display: flex;
@@ -14910,10 +14920,13 @@
         });
       };
 
-      // 활성 프로젝트를 3가지로 분류 (최근 활동순 정렬)
-      const inProgressProjects = sortByRecent(activeProjects.filter(p => p.deadline && !isProjectCompleted(p)));
-      const completedProjects = sortByRecent(activeProjects.filter(p => isProjectCompleted(p)));
-      const noDeadlineProjects = sortByRecent(activeProjects.filter(p => !p.deadline && !isProjectCompleted(p)));
+      // 보류 프로젝트 분리
+      const onHoldProjects = sortByRecent(activeProjects.filter(p => p.onHold));
+
+      // 활성 프로젝트를 3가지로 분류 (최근 활동순 정렬, 보류 제외)
+      const inProgressProjects = sortByRecent(activeProjects.filter(p => !p.onHold && p.deadline && !isProjectCompleted(p)));
+      const completedProjects = sortByRecent(activeProjects.filter(p => !p.onHold && isProjectCompleted(p)));
+      const noDeadlineProjects = sortByRecent(activeProjects.filter(p => !p.onHold && !p.deadline && !isProjectCompleted(p)));
 
       if (appState.workProjects.length === 0) {
         return `
@@ -15028,6 +15041,19 @@
                 ` : ''}
               </div>
             ` : ''}
+            ${onHoldProjects.length > 0 ? `
+              <div class="work-section collapsible" style="margin-top: 20px;">
+                <div class="work-section-title clickable" style="color: #f5576c;" onclick="toggleWorkSection('onHold')">
+                  <span class="work-section-toggle">${appState.workSectionExpanded?.onHold ? '▼' : '▶'}</span>
+                  ⏸ 보류 (${onHoldProjects.length})
+                </div>
+                ${appState.workSectionExpanded?.onHold ? `
+                  <div class="work-dashboard">
+                    ${onHoldProjects.map(p => renderWorkDashboardCard(p)).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
             ${completedProjects.length > 0 ? `
               <div class="work-section collapsible" style="margin-top: 20px;">
                 <div class="work-section-title clickable" style="color: var(--success);" onclick="toggleWorkSection('completed')">
@@ -15065,6 +15091,13 @@
                 ${noDeadlineProjects.length > 0 ? `
                   <optgroup label="📋 마감없음">
                     ${noDeadlineProjects.map(p => `
+                      <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
+                    `).join('')}
+                  </optgroup>
+                ` : ''}
+                ${onHoldProjects.length > 0 ? `
+                  <optgroup label="⏸ 보류">
+                    ${onHoldProjects.map(p => `
                       <option value="${p.id}" ${p.id === appState.activeWorkProject ? 'selected' : ''}>${p.name}</option>
                     `).join('')}
                   </optgroup>
@@ -15743,6 +15776,7 @@
             <div class="work-dashboard-name">
               ${project.name}
               ${project.archived ? '<span class="work-archived-badge">아카이브</span>' : ''}
+              ${project.onHold ? '<span class="work-onhold-badge">보류</span>' : ''}
             </div>
             ${project.deadline ? `
               <span class="work-deadline ${deadlineClass}">${deadlineText}</span>
@@ -15838,6 +15872,7 @@
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})">📋 복제</button>
+              <button class="work-project-action-btn" onclick="holdWorkProject(${project.id})">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
               <button class="work-project-action-btn" onclick="archiveWorkProject(${project.id})">${project.archived ? '📤 복원' : '📦 보관'}</button>
               <button class="work-project-action-btn" onclick="saveAsTemplate(${project.id})">💾 템플릿</button>
               <button class="work-project-action-btn delete" onclick="deleteWorkProject(${project.id})">🗑️ 삭제</button>
@@ -16038,6 +16073,22 @@
       showToast(project.archived ? '아카이브됨' : '아카이브 해제됨', 'success');
     }
     window.archiveWorkProject = archiveWorkProject;
+
+    /**
+     * 프로젝트 보류 토글
+     */
+    function holdWorkProject(projectId) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      project.onHold = !project.onHold;
+      project.updatedAt = new Date().toISOString();
+
+      saveWorkProjects();
+      renderStatic();
+      showToast(project.onHold ? '보류 처리됨' : '보류 해제됨', 'success');
+    }
+    window.holdWorkProject = holdWorkProject;
 
     /**
      * 템플릿으로 저장
