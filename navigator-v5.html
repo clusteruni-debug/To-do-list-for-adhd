@@ -3731,6 +3731,31 @@
       gap: 8px;
     }
 
+    /* 중분류 체크박스 */
+    .work-subcategory-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-subcategory-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-subcategory-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
     .work-subcategory-name {
       cursor: pointer;
       padding: 2px 6px;
@@ -16194,8 +16219,8 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})" title="단계 일정 설정">📅</button>
                       <button class="work-stage-add-task" onclick="promptRenameStage(${project.id}, ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경">✏️</button>
+                      <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', ${project.id}, ${stageIdx})" title="단계 일정 설정">📅</button>
                       <button class="work-stage-add-task" onclick="deleteProjectStage(${project.id}, ${stageIdx})" title="단계 삭제" style="color: var(--danger);">🗑️</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', ${project.id}, ${stageIdx})">+ 중분류</button>
                     </div>
@@ -16206,7 +16231,11 @@
                       <div class="work-subcategory">
                         <div class="work-subcategory-header">
                           <div class="work-subcategory-title">
-                            📁 <span class="work-subcategory-name" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${subcat.name}</span>
+                            <div class="work-subcategory-checkbox ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? 'checked' : ''}"
+                                 onclick="toggleSubcategoryComplete(${project.id}, ${stageIdx}, ${subcatIdx})">
+                              ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? '✓' : ''}
+                            </div>
+                            <span class="work-subcategory-name" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${subcat.name}</span>
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
@@ -16225,8 +16254,8 @@
                           <div class="work-subcategory-actions">
                             <button class="work-task-action" onclick="promptRenameSubcategory(${project.id}, ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">✏️</button>
                             <button class="work-task-action" onclick="showWorkModal('subcat-deadline', ${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 일정">📅</button>
+                            <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">🗑️</button>
                             <button class="work-task-action" onclick="showWorkModal('task', ${project.id}, ${stageIdx}, ${subcatIdx})">+ 항목</button>
-                            <button class="work-task-action" onclick="deleteSubcategory(${project.id}, ${stageIdx}, ${subcatIdx})">삭제</button>
                           </div>
                         </div>
                         ${subcat.tasks.length > 0 ? `
@@ -16508,6 +16537,11 @@
       return `
         <div class="work-task-item">
           <div class="work-task-header">
+            <div class="work-task-checkbox ${task.status === 'completed' ? 'checked' : ''}"
+                 onclick="toggleWorkTaskComplete(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})"
+                 title="완료 체크">
+              ${task.status === 'completed' ? '✓' : ''}
+            </div>
             <span class="work-status-badge ${task.status}" onclick="cycleWorkTaskStatus(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})"
                   title="클릭하여 상태 변경">
               ${statusInfo.label}
@@ -16517,10 +16551,10 @@
                   title="클릭하여 이름 변경">${task.title}</span>
             ${deadlineHtml}
             <div class="work-task-actions">
-              <button class="work-task-action" onclick="promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정">📅</button>
               <button class="work-task-action" onclick="promptRenameWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
+              <button class="work-task-action" onclick="promptTaskDeadline(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정">📅</button>
               <button class="work-task-action" onclick="showWorkModal('log', ${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">+ 기록</button>
-              <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})">삭제</button>
+              <button class="work-task-action" onclick="deleteWorkTask(${projectId}, ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" style="color: var(--danger);">🗑️</button>
             </div>
           </div>
           ${task.logs && task.logs.length > 0 ? `
@@ -17342,6 +17376,65 @@
       renderStatic();
     }
     window.cycleWorkTaskStatus = cycleWorkTaskStatus;
+
+    /**
+     * 소분류 완료 체크박스 토글 (완료↔미시작)
+     */
+    function toggleWorkTaskComplete(projectId, stageIdx, subcatIdx, taskIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const task = project.stages[stageIdx].subcategories[subcatIdx].tasks[taskIdx];
+      const wasCompleted = task.status === 'completed';
+      task.status = wasCompleted ? 'not-started' : 'completed';
+
+      // 완료로 변경 시 자동 로그
+      if (!wasCompleted) {
+        const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+        task.logs.push({ date: today, content: '✓ 완료' });
+      }
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(wasCompleted ? '미시작으로 변경' : '완료!', 'success');
+    }
+    window.toggleWorkTaskComplete = toggleWorkTaskComplete;
+
+    /**
+     * 중분류 완료 체크박스 토글 (하위 전체 완료↔미시작)
+     */
+    function toggleSubcategoryComplete(projectId, stageIdx, subcatIdx) {
+      const project = appState.workProjects.find(p => p.id === projectId);
+      if (!project) return;
+
+      const subcat = project.stages[stageIdx].subcategories[subcatIdx];
+      if (!subcat || subcat.tasks.length === 0) {
+        showToast('항목이 없습니다', 'warning');
+        return;
+      }
+
+      // 모두 완료이면 → 전부 미시작, 아니면 → 전부 완료
+      const allCompleted = subcat.tasks.every(t => t.status === 'completed');
+      const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+
+      subcat.tasks.forEach(task => {
+        if (allCompleted) {
+          task.status = 'not-started';
+        } else {
+          if (task.status !== 'completed') {
+            task.status = 'completed';
+            task.logs.push({ date: today, content: '✓ 완료' });
+          }
+        }
+      });
+
+      project.updatedAt = new Date().toISOString();
+      saveWorkProjects();
+      renderStatic();
+      showToast(allCompleted ? '중분류 전체 미시작으로 변경' : '중분류 전체 완료!', 'success');
+    }
+    window.toggleSubcategoryComplete = toggleSubcategoryComplete;
 
     /**
      * 작업 삭제

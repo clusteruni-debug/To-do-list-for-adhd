@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## [2026-02-04] (세션 6)
+
+### 작업 내용
+- **중분류/소분류 완료 체크박스 추가**
+  - 소분류(Task): status badge 앞에 체크박스 추가, 클릭 시 완료↔미시작 직접 토글
+  - 중분류(Subcategory): 📁 아이콘 → 체크박스로 교체, 하위 task 전체 완료면 자동 checked
+  - `toggleWorkTaskComplete()`, `toggleSubcategoryComplete()` 함수 추가
+  - `.work-subcategory-checkbox` CSS 추가 (기존 `.work-task-checkbox` 활용)
+
+- **본업 섹션 버튼 순서 통일**
+  - 대분류: 📅✏️🗑️ → ✏️📅🗑️ 순서로 변경
+  - 중분류: 텍스트 '삭제' → 🗑️ 아이콘 + 빨간색 통일
+  - 소분류: 📅✏️ → ✏️📅 순서, 텍스트 '삭제' → 🗑️ 통일
+  - 전 계층 ✏️→📅→🗑️→[추가] 순서 통일
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html` (단일 파일)
+- DB 변경: 없음
+
+### 다음에 할 것
+- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
+- SVG 아이콘 교체 (P2)
+- 접근성 개선 (P2)
+- 포모도로 통합 (P2)
+
 ## [2026-02-04] (세션 5)
 
 ### 작업 내용
@@ -22,9 +47,20 @@
   - 템플릿 없을 때 안내 메시지 표시
   - 템플릿 이름에 escapeHtml 적용 (XSS 방지)
 
+- **git history 보안 정리**
+  - 공개 레포에 노출된 내부 업무 용어 전수 제거
+  - 코드, 커밋 메시지, CHANGELOG, ROADMAP 등 전체 대상
+  - `workProjectStages` 기본값 일반화 (준비/설계/진행/점검/실행/마무리)
+  - 참여자 UI 라벨 일반화
+  - `navigator-backup-fixed.json` git 추적 제거 + .gitignore 추가
+  - `git rebase` + `force push`로 과거 커밋 history 완전 정리
+  - GitHub에서 이전 커밋 접근 불가(404) 확인 완료
+
 ### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
+- 수정 파일: `navigator-v5.html`, `ROADMAP.md`, `docs/CHANGELOG.md`, `.gitignore`
 - DB 변경: 없음
+- 사용자 데이터(Firebase/localStorage)는 UID 기반 비공개로 안전
+
 ### 다음에 할 것
 - 다른 기능의 UTC 날짜 사용 부분도 점검 필요
 - SVG 아이콘 교체 (P2)
