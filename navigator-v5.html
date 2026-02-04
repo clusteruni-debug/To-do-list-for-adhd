@@ -8191,6 +8191,7 @@
       if (removed > 0) {
         console.log(`[cleanup] 오래된 완료 태스크 ${removed}개 정리됨`);
       }
+      return removed;
     }
 
     // ============================================
@@ -8485,6 +8486,7 @@
 
     let unsubscribeSnapshot = null;
     let isSyncing = false;
+    let pendingSync = false; // 동기화 중 추가 변경 발생 시 재동기화 예약
     let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
 
@@ -8558,9 +8560,20 @@
 
       try {
         showToast('🔄 동기화 갱신 중...', 'info');
-        // 로컬 변경사항 먼저 저장
-        saveStateImmediate();
-        // 클라우드에서 가져와 병합
+        // 로컬 변경사항을 localStorage에만 저장 (Firebase는 loadFromFirebase에서 처리)
+        if (saveStateTimeout) {
+          clearTimeout(saveStateTimeout);
+          saveStateTimeout = null;
+        }
+        localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
+        localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+        localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+        localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+        localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
+        localStorage.setItem('navigator-theme', appState.theme);
+        // 클라우드에서 가져와 병합 후 업로드 (loadFromFirebase 내에서 syncToFirebase 호출)
         await loadFromFirebase();
         recomputeTodayStats();
         renderStatic();
@@ -8576,10 +8589,17 @@
      * Firebase에 데이터 저장
      */
     async function syncToFirebase() {
-      if (!appState.user || isSyncing) return;
+      if (!appState.user) return;
+
+      // 동기화 중이면 다음 동기화 예약 (변경사항 누락 방지)
+      if (isSyncing) {
+        pendingSync = true;
+        return;
+      }
 
       try {
         isSyncing = true;
+        pendingSync = false;
         appState.syncStatus = 'syncing';
 
         const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
@@ -8614,6 +8634,11 @@
         updateSyncIndicator();
       } finally {
         isSyncing = false;
+        // 동기화 중 추가 변경이 있었으면 재동기화
+        if (pendingSync) {
+          pendingSync = false;
+          syncToFirebase();
+        }
       }
     }
 
@@ -8716,7 +8741,8 @@
               today: cloudCount >= localCount ? cloudToday : localToday,
               settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
             };
-            saveLifeRhythm();
+            // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
+            localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
           }
           // 주간 계획 병합
           if (data.weeklyPlan) {
@@ -8821,16 +8847,20 @@
                 today: cloudCount >= localCount ? cloudToday : localToday,
                 settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
               };
-              saveLifeRhythm();
+              // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
+              localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
             }
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
+              localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
             }
             if (data.shuttleSuccess !== undefined) {
               appState.shuttleSuccess = data.shuttleSuccess;
+              localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
             }
             if (data.theme) {
               appState.theme = data.theme;
+              localStorage.setItem('navigator-theme', appState.theme);
             }
 
             appState.lastSyncTime = cloudUpdated;
@@ -8838,7 +8868,11 @@
 
             // 오늘 통계 재계산 + 오래된 완료 태스크 정리
             recomputeTodayStats();
-            cleanupOldCompletedTasks();
+            const cleanedCount = cleanupOldCompletedTasks();
+            // cleanup으로 태스크가 제거되었으면 localStorage에 반영
+            if (cleanedCount > 0) {
+              localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
+            }
 
             renderStatic();
             updateSyncIndicator();
