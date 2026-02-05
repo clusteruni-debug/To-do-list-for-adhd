@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## [2026-02-06] (세션 14)
+
+### 작업 내용
+- **Soft-Delete 동기화 버그 수정 (P0)**
+  - `appState.deletedIds`: 삭제된 항목의 ID+시각 추적 (tasks, workProjects, templates, workTemplates)
+  - `mergeTasks()`, `mergeById()`: deletedIds 매개변수 추가, 삭제 항목 병합 제외
+  - `mergeDeletedIds()`: 로컬+클라우드 삭제 기록 합집합 병합
+  - `cleanupOldDeletedIds()`: 30일 이상 된 삭제 기록 자동 정리
+  - `deleteTask()`, `deleteTemplate()`, `deleteWorkProject()`: 삭제 시 deletedIds에 기록
+  - `_doSyncToFirebase()`: Firebase에 deletedIds 업로드
+  - `loadFromFirebase()`, `startRealtimeSync()`: deletedIds 병합 후 merge에 전달
+  - `_doSaveState()`, `loadState()`: localStorage에 deletedIds 저장/로드
+  - **효과**: 기기 A에서 삭제 → 기기 B 동기화 시 부활하지 않음
+
+- **startRealtimeSync localStorage 누락 수정 (P0)**
+  - settings, streak, templates, availableTags의 localStorage 저장 추가
+  - 앱 재시작 시 병합 결과 유실 방지
+
+- **점심약 ADHD/영양제 분리 완전 수정 (P1)**
+  - `restoreFromSyncBackup()`: 백업 복원 시 med_afternoon 마이그레이션 추가
+  - `loadFromFirebase()`, `startRealtimeSync()`: settings 병합 시 medicationSlots 로컬 우선 보호
+  - 클라우드의 옛 슬롯 정의가 분리된 슬롯을 덮어쓰는 문제 해결
+
+- **completionLog 이전 기록 수정/삭제 기능 (P1)**
+  - `editCompletionLogEntry()`: prompt 기반 제목/카테고리/시간/수익 수정
+  - `deleteCompletionLogEntry()`: confirm 후 기록 삭제
+  - `renderDayDetail()`: completionLog 항목에 ✏️/❌ 버튼 추가
+  - `getCompletedTasksByDate()`: logIndex 필드 추가 (수정/삭제 대상 인덱스)
+
+- **기타 수정**
+  - `_doSaveState()`: commuteTracker 중복 저장 제거
+  - `_doSaveState()`: streak, templates localStorage 저장 누락 추가
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- DB 변경: Firebase users 문서에 `deletedIds` 필드 추가
+- 검증: 기기 간 삭제 동기화, 점심약 슬롯 2개 표시, 과거 기록 수정/삭제
+
+---
+
 ## [2026-02-05] (세션 13)
 
 ### 작업 내용

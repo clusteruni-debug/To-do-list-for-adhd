@@ -9345,7 +9345,15 @@
       lastSyncTime: null,               // 마지막 동기화 시간
       // 태스크 완료 영구 기록 (날짜별)
       // { "2026-02-05": [{ t, c, at, r?, rv?, st? }], ... }
-      completionLog: {}
+      completionLog: {},
+      // Soft-Delete 추적: 삭제된 항목의 ID + 삭제 시각 기록
+      // 다른 기기에서 동기화 시 "로컬에만 있음 = 새 항목" 오판 방지
+      deletedIds: {
+        tasks: {},          // { "task-uuid": "2026-02-05T..." }
+        workProjects: {},
+        templates: {},
+        workTemplates: {}
+      }
     };
 
     // ============================================
@@ -9426,6 +9434,12 @@
         loadCompletionLog();
         compactOldCompletionLog();
 
+        // Soft-Delete 추적 데이터 로드
+        const parsedDeletedIds = safeParseJSON('navigator-deleted-ids', null);
+        if (parsedDeletedIds) appState.deletedIds = parsedDeletedIds;
+        // 30일 이상 된 deletedIds 자동 정리
+        cleanupOldDeletedIds();
+
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
 
@@ -9477,8 +9491,9 @@
         localStorage.setItem('navigator-theme', appState.theme);
         localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
         localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
         localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
-          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
 
         // 본업 프로젝트 저장
         localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
@@ -9489,6 +9504,9 @@
 
         // 완료 기록 영구 로그 저장
         localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+
+        // Soft-Delete 추적 데이터 저장
+        localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
 
         // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
@@ -9717,6 +9735,7 @@
           weeklyPlan: appState.weeklyPlan,
           shuttleSuccess: appState.shuttleSuccess,
           theme: appState.theme,
+          deletedIds: appState.deletedIds,
           lastUpdated: new Date().toISOString()
         });
 
@@ -9755,13 +9774,18 @@
      * - 같은 ID: updatedAt이 더 최신인 쪽을 사용
      * - 한쪽에만 있는 태스크: 그대로 보존
      */
-    function mergeTasks(localTasks, cloudTasks) {
+    function mergeTasks(localTasks, cloudTasks, deletedIds) {
+      // deletedIds가 없으면 appState에서 가져오기
+      const deleted = deletedIds || (appState.deletedIds && appState.deletedIds.tasks) || {};
       const localMap = new Map(localTasks.map(t => [t.id, t]));
       const cloudMap = new Map(cloudTasks.map(t => [t.id, t]));
       const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
       const merged = [];
 
       for (const id of allIds) {
+        // Soft-Delete: 삭제 기록이 있으면 병합에서 제외 (부활 방지)
+        if (deleted[id]) continue;
+
         const local = localMap.get(id);
         const cloud = cloudMap.get(id);
 
@@ -9786,13 +9810,17 @@
      * - 양쪽 다 있으면 updatedAt이 더 최신인 쪽 사용
      * workProjects, templates, workTemplates 등에 사용
      */
-    function mergeById(localArr, cloudArr) {
+    function mergeById(localArr, cloudArr, deletedIds) {
+      const deleted = deletedIds || {};
       const localMap = new Map((localArr || []).map(p => [p.id, p]));
       const cloudMap = new Map((cloudArr || []).map(p => [p.id, p]));
       const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
       const merged = [];
 
       for (const id of allIds) {
+        // Soft-Delete: 삭제 기록이 있으면 병합에서 제외 (부활 방지)
+        if (deleted[id]) continue;
+
         const local = localMap.get(id);
         const cloud = cloudMap.get(id);
 
@@ -9808,6 +9836,39 @@
       }
 
       return merged;
+    }
+
+    /**
+     * deletedIds 병합: 로컬 + 클라우드 양쪽의 삭제 기록을 합침
+     * 한쪽에서 삭제한 항목은 다른 쪽에서도 삭제 유지
+     */
+    function mergeDeletedIds(local, cloud) {
+      const merged = {};
+      const types = new Set([...Object.keys(local || {}), ...Object.keys(cloud || {})]);
+      for (const type of types) {
+        merged[type] = { ...(local[type] || {}), ...(cloud[type] || {}) };
+      }
+      return merged;
+    }
+
+    /**
+     * 30일 이상 된 deletedIds 항목 자동 정리 (앱 시작 시 호출)
+     */
+    function cleanupOldDeletedIds() {
+      const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000; // 30일 전
+      let cleaned = 0;
+      for (const type of Object.keys(appState.deletedIds)) {
+        const ids = appState.deletedIds[type];
+        for (const id of Object.keys(ids)) {
+          if (new Date(ids[id]).getTime() < cutoff) {
+            delete ids[id];
+            cleaned++;
+          }
+        }
+      }
+      if (cleaned > 0) {
+        console.log(`[deletedIds] ${cleaned}개 오래된 삭제 기록 정리`);
+      }
     }
 
     /**
@@ -9910,7 +9971,34 @@
         if (backup.workTemplates) appState.workTemplates = backup.workTemplates;
         if (backup.templates) appState.templates = backup.templates;
         if (backup.settings) appState.settings = { ...appState.settings, ...backup.settings };
-        if (backup.lifeRhythm) appState.lifeRhythm = backup.lifeRhythm;
+        if (backup.lifeRhythm) {
+          // 복원된 lifeRhythm에 med_afternoon → med_afternoon_adhd 마이그레이션
+          if (backup.lifeRhythm.today?.medications?.med_afternoon !== undefined) {
+            backup.lifeRhythm.today.medications.med_afternoon_adhd = backup.lifeRhythm.today.medications.med_afternoon;
+            delete backup.lifeRhythm.today.medications.med_afternoon;
+          }
+          if (backup.lifeRhythm.history) {
+            for (const date of Object.keys(backup.lifeRhythm.history)) {
+              const meds = backup.lifeRhythm.history[date]?.medications;
+              if (meds?.med_afternoon !== undefined) {
+                meds.med_afternoon_adhd = meds.med_afternoon;
+                delete meds.med_afternoon;
+              }
+            }
+          }
+          // medicationSlots 마이그레이션: med_afternoon → ADHD약 + 영양제 2개
+          const slots = backup.lifeRhythm.settings?.medicationSlots;
+          if (slots) {
+            const oldIdx = slots.findIndex(s => s.id === 'med_afternoon');
+            if (oldIdx !== -1) {
+              slots.splice(oldIdx, 1,
+                { id: 'med_afternoon_adhd', label: 'ADHD약(점심)', icon: '💊', required: true },
+                { id: 'med_afternoon_nutrient', label: '영양제(점심)', icon: '🌿', required: false }
+              );
+            }
+          }
+          appState.lifeRhythm = backup.lifeRhythm;
+        }
         if (backup.availableTags) appState.availableTags = backup.availableTags;
         if (backup.streak) appState.streak = backup.streak;
         if (backup.completionLog) appState.completionLog = backup.completionLog;
@@ -10003,11 +10091,14 @@
         if (docSnap.exists()) {
           const data = docSnap.data();
 
+          // Soft-Delete: 삭제 기록 병합 (merge 전에 수행해야 삭제된 항목 필터링 가능)
+          appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
+
           const cloudTasks = validateTasks(data.tasks || []);
           const localTasks = appState.tasks || [];
 
-          // 태스크별 타임스탬프 기반 병합
-          appState.tasks = mergeTasks(localTasks, cloudTasks);
+          // 태스크별 타임스탬프 기반 병합 (deletedIds 전달하여 삭제 항목 제외)
+          appState.tasks = mergeTasks(localTasks, cloudTasks, appState.deletedIds.tasks);
 
           if (data.settings) {
             appState.settings = { ...appState.settings, ...data.settings };
@@ -10023,21 +10114,21 @@
                 ? appState.streak.current : cloudStreak.current
             };
           }
-          // 템플릿: ID 기반 병합 (덮어쓰기 방지)
-          appState.templates = mergeById(appState.templates, data.templates);
+          // 템플릿: ID 기반 병합 (deletedIds 전달)
+          appState.templates = mergeById(appState.templates, data.templates, appState.deletedIds.templates);
           if (data.availableTags) {
             // 태그 병합 (양쪽 합집합)
             const mergedTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
             appState.availableTags = mergedTags;
           }
-          // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
-          appState.workProjects = mergeById(appState.workProjects, data.workProjects);
+          // 본업 프로젝트: ID 기반 병합 (deletedIds 전달)
+          appState.workProjects = mergeById(appState.workProjects, data.workProjects, appState.deletedIds.workProjects);
           if (appState.workProjects.length > 0 && !appState.activeWorkProject) {
             const activeProject = appState.workProjects.find(p => !p.archived);
             appState.activeWorkProject = activeProject ? activeProject.id : null;
           }
-          // 본업 템플릿: ID 기반 병합 (덮어쓰기 방지)
-          appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates);
+          // 본업 템플릿: ID 기반 병합 (deletedIds 전달)
+          appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates, appState.deletedIds.workTemplates);
           // 라이프 리듬 병합 (히스토리 필드별 병합, 오늘 데이터도 필드별)
           if (data.lifeRhythm) {
             const cloudRhythm = data.lifeRhythm;
@@ -10068,11 +10159,16 @@
               sleep: localToday.sleep || cloudToday.sleep || null,
               medications: mergedMeds
             };
+            // settings 병합 시 medicationSlots는 로컬 우선 (마이그레이션 결과 보호)
+            const mergedRhythmSettings = { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) };
+            if (localRhythm.settings?.medicationSlots) {
+              mergedRhythmSettings.medicationSlots = localRhythm.settings.medicationSlots;
+            }
             appState.lifeRhythm = {
               ...localRhythm,
               history: mergedHistory,
               today: mergedToday,
-              settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
+              settings: mergedRhythmSettings
             };
             // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
             localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
@@ -10110,12 +10206,15 @@
           // 로컬에도 저장
           localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
           localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+          localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+          localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
           localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
           localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
           localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
           localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
           localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
           localStorage.setItem('navigator-theme', appState.theme);
+          localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
 
           appState.syncStatus = 'synced';
 
@@ -10156,14 +10255,20 @@
 
           // 클라우드가 더 최신이면 업데이트
           if (!localUpdated || cloudUpdated > localUpdated) {
+            // Soft-Delete: 삭제 기록 병합 (merge 전에 수행)
+            if (data.deletedIds) {
+              appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
+              localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+            }
             if (data.tasks) {
-              // 태스크별 병합 (덮어쓰기 대신)
+              // 태스크별 병합 (deletedIds 전달하여 삭제 항목 제외)
               const cloudTasks = validateTasks(data.tasks);
-              appState.tasks = mergeTasks(appState.tasks, cloudTasks);
+              appState.tasks = mergeTasks(appState.tasks, cloudTasks, appState.deletedIds.tasks);
               localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
             }
             if (data.settings) {
               appState.settings = { ...appState.settings, ...data.settings };
+              localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
             }
             if (data.streak) {
               const cloudStreak = data.streak;
@@ -10174,17 +10279,20 @@
                 current: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
                   ? appState.streak.current : cloudStreak.current
               };
+              localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
             }
-            // 템플릿: ID 기반 병합 (덮어쓰기 방지)
-            appState.templates = mergeById(appState.templates, data.templates);
+            // 템플릿: ID 기반 병합 (deletedIds 전달)
+            appState.templates = mergeById(appState.templates, data.templates, appState.deletedIds.templates);
+            localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
             if (data.availableTags) {
               appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
+              localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
             }
-            // 본업 프로젝트: ID 기반 병합 (덮어쓰기 방지)
-            appState.workProjects = mergeById(appState.workProjects, data.workProjects);
+            // 본업 프로젝트: ID 기반 병합 (deletedIds 전달)
+            appState.workProjects = mergeById(appState.workProjects, data.workProjects, appState.deletedIds.workProjects);
             localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-            // 본업 템플릿: ID 기반 병합 (덮어쓰기 방지)
-            appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates);
+            // 본업 템플릿: ID 기반 병합 (deletedIds 전달)
+            appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates, appState.deletedIds.workTemplates);
             localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
             // 라이프 리듬 병합 (필드별)
             if (data.lifeRhythm) {
@@ -10214,11 +10322,16 @@
                 sleep: localToday.sleep || cloudToday.sleep || null,
                 medications: mergedMedsRT
               };
+              // settings 병합 시 medicationSlots는 로컬 우선 (마이그레이션 결과 보호)
+              const mergedRhythmSettingsRT = { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) };
+              if (localRhythm.settings?.medicationSlots) {
+                mergedRhythmSettingsRT.medicationSlots = localRhythm.settings.medicationSlots;
+              }
               appState.lifeRhythm = {
                 ...localRhythm,
                 history: mergedHistory,
                 today: mergedToday,
-                settings: { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) }
+                settings: mergedRhythmSettingsRT
               };
               // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
               localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
@@ -10832,7 +10945,7 @@
 
       // 1. completionLog에서 조회 (영구 기록)
       const logEntries = (appState.completionLog || {})[dateStr] || [];
-      logEntries.forEach(e => {
+      logEntries.forEach((e, idx) => {
         const key = e.t + '|' + e.at;
         if (!seen.has(key)) {
           seen.add(key);
@@ -10843,7 +10956,8 @@
             repeatType: e.r || null,
             expectedRevenue: e.rv || 0,
             estimatedTime: 0,
-            fromLog: true
+            fromLog: true,
+            logIndex: idx  // completionLog 내 원래 인덱스 (수정/삭제용)
           });
         }
       });
@@ -11058,6 +11172,62 @@
     }
 
     /**
+     * completionLog 항목 수정 (과거 완료 기록 수정)
+     */
+    function editCompletionLogEntry(dateStr, index) {
+      const entries = (appState.completionLog || {})[dateStr];
+      if (!entries || !entries[index]) return;
+      const entry = entries[index];
+
+      const newTitle = prompt('제목:', entry.t);
+      if (newTitle === null) return; // 취소
+      if (!newTitle.trim()) { showToast('제목을 입력해주세요', 'error'); return; }
+
+      const categories = ['본업', '부업', '일상', '가족'];
+      const catIdx = prompt(`카테고리 (1:본업, 2:부업, 3:일상, 4:가족):\n현재: ${entry.c}`, String(categories.indexOf(entry.c) + 1));
+      if (catIdx === null) return;
+      const newCat = categories[parseInt(catIdx) - 1] || entry.c;
+
+      const newTime = prompt('완료 시간 (HH:MM):', entry.at);
+      if (newTime === null) return;
+
+      const newRevenue = prompt('수익 (원, 없으면 0):', String(entry.rv || 0));
+      if (newRevenue === null) return;
+
+      // 업데이트 적용
+      entry.t = newTitle.trim();
+      entry.c = newCat;
+      if (newTime.match(/^\d{2}:\d{2}$/)) entry.at = newTime;
+      entry.rv = parseInt(newRevenue) || 0;
+
+      saveState();
+      recomputeTodayStats();
+      renderStatic();
+      showToast('기록이 수정되었습니다', 'success');
+    }
+    window.editCompletionLogEntry = editCompletionLogEntry;
+
+    /**
+     * completionLog 항목 삭제 (과거 완료 기록 삭제)
+     */
+    function deleteCompletionLogEntry(dateStr, index) {
+      const entries = (appState.completionLog || {})[dateStr];
+      if (!entries || !entries[index]) return;
+
+      if (!confirm(`"${entries[index].t}" 기록을 삭제하시겠습니까?`)) return;
+
+      entries.splice(index, 1);
+      // 해당 날짜에 기록이 0개면 날짜 키 자체 제거
+      if (entries.length === 0) delete appState.completionLog[dateStr];
+
+      saveState();
+      recomputeTodayStats();
+      renderStatic();
+      showToast('기록이 삭제되었습니다', 'success');
+    }
+    window.deleteCompletionLogEntry = deleteCompletionLogEntry;
+
+    /**
      * 선택된 날짜의 상세 정보 렌더링
      */
     function renderDayDetail() {
@@ -11128,7 +11298,16 @@
                         ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                       </div>
                     </div>
-                    <div class="day-task-status">✅</div>
+                    ${task.fromLog && task.logIndex !== undefined ? `
+                      <div class="day-task-actions" style="display:flex;gap:4px;align-items:center;">
+                        <button onclick="editCompletionLogEntry('${selectedDate}', ${task.logIndex})"
+                          style="background:none;border:none;cursor:pointer;padding:4px;font-size:14px;"
+                          aria-label="기록 수정" title="수정">✏️</button>
+                        <button onclick="deleteCompletionLogEntry('${selectedDate}', ${task.logIndex})"
+                          style="background:none;border:none;cursor:pointer;padding:4px;font-size:14px;"
+                          aria-label="기록 삭제" title="삭제">❌</button>
+                      </div>
+                    ` : `<div class="day-task-status">✅</div>`}
                   </div>
                 `;
               }).join('')}
@@ -11335,6 +11514,8 @@
      * 템플릿 삭제
      */
     function deleteTemplate(templateId) {
+      // Soft-Delete: 삭제 기록 남기기 (동기화 시 부활 방지)
+      appState.deletedIds.templates[templateId] = new Date().toISOString();
       appState.templates = appState.templates.filter(t => t.id !== templateId);
       saveTemplates();
       renderStatic();
@@ -12514,6 +12695,8 @@
     function deleteTask(id) {
       if (!confirm('정말 삭제하시겠습니까?')) return;
 
+      // Soft-Delete: 삭제 기록 남기기 (동기화 시 부활 방지)
+      appState.deletedIds.tasks[id] = new Date().toISOString();
       appState.tasks = appState.tasks.filter(t => t.id !== id);
       saveState();
       renderStatic();
@@ -20110,6 +20293,8 @@
     function deleteWorkProject(projectId) {
       if (!confirm('이 프로젝트를 삭제하시겠습니까?')) return;
 
+      // Soft-Delete: 삭제 기록 남기기 (동기화 시 부활 방지)
+      appState.deletedIds.workProjects[projectId] = new Date().toISOString();
       appState.workProjects = appState.workProjects.filter(p => p.id !== projectId);
       if (appState.activeWorkProject === projectId) {
         appState.activeWorkProject = appState.workProjects.length > 0 ? appState.workProjects[0].id : null;
