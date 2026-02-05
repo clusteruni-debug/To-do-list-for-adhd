@@ -1,5 +1,41 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 12)
+
+### 작업 내용
+- **복약/영양제 트래커 — 라이프 리듬 통합 (P1)**
+  - appState.lifeRhythm에 medications 필드 + settings.medicationSlots 추가
+  - 기본 슬롯 3개: ADHD약(아침/필수), ADHD약+영양제(점심/필수), 영양제(저녁/선택)
+  - 오늘의 복약 카드: 리듬 트래커 바로 아래, 탭 한 번으로 시간 기록
+  - 기록/수정/삭제 함수 + 액션 메뉴 (기존 리듬 패턴 재사용)
+  - 필수 복약 연속일(streak) 계산 + 리마인더 표시
+  - Firebase/localStorage 이중 저장 + 병합 로직 확장
+  - mergeRhythmHistory, loadFromFirebase, startRealtimeSync 모두 medications 병합 추가
+  - today 초기화 6곳 + history 생성 2곳 모두 medications:{} 포함
+  - loadLifeRhythm 마이그레이션에 medications 필드 초기화 추가
+  - CSS: .medication-tracker, .medication-btn, .medication-btn.taken 등 스타일
+  - XSS 방어: escapeHtml() 적용 (slot.id, slot.label)
+  - 접근성: button title 속성 (수정/삭제 안내)
+
+### 진행 중
+- 히스토리 렌더링 + 과거 날짜 복약 편집
+- 설정 UI (슬롯 추가/편집/삭제)
+- 대시보드 통계 (7일 복용률)
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- DB 변경: lifeRhythm.today/history에 medications 필드 추가 (Firebase 자동 반영)
+- 기존 사용자: medications 필드 없어도 `|| {}` 처리로 크래시 없음
+
+### 다음에 할 것
+- 히스토리에 복약 행 추가
+- 과거 날짜 복약 편집 기능
+- 설정 UI (슬롯 관리)
+- 대시보드 7일 복용률 통계
+- P2: SVG 아이콘 교체
+
+---
+
 ## [2026-02-05] (세션 11)
 
 ### 작업 내용
