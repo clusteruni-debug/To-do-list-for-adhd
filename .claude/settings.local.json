@@ -3,7 +3,12 @@
     "allow": [
       "Bash(git clone:*)",
       "Bash(start \"\" \"C:\\\\Users\\\\clust\\\\Desktop\\\\myvibe\\\\navigator-app\\\\navigator-v5.html\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 중분류/소분류 완료 체크박스 + 버튼 순서 통일\n\n- 소분류: 체크박스로 완료↔미시작 직접 토글\n- 중분류: 하위 task 일괄 완료/미시작 토글 체크박스\n- 전 계층 버튼 순서 ✏️→📅→🗑️→[추가]로 통일\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: 멀티디바이스 동기화 데이터 유실 방지 \\(5겹 보호\\)\n\n- isLoadingFromCloud 플래그: 클라우드 초기 로드 중 sync 차단\n- loadFromFirebase 시작 시 saveStateTimeout 디바운스 강제 취소\n- checkDataShrinkage: 데이터 급격 감소\\(→0\\) 감지 시 동기화 자동 차단\n- createSyncBackup: 매 동기화 전 현재 상태 localStorage 자동 백업\n- restoreFromSyncBackup: 설정 UI에서 수동 복원 + 앱 시작 시 자동 감지/복구 제안\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
