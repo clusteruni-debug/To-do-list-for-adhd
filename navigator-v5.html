@@ -11105,6 +11105,30 @@
     }
 
     /**
+     * 시간 입력 편의 파싱: 1430→14:30, 930→09:30, 9→09:00, 14:30→14:30
+     */
+    function parseTimeInput(input) {
+      if (!input) return null;
+      const s = input.trim().replace(/[：]/, ':'); // 전각 콜론도 처리
+      // 이미 HH:MM 형식
+      if (/^\d{1,2}:\d{2}$/.test(s)) {
+        const [h, m] = s.split(':').map(Number);
+        if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+        return null;
+      }
+      // 숫자만 입력
+      const digits = s.replace(/\D/g, '');
+      if (!digits) return null;
+      let h, m;
+      if (digits.length === 4) { h = parseInt(digits.slice(0, 2)); m = parseInt(digits.slice(2)); }       // 1430
+      else if (digits.length === 3) { h = parseInt(digits.slice(0, 1)); m = parseInt(digits.slice(1)); }   // 930
+      else if (digits.length <= 2) { h = parseInt(digits); m = 0; }                                        // 9, 14
+      else return null;
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+      return null;
+    }
+
+    /**
      * completionLog 항목 추가 (과거 날짜에 완료 기록 추가)
      */
     function addCompletionLogEntry(dateStr) {
@@ -11120,12 +11144,13 @@
       // 오늘이면 현재 시간, 과거 날짜면 12:00 기본값
       const todayStr = getLocalDateStr(new Date());
       const defaultTime = dateStr === todayStr ? new Date().toTimeString().slice(0, 5) : '12:00';
-      const time = prompt('완료 시간 (HH:MM):', defaultTime);
+      const time = prompt('완료 시간 (예: 1430, 930, 9, 14:30):', defaultTime);
       if (time === null) return;
-      if (time && !time.match(/^\d{2}:\d{2}$/)) {
+      const parsed = parseTimeInput(time);
+      if (!parsed && time.trim()) {
         showToast('시간 형식이 올바르지 않아 기본값을 사용합니다', 'warning');
       }
-      const finalTime = time.match(/^\d{2}:\d{2}$/) ? time : defaultTime;
+      const finalTime = parsed || defaultTime;
 
       const revenueStr = prompt('수익 (원, 없으면 0):', '0');
       if (revenueStr === null) return;
@@ -11165,7 +11190,7 @@
       if (catIdx === null) return;
       const newCat = categories[parseInt(catIdx) - 1] || entry.c;
 
-      const newTime = prompt('완료 시간 (HH:MM):', entry.at);
+      const newTime = prompt('완료 시간 (예: 1430, 930, 9, 14:30):', entry.at);
       if (newTime === null) return;
 
       const newRevenue = prompt('수익 (원, 없으면 0):', String(entry.rv || 0));
@@ -11174,8 +11199,9 @@
       // 업데이트 적용
       entry.t = newTitle.trim();
       entry.c = newCat;
-      if (newTime.match(/^\d{2}:\d{2}$/)) {
-        entry.at = newTime;
+      const parsedTime = parseTimeInput(newTime);
+      if (parsedTime) {
+        entry.at = parsedTime;
       } else if (newTime.trim()) {
         showToast('시간 형식이 올바르지 않아 기존 값을 유지합니다', 'warning');
       }
