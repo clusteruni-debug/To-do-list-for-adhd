@@ -9194,7 +9194,7 @@
     /**
      * 로컬스토리지에 데이터 저장 (실제 저장 로직)
      */
-    function _doSaveState() {
+    function _doSaveState(immediate = false) {
       try {
         localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
         localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
@@ -9207,9 +9207,9 @@
         localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
         localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
 
-        // Firebase 동기화 (로그인된 경우)
+        // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
-          syncToFirebase();
+          syncToFirebase(immediate);
         }
       } catch (error) {
         console.error('데이터 저장 실패:', error);
@@ -9230,12 +9230,17 @@
     }
 
     // 즉시 저장이 필요한 경우 (앱 종료 전 등)
+    // 디바운스된 sync 타이머도 취소하고 즉시 동기화
     function saveStateImmediate() {
       if (saveStateTimeout) {
         clearTimeout(saveStateTimeout);
         saveStateTimeout = null;
       }
-      _doSaveState();
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
+      _doSaveState(true);
     }
 
     // ============================================
@@ -9248,6 +9253,8 @@
     let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
     let isLoadingFromCloud = false; // 클라우드 초기 로드 중 sync 차단 (빈 데이터 업로드 방지)
+    let syncDebounceTimer = null; // syncToFirebase 디바운스 타이머
+    const SYNC_DEBOUNCE_MS = 5000; // 동기화 디바운스 간격 (5초)
 
     /**
      * Google 로그인
@@ -9345,9 +9352,38 @@
     window.forceSync = forceSync;
 
     /**
-     * Firebase에 데이터 저장
+     * Firebase에 데이터 저장 (디바운스 래퍼)
+     * 빈번한 변경을 배치 처리하여 Firebase 쓰기 횟수를 줄임
+     * @param {boolean} immediate - true이면 디바운스 없이 즉시 동기화 (로드 후 머지 등)
      */
-    async function syncToFirebase() {
+    function syncToFirebase(immediate = false) {
+      if (!appState.user) return;
+
+      if (immediate) {
+        // 즉시 동기화: 디바운스 타이머 취소 후 바로 실행
+        if (syncDebounceTimer) {
+          clearTimeout(syncDebounceTimer);
+          syncDebounceTimer = null;
+        }
+        _doSyncToFirebase();
+        return;
+      }
+
+      // 디바운스: 5초 내 추가 호출이 있으면 마지막 호출만 실행
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+      }
+      syncDebounceTimer = setTimeout(() => {
+        syncDebounceTimer = null;
+        _doSyncToFirebase();
+      }, SYNC_DEBOUNCE_MS);
+    }
+
+    /**
+     * Firebase에 데이터 저장 (실제 로직)
+     * syncToFirebase()를 통해서만 호출 — 직접 호출 금지
+     */
+    async function _doSyncToFirebase() {
       if (!appState.user) return;
 
       // 클라우드 초기 로드 중에는 동기화 차단 (빈 데이터 업로드 방지)
@@ -9420,7 +9456,7 @@
         // 동기화 중 추가 변경이 있었으면 재동기화
         if (pendingSync) {
           pendingSync = false;
-          syncToFirebase();
+          _doSyncToFirebase();
         }
       }
     }
@@ -9611,6 +9647,12 @@
         if (last.workProjects > 0 && appState.workProjects.length === 0) {
           issues.push(`workProjects: ${last.workProjects} → 0`);
         }
+        if (last.templates > 0 && (!appState.templates || appState.templates.length === 0)) {
+          issues.push(`templates: ${last.templates} → 0`);
+        }
+        if (last.workTemplates > 0 && (!appState.workTemplates || appState.workTemplates.length === 0)) {
+          issues.push(`workTemplates: ${last.workTemplates} → 0`);
+        }
 
         return {
           blocked: issues.length > 0,
@@ -9746,15 +9788,15 @@
 
           appState.syncStatus = 'synced';
 
-          // 병합 완료 → 로드 잠금 해제 후 클라우드에 반영
+          // 병합 완료 → 로드 잠금 해제 후 클라우드에 즉시 반영
           isLoadingFromCloud = false;
           updateDataCounts();
-          await syncToFirebase();
+          syncToFirebase(true);
         } else {
-          // 클라우드에 데이터 없으면 현재 로컬 데이터 업로드
+          // 클라우드에 데이터 없으면 현재 로컬 데이터 즉시 업로드
           isLoadingFromCloud = false;
           updateDataCounts();
-          await syncToFirebase();
+          syncToFirebase(true);
         }
 
         appState.lastSyncTime = new Date();
@@ -11381,9 +11423,19 @@
       // daily/weekdays는 checkDailyReset()이 자동 초기화하므로 중복 생성하지 않음
       if (task.repeatType && task.repeatType !== 'none'
           && task.repeatType !== 'daily' && task.repeatType !== 'weekdays') {
-        const nextTask = createNextRepeatTask(task);
-        if (nextTask) {
-          appState.tasks.push(nextTask);
+        // 동일 제목+카테고리+반복타입의 미완료 태스크가 이미 있으면 중복 생성 방지
+        const isDuplicate = appState.tasks.some(t =>
+          t.id !== task.id &&
+          !t.completed &&
+          t.title === task.title &&
+          t.category === task.category &&
+          t.repeatType === task.repeatType
+        );
+        if (!isDuplicate) {
+          const nextTask = createNextRepeatTask(task);
+          if (nextTask) {
+            appState.tasks.push(nextTask);
+          }
         }
       }
 
@@ -19352,10 +19404,10 @@
 
     window.addEventListener('online', () => {
       updateOnlineStatus();
-      // 온라인 복귀 시 자동 동기화
+      // 온라인 복귀 시 즉시 동기화 (오프라인 중 쌓인 변경사항 반영)
       if (appState.user) {
         showToast('온라인 복귀 - 동기화 중...', 'success');
-        syncToFirebase();
+        syncToFirebase(true);
       }
     });
     window.addEventListener('offline', () => {

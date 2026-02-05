@@ -1,5 +1,36 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 10)
+
+### 작업 내용
+- **데이터 축소 감지 확장 (P0)**
+  - `checkDataShrinkage()`에 templates, workTemplates 카운트 감시 추가
+  - 기존: tasks, workProjects만 감지 → 템플릿 유실은 미감지
+  - 수정: 4가지 데이터 타입 모두 0으로 감소 시 동기화 차단
+
+- **반복 태스크(weekly/monthly/custom) 중복 생성 방지 (P0)**
+  - `completeTask()`에서 `createNextRepeatTask()` 호출 전 중복 체크 추가
+  - 동일 제목 + 카테고리 + 반복타입의 미완료 태스크가 이미 있으면 생성 스킵
+  - 기존: 완료할 때마다 무조건 다음 주기 태스크 생성 → 중복 누적
+
+- **동기화 빈도 최적화 (디바운싱)**
+  - `syncToFirebase()` 디바운스 래퍼로 변환 (5초 간격 배치 처리)
+  - 실제 로직은 `_doSyncToFirebase()`로 분리
+  - `immediate=true` 옵션: 로드 후 머지, 온라인 복귀 등 즉시 동기화 필요 시 사용
+  - `saveStateImmediate()`: 앱 종료 전 디바운스 타이머 즉시 실행
+  - 효과: 빠른 연속 변경 시 Firebase 쓰기 1회로 통합 (비용/부하 감소)
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html` (단일 파일)
+- DB 변경: 없음
+- 즉시 동기화 경로: `loadFromFirebase()` 머지 후, 온라인 복귀 시
+- 디바운스 동기화 경로: `_doSaveState()`, `saveLifeRhythm()`, `saveWorkProjects()`, 템플릿 저장
+
+### 다음에 할 것
+- P1: 라이프 리듬 히스토리 30일 이후 자동 정리
+- P1: 동기화 백업 3개 로테이션
+- P2: SVG 아이콘 교체
+
 ## [2026-02-05] (세션 9)
 
 ### 작업 내용
