@@ -1,5 +1,51 @@
 # CHANGELOG
 
+## [2026-02-06] (세션 16)
+
+### 작업 내용
+- **캘린더 과거 날짜 완료 기록 추가 기능**
+  - `addCompletionLogEntry()`: prompt UI로 제목/카테고리/시간/수익 입력 → completionLog에 추가
+  - `renderDayDetail()` header에 "➕ 기록 추가" 버튼 배치
+  - 빈 날짜(기록 0개)에서도 추가 가능
+  - 추가된 기록은 기존 ✏️수정/❌삭제 버튼 자동 표시
+
+- **시간 입력 편의 파싱 (parseTimeInput)**
+  - `1430`→`14:30`, `930`→`09:30`, `9`→`09:00` 등 콜론 없이 입력 가능
+  - 전각 콜론(：) 자동 변환
+  - addCompletionLogEntry, editCompletionLogEntry 양쪽 적용
+
+- **캘린더 카운트 버그 수정 (P0)**
+  - `getCompletionMap()`: completionLog에 항목이 있어도 tasks의 추가 완료 항목이 누락되던 버그 수정
+  - 날짜 키 유무 체크 → 제목+시간 기반 정확한 중복 체크로 변경
+
+- **completionLog 중복 기록 표시 수정**
+  - `getCompletedTasksByDate()`: 같은 제목+시간 기록이 2개 이상일 때 두 번째가 사라지던 문제 수정
+  - seen key에 인덱스 포함하여 각각 표시
+
+- **시간 검증 피드백 추가**
+  - add/edit 모두 잘못된 시간 형식 입력 시 toast 경고 표시
+  - 과거 날짜 기록 시 기본 시간을 현재시간→12:00으로 변경 (오늘은 현재시간 유지)
+
+- **P0 버그 4건 수정**
+  - `saveActualTime()`: NaN/음수 입력 방어 + 에러 toast
+  - `handleTouchEnd()`: changedTouches 배열 비어있을 때 크래시 방지
+  - `importData()`: input.value 초기화로 같은 파일 재선택 가능
+  - `handleFileImport()`: JSON 외 파일 거부 + string 타입 검증
+
+- **기타 수정**
+  - `showTimeInputModal()`: 기존 모달 닫고 새로 열어 중첩 방지
+  - setInterval 중복 등록 방지: `window._navIntervals`로 ID 추적, 재실행 시 기존 정리
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- DB 변경: 없음 (completionLog 기존 구조 `{t, c, at, rv}` 그대로)
+
+### 다음에 할 것
+- P2: SVG 아이콘 교체
+- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
+
+---
+
 ## [2026-02-06] (세션 15)
 
 ### 작업 내용
