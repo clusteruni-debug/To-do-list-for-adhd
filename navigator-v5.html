@@ -9421,8 +9421,9 @@
         // 통근 트래커 로드
         loadCommuteTracker();
 
-        // 완료 기록 영구 로그 로드
+        // 완료 기록 영구 로그 로드 + 1년 이상 데이터 압축
         loadCompletionLog();
+        compactOldCompletionLog();
 
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
@@ -10707,10 +10708,13 @@
         hourlyData[i] = 0;
       }
 
-      appState.tasks.filter(t => t.completed && t.completedAt).forEach(task => {
-        const hour = new Date(task.completedAt).getHours();
-        hourlyData[hour]++;
-      });
+      // completionLog 기반 시간대별 집계
+      for (const entries of Object.values(appState.completionLog || {})) {
+        (entries || []).forEach(e => {
+          const hour = parseInt(e.at.split(':')[0], 10);
+          if (hour >= 0 && hour < 24) hourlyData[hour]++;
+        });
+      }
 
       // 가장 생산적인 시간대 찾기
       let maxHour = 0;
@@ -10763,15 +10767,17 @@
      * 카테고리별 완료 분배
      */
     function getCategoryDistribution() {
-      const completed = appState.tasks.filter(t => t.completed);
       const distribution = {};
+      let total = 0;
 
-      completed.forEach(task => {
-        const cat = task.category || '기타';
-        distribution[cat] = (distribution[cat] || 0) + 1;
-      });
-
-      const total = completed.length;
+      // completionLog 기반 카테고리 분포
+      for (const entries of Object.values(appState.completionLog || {})) {
+        (entries || []).forEach(e => {
+          const cat = e.c || '기타';
+          distribution[cat] = (distribution[cat] || 0) + 1;
+          total++;
+        });
+      }
       const result = Object.keys(distribution).map(cat => ({
         category: cat,
         count: distribution[cat],
@@ -10788,10 +10794,11 @@
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const dayData = [0, 0, 0, 0, 0, 0, 0];
 
-      appState.tasks.filter(t => t.completed && t.completedAt).forEach(task => {
-        const day = new Date(task.completedAt).getDay();
-        dayData[day]++;
-      });
+      // completionLog 기반 요일별 집계
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        const day = new Date(dateKey).getDay();
+        dayData[day] += (entries || []).length;
+      }
 
       const maxDay = dayData.indexOf(Math.max(...dayData));
 
@@ -10854,7 +10861,13 @@
       const map = {};
       // completionLog 기반 (과거 영구 기록 포함)
       for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
-        map[dateKey] = (map[dateKey] || 0) + (entries || []).length;
+        (entries || []).forEach(e => {
+          if (e._summary) {
+            map[dateKey] = (map[dateKey] || 0) + (e.count || 0);
+          } else {
+            map[dateKey] = (map[dateKey] || 0) + 1;
+          }
+        });
       }
       // appState.tasks 현재 데이터로 보완 (아직 completionLog에 없는 오늘 데이터 등)
       appState.tasks.forEach(t => {
@@ -13839,8 +13852,52 @@
     }
 
     /**
-     * 주간 리포트 데이터 생성
+     * completionLog 데이터 보존 정책:
+     * - 최근 365일: 전체 상세 기록 유지
+     * - 1년 이상: 일별 요약으로 압축 { count, categories: {본업:2}, totalRevenue: 150000 }
+     * 앱 시작 시 1일 1회 자동 실행
      */
+    function compactOldCompletionLog() {
+      const lastCompact = localStorage.getItem('navigator-completion-log-compact-date');
+      const todayStr = getLocalDateStr();
+      if (lastCompact === todayStr) return; // 오늘 이미 실행
+
+      const cutoff = new Date();
+      cutoff.setFullYear(cutoff.getFullYear() - 1);
+      const cutoffStr = getLocalDateStr(cutoff);
+
+      let compacted = 0;
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        if (dateKey >= cutoffStr) continue; // 1년 이내는 유지
+        if (!Array.isArray(entries)) continue;
+        // 이미 압축된 형태인지 확인 (배열 길이 1 + _summary 플래그)
+        if (entries.length === 1 && entries[0]._summary) continue;
+
+        // 일별 요약으로 압축
+        const cats = {};
+        let totalRev = 0;
+        entries.forEach(e => {
+          cats[e.c || '기타'] = (cats[e.c || '기타'] || 0) + 1;
+          if (e.rv) totalRev += e.rv;
+        });
+
+        appState.completionLog[dateKey] = [{
+          _summary: true,
+          count: entries.length,
+          categories: cats,
+          totalRevenue: totalRev
+        }];
+        compacted++;
+      }
+
+      if (compacted > 0) {
+        saveCompletionLog();
+        console.log(`[compact] completionLog ${compacted}일 압축 완료`);
+      }
+
+      localStorage.setItem('navigator-completion-log-compact-date', todayStr);
+    }
+
     /**
      * completionLog에서 날짜 범위 내 엔트리 조회
      * @param {string} startDateStr - YYYY-MM-DD (포함)
@@ -13851,7 +13908,18 @@
       const entries = [];
       for (const [dateKey, dayEntries] of Object.entries(appState.completionLog || {})) {
         if (dateKey >= startDateStr && dateKey < endDateStr) {
-          (dayEntries || []).forEach(e => entries.push({ ...e, dateKey }));
+          (dayEntries || []).forEach(e => {
+            if (e._summary) {
+              // 압축된 데이터: 카테고리별 가상 엔트리 생성
+              for (const [cat, cnt] of Object.entries(e.categories || {})) {
+                for (let i = 0; i < cnt; i++) {
+                  entries.push({ t: '(요약)', c: cat, at: '00:00', rv: 0, dateKey });
+                }
+              }
+            } else {
+              entries.push({ ...e, dateKey });
+            }
+          });
         }
       }
       return entries;
@@ -15627,54 +15695,56 @@
                     </div>
                   ` : ''}
 
-                  <!-- 복약 통계 (7일) -->
+                  <!-- 복약 통계 (7일/30일) -->
                   ${(() => {
                     const medSlots = getMedicationSlots();
                     if (!medSlots || medSlots.length === 0) return '';
 
                     const today = new Date();
-                    let totalRequired = 0, takenRequired = 0;
-                    let totalOptional = 0, takenOptional = 0;
-
-                    for (let i = 0; i < 7; i++) {
-                      const d = new Date(today);
-                      d.setDate(today.getDate() - i);
-                      const ds = getLocalDateStr(d);
-
-                      let dayMeds;
-                      if (i === 0 && appState.lifeRhythm.today.date === ds) {
-                        dayMeds = appState.lifeRhythm.today.medications || {};
-                      } else {
-                        const hist = appState.lifeRhythm.history[ds];
-                        dayMeds = hist ? (hist.medications || {}) : {};
-                      }
-
-                      medSlots.forEach(s => {
-                        if (s.required) {
-                          totalRequired++;
-                          if (dayMeds[s.id]) takenRequired++;
+                    // 7일 / 30일 통계 함수
+                    function calcMedStats(days) {
+                      let tReq = 0, takenReq = 0, tOpt = 0, takenOpt = 0;
+                      for (let i = 0; i < days; i++) {
+                        const d = new Date(today);
+                        d.setDate(today.getDate() - i);
+                        const ds = getLocalDateStr(d);
+                        let dayMeds;
+                        if (i === 0 && appState.lifeRhythm.today.date === ds) {
+                          dayMeds = appState.lifeRhythm.today.medications || {};
                         } else {
-                          totalOptional++;
-                          if (dayMeds[s.id]) takenOptional++;
+                          const hist = appState.lifeRhythm.history[ds];
+                          dayMeds = hist ? (hist.medications || {}) : {};
                         }
-                      });
+                        medSlots.forEach(s => {
+                          if (s.required) { tReq++; if (dayMeds[s.id]) takenReq++; }
+                          else { tOpt++; if (dayMeds[s.id]) takenOpt++; }
+                        });
+                      }
+                      return {
+                        reqRate: tReq > 0 ? Math.round((takenReq / tReq) * 100) : 0,
+                        optRate: tOpt > 0 ? Math.round((takenOpt / tOpt) * 100) : 0
+                      };
                     }
 
-                    const reqRate = totalRequired > 0 ? Math.round((takenRequired / totalRequired) * 100) : 0;
-                    const optRate = totalOptional > 0 ? Math.round((takenOptional / totalOptional) * 100) : 0;
+                    const w7 = calcMedStats(7);
+                    const w30 = calcMedStats(30);
                     const streak = getMedicationStreak();
 
                     return `
                       <div class="rhythm-work-section" style="margin-top: 16px;">
-                        <div class="rhythm-chart-title">💊 복약 (최근 7일)</div>
+                        <div class="rhythm-chart-title">💊 복약 통계</div>
                         <div class="rhythm-work-stats">
                           <div class="rhythm-work-stat">
-                            <span class="rhythm-work-label">필수 복용률</span>
-                            <span class="rhythm-work-value ${reqRate >= 80 ? 'good' : ''}">${reqRate}%</span>
+                            <span class="rhythm-work-label">필수 7일</span>
+                            <span class="rhythm-work-value ${w7.reqRate >= 80 ? 'good' : ''}">${w7.reqRate}%</span>
                           </div>
                           <div class="rhythm-work-stat">
-                            <span class="rhythm-work-label">선택 복용률</span>
-                            <span class="rhythm-work-value">${optRate}%</span>
+                            <span class="rhythm-work-label">필수 30일</span>
+                            <span class="rhythm-work-value ${w30.reqRate >= 80 ? 'good' : ''}">${w30.reqRate}%</span>
+                          </div>
+                          <div class="rhythm-work-stat">
+                            <span class="rhythm-work-label">선택 7일</span>
+                            <span class="rhythm-work-value">${w7.optRate}%</span>
                           </div>
                           <div class="rhythm-work-stat">
                             <span class="rhythm-work-label">연속일</span>
@@ -15968,34 +16038,51 @@
             ` : ''}
 
             ${(() => {
-              // 주간/월간 리포트
+              // 주간/월간/90일 리포트 (completionLog 기반)
               const today = new Date();
+              const todayStr = getLocalDateStr(today);
               const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+              const weekAgoStr = getLocalDateStr(weekAgo);
               const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate() - 30);
+              const monthAgoStr = getLocalDateStr(monthAgo);
+              const q90Ago = new Date(today); q90Ago.setDate(q90Ago.getDate() - 90);
+              const q90AgoStr = getLocalDateStr(q90Ago);
+              const tomorrowStr = getLocalDateStr(new Date(today.getTime() + 86400000));
 
-              const allTasks = appState.tasks || [];
-              const weekCompleted = allTasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= weekAgo);
-              const monthCompleted = allTasks.filter(t => t.completed && t.completedAt && new Date(t.completedAt) >= monthAgo);
+              const weekEntries = getCompletionLogEntries(weekAgoStr, tomorrowStr);
+              const monthEntries = getCompletionLogEntries(monthAgoStr, tomorrowStr);
+              const q90Entries = getCompletionLogEntries(q90AgoStr, tomorrowStr);
 
-              const weekRevenue = weekCompleted.reduce((sum, t) => sum + (t.estimatedRevenue || 0), 0);
-              const monthRevenue = monthCompleted.reduce((sum, t) => sum + (t.estimatedRevenue || 0), 0);
+              const weekRevenue = weekEntries.reduce((sum, e) => sum + (e.rv || 0), 0);
+              const monthRevenue = monthEntries.reduce((sum, e) => sum + (e.rv || 0), 0);
 
               // 카테고리별 분포
               const weekCats = {};
-              weekCompleted.forEach(t => { weekCats[t.category] = (weekCats[t.category] || 0) + 1; });
+              weekEntries.forEach(e => { weekCats[e.c || '기타'] = (weekCats[e.c || '기타'] || 0) + 1; });
 
               const formatKRW = (n) => n >= 10000 ? Math.round(n/10000) + '만원' : n.toLocaleString() + '원';
+
+              // 월별 트렌드 (최근 3개월)
+              const monthlyTrend = [];
+              for (let m = 2; m >= 0; m--) {
+                const mStart = new Date(today.getFullYear(), today.getMonth() - m, 1);
+                const mEnd = new Date(today.getFullYear(), today.getMonth() - m + 1, 1);
+                const mEntries = getCompletionLogEntries(getLocalDateStr(mStart), getLocalDateStr(mEnd));
+                const mName = `${mStart.getMonth() + 1}월`;
+                monthlyTrend.push({ name: mName, count: mEntries.length, revenue: mEntries.reduce((s, e) => s + (e.rv || 0), 0) });
+              }
+              const maxMonthCount = Math.max(...monthlyTrend.map(m => m.count), 1);
 
               return `
                 <div class="dashboard-section">
                   <div class="dashboard-title">📋 주간/월간 리포트</div>
                   <div class="stats" style="margin-bottom: 12px;">
                     <div class="stat-card">
-                      <div class="stat-value" style="color: #667eea">${weekCompleted.length}</div>
+                      <div class="stat-value" style="color: #667eea">${weekEntries.length}</div>
                       <div class="stat-label">주간 완료</div>
                     </div>
                     <div class="stat-card">
-                      <div class="stat-value" style="color: #48bb78">${monthCompleted.length}</div>
+                      <div class="stat-value" style="color: #48bb78">${monthEntries.length}</div>
                       <div class="stat-label">월간 완료</div>
                     </div>
                     <div class="stat-card">
@@ -16014,7 +16101,21 @@
                     </div>
                   ` : ''}
                   <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
-                    일평균: ${(weekCompleted.length / 7).toFixed(1)}건/일 (주간) · ${(monthCompleted.length / 30).toFixed(1)}건/일 (월간)
+                    일평균: ${(weekEntries.length / 7).toFixed(1)}건/일 (주간) · ${(monthEntries.length / 30).toFixed(1)}건/일 (월간)${q90Entries.length > 0 ? ` · ${(q90Entries.length / 90).toFixed(1)}건/일 (90일)` : ''}
+                  </div>
+
+                  <!-- 월별 트렌드 바 차트 -->
+                  <div style="margin-top: 12px;">
+                    <div style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">📊 월별 완료 트렌드</div>
+                    ${monthlyTrend.map(m => `
+                      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span style="width: 30px; font-size: 12px; color: var(--text-secondary);">${m.name}</span>
+                        <div style="flex: 1; height: 16px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                          <div style="width: ${Math.round((m.count / maxMonthCount) * 100)}%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; transition: width 0.3s;"></div>
+                        </div>
+                        <span style="width: 50px; font-size: 12px; text-align: right; color: var(--text-secondary);">${m.count}건</span>
+                      </div>
+                    `).join('')}
                   </div>
                 </div>
               `;
