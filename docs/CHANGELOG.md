@@ -1,5 +1,54 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 13)
+
+### 작업 내용
+- **태스크 완료 영구 기록 (completionLog) — 장기 통계 분석**
+  - `appState.completionLog`: 날짜별 완료 기록 영구 보존 (키: YYYY-MM-DD)
+  - 데이터 구조: `{ t: title, c: category, at: "HH:MM", r?: repeatType, rv?: revenue, st?: subtaskCount }`
+  - `completeTask()`에서 completionLog 자동 기록 / `uncompleteTask()`에서 제거
+  - Firebase `setDoc`에 completionLog 필드 추가 — 멀티디바이스 동기화
+  - `mergeCompletionLog()`: 날짜별 합집합 + title+at 중복 제거
+  - `loadFromFirebase()`/`startRealtimeSync()` 양쪽 병합 로직 확장
+  - `createSyncBackup()`/`restoreFromSyncBackup()` completionLog 포함
+  - `exportData()`/`handleFileImport()` completionLog 포함
+  - 기존 사용자 마이그레이션: appState.tasks + navigator-completion-history → completionLog 자동 이전
+  - 기존 `saveCompletionHistory()`/`getCompletionHistory()` 제거 (dead code 정리)
+
+- **캘린더/히스토리 뷰 completionLog 기반 전환**
+  - `getCompletionMap()`: completionLog + tasks 통합 (캘린더 히트맵)
+  - `getCompletedTasksByDate()`: completionLog 우선, tasks 보완
+  - `renderRecentHistory()`: 14일 → 30일 확장, 날짜별 수익 표시
+  - `renderDayDetail()`: 리듬/복약 정보 통합 + 수익 표시
+  - `getWeeklyStats()`/`getWeeklyReport()`: completionLog 기반
+  - `getCompletionLogEntries()`: 날짜 범위 조회 헬퍼 함수 신규
+
+- **장기 통계 대시보드**
+  - `getHourlyProductivity()`/`getDayOfWeekProductivity()`/`getCategoryDistribution()`: completionLog 기반
+  - 대시보드: 주간/월간 + 90일 통계 + 월별 트렌드 바 차트 (최근 3개월)
+  - 복약 통계: 7일 + 30일 필수/선택 복용률 확장
+  - 라이프 리듬 히스토리 완료 수 completionLog 기반
+
+- **데이터 보존 정책**
+  - `compactOldCompletionLog()`: 1년 이상 데이터 → 일별 요약 자동 압축
+  - 압축 형태: `{ _summary: true, count, categories: {...}, totalRevenue }`
+  - `getCompletionMap()`/`getCompletionLogEntries()`: 압축 데이터 지원
+  - 앱 시작 시 1일 1회 자동 실행
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
+- DB 변경: Firebase users 문서에 `completionLog` 필드 추가
+- 용량 추정: 하루 5건 기준 1년 ~146KB, 3년 ~438KB (Firestore 1MB 한도 안전)
+- 기존 `cleanupOldCompletedTasks()` 동작 유지 (appState.tasks 정리) — completionLog는 별도 영구 보존
+- 기존 사용자: completionLog 없어도 `|| {}` 처리로 크래시 없음
+
+### 다음에 할 것
+- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
+- P1: 동기화 백업 3개 로테이션
+- P2: SVG 아이콘 교체
+
+---
+
 ## [2026-02-05] (세션 12)
 
 ### 작업 내용
