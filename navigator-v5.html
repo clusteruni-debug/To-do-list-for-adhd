@@ -11101,6 +11101,46 @@
     }
 
     /**
+     * completionLog 항목 추가 (과거 날짜에 완료 기록 추가)
+     */
+    function addCompletionLogEntry(dateStr) {
+      const title = prompt('제목:');
+      if (title === null) return; // 취소
+      if (!title.trim()) { showToast('제목을 입력해주세요', 'error'); return; }
+
+      const categories = ['본업', '부업', '일상', '가족'];
+      const catIdx = prompt('카테고리 (1:본업, 2:부업, 3:일상, 4:가족):', '3');
+      if (catIdx === null) return;
+      const cat = categories[parseInt(catIdx) - 1] || '일상';
+
+      const now = new Date();
+      const defaultTime = now.toTimeString().slice(0, 5);
+      const time = prompt('완료 시간 (HH:MM):', defaultTime);
+      if (time === null) return;
+      const finalTime = time.match(/^\d{2}:\d{2}$/) ? time : defaultTime;
+
+      const revenueStr = prompt('수익 (원, 없으면 0):', '0');
+      if (revenueStr === null) return;
+      const revenue = parseInt(revenueStr) || 0;
+
+      // completionLog에 추가
+      if (!appState.completionLog) appState.completionLog = {};
+      if (!appState.completionLog[dateStr]) appState.completionLog[dateStr] = [];
+      appState.completionLog[dateStr].push({
+        t: title.trim(),
+        c: cat,
+        at: finalTime,
+        rv: revenue
+      });
+
+      saveState();
+      recomputeTodayStats();
+      renderStatic();
+      showToast('기록이 추가되었습니다', 'success');
+    }
+    window.addCompletionLogEntry = addCompletionLogEntry;
+
+    /**
      * completionLog 항목 수정 (과거 완료 기록 수정)
      */
     function editCompletionLogEntry(dateStr, index) {
@@ -11181,7 +11221,12 @@
       return `
         <div class="day-detail">
           <div class="day-detail-header">
-            <div class="day-detail-date">${dateTitle}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="day-detail-date">${dateTitle}</div>
+              <button onclick="addCompletionLogEntry('${selectedDate}')"
+                style="background:var(--accent-color);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;white-space:nowrap;"
+                aria-label="이 날짜에 기록 추가">➕ 기록 추가</button>
+            </div>
             <div class="day-detail-stats">
               <div class="day-detail-stat completed">✓ ${tasks.length}개 완료</div>
               ${totalRevenue > 0 ? `<div class="day-detail-stat">💰 ${totalRevenue.toLocaleString()}원</div>` : ''}
@@ -11245,6 +11290,9 @@
             <div class="day-empty">
               <div class="day-empty-icon">📭</div>
               <div>이 날 완료한 작업이 없습니다</div>
+              <button onclick="addCompletionLogEntry('${selectedDate}')"
+                style="margin-top:12px;background:var(--accent-color);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:14px;cursor:pointer;"
+                aria-label="이 날짜에 기록 추가">➕ 기록 추가</button>
             </div>
           `}
         </div>
