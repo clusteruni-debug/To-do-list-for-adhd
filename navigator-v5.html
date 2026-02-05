@@ -16867,7 +16867,10 @@
           if (dayData.workEnd && !dayData.workDepart) dayData.workDepart = dayData.workEnd;
         }
 
-        if (dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep)) {
+        // 데이터가 있거나, 히스토리에 명시적으로 추가된 날짜면 표시
+        const hasAnyData = dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep);
+        const isExplicitlyAdded = !isToday && appState.lifeRhythm.history.hasOwnProperty(dateStr);
+        if (hasAnyData || isExplicitlyAdded) {
           // 수면 시간 계산
           let sleepDuration = null;
           if (i < 29) {
@@ -16942,11 +16945,18 @@
         }
       }
 
+      // 날짜 추가 버튼
+      const addDateBtn = '<div class="rhythm-history-add-date" style="text-align: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">' +
+        '<button onclick="addRhythmHistoryDate()" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;" aria-label="과거 날짜 기록 추가">' +
+          '📅 과거 날짜 추가' +
+        '</button>' +
+      '</div>';
+
       if (records.length === 0) {
-        return '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
+        return addDateBtn + '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
       }
 
-      return '<div class="rhythm-history-list">' + records.map(r => {
+      return addDateBtn + '<div class="rhythm-history-list">' + records.map(r => {
         return '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '">' +
           '<div class="rhythm-history-date">' +
             '<span class="rhythm-history-day">' + r.dayLabel + '</span>' +
@@ -17022,6 +17032,58 @@
       showToast(labels[type] + ' 시간이 수정되었습니다', 'success');
     }
     window.editLifeRhythmHistory = editLifeRhythmHistory;
+
+    /**
+     * 과거 날짜 라이프 리듬 추가
+     * 히스토리에 없는 날짜를 수동으로 추가
+     */
+    function addRhythmHistoryDate() {
+      const dateStr = prompt('추가할 날짜를 입력하세요 (YYYY-MM-DD):', '');
+      if (!dateStr) return;
+
+      // 날짜 형식 검증
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        showToast('올바른 날짜 형식이 아닙니다 (예: 2026-02-04)', 'error');
+        return;
+      }
+
+      // 유효한 날짜인지 확인
+      const date = new Date(dateStr + 'T12:00:00');
+      if (isNaN(date.getTime())) {
+        showToast('유효하지 않은 날짜입니다', 'error');
+        return;
+      }
+
+      // 미래 날짜 차단
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (date > today) {
+        showToast('미래 날짜는 추가할 수 없습니다', 'error');
+        return;
+      }
+
+      // 이미 데이터가 있으면 알림
+      const localDateStr = getLocalDateStr(date);
+      if (appState.lifeRhythm.history[localDateStr]) {
+        showToast('이미 기록이 있는 날짜입니다. 해당 날짜를 클릭해서 수정하세요.', 'info');
+        return;
+      }
+
+      // 빈 레코드 추가
+      appState.lifeRhythm.history[localDateStr] = {
+        wakeUp: null,
+        homeDepart: null,
+        workArrive: null,
+        workDepart: null,
+        homeArrive: null,
+        sleep: null
+      };
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast('📅 ' + localDateStr + ' 날짜가 추가되었습니다. 시간을 클릭해서 입력하세요.', 'success');
+    }
+    window.addRhythmHistoryDate = addRhythmHistoryDate;
 
     /**
      * 라이프 리듬 저장

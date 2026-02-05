@@ -16,6 +16,12 @@
   - 트리거: 앱 로딩 + visibilitychange(탭 포커스) + setInterval(1분) + 기상 버튼
   - `validateTask()`에 `lastCompletedAt`, `source` 필드 보존 추가
 
+- **라이프 리듬 과거 날짜 수동 입력 기능**
+  - "📅 과거 날짜 추가" 버튼: 히스토리 화면 상단에 추가
+  - `addRhythmHistoryDate()`: YYYY-MM-DD 형식으로 과거 날짜 입력
+  - 추가된 날짜는 빈 레코드로 생성 → 각 시간 클릭해서 수동 입력 가능
+  - 기존 `editLifeRhythmHistory()`: 클릭으로 개별 시간 수정 (기존 기능)
+
 - **멀티디바이스 동기화 데이터 유실 방지 (P0 버그 수정)**
   - 근본 원인: `onAuthStateChanged` → `appState.user` 설정 후 `loadFromFirebase()` 완료 전에 `syncToFirebase()`가 빈 데이터를 업로드하는 Race Condition
   - `isLoadingFromCloud` 플래그: 클라우드 초기 로드 중 모든 Firebase 업로드 차단
