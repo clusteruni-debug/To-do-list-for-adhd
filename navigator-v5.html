@@ -10810,12 +10810,41 @@
      * 특정 날짜의 완료된 작업 목록 가져오기
      */
     function getCompletedTasksByDate(dateStr) {
-      return appState.tasks.filter(t => {
-        if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt).toLocaleDateString('ko-KR');
-        const targetDate = new Date(dateStr).toLocaleDateString('ko-KR');
-        return completedDate === targetDate;
-      }).sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+      const results = [];
+      const seen = new Set();
+
+      // 1. completionLog에서 조회 (영구 기록)
+      const logEntries = (appState.completionLog || {})[dateStr] || [];
+      logEntries.forEach(e => {
+        const key = e.t + '|' + e.at;
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push({
+            title: e.t,
+            category: e.c,
+            completedAt: dateStr + 'T' + e.at,
+            repeatType: e.r || null,
+            expectedRevenue: e.rv || 0,
+            estimatedTime: 0,
+            fromLog: true
+          });
+        }
+      });
+
+      // 2. appState.tasks에서 보완 (completionLog에 없는 항목)
+      appState.tasks.forEach(t => {
+        if (!t.completed || !t.completedAt) return;
+        const completedDate = getLocalDateStr(new Date(t.completedAt));
+        if (completedDate !== dateStr) return;
+        const timeStr = new Date(t.completedAt).toTimeString().slice(0, 5);
+        const key = t.title + '|' + timeStr;
+        if (!seen.has(key)) {
+          seen.add(key);
+          results.push(t);
+        }
+      });
+
+      return results.sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
     }
 
     /**
@@ -10823,10 +10852,18 @@
      */
     function getCompletionMap() {
       const map = {};
+      // completionLog 기반 (과거 영구 기록 포함)
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        map[dateKey] = (map[dateKey] || 0) + (entries || []).length;
+      }
+      // appState.tasks 현재 데이터로 보완 (아직 completionLog에 없는 오늘 데이터 등)
       appState.tasks.forEach(t => {
         if (t.completed && t.completedAt) {
           const dateKey = getLocalDateStr(new Date(t.completedAt));
-          map[dateKey] = (map[dateKey] || 0) + 1;
+          // completionLog에 이미 포함되지 않은 경우만 추가
+          if (!appState.completionLog[dateKey]) {
+            map[dateKey] = (map[dateKey] || 0) + 1;
+          }
         }
       });
       return map;
@@ -10841,28 +10878,17 @@
       weekStart.setDate(now.getDate() - now.getDay()); // 이번 주 일요일
       weekStart.setHours(0, 0, 0, 0);
 
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 7);
-
-      const completedThisWeek = appState.tasks.filter(t => {
-        if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt);
-        return completedDate >= weekStart && completedDate < weekEnd;
-      });
-
-      // 일별 완료 수 계산
+      // completionLog 기반 일별 완료 수 계산
+      const completionMap = getCompletionMap();
       const dailyCounts = [];
       for (let i = 0; i < 7; i++) {
         const day = new Date(weekStart);
         day.setDate(weekStart.getDate() + i);
         const dayStr = getLocalDateStr(day);
-        const count = completedThisWeek.filter(t =>
-          getLocalDateStr(new Date(t.completedAt)) === dayStr
-        ).length;
-        dailyCounts.push(count);
+        dailyCounts.push(completionMap[dayStr] || 0);
       }
 
-      const totalCompleted = completedThisWeek.length;
+      const totalCompleted = dailyCounts.reduce((a, b) => a + b, 0);
       const daysWithActivity = dailyCounts.filter(c => c > 0).length;
       const avgPerDay = daysWithActivity > 0 ? (totalCompleted / daysWithActivity).toFixed(1) : 0;
 
@@ -11020,8 +11046,15 @@
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const dateTitle = `${date.getMonth() + 1}월 ${date.getDate()}일 ${dayNames[date.getDay()]}요일`;
 
-      // 총 소요 시간 계산
+      // 총 소요 시간 + 수익 계산
       const totalTime = tasks.reduce((sum, t) => sum + (t.estimatedTime || 0), 0);
+      const totalRevenue = tasks.reduce((sum, t) => sum + (t.expectedRevenue || 0), 0);
+
+      // 라이프 리듬 정보 (해당 날짜)
+      const rhythmData = (appState.lifeRhythm.history || {})[selectedDate];
+      // 복약 정보
+      const medsData = rhythmData ? (rhythmData.medications || {}) : {};
+      const medSlots = getMedicationSlots ? getMedicationSlots() : [];
 
       return `
         <div class="day-detail">
@@ -11029,21 +11062,46 @@
             <div class="day-detail-date">${dateTitle}</div>
             <div class="day-detail-stats">
               <div class="day-detail-stat completed">✓ ${tasks.length}개 완료</div>
+              ${totalRevenue > 0 ? `<div class="day-detail-stat">💰 ${totalRevenue.toLocaleString()}원</div>` : ''}
               ${totalTime > 0 ? `<div class="day-detail-stat">⏱ ${totalTime}분</div>` : ''}
             </div>
           </div>
+          ${rhythmData ? `
+            <div class="day-detail-rhythm" style="padding: 8px 12px; margin-bottom: 8px; background: var(--bg-secondary); border-radius: 8px; font-size: 13px;">
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                ${rhythmData.wakeUp ? `<span>☀️ ${rhythmData.wakeUp}</span>` : ''}
+                ${rhythmData.homeDepart ? `<span>🏠→ ${rhythmData.homeDepart}</span>` : ''}
+                ${rhythmData.workArrive ? `<span>🏢 ${rhythmData.workArrive}</span>` : ''}
+                ${rhythmData.workDepart ? `<span>🏢→ ${rhythmData.workDepart}</span>` : ''}
+                ${rhythmData.homeArrive ? `<span>→🏠 ${rhythmData.homeArrive}</span>` : ''}
+                ${rhythmData.sleep ? `<span>🌙 ${rhythmData.sleep}</span>` : ''}
+              </div>
+              ${Object.keys(medsData).length > 0 ? `
+                <div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px;">
+                  ${medSlots.map(slot => {
+                    const taken = medsData[slot.id];
+                    return taken ? `<span style="color: var(--accent-color);">${slot.icon || '💊'} ${slot.label} ${taken}</span>` :
+                      `<span style="color: var(--text-muted);">${slot.icon || '💊'} ${slot.label} -</span>`;
+                  }).join('')}
+                </div>
+              ` : ''}
+            </div>
+          ` : ''}
           ${tasks.length > 0 ? `
             <div class="day-detail-list">
               ${tasks.map(task => {
                 const completedTime = new Date(task.completedAt);
                 const timeStr = completedTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                const cat = task.category || '기타';
+                const revenue = task.expectedRevenue || 0;
                 return `
                   <div class="day-task-item">
                     <div class="day-task-time">${timeStr}</div>
                     <div class="day-task-content">
                       <div class="day-task-title completed">${escapeHtml(task.title)}</div>
                       <div class="day-task-meta">
-                        <span class="category ${task.category}">${task.category}</span>
+                        <span class="category ${cat}">${escapeHtml(cat)}</span>
+                        ${revenue > 0 ? ` · 💰${revenue.toLocaleString()}` : ''}
                         ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                       </div>
                     </div>
@@ -11066,9 +11124,39 @@
      * 최근 기록 리스트 렌더링
      */
     function renderRecentHistory() {
-      // 완료된 작업을 날짜별로 그룹화
-      const completedTasks = appState.tasks.filter(t => t.completed && t.completedAt);
-      if (completedTasks.length === 0) {
+      // completionLog + appState.tasks 통합 조회 (날짜별 그룹화)
+      const grouped = {};
+
+      // 1. completionLog 기반 (영구 기록)
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        entries.forEach(e => {
+          grouped[dateKey].push({
+            title: e.t,
+            category: e.c,
+            completedAt: dateKey + 'T' + e.at,
+            expectedRevenue: e.rv || 0
+          });
+        });
+      }
+
+      // 2. appState.tasks 보완 (completionLog에 없는 항목)
+      appState.tasks.forEach(t => {
+        if (!t.completed || !t.completedAt) return;
+        const dateKey = getLocalDateStr(new Date(t.completedAt));
+        if (!grouped[dateKey]) grouped[dateKey] = [];
+        const timeStr = new Date(t.completedAt).toTimeString().slice(0, 5);
+        const exists = grouped[dateKey].some(e => {
+          const eTime = new Date(e.completedAt).toTimeString().slice(0, 5);
+          return e.title === t.title && eTime === timeStr;
+        });
+        if (!exists) {
+          grouped[dateKey].push(t);
+        }
+      });
+
+      const allDates = Object.keys(grouped);
+      if (allDates.length === 0) {
         return `
           <div class="day-empty">
             <div class="day-empty-icon">📝</div>
@@ -11080,17 +11168,9 @@
         `;
       }
 
-      // 날짜별 그룹화
-      const grouped = {};
-      completedTasks.forEach(t => {
-        const dateKey = getLocalDateStr(new Date(t.completedAt));
-        if (!grouped[dateKey]) grouped[dateKey] = [];
-        grouped[dateKey].push(t);
-      });
-
-      // 최근 날짜순 정렬
-      const sortedDates = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
-      const recentDates = sortedDates.slice(0, 14); // 최근 14일
+      // 최근 날짜순 정렬 — 30일
+      const sortedDates = allDates.sort((a, b) => new Date(b) - new Date(a));
+      const recentDates = sortedDates.slice(0, 30);
 
       return `
         <div class="history-list">
@@ -11109,12 +11189,13 @@
             else dateTitle = `${date.getMonth() + 1}월 ${date.getDate()}일 (${dayNames[date.getDay()]})`;
 
             const isExpanded = appState.historyState.expandedDates[dateStr];
+            const dayRevenue = tasks.reduce((s, t) => s + (t.expectedRevenue || 0), 0);
 
             return `
               <div class="history-date-group">
                 <div class="history-date-header" onclick="toggleHistoryDate('${dateStr}')">
                   <div class="history-date-title">${dateTitle}</div>
-                  <div class="history-date-count">✓ ${tasks.length}개 완료 ${isExpanded ? '▲' : '▼'}</div>
+                  <div class="history-date-count">✓ ${tasks.length}개${dayRevenue > 0 ? ` · 💰${dayRevenue.toLocaleString()}` : ''} ${isExpanded ? '▲' : '▼'}</div>
                 </div>
                 <div class="history-date-tasks ${isExpanded ? 'show' : ''}">
                   ${tasks.map(task => {
@@ -13760,6 +13841,22 @@
     /**
      * 주간 리포트 데이터 생성
      */
+    /**
+     * completionLog에서 날짜 범위 내 엔트리 조회
+     * @param {string} startDateStr - YYYY-MM-DD (포함)
+     * @param {string} endDateStr - YYYY-MM-DD (미포함)
+     * @returns {Array} [{t, c, at, r?, rv?, dateKey}, ...]
+     */
+    function getCompletionLogEntries(startDateStr, endDateStr) {
+      const entries = [];
+      for (const [dateKey, dayEntries] of Object.entries(appState.completionLog || {})) {
+        if (dateKey >= startDateStr && dateKey < endDateStr) {
+          (dayEntries || []).forEach(e => entries.push({ ...e, dateKey }));
+        }
+      }
+      return entries;
+    }
+
     function getWeeklyReport() {
       const now = new Date();
 
@@ -13767,32 +13864,28 @@
       const thisWeekStart = new Date(now);
       thisWeekStart.setDate(now.getDate() - now.getDay());
       thisWeekStart.setHours(0, 0, 0, 0);
+      const thisWeekStartStr = getLocalDateStr(thisWeekStart);
 
       // 지난 주 시작/끝
       const lastWeekStart = new Date(thisWeekStart);
       lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-      const lastWeekEnd = new Date(thisWeekStart);
+      const lastWeekStartStr = getLocalDateStr(lastWeekStart);
 
-      // 이번 주 완료된 작업
-      const thisWeekCompleted = appState.tasks.filter(t => {
-        if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt);
-        return completedDate >= thisWeekStart;
-      });
+      // 내일 (이번 주 종료 기준)
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = getLocalDateStr(tomorrow);
 
-      // 지난 주 완료된 작업
-      const lastWeekCompleted = appState.tasks.filter(t => {
-        if (!t.completed || !t.completedAt) return false;
-        const completedDate = new Date(t.completedAt);
-        return completedDate >= lastWeekStart && completedDate < lastWeekEnd;
-      });
+      // completionLog 기반 이번 주 / 지난 주 완료 작업 조회
+      const thisWeekEntries = getCompletionLogEntries(thisWeekStartStr, tomorrowStr);
+      const lastWeekEntries = getCompletionLogEntries(lastWeekStartStr, thisWeekStartStr);
 
       // 요일별 완료 수 계산
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const dayData = [0, 0, 0, 0, 0, 0, 0];
 
-      thisWeekCompleted.forEach(task => {
-        const day = new Date(task.completedAt).getDay();
+      thisWeekEntries.forEach(e => {
+        const day = new Date(e.dateKey).getDay();
         dayData[day]++;
       });
 
@@ -13803,8 +13896,8 @@
 
       // 카테고리별 완료 수
       const categoryData = {};
-      thisWeekCompleted.forEach(task => {
-        const cat = task.category || '기타';
+      thisWeekEntries.forEach(e => {
+        const cat = e.c || '기타';
         categoryData[cat] = (categoryData[cat] || 0) + 1;
       });
 
@@ -13819,11 +13912,11 @@
       });
 
       // 변화량 계산
-      const change = thisWeekCompleted.length - lastWeekCompleted.length;
+      const change = thisWeekEntries.length - lastWeekEntries.length;
 
       return {
-        thisWeekCount: thisWeekCompleted.length,
-        lastWeekCount: lastWeekCompleted.length,
+        thisWeekCount: thisWeekEntries.length,
+        lastWeekCount: lastWeekEntries.length,
         change: change,
         bestDay: bestDay,
         bestDayCount: bestDayCount,
@@ -17842,10 +17935,8 @@
             if (dur > 0) totalOut = formatDur(dur);
           }
 
-          // 완료한 작업 수
-          const completedTasks = appState.tasks.filter(t =>
-            t.completed && t.completedAt && t.completedAt.startsWith(dateStr)
-          ).length;
+          // 완료한 작업 수 (completionLog 기반)
+          const completedTasks = ((appState.completionLog || {})[dateStr] || []).length;
 
           records.push({
             date: dateStr,
