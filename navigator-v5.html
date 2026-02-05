@@ -14664,6 +14664,116 @@
                   `;
                 })()}
 
+                <!-- 💊 복약 트래커 -->
+                ${(() => {
+                  const medSlots = getMedicationSlots();
+                  if (!medSlots || medSlots.length === 0) return '';
+
+                  const todayStr = getLocalDateStr();
+                  const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
+                  const todayMeds = (todayRhythm.medications) || {};
+                  const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
+                  const totalCount = medSlots.length;
+                  const streak = getMedicationStreak();
+                  const requiredSlots = medSlots.filter(s => s.required);
+                  const allRequiredTaken = requiredSlots.every(s => todayMeds[s.id]);
+
+                  return `
+                    <div class="medication-tracker">
+                      <div class="medication-header">
+                        <span class="medication-title">💊 오늘의 복약</span>
+                        <span class="medication-progress">${takenCount}/${totalCount} 완료</span>
+                      </div>
+                      <div class="medication-slots">
+                        ${medSlots.map(slot => {
+                          const taken = !!todayMeds[slot.id];
+                          const timeVal = todayMeds[slot.id] || '--:--';
+                          return `
+                            <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
+                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
+                                    title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
+                              <span class="med-icon">${slot.icon}</span>
+                              <span class="med-label">${escapeHtml(slot.label)}</span>
+                              <span class="med-time">${timeVal}</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                      ${streak > 0 ? '<div class="medication-streak">❤️ 필수 복약 연속 <span class="streak-good">' + streak + '일째</span></div>' : ''}
+                      ${!allRequiredTaken && requiredSlots.length > 0 ? '<div class="medication-streak">⚠️ 필수 복약을 잊지 마세요!</div>' : ''}
+                    </div>
+                  `;
+                })()}
+
+                <!-- 🎯 일일 목표 진행률 -->
+                ${(() => {
+                  const dailyGoal = appState.settings.dailyGoal || 5;
+                  const completed = appState.todayStats.completedToday;
+                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
+                  const isComplete = completed >= dailyGoal;
+                  const remaining = dailyGoal - completed;
+
+                  let message = '';
+                  let messageClass = '';
+                  if (isComplete) {
+                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
+                    messageClass = 'positive';
+                  } else if (percentage >= 80) {
+                    message = '거의 다 왔어요! 조금만 더! 💪';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 50) {
+                    message = '반 이상 완료! 잘하고 있어요! ⭐';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 20) {
+                    message = '좋은 시작이에요! 계속 가보자! 🚀';
+                    messageClass = '';
+                  } else if (completed > 0) {
+                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
+                    messageClass = '';
+                  } else {
+                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
+                    messageClass = '';
+                  }
+
+                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
+
+                  return `
+                    <div class="daily-goal-compact">
+                      <div class="daily-goal-header">
+                        <div class="daily-goal-info">
+                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
+                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
+                        </div>
+                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
+                      </div>
+                      <div class="daily-goal-track">
+                        <div class="daily-goal-bar" style="width: 100%">
+                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
+                            <span class="daily-goal-runner">${runner}</span>
+                          </div>
+                        </div>
+                        <span class="daily-goal-finish">🏁</span>
+                      </div>
+                      <div class="daily-goal-message ${messageClass}">${message}</div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 💬 오늘의 명언 -->
+                ${(() => {
+                  const quote = getDailyQuote();
+                  return `
+                    <div class="daily-quote">
+                      <div class="daily-quote-text">"${quote.text}"</div>
+                      <div class="daily-quote-author">— ${quote.author}</div>
+                    </div>
+                  `;
+                })()}
+
+              </div>
+
+              <!-- 중간 컬럼: 할 일 -->
+              <div class="pc-column-center">
                 <!-- 🚨 마감 임박 -->
                 ${urgentTasks.length > 0 ? `
                   <div class="dashboard-section">
@@ -14736,11 +14846,8 @@
                     <span style="font-size: 12px">내일 하면 됩니다</span>
                   </div>
                 ` : ''}
-              </div>
 
-              <!-- 중간 컬럼: 빠른 추가 + 작업 목록 -->
-              <div class="pc-column-center">
-                <!-- 빠른 추가 (상단으로 이동) -->
+                <!-- 빠른 추가 -->
                 <div class="quick-add-simple">
                   <input
                     type="text"
@@ -14946,47 +15053,6 @@
                   </div>
                 ` : ''}
 
-                <!-- 포커스 모드 표시 -->
-                ${appState.focusMode && filteredTasks.length > 0 ? `
-                  <div class="focus-mode-container">
-                    <div class="focus-mode-header">
-                      <span>🎯 포커스 모드</span>
-                      <span class="focus-mode-hint">가장 중요한 작업에 집중하세요</span>
-                    </div>
-                    <div class="focus-task">
-                      <div class="focus-task-title">${filteredTasks[0].title}</div>
-                      <div class="focus-task-meta">
-                        <span class="category ${filteredTasks[0].category}">${filteredTasks[0].category}</span>
-                        ${filteredTasks[0].estimatedTime ? ` · ${filteredTasks[0].estimatedTime}분` : ''}
-                        ${filteredTasks[0].deadline ? ` · ${formatDeadline(filteredTasks[0].deadline)}` : ''}
-                      </div>
-                      ${filteredTasks[0].subtasks && filteredTasks[0].subtasks.length > 0 ? `
-                        <div class="focus-subtasks">
-                          ${filteredTasks[0].subtasks.map((st, idx) => `
-                            <div class="focus-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete(${filteredTasks[0].id}, ${idx})">
-                              <span class="focus-subtask-check">${st.completed ? '✓' : '○'}</span>
-                              <span>${st.text}</span>
-                            </div>
-                          `).join('')}
-                        </div>
-                      ` : ''}
-                      <div class="focus-actions">
-                        <button class="btn btn-primary btn-large" onclick="completeTask(${filteredTasks[0].id})">
-                          ✓ 완료!
-                        </button>
-                        ${filteredTasks[0].link ? `
-                          <button class="btn btn-secondary" onclick="handleGo('${filteredTasks[0].link}')">
-                            🔗 열기
-                          </button>
-                        ` : ''}
-                      </div>
-                    </div>
-                    <div class="focus-remaining">
-                      나머지 ${filteredTasks.length - 1}개 작업 대기 중
-                    </div>
-                  </div>
-                ` : ''}
-
                 ${filteredTasks.length > 0 && !appState.focusMode ? `
                   <!-- 스와이프 힌트 -->
                   ${!localStorage.getItem('navigator-hide-swipe-hint') ? `
@@ -15134,109 +15200,13 @@
                 ` : ''}
               </div>
 
-              <!-- 오른쪽 컬럼: 진행률 + 도구 -->
+              <!-- 오른쪽 컬럼: 집중 도구 -->
               <div class="pc-column-right">
-                <!-- 일일 목표 진행률 (LEFT → RIGHT 이동) -->
-                ${(() => {
-                  const dailyGoal = appState.settings.dailyGoal || 5;
-                  const completed = appState.todayStats.completedToday;
-                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
-                  const isComplete = completed >= dailyGoal;
-                  const remaining = dailyGoal - completed;
-
-                  let message = '';
-                  let messageClass = '';
-                  if (isComplete) {
-                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
-                    messageClass = 'positive';
-                  } else if (percentage >= 80) {
-                    message = '거의 다 왔어요! 조금만 더! 💪';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 50) {
-                    message = '반 이상 완료! 잘하고 있어요! ⭐';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 20) {
-                    message = '좋은 시작이에요! 계속 가보자! 🚀';
-                    messageClass = '';
-                  } else if (completed > 0) {
-                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
-                    messageClass = '';
-                  } else {
-                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
-                    messageClass = '';
-                  }
-
-                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
-
-                  return `
-                    <div class="daily-goal-compact">
-                      <div class="daily-goal-header">
-                        <div class="daily-goal-info">
-                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
-                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
-                        </div>
-                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
-                      </div>
-                      <div class="daily-goal-track">
-                        <div class="daily-goal-bar" style="width: 100%">
-                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
-                            <span class="daily-goal-runner">${runner}</span>
-                          </div>
-                        </div>
-                        <span class="daily-goal-finish">🏁</span>
-                      </div>
-                      <div class="daily-goal-message ${messageClass}">${message}</div>
-                    </div>
-                  `;
-                })()}
-
-                <!-- 오늘의 복약 (LEFT → RIGHT 이동) -->
-                ${(() => {
-                  const medSlots = getMedicationSlots();
-                  if (!medSlots || medSlots.length === 0) return '';
-
-                  const todayStr = getLocalDateStr();
-                  const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
-                  const todayMeds = (todayRhythm.medications) || {};
-                  const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
-                  const totalCount = medSlots.length;
-                  const streak = getMedicationStreak();
-                  const requiredSlots = medSlots.filter(s => s.required);
-                  const allRequiredTaken = requiredSlots.every(s => todayMeds[s.id]);
-
-                  return `
-                    <div class="medication-tracker">
-                      <div class="medication-header">
-                        <span class="medication-title">💊 오늘의 복약</span>
-                        <span class="medication-progress">${takenCount}/${totalCount} 완료</span>
-                      </div>
-                      <div class="medication-slots">
-                        ${medSlots.map(slot => {
-                          const taken = !!todayMeds[slot.id];
-                          const timeVal = todayMeds[slot.id] || '--:--';
-                          return `
-                            <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
-                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
-                                    title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
-                              <span class="med-icon">${slot.icon}</span>
-                              <span class="med-label">${escapeHtml(slot.label)}</span>
-                              <span class="med-time">${timeVal}</span>
-                            </button>
-                          `;
-                        }).join('')}
-                      </div>
-                      ${streak > 0 ? '<div class="medication-streak">❤️ 필수 복약 연속 <span class="streak-good">' + streak + '일째</span></div>' : ''}
-                      ${!allRequiredTaken && requiredSlots.length > 0 ? '<div class="medication-streak">⚠️ 필수 복약을 잊지 마세요!</div>' : ''}
-                    </div>
-                  `;
-                })()}
-
-                <!-- 포모도로 타이머 -->
+                <!-- 🍅 포모도로 타이머 -->
                 ${(() => {
                   const pomo = appState.pomodoro;
                   const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
                   if (!pomo.isRunning && !pomo.isBreak && pomo.completedPomodoros === 0) {
-                    // 비활성 상태: 시작 버튼만
                     return `
                       <div class="pomodoro-section" style="margin-bottom: 12px;">
                         <button class="btn btn-secondary" onclick="startPomodoro()" style="width: 100%; padding: 10px;" aria-label="포모도로 시작">
@@ -15245,7 +15215,6 @@
                       </div>
                     `;
                   }
-                  // 활성/휴식 상태
                   return `
                     <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">
                       <div class="pomodoro-title">${pomo.isBreak ? '☕ 휴식 중' : '🍅 포모도로'}</div>
@@ -15270,18 +15239,48 @@
                   `;
                 })()}
 
-                <!-- 오늘의 명언 (LEFT → RIGHT 이동) -->
-                ${(() => {
-                  const quote = getDailyQuote();
-                  return `
-                    <div class="daily-quote">
-                      <div class="daily-quote-text">"${quote.text}"</div>
-                      <div class="daily-quote-author">— ${quote.author}</div>
+                <!-- 🎯 포커스 모드 -->
+                ${appState.focusMode && filteredTasks.length > 0 ? `
+                  <div class="focus-mode-container">
+                    <div class="focus-mode-header">
+                      <span>🎯 포커스 모드</span>
+                      <span class="focus-mode-hint">가장 중요한 작업에 집중하세요</span>
                     </div>
-                  `;
-                })()}
+                    <div class="focus-task">
+                      <div class="focus-task-title">${filteredTasks[0].title}</div>
+                      <div class="focus-task-meta">
+                        <span class="category ${filteredTasks[0].category}">${filteredTasks[0].category}</span>
+                        ${filteredTasks[0].estimatedTime ? ` · ${filteredTasks[0].estimatedTime}분` : ''}
+                        ${filteredTasks[0].deadline ? ` · ${formatDeadline(filteredTasks[0].deadline)}` : ''}
+                      </div>
+                      ${filteredTasks[0].subtasks && filteredTasks[0].subtasks.length > 0 ? `
+                        <div class="focus-subtasks">
+                          ${filteredTasks[0].subtasks.map((st, idx) => `
+                            <div class="focus-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete(${filteredTasks[0].id}, ${idx})">
+                              <span class="focus-subtask-check">${st.completed ? '✓' : '○'}</span>
+                              <span>${st.text}</span>
+                            </div>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                      <div class="focus-actions">
+                        <button class="btn btn-primary btn-large" onclick="completeTask(${filteredTasks[0].id})">
+                          ✓ 완료!
+                        </button>
+                        ${filteredTasks[0].link ? `
+                          <button class="btn btn-secondary" onclick="handleGo('${filteredTasks[0].link}')">
+                            🔗 열기
+                          </button>
+                        ` : ''}
+                      </div>
+                    </div>
+                    <div class="focus-remaining">
+                      나머지 ${filteredTasks.length - 1}개 작업 대기 중
+                    </div>
+                  </div>
+                ` : ''}
 
-                <!-- 월요일 리마인더 (LEFT → RIGHT 이동) -->
+                <!-- 📅 월요일 리마인더 -->
                 ${(() => {
                   if (!checkMondayReminder()) return '';
                   const focusTasks = appState.weeklyPlan.focusTasks
