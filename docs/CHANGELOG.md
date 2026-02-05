@@ -3,15 +3,17 @@
 ## [2026-02-06] (세션 15)
 
 ### 작업 내용
-- **PC 레이아웃 3-column 재배치 (UX)**
-  - LEFT: 마감 임박을 RIGHT→LEFT 이동 (현재시간 바로 아래), Next Action/일일목표 상단 배치, 라이프리듬/복약 하단으로
-  - CENTER: 포모도로 제거 → 퀵필터가 빠른 템플릿 바로 아래로 올라옴
-  - RIGHT: 포모도로(CENTER→RIGHT), 명언/월요일 리마인더(LEFT→RIGHT), PWA 배너 유지
-  - 목적: 핵심 정보(마감 임박, Next Action) 좌측 상단 집중, 보조 정보(명언, 리마인더) 우측 분리
+- **PC 4K 레이아웃 균등 재배치 (UX 대폭 개선)**
+  - 4K CSS: 3열(RIGHT이 LEFT 아래 쌓임) → 4열(LEFT|CENTER|RIGHT|TASKLIST) 독립 배치
+  - LEFT (핵심 상태): 시간 → 라이프 리듬(↑위로 이동) → 마감 임박 → Next Action
+  - CENTER (작업 관리): 빠른 추가 → 템플릿 → 퀵 필터 → 작업 목록 → 상세 폼 → 포커스
+  - RIGHT (진행률+도구): 일일 목표(LEFT→RIGHT) → 복약(LEFT→RIGHT) → 포모도로 → 명언 → 리마인더 → PWA
+  - TASKLIST: 4K 전체 작업 목록 (기존 유지)
+  - 목적: 3면 균등 배치, LEFT 과부하 해소, 라이프 리듬 즉시 접근
 
 ### 상태
-- 완료: PC 3-column 레이아웃 재배치
-- 다음: 브라우저에서 모바일(display: contents) 순서 확인
+- 완료: 4K 4열 레이아웃 + 콘텐츠 균등 재배치
+- 다음: 브라우저에서 확인
 
 ---
 

@@ -348,34 +348,31 @@
       }
 
       .pc-layout {
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 420px;
         gap: 40px;
       }
 
-      /* 4K 3열: 통계를 좌측 컬럼 아래에 배치 */
+      /* 4K 4열: LEFT | CENTER | RIGHT | TASKLIST 균등 배치 */
       .pc-column-left {
         grid-column: 1;
-        grid-row: 1;
       }
 
       .pc-column-center {
         grid-column: 2;
-        grid-row: 1 / 3;
       }
 
       .pc-column-right {
-        grid-column: 1;
-        grid-row: 2;
-        position: static;
+        grid-column: 3;
+        position: sticky;
+        top: 100px;
       }
 
-      /* 4K: 3번째 컬럼 - 전체 작업 목록 */
+      /* 4K: 4번째 컬럼 - 전체 작업 목록 */
       .pc-column-tasklist {
         display: flex;
         flex-direction: column;
         gap: 20px;
-        grid-column: 3;
-        grid-row: 1 / 3;
+        grid-column: 4;
         position: sticky;
         top: 100px;
         max-height: calc(100vh - 140px);
@@ -14558,138 +14555,13 @@
                   </div>
                 </div>
 
-                <!-- 셔틀 상태는 헤더로 이동됨 -->
-
-                <!-- 🚨 마감 임박 (RIGHT → LEFT 이동) -->
-                ${urgentTasks.length > 0 ? `
-                  <div class="dashboard-section">
-                    <div class="dashboard-title">🚨 마감 임박</div>
-                    <div class="urgent-list">
-                      ${urgentTasks.slice(0, 3).map(task => `
-                        <div class="urgent-item">
-                          <div class="urgent-item-title">${escapeHtml(task.title)}</div>
-                          <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  </div>
-                ` : ''}
-
-                ${nextAction ? `
-                  <div class="next-action ${urgencyClass}">
-                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
-                    <div class="task-title">${nextAction.title}</div>
-                    <div class="task-meta">
-                      <span class="category ${nextAction.category}">${nextAction.category}</span>
-                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
-                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
-                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
-                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
-                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
-                        ${nextAction.link ? '🚀 GO' : '시작하기'}
-                      </button>
-                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
-                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
-                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
-                          '5분 집중'}</span>
-                      </button>
-                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
-                        ✓ 완료
-                      </button>
-                    </div>
-                  </div>
-                ` : `
-                  ${(() => {
-                    const rest = getRestActivity();
-                    const completedToday = appState.todayStats.completedToday;
-                    const streak = appState.streak.current;
-                    return `
-                      <div class="empty-state-enhanced">
-                        <div class="empty-state-icon-large">🎉</div>
-                        <div class="empty-state-title">모든 작업 완료!</div>
-                        <div class="empty-state-subtitle">
-                          오늘 <strong>${completedToday}개</strong> 완료했어요!
-                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
-                        </div>
-                        <div class="empty-state-actions">
-                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
-                            ➕ 새 작업 추가
-                          </button>
-                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
-                            ${rest.icon} ${rest.text}
-                          </button>
-                        </div>
-                      </div>
-                    `;
-                  })()}
-                `}
-
-                <!-- 일일 목표 진행률 (게이미피케이션) -->
-                ${(() => {
-                  const dailyGoal = appState.settings.dailyGoal || 5;
-                  const completed = appState.todayStats.completedToday;
-                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
-                  const isComplete = completed >= dailyGoal;
-                  const remaining = dailyGoal - completed;
-
-                  // 동기부여 메시지
-                  let message = '';
-                  let messageClass = '';
-                  if (isComplete) {
-                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
-                    messageClass = 'positive';
-                  } else if (percentage >= 80) {
-                    message = '거의 다 왔어요! 조금만 더! 💪';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 50) {
-                    message = '반 이상 완료! 잘하고 있어요! ⭐';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 20) {
-                    message = '좋은 시작이에요! 계속 가보자! 🚀';
-                    messageClass = '';
-                  } else if (completed > 0) {
-                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
-                    messageClass = '';
-                  } else {
-                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
-                    messageClass = '';
-                  }
-
-                  // 러너 이모지
-                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
-
-                  return `
-                    <div class="daily-goal-compact">
-                      <div class="daily-goal-header">
-                        <div class="daily-goal-info">
-                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
-                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
-                        </div>
-                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
-                      </div>
-                      <div class="daily-goal-track">
-                        <div class="daily-goal-bar" style="width: 100%">
-                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
-                            <span class="daily-goal-runner">${runner}</span>
-                          </div>
-                        </div>
-                        <span class="daily-goal-finish">🏁</span>
-                      </div>
-                      <div class="daily-goal-message ${messageClass}">${message}</div>
-                    </div>
-                  `;
-                })()}
-
-                <!-- 라이프 리듬 트래커 (6개 항목) -->
+                <!-- 📊 라이프 리듬 트래커 -->
                 ${(() => {
                   const today = getLocalDateStr();
                   const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
                   const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
                   const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
 
-                  // 시간을 분으로 변환하는 헬퍼
                   const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
                   const formatDur = (mins) => {
                     if (!mins || mins <= 0) return null;
@@ -14698,7 +14570,6 @@
                     return h + 'h ' + m + 'm';
                   };
 
-                  // 어제 수면 시간 계산
                   let sleepDuration = null;
                   if (yesterdayData.sleep && rhythm.wakeUp) {
                     const sleepTime = toMins(yesterdayData.sleep);
@@ -14709,28 +14580,24 @@
                     sleepDuration = formatDur(duration);
                   }
 
-                  // 출근 통근시간 (집출발 → 회사도착)
                   let commuteToWork = null;
                   if (rhythm.homeDepart && rhythm.workArrive) {
                     const dur = toMins(rhythm.workArrive) - toMins(rhythm.homeDepart);
                     commuteToWork = formatDur(dur);
                   }
 
-                  // 퇴근 통근시간 (회사출발 → 집도착)
                   let commuteToHome = null;
                   if (rhythm.workDepart && rhythm.homeArrive) {
                     const dur = toMins(rhythm.homeArrive) - toMins(rhythm.workDepart);
                     commuteToHome = formatDur(dur);
                   }
 
-                  // 실제 근무 시간 (회사도착 → 회사출발)
                   let workDuration = null;
                   if (rhythm.workArrive && rhythm.workDepart) {
                     const dur = toMins(rhythm.workDepart) - toMins(rhythm.workArrive);
                     workDuration = formatDur(dur);
                   }
 
-                  // 총 외출 시간 (집출발 → 집도착)
                   let totalOutTime = null;
                   if (rhythm.homeDepart && rhythm.homeArrive) {
                     const dur = toMins(rhythm.homeArrive) - toMins(rhythm.homeDepart);
@@ -14797,46 +14664,71 @@
                   `;
                 })()}
 
-                <!-- 오늘의 복약 -->
-                ${(() => {
-                  const medSlots = getMedicationSlots();
-                  if (!medSlots || medSlots.length === 0) return '';
-
-                  const todayStr = getLocalDateStr();
-                  const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
-                  const todayMeds = (todayRhythm.medications) || {};
-                  const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
-                  const totalCount = medSlots.length;
-                  const streak = getMedicationStreak();
-                  const requiredSlots = medSlots.filter(s => s.required);
-                  const allRequiredTaken = requiredSlots.every(s => todayMeds[s.id]);
-
-                  return `
-                    <div class="medication-tracker">
-                      <div class="medication-header">
-                        <span class="medication-title">💊 오늘의 복약</span>
-                        <span class="medication-progress">${takenCount}/${totalCount} 완료</span>
-                      </div>
-                      <div class="medication-slots">
-                        ${medSlots.map(slot => {
-                          const taken = !!todayMeds[slot.id];
-                          const timeVal = todayMeds[slot.id] || '--:--';
-                          return `
-                            <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
-                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
-                                    title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
-                              <span class="med-icon">${slot.icon}</span>
-                              <span class="med-label">${escapeHtml(slot.label)}</span>
-                              <span class="med-time">${timeVal}</span>
-                            </button>
-                          `;
-                        }).join('')}
-                      </div>
-                      ${streak > 0 ? '<div class="medication-streak">❤️ 필수 복약 연속 <span class="streak-good">' + streak + '일째</span></div>' : ''}
-                      ${!allRequiredTaken && requiredSlots.length > 0 ? '<div class="medication-streak">⚠️ 필수 복약을 잊지 마세요!</div>' : ''}
+                <!-- 🚨 마감 임박 -->
+                ${urgentTasks.length > 0 ? `
+                  <div class="dashboard-section">
+                    <div class="dashboard-title">🚨 마감 임박</div>
+                    <div class="urgent-list">
+                      ${urgentTasks.slice(0, 3).map(task => `
+                        <div class="urgent-item">
+                          <div class="urgent-item-title">${escapeHtml(task.title)}</div>
+                          <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
+                        </div>
+                      `).join('')}
                     </div>
-                  `;
-                })()}
+                  </div>
+                ` : ''}
+
+                ${nextAction ? `
+                  <div class="next-action ${urgencyClass}">
+                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
+                    <div class="task-title">${nextAction.title}</div>
+                    <div class="task-meta">
+                      <span class="category ${nextAction.category}">${nextAction.category}</span>
+                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
+                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
+                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
+                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
+                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
+                        ${nextAction.link ? '🚀 GO' : '시작하기'}
+                      </button>
+                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
+                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
+                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
+                          '5분 집중'}</span>
+                      </button>
+                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
+                        ✓ 완료
+                      </button>
+                    </div>
+                  </div>
+                ` : `
+                  ${(() => {
+                    const rest = getRestActivity();
+                    const completedToday = appState.todayStats.completedToday;
+                    const streak = appState.streak.current;
+                    return `
+                      <div class="empty-state-enhanced">
+                        <div class="empty-state-icon-large">🎉</div>
+                        <div class="empty-state-title">모든 작업 완료!</div>
+                        <div class="empty-state-subtitle">
+                          오늘 <strong>${completedToday}개</strong> 완료했어요!
+                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
+                        </div>
+                        <div class="empty-state-actions">
+                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
+                            ➕ 새 작업 추가
+                          </button>
+                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
+                            ${rest.icon} ${rest.text}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  })()}
+                `}
 
                 ${hiddenCount > 0 ? `
                   <div class="hidden-tasks">
@@ -15242,9 +15134,104 @@
                 ` : ''}
               </div>
 
-              <!-- 오른쪽 컬럼: 보조 정보 + 도구 -->
+              <!-- 오른쪽 컬럼: 진행률 + 도구 -->
               <div class="pc-column-right">
-                <!-- 포모도로 타이머 (CENTER → RIGHT 이동) -->
+                <!-- 일일 목표 진행률 (LEFT → RIGHT 이동) -->
+                ${(() => {
+                  const dailyGoal = appState.settings.dailyGoal || 5;
+                  const completed = appState.todayStats.completedToday;
+                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
+                  const isComplete = completed >= dailyGoal;
+                  const remaining = dailyGoal - completed;
+
+                  let message = '';
+                  let messageClass = '';
+                  if (isComplete) {
+                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
+                    messageClass = 'positive';
+                  } else if (percentage >= 80) {
+                    message = '거의 다 왔어요! 조금만 더! 💪';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 50) {
+                    message = '반 이상 완료! 잘하고 있어요! ⭐';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 20) {
+                    message = '좋은 시작이에요! 계속 가보자! 🚀';
+                    messageClass = '';
+                  } else if (completed > 0) {
+                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
+                    messageClass = '';
+                  } else {
+                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
+                    messageClass = '';
+                  }
+
+                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
+
+                  return `
+                    <div class="daily-goal-compact">
+                      <div class="daily-goal-header">
+                        <div class="daily-goal-info">
+                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
+                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
+                        </div>
+                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
+                      </div>
+                      <div class="daily-goal-track">
+                        <div class="daily-goal-bar" style="width: 100%">
+                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
+                            <span class="daily-goal-runner">${runner}</span>
+                          </div>
+                        </div>
+                        <span class="daily-goal-finish">🏁</span>
+                      </div>
+                      <div class="daily-goal-message ${messageClass}">${message}</div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 오늘의 복약 (LEFT → RIGHT 이동) -->
+                ${(() => {
+                  const medSlots = getMedicationSlots();
+                  if (!medSlots || medSlots.length === 0) return '';
+
+                  const todayStr = getLocalDateStr();
+                  const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
+                  const todayMeds = (todayRhythm.medications) || {};
+                  const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
+                  const totalCount = medSlots.length;
+                  const streak = getMedicationStreak();
+                  const requiredSlots = medSlots.filter(s => s.required);
+                  const allRequiredTaken = requiredSlots.every(s => todayMeds[s.id]);
+
+                  return `
+                    <div class="medication-tracker">
+                      <div class="medication-header">
+                        <span class="medication-title">💊 오늘의 복약</span>
+                        <span class="medication-progress">${takenCount}/${totalCount} 완료</span>
+                      </div>
+                      <div class="medication-slots">
+                        ${medSlots.map(slot => {
+                          const taken = !!todayMeds[slot.id];
+                          const timeVal = todayMeds[slot.id] || '--:--';
+                          return `
+                            <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
+                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
+                                    title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
+                              <span class="med-icon">${slot.icon}</span>
+                              <span class="med-label">${escapeHtml(slot.label)}</span>
+                              <span class="med-time">${timeVal}</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                      ${streak > 0 ? '<div class="medication-streak">❤️ 필수 복약 연속 <span class="streak-good">' + streak + '일째</span></div>' : ''}
+                      ${!allRequiredTaken && requiredSlots.length > 0 ? '<div class="medication-streak">⚠️ 필수 복약을 잊지 마세요!</div>' : ''}
+                    </div>
+                  `;
+                })()}
+
+                <!-- 포모도로 타이머 -->
                 ${(() => {
                   const pomo = appState.pomodoro;
                   const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
