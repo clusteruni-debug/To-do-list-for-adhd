@@ -42,6 +42,16 @@
 - 기존 `cleanupOldCompletedTasks()` 동작 유지 (appState.tasks 정리) — completionLog는 별도 영구 보존
 - 기존 사용자: completionLog 없어도 `|| {}` 처리로 크래시 없음
 
+### 버그 수정 (세션 13 추가)
+- **일상/전체 작업 목록 완료 태스크 사라짐 버그 수정**
+  - 원인: `getTodayCompletedTasks()`가 오늘 완료한 태스크만 반환 → 어제 완료 태스크가 pending에도 completedTasks에도 안 보이는 "블랙홀"
+  - 수정: 일상 탭 + 전체 작업 목록에서 `lifeTasks.filter(t => t.completed)` / `categoryTasks.filter(t => t.completed)` 사용
+  - "오늘" 탭과 헤더 카운트는 기존 `getTodayCompletedTasks` 유지 (정보 표시용)
+- **점심 복약 슬롯 ADHD약/영양제 분리**
+  - `med_afternoon` (ADHD약+영양제(점심)) → `med_afternoon_adhd` (ADHD약(점심)) + `med_afternoon_nutrient` (영양제(점심))
+  - 기존 데이터 마이그레이션: loadLifeRhythm, mergeRhythmHistory, loadFromFirebase, startRealtimeSync 4곳 자동 변환
+  - 기존 `med_afternoon` 기록 → `med_afternoon_adhd`로 이전 (ADHD약이 필수이므로)
+
 ### 다음에 할 것
 - P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
 - P1: 동기화 백업 3개 로테이션

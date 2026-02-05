@@ -9270,7 +9270,8 @@
           workdays: [1, 2, 3, 4, 5],  // 근무일 (0=일, 1=월, ... 6=토)
           medicationSlots: [
             { id: 'med_morning', label: 'ADHD약(아침)', icon: '💊', required: true },
-            { id: 'med_afternoon', label: 'ADHD약+영양제(점심)', icon: '💊', required: true },
+            { id: 'med_afternoon_adhd', label: 'ADHD약(점심)', icon: '💊', required: true },
+            { id: 'med_afternoon_nutrient', label: '영양제(점심)', icon: '🌿', required: false },
             { id: 'med_evening', label: '영양제(저녁)', icon: '🌿', required: false }
           ]
         }
@@ -9834,6 +9835,9 @@
         // 복약 기록 병합 (슬롯별로 값이 있는 쪽 우선)
         const lMeds = l.medications || {};
         const cMeds = c.medications || {};
+        // med_afternoon → med_afternoon_adhd 마이그레이션
+        if (lMeds.med_afternoon !== undefined) { lMeds.med_afternoon_adhd = lMeds.med_afternoon; delete lMeds.med_afternoon; }
+        if (cMeds.med_afternoon !== undefined) { cMeds.med_afternoon_adhd = cMeds.med_afternoon; delete cMeds.med_afternoon; }
         const allSlots = new Set([...Object.keys(lMeds), ...Object.keys(cMeds)]);
         if (allSlots.size > 0) {
           merged[date].medications = {};
@@ -10046,6 +10050,9 @@
             // 복약 기록 병합 (슬롯별)
             const lMedsToday = (localToday.medications || {});
             const cMedsToday = (cloudToday.medications || {});
+            // med_afternoon → med_afternoon_adhd 마이그레이션
+            if (lMedsToday.med_afternoon !== undefined) { lMedsToday.med_afternoon_adhd = lMedsToday.med_afternoon; delete lMedsToday.med_afternoon; }
+            if (cMedsToday.med_afternoon !== undefined) { cMedsToday.med_afternoon_adhd = cMedsToday.med_afternoon; delete cMedsToday.med_afternoon; }
             const allMedSlots = new Set([...Object.keys(lMedsToday), ...Object.keys(cMedsToday)]);
             const mergedMeds = {};
             for (const slot of allMedSlots) {
@@ -10189,6 +10196,9 @@
               // 복약 기록 병합 (슬롯별)
               const lMedsRT = (localToday.medications || {});
               const cMedsRT = (cloudToday.medications || {});
+              // med_afternoon → med_afternoon_adhd 마이그레이션
+              if (lMedsRT.med_afternoon !== undefined) { lMedsRT.med_afternoon_adhd = lMedsRT.med_afternoon; delete lMedsRT.med_afternoon; }
+              if (cMedsRT.med_afternoon !== undefined) { cMedsRT.med_afternoon_adhd = cMedsRT.med_afternoon; delete cMedsRT.med_afternoon; }
               const allMedSlotsRT = new Set([...Object.keys(lMedsRT), ...Object.keys(cMedsRT)]);
               const mergedMedsRT = {};
               for (const slot of allMedSlotsRT) {
@@ -15406,7 +15416,8 @@
                 if (!b.deadline) return -1;
                 return new Date(a.deadline) - new Date(b.deadline);
               });
-              const completedTasks = getTodayCompletedTasks(lifeTasks);
+              // 모든 완료 태스크 표시 (getTodayCompletedTasks는 오늘만 → 어제 완료 태스크 사라지는 버그)
+              const completedTasks = lifeTasks.filter(t => t.completed);
               const dailyTasks = pendingTasks.filter(t => t.category === '일상');
               const familyTasks = pendingTasks.filter(t => t.category === '가족');
 
@@ -16134,7 +16145,8 @@
             ${['본업', '부업', '일상', '가족'].map(category => {
               const categoryTasks = appState.tasks.filter(t => t.category === category);
               const pendingTasks = categoryTasks.filter(t => !t.completed);
-              const completedTasks = getTodayCompletedTasks(categoryTasks);
+              // 모든 완료 태스크 표시 (오늘만 필터링하면 어제 완료 태스크가 사라짐)
+              const completedTasks = categoryTasks.filter(t => t.completed);
 
               if (categoryTasks.length === 0) return '';
 
@@ -17254,7 +17266,8 @@
     function getMedicationSlots() {
       return (appState.lifeRhythm.settings && appState.lifeRhythm.settings.medicationSlots) || [
         { id: 'med_morning', label: 'ADHD약(아침)', icon: '💊', required: true },
-        { id: 'med_afternoon', label: 'ADHD약+영양제(점심)', icon: '💊', required: true },
+        { id: 'med_afternoon_adhd', label: 'ADHD약(점심)', icon: '💊', required: true },
+        { id: 'med_afternoon_nutrient', label: '영양제(점심)', icon: '🌿', required: false },
         { id: 'med_evening', label: '영양제(저녁)', icon: '🌿', required: false }
       ];
     }
@@ -18711,6 +18724,11 @@
             if (data.homeArrive === undefined) data.homeArrive = null;
             // 복약 필드 초기화 (마이그레이션)
             if (data.medications === undefined) data.medications = {};
+            // med_afternoon → med_afternoon_adhd 마이그레이션 (ADHD약/영양제 분리)
+            if (data.medications && data.medications.med_afternoon !== undefined) {
+              data.medications.med_afternoon_adhd = data.medications.med_afternoon;
+              delete data.medications.med_afternoon;
+            }
             return data;
           };
 
@@ -18751,6 +18769,18 @@
             history: parsed.history || {},
             settings: { ...appState.lifeRhythm.settings, ...parsed.settings }
           };
+
+          // medicationSlots에서 med_afternoon → med_afternoon_adhd + med_afternoon_nutrient 분리 마이그레이션
+          const slots = appState.lifeRhythm.settings.medicationSlots;
+          if (slots) {
+            const oldIdx = slots.findIndex(s => s.id === 'med_afternoon');
+            if (oldIdx !== -1) {
+              slots.splice(oldIdx, 1,
+                { id: 'med_afternoon_adhd', label: 'ADHD약(점심)', icon: '💊', required: true },
+                { id: 'med_afternoon_nutrient', label: '영양제(점심)', icon: '🌿', required: false }
+              );
+            }
+          }
 
           // 마이그레이션된 데이터 저장
           saveLifeRhythm();
