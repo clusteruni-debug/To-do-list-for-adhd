@@ -8724,6 +8724,8 @@
       if (task.organizer) validated.organizer = task.organizer;
       if (task.eventType) validated.eventType = task.eventType;
       if (task.repeatMonthDay) validated.repeatMonthDay = task.repeatMonthDay;
+      if (task.lastCompletedAt) validated.lastCompletedAt = task.lastCompletedAt;
+      if (task.source) validated.source = task.source;
 
       return validated;
     }
@@ -8788,6 +8790,126 @@
         console.log(`[cleanup] 오래된 완료 태스크 ${removed}개 정리됨`);
       }
       return removed;
+    }
+
+    /**
+     * 반복 태스크 일일 초기화 (날짜 변경 시 자동 실행)
+     * - daily/weekdays 태스크: 완료 상태를 리셋하여 매일 새로 시작
+     * - weekdays 태스크: 주말에는 초기화하지 않음 (금요일 완료 → 월요일에 리셋)
+     * - 기존 createNextRepeatTask로 생긴 중복 태스크도 정리
+     * - 스트릭: 어제 모든 반복 태스크 완료 시 유지, 아니면 리셋
+     */
+    function checkDailyReset() {
+      const today = getLocalDateStr();
+      const lastResetDate = localStorage.getItem('navigator-last-reset-date');
+
+      if (lastResetDate === today) return false; // 이미 오늘 초기화됨
+
+      const now = new Date();
+      const todayDay = now.getDay(); // 0=일, 6=토
+      const isWeekday = todayDay !== 0 && todayDay !== 6;
+
+      let changed = false;
+
+      // 1단계: 반복 태스크 완료 상태 초기화
+      appState.tasks.forEach(task => {
+        if (task.repeatType !== 'daily' && task.repeatType !== 'weekdays') return;
+
+        // weekdays 태스크: 주말(토/일)에는 초기화하지 않음
+        if (task.repeatType === 'weekdays' && !isWeekday) return;
+
+        if (task.completed && task.completedAt) {
+          const completedDate = getLocalDateStr(new Date(task.completedAt));
+          if (completedDate !== today) {
+            // 오늘이 아닌 날에 완료된 태스크 → 초기화
+            task.lastCompletedAt = task.completedAt; // 히스토리 보존
+            task.completed = false;
+            task.completedAt = null;
+            task.updatedAt = new Date().toISOString();
+            changed = true;
+          }
+        }
+      });
+
+      // 2단계: 중복 반복 태스크 정리 (같은 제목+카테고리+반복타입의 미완료 태스크가 여러 개면 하나만 남김)
+      const seen = new Map();
+      const toRemove = [];
+
+      appState.tasks.forEach(task => {
+        if (task.repeatType !== 'daily' && task.repeatType !== 'weekdays') return;
+        if (task.completed) return; // 완료된 것은 cleanupOldCompletedTasks가 처리
+
+        const key = `${task.title}|${task.repeatType}|${task.category}`;
+        if (seen.has(key)) {
+          // 중복 발견: 더 최근에 생성된 것을 남기고 나머지 제거
+          const existing = seen.get(key);
+          const existingTime = new Date(existing.createdAt || 0).getTime();
+          const currentTime = new Date(task.createdAt || 0).getTime();
+          if (currentTime > existingTime) {
+            toRemove.push(existing.id);
+            seen.set(key, task);
+          } else {
+            toRemove.push(task.id);
+          }
+        } else {
+          seen.set(key, task);
+        }
+      });
+
+      if (toRemove.length > 0) {
+        appState.tasks = appState.tasks.filter(t => !toRemove.includes(t.id));
+        changed = true;
+        console.log(`[daily-reset] 중복 반복 태스크 ${toRemove.length}개 정리`);
+      }
+
+      // 3단계: 반복 태스크 스트릭 체크 (어제 모든 반복 태스크 완료 여부)
+      if (lastResetDate) {
+        checkDailyRepeatStreak();
+      }
+
+      localStorage.setItem('navigator-last-reset-date', today);
+
+      if (changed) {
+        console.log('[daily-reset] 반복 태스크 초기화 완료');
+      }
+
+      return changed;
+    }
+
+    /**
+     * 반복 태스크 스트릭 체크
+     * 어제 모든 daily/weekdays 태스크를 완료했으면 스트릭 유지, 아니면 리셋
+     */
+    function checkDailyRepeatStreak() {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = getLocalDateStr(yesterday);
+      const yesterdayDay = yesterday.getDay();
+      const wasWeekday = yesterdayDay !== 0 && yesterdayDay !== 6;
+
+      // daily + weekdays(어제가 평일인 경우만) 태스크 필터링
+      const repeatTasks = appState.tasks.filter(t => {
+        if (t.repeatType === 'daily') return true;
+        if (t.repeatType === 'weekdays' && wasWeekday) return true;
+        return false;
+      });
+
+      if (repeatTasks.length === 0) return; // 반복 태스크 없으면 무시
+
+      // 어제 모든 반복 태스크가 완료되었는지 확인
+      // (lastCompletedAt 또는 completedAt이 어제 날짜인지)
+      const allCompleted = repeatTasks.every(t => {
+        const completedDateRaw = t.lastCompletedAt || t.completedAt;
+        if (!completedDateRaw) return false;
+        return getLocalDateStr(new Date(completedDateRaw)) === yesterdayStr;
+      });
+
+      if (!allCompleted) {
+        // 어제 반복 태스크를 전부 완료하지 못함 → 스트릭 리셋
+        appState.streak.current = 0;
+        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        console.log('[daily-reset] 어제 미완료 반복 태스크 있음 → 스트릭 리셋');
+      }
     }
 
     // ============================================
@@ -9002,6 +9124,12 @@
 
         // 오래된 완료 태스크 정리
         cleanupOldCompletedTasks();
+
+        // 반복 태스크(daily/weekdays) 일일 초기화
+        const dailyResetDone = checkDailyReset();
+        if (dailyResetDone) {
+          recomputeTodayStats(); // 초기화 후 오늘 통계 재계산
+        }
 
         // 첫 방문 시 온보딩
         if (isFirstVisit) {
@@ -11219,7 +11347,9 @@
       recordActivity();
 
       // 반복 작업이면 다음 주기 작업 자동 생성
-      if (task.repeatType && task.repeatType !== 'none') {
+      // daily/weekdays는 checkDailyReset()이 자동 초기화하므로 중복 생성하지 않음
+      if (task.repeatType && task.repeatType !== 'none'
+          && task.repeatType !== 'daily' && task.repeatType !== 'weekdays') {
         const nextTask = createNextRepeatTask(task);
         if (nextTask) {
           appState.tasks.push(nextTask);
@@ -19122,6 +19252,24 @@
     setInterval(updateTime, 1000);
     setInterval(checkDeadlinesAndNotify, 5 * 60 * 1000); // 5분마다 마감 체크
     checkDeadlinesAndNotify(); // 초기 실행
+
+    // 반복 태스크 일일 초기화: 자정 넘김 감지 (1분마다 날짜 변경 체크)
+    setInterval(() => {
+      if (checkDailyReset()) {
+        recomputeTodayStats();
+        renderStatic();
+        showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
+      }
+    }, 60000);
+
+    // 반복 태스크 일일 초기화: 탭 포커스 시 체크
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && checkDailyReset()) {
+        recomputeTodayStats();
+        renderStatic();
+        showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
+      }
+    });
 
     // 주간 리뷰 체크 (일요일 저녁)
     setTimeout(() => checkWeeklyReview(), 3000);

@@ -3,6 +3,16 @@
 ## [2026-02-05] (세션 9)
 
 ### 작업 내용
+- **반복 태스크(daily/weekdays) 날짜 변경 자동 초기화**
+  - `checkDailyReset()`: 날짜 변경 감지 시 daily/weekdays 완료 상태 리셋
+  - weekdays 태스크: 주말(토/일)에는 초기화하지 않음 (금 완료 → 월 리셋)
+  - `lastCompletedAt` 필드: 초기화 전 완료 시각을 히스토리로 보존
+  - 중복 반복 태스크 자동 정리 (같은 제목+카테고리+반복타입 → 최신 1개만 유지)
+  - `completeTask()`: daily/weekdays는 createNextRepeatTask 스킵 (초기화 방식으로 전환)
+  - `checkDailyRepeatStreak()`: 어제 모든 반복 태스크 완료 여부로 스트릭 유지/리셋
+  - 트리거: 앱 로딩 시 + visibilitychange(탭 포커스) + setInterval(1분마다 자정 넘김 감지)
+  - `validateTask()`에 `lastCompletedAt`, `source` 필드 보존 추가
+
 - **멀티디바이스 동기화 데이터 유실 방지 (P0 버그 수정)**
   - 근본 원인: `onAuthStateChanged` → `appState.user` 설정 후 `loadFromFirebase()` 완료 전에 `syncToFirebase()`가 빈 데이터를 업로드하는 Race Condition
   - `isLoadingFromCloud` 플래그: 클라우드 초기 로드 중 모든 Firebase 업로드 차단
