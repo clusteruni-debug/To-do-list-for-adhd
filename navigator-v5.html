@@ -5680,6 +5680,113 @@
       }
     }
 
+    /* 복약/영양제 트래커 */
+    .medication-tracker {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .medication-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .medication-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .medication-progress {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .medication-slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .medication-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-primary);
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .medication-btn:hover {
+      background: var(--bg-primary);
+      border-color: var(--primary);
+    }
+
+    .medication-btn:active {
+      transform: scale(0.95);
+    }
+
+    .medication-btn.taken {
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+      border-color: var(--success);
+    }
+
+    .medication-btn.taken .med-time {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .medication-btn .med-icon {
+      font-size: 18px;
+    }
+
+    .medication-btn .med-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .medication-btn .med-time {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+      margin-left: auto;
+    }
+
+    .medication-streak {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .medication-streak .streak-good {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .medication-btn.required {
+      border-left: 3px solid var(--primary);
+    }
+
+    .medication-btn.required.taken {
+      border-left-color: var(--success);
+    }
+
     /* 오늘의 명언 */
     .daily-quote {
       background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
@@ -8525,6 +8632,100 @@
       color: var(--text-secondary);
       margin-top: 8px;
     }
+
+    /* ============================================
+       통근 트래커 스타일
+       ============================================ */
+    .commute-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .commute-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .commute-sub-tabs { display: flex; gap: 4px; background: var(--bg-secondary); border-radius: 12px; padding: 3px; margin-bottom: 16px; }
+    .commute-sub-tab { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; min-height: 44px; }
+    .commute-sub-tab.active { background: var(--accent-primary); color: #fff; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); }
+    .commute-route-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .commute-route-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--bg-card); border-radius: 14px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; min-height: 44px; }
+    .commute-route-card:hover { border-color: var(--accent-primary); transform: translateY(-1px); }
+    .commute-route-card.selected { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.08); }
+    .commute-route-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .commute-route-info { flex: 1; min-width: 0; }
+    .commute-route-name { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .commute-route-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .commute-route-time { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .commute-route-actions { display: flex; gap: 4px; }
+    .commute-route-action-btn { width: 32px; height: 32px; border: none; background: var(--bg-secondary); border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .commute-route-action-btn:hover { background: var(--bg-hover); }
+    .commute-time-display { background: var(--bg-card); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+    .commute-time-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+    .commute-time-row + .commute-time-row { border-top: 1px solid var(--border-color); }
+    .commute-time-label { font-size: 14px; color: var(--text-secondary); }
+    .commute-time-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .commute-time-value.empty { color: var(--text-muted); font-weight: 400; }
+    .commute-duration-badge { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 20px; font-size: 15px; font-weight: 700; margin-top: 8px; }
+    .commute-duration-badge.good { background: rgba(72, 187, 120, 0.15); color: #48bb78; }
+    .commute-duration-badge.normal { background: rgba(237, 137, 54, 0.15); color: #ed8936; }
+    .commute-duration-badge.bad { background: rgba(245, 101, 101, 0.15); color: #f56565; }
+    .commute-recommend-card { background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+    .commute-recommend-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+    .commute-recommend-time { font-size: 28px; font-weight: 800; color: var(--accent-primary); }
+    .commute-recommend-detail { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+    .commute-recommend-confidence { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+    .commute-recommend-confidence.high { background: rgba(72, 187, 120, 0.15); color: #48bb78; }
+    .commute-recommend-confidence.medium { background: rgba(237, 137, 54, 0.15); color: #ed8936; }
+    .commute-recommend-confidence.low { background: rgba(160, 174, 192, 0.15); color: #a0aec0; }
+    .commute-recent-summary { background: var(--bg-card); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+    .commute-recent-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+    .commute-recent-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+    .commute-recent-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .commute-recent-name { flex: 1; color: var(--text-primary); font-weight: 500; }
+    .commute-recent-avg { color: var(--text-secondary); }
+    .commute-stats-card { background: var(--bg-card); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+    .commute-stats-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .commute-stats-route-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+    .commute-stats-count { font-size: 12px; color: var(--text-muted); padding: 2px 8px; background: var(--bg-secondary); border-radius: 10px; }
+    .commute-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .commute-stat-item { text-align: center; padding: 10px 6px; background: var(--bg-secondary); border-radius: 10px; }
+    .commute-stat-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .commute-stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+    .commute-freq-bar-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .commute-freq-bar-label { width: 80px; font-size: 12px; font-weight: 500; color: var(--text-secondary); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .commute-freq-bar-track { flex: 1; height: 20px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; }
+    .commute-freq-bar-fill { height: 100%; border-radius: 10px; transition: width 0.4s ease; min-width: 4px; }
+    .commute-freq-bar-count { width: 40px; font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .commute-weekday-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .commute-weekday-item { padding: 8px 2px; background: var(--bg-secondary); border-radius: 8px; }
+    .commute-weekday-label { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .commute-weekday-value { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+    .commute-weekday-count { font-size: 10px; color: var(--text-muted); }
+    .commute-best-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 700; background: rgba(72, 187, 120, 0.15); color: #48bb78; margin-left: 8px; }
+    .commute-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .commute-modal { background: var(--bg-primary); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .commute-modal-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+    .commute-modal-field { margin-bottom: 14px; }
+    .commute-modal-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+    .commute-modal-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; box-sizing: border-box; }
+    .commute-modal-input:focus { outline: none; border-color: var(--accent-primary); }
+    .commute-modal-select { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-card); color: var(--text-primary); font-size: 14px; box-sizing: border-box; }
+    .commute-color-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .commute-color-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; transition: border-color 0.15s, transform 0.15s; }
+    .commute-color-btn:hover { transform: scale(1.15); }
+    .commute-color-btn.selected { border-color: var(--text-primary); }
+    .commute-modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .commute-modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; }
+    .commute-modal-cancel { background: var(--bg-secondary); color: var(--text-secondary); }
+    .commute-modal-save { background: var(--accent-primary); color: #fff; }
+    .commute-tag-prompt { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 999; max-width: 360px; width: calc(100% - 40px); animation: commuteSlideUp 0.3s ease; }
+    .commute-tag-prompt-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
+    .commute-tag-prompt-routes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .commute-tag-prompt-btn { padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); font-size: 13px; font-weight: 500; cursor: pointer; min-height: 36px; transition: all 0.15s; }
+    .commute-tag-prompt-btn:hover { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.08); }
+    .commute-tag-prompt-later { font-size: 12px; color: var(--text-muted); cursor: pointer; text-align: center; }
+    .commute-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .commute-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .commute-empty-text { font-size: 14px; margin-bottom: 16px; }
+    .commute-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: var(--accent-primary); color: #fff; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; }
+    .commute-conditions-row { display: flex; gap: 6px; margin-top: 8px; }
+    .commute-condition-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); font-size: 13px; cursor: pointer; min-height: 36px; transition: all 0.15s; }
+    .commute-condition-btn.selected { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.1); color: var(--accent-primary); font-weight: 600; }
+    @keyframes commuteSlideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
   </style>
 </head>
 <body>
@@ -9022,7 +9223,7 @@
         streak: 0,                    // 연속 완료 (세션 내)
         lastCompletedDate: null       // 마지막 완료 날짜
       },
-      // 라이프 리듬 트래커 (6개 항목)
+      // 라이프 리듬 트래커 (6개 항목 + 복약)
       lifeRhythm: {
         today: {
           date: null,                 // 오늘 날짜 (YYYY-MM-DD)
@@ -9031,14 +9232,35 @@
           workArrive: null,           // 회사 도착 시간
           workDepart: null,           // 회사 출발 시간
           homeArrive: null,           // 집 도착 시간
-          sleep: null                 // 취침 시간
+          sleep: null,                // 취침 시간
+          medications: {}             // 복약 기록 { slotId: 'HH:MM' or null }
         },
         history: {},                  // 날짜별 기록
         settings: {
           targetSleep: 7,             // 목표 수면 시간
-          workdays: [1, 2, 3, 4, 5]   // 근무일 (0=일, 1=월, ... 6=토)
+          workdays: [1, 2, 3, 4, 5],  // 근무일 (0=일, 1=월, ... 6=토)
+          medicationSlots: [
+            { id: 'med_morning', label: 'ADHD약(아침)', icon: '💊', required: true },
+            { id: 'med_afternoon', label: 'ADHD약+영양제(점심)', icon: '💊', required: true },
+            { id: 'med_evening', label: '영양제(저녁)', icon: '🌿', required: false }
+          ]
         }
       },
+      // 통근 트래커
+      commuteTracker: {
+        routes: [],
+        trips: {},
+        settings: {
+          targetArrivalTime: '09:00',
+          bufferMinutes: 10,
+          preferredMorningRoute: null,
+          preferredEveningRoute: null,
+          enableAutoTag: true
+        }
+      },
+      commuteSubTab: 'morning',
+      commuteRouteModal: null,
+      commuteSelectedRoute: {},
       // 히스토리/캘린더 상태
       historyState: {
         viewingYear: new Date().getFullYear(),
@@ -9164,6 +9386,9 @@
         // 라이프 리듬 로드
         loadLifeRhythm();
 
+        // 통근 트래커 로드
+        loadCommuteTracker();
+
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
 
@@ -9216,10 +9441,14 @@
         localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
         localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
         localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
 
         // 본업 프로젝트 저장
         localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
         localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+
+        // 통근 트래커 저장
+        localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
 
         // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
@@ -9351,6 +9580,7 @@
         localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
         localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
         localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
         localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
         localStorage.setItem('navigator-theme', appState.theme);
         // 클라우드에서 가져와 병합 후 업로드 (loadFromFirebase 내에서 syncToFirebase 호출)
@@ -9442,6 +9672,7 @@
           workProjects: appState.workProjects,
           workTemplates: appState.workTemplates,
           lifeRhythm: appState.lifeRhythm,
+          commuteTracker: appState.commuteTracker,
           weeklyPlan: appState.weeklyPlan,
           shuttleSuccess: appState.shuttleSuccess,
           theme: appState.theme,
@@ -9560,6 +9791,16 @@
           homeArrive: l.homeArrive || c.homeArrive || null,
           sleep: l.sleep || c.sleep || null
         };
+        // 복약 기록 병합 (슬롯별로 값이 있는 쪽 우선)
+        const lMeds = l.medications || {};
+        const cMeds = c.medications || {};
+        const allSlots = new Set([...Object.keys(lMeds), ...Object.keys(cMeds)]);
+        if (allSlots.size > 0) {
+          merged[date].medications = {};
+          for (const slot of allSlots) {
+            merged[date].medications[slot] = lMeds[slot] || cMeds[slot] || null;
+          }
+        }
       }
 
       return merged;
@@ -9760,6 +10001,14 @@
             // 오늘 데이터: 필드별 병합 (양쪽 값 보존)
             const localToday = localRhythm.today || {};
             const cloudToday = cloudRhythm.today || {};
+            // 복약 기록 병합 (슬롯별)
+            const lMedsToday = (localToday.medications || {});
+            const cMedsToday = (cloudToday.medications || {});
+            const allMedSlots = new Set([...Object.keys(lMedsToday), ...Object.keys(cMedsToday)]);
+            const mergedMeds = {};
+            for (const slot of allMedSlots) {
+              mergedMeds[slot] = lMedsToday[slot] || cMedsToday[slot] || null;
+            }
             const mergedToday = {
               date: localToday.date || cloudToday.date,
               wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
@@ -9767,7 +10016,8 @@
               workArrive: localToday.workArrive || cloudToday.workArrive || null,
               workDepart: localToday.workDepart || cloudToday.workDepart || null,
               homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
-              sleep: localToday.sleep || cloudToday.sleep || null
+              sleep: localToday.sleep || cloudToday.sleep || null,
+              medications: mergedMeds
             };
             appState.lifeRhythm = {
               ...localRhythm,
@@ -9777,6 +10027,19 @@
             };
             // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
             localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+          }
+          // 통근 트래커 병합
+          if (data.commuteTracker) {
+            const cloud = data.commuteTracker;
+            const local = appState.commuteTracker;
+            const routeMap = {};
+            (local.routes || []).forEach(r => { routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => { if (!routeMap[r.id]) routeMap[r.id] = r; });
+            appState.commuteTracker.routes = Object.values(routeMap);
+            const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+            appState.commuteTracker.trips = mergedTrips;
+            appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
+            localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
           }
           // 주간 계획 병합
           if (data.weeklyPlan) {
@@ -9876,6 +10139,14 @@
               const mergedHistory = mergeRhythmHistory(localRhythm.history, cloudRhythm.history);
               const localToday = localRhythm.today || {};
               const cloudToday = cloudRhythm.today || {};
+              // 복약 기록 병합 (슬롯별)
+              const lMedsRT = (localToday.medications || {});
+              const cMedsRT = (cloudToday.medications || {});
+              const allMedSlotsRT = new Set([...Object.keys(lMedsRT), ...Object.keys(cMedsRT)]);
+              const mergedMedsRT = {};
+              for (const slot of allMedSlotsRT) {
+                mergedMedsRT[slot] = lMedsRT[slot] || cMedsRT[slot] || null;
+              }
               const mergedToday = {
                 date: localToday.date || cloudToday.date,
                 wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
@@ -9883,7 +10154,8 @@
                 workArrive: localToday.workArrive || cloudToday.workArrive || null,
                 workDepart: localToday.workDepart || cloudToday.workDepart || null,
                 homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
-                sleep: localToday.sleep || cloudToday.sleep || null
+                sleep: localToday.sleep || cloudToday.sleep || null,
+                medications: mergedMedsRT
               };
               appState.lifeRhythm = {
                 ...localRhythm,
@@ -13103,6 +13375,19 @@
               };
               saveLifeRhythm();
             }
+          // 통근 트래커 병합
+          if (data.commuteTracker) {
+            const cloud = data.commuteTracker;
+            const local = appState.commuteTracker;
+            const routeMap = {};
+            (local.routes || []).forEach(r => { routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => { if (!routeMap[r.id]) routeMap[r.id] = r; });
+            appState.commuteTracker.routes = Object.values(routeMap);
+            const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+            appState.commuteTracker.trips = mergedTrips;
+            appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
+            localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+          }
             // 주간 계획 병합
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
@@ -13736,10 +14021,13 @@
               🏠 일상
             </button>
             <div class="tab-more-dropdown">
-              <button class="tab-btn ${['dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
+              <button class="tab-btn ${['commute', 'dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
                 📋 더보기 ▾
               </button>
               <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}" role="menu">
+              <button class="more-menu-item ${appState.currentTab === 'commute' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('commute');" role="menuitem" aria-label="통근 탭">
+                🚌 통근
+              </button>
                 <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');" role="menuitem" aria-label="통계 탭">
                   📊 통계
                 </button>
@@ -13781,7 +14069,7 @@
                 <!-- 라이프 리듬 트래커 (6개 항목) -->
                 ${(() => {
                   const today = getLocalDateStr();
-                  const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
+                  const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
                   const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
                   const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
 
@@ -13889,6 +14177,45 @@
                         ${commuteToHome ? '<span class="rhythm-stat">🏠 퇴근 ' + commuteToHome + '</span>' : ''}
                         ${totalOutTime ? '<span class="rhythm-stat total">📍 총 외출 ' + totalOutTime + '</span>' : ''}
                       </div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 오늘의 복약 -->
+                ${(() => {
+                  const medSlots = getMedicationSlots();
+                  if (!medSlots || medSlots.length === 0) return '';
+
+                  const todayMeds = (rhythm.medications) || {};
+                  const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
+                  const totalCount = medSlots.length;
+                  const streak = getMedicationStreak();
+                  const requiredSlots = medSlots.filter(s => s.required);
+                  const allRequiredTaken = requiredSlots.every(s => todayMeds[s.id]);
+
+                  return `
+                    <div class="medication-tracker">
+                      <div class="medication-header">
+                        <span class="medication-title">💊 오늘의 복약</span>
+                        <span class="medication-progress">${takenCount}/${totalCount} 완료</span>
+                      </div>
+                      <div class="medication-slots">
+                        ${medSlots.map(slot => {
+                          const taken = !!todayMeds[slot.id];
+                          const timeVal = todayMeds[slot.id] || '--:--';
+                          return `
+                            <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
+                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
+                                    title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
+                              <span class="med-icon">${slot.icon}</span>
+                              <span class="med-label">${escapeHtml(slot.label)}</span>
+                              <span class="med-time">${timeVal}</span>
+                            </button>
+                          `;
+                        }).join('')}
+                      </div>
+                      ${streak > 0 ? '<div class="medication-streak">❤️ 필수 복약 연속 <span class="streak-good">' + streak + '일째</span></div>' : ''}
+                      ${!allRequiredTaken && requiredSlots.length > 0 ? '<div class="medication-streak">⚠️ 필수 복약을 잊지 마세요!</div>' : ''}
                     </div>
                   `;
                 })()}
@@ -14889,6 +15216,13 @@
                 ` : ''}
               `;
             })()}
+          </div>
+
+
+
+          <!-- 통근 트래커 탭 -->
+          <div class="tab-content ${appState.currentTab === 'commute' ? 'active' : ''}">
+            ${renderCommuteTab()}
           </div>
 
           <!-- 대시보드 탭 -->
@@ -16023,6 +16357,10 @@
       showTimeInputModal, saveActualTime, closeTimeInputModal,
       // 히스토리/캘린더
       prevMonth, nextMonth, selectDate, toggleHistoryDate,
+      // 통근 트래커
+      setCommuteSubTab, openCommuteRouteModal, closeCommuteRouteModal,
+      saveCommuteRoute, deleteCommuteRoute, selectCommuteRoute,
+      tagCommuteRoute, dismissCommuteTag, setCommuteCondition,
       // 설정
       openSettings, closeSettings, updateSetting,
       // 템플릿
@@ -16480,6 +16818,209 @@
     }
     window.deleteLifeRhythm = deleteLifeRhythm;
 
+    // ============================================
+    // 복약/영양제 트래커
+    // ============================================
+
+    /**
+     * 복약 슬롯 설정 가져오기 (기본값 포함)
+     */
+    function getMedicationSlots() {
+      return (appState.lifeRhythm.settings && appState.lifeRhythm.settings.medicationSlots) || [
+        { id: 'med_morning', label: 'ADHD약(아침)', icon: '💊', required: true },
+        { id: 'med_afternoon', label: 'ADHD약+영양제(점심)', icon: '💊', required: true },
+        { id: 'med_evening', label: '영양제(저녁)', icon: '🌿', required: false }
+      ];
+    }
+
+    /**
+     * 복약 기록 (현재 시간)
+     */
+    function recordMedication(slotId) {
+      const now = new Date();
+      const today = getLocalDateStr(now);
+      const timeStr = now.toTimeString().slice(0, 5);
+
+      // 오늘 날짜 확인
+      if (appState.lifeRhythm.today.date !== today) {
+        // 어제 기록을 히스토리로 이동
+        if (appState.lifeRhythm.today.date) {
+          appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
+          delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
+        }
+        appState.lifeRhythm.today = {
+          date: today, wakeUp: null, homeDepart: null, workArrive: null,
+          workDepart: null, homeArrive: null, sleep: null, medications: {}
+        };
+      }
+
+      if (!appState.lifeRhythm.today.medications) {
+        appState.lifeRhythm.today.medications = {};
+      }
+      appState.lifeRhythm.today.medications[slotId] = timeStr;
+
+      saveLifeRhythm();
+      renderStatic();
+
+      const slots = getMedicationSlots();
+      const slot = slots.find(s => s.id === slotId);
+      const label = slot ? slot.label : slotId;
+      showToast(slot ? slot.icon + ' ' + label + ' 복용 기록: ' + timeStr : '복용 기록: ' + timeStr, 'success');
+
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+    window.recordMedication = recordMedication;
+
+    /**
+     * 복약 시간 수정 (직접 입력)
+     */
+    function editMedication(slotId) {
+      const today = getLocalDateStr();
+      const currentValue = (appState.lifeRhythm.today.date === today && appState.lifeRhythm.today.medications)
+        ? appState.lifeRhythm.today.medications[slotId] : null;
+
+      const slots = getMedicationSlots();
+      const slot = slots.find(s => s.id === slotId);
+      const label = slot ? slot.label : slotId;
+
+      const newTime = prompt(label + ' 복용 시간을 입력하세요 (HH:MM):', currentValue || '');
+      if (newTime === null) return;
+
+      if (newTime && !/^\d{1,2}:\d{2}$/.test(newTime)) {
+        showToast('올바른 시간 형식이 아닙니다 (예: 08:30)', 'error');
+        return;
+      }
+
+      if (!appState.lifeRhythm.today.medications) {
+        appState.lifeRhythm.today.medications = {};
+      }
+
+      if (!newTime) {
+        appState.lifeRhythm.today.medications[slotId] = null;
+      } else {
+        const [h, m] = newTime.split(':');
+        appState.lifeRhythm.today.medications[slotId] = h.padStart(2, '0') + ':' + m;
+      }
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast(label + ' 복용 시간이 수정되었습니다', 'success');
+    }
+    window.editMedication = editMedication;
+
+    /**
+     * 복약 기록 삭제
+     */
+    function deleteMedication(slotId) {
+      const today = getLocalDateStr();
+      if (appState.lifeRhythm.today.date === today && appState.lifeRhythm.today.medications) {
+        appState.lifeRhythm.today.medications[slotId] = null;
+        saveLifeRhythm();
+        renderStatic();
+
+        const slots = getMedicationSlots();
+        const slot = slots.find(s => s.id === slotId);
+        showToast((slot ? slot.label : '복약') + ' 기록이 삭제되었습니다', 'success');
+      }
+    }
+    window.deleteMedication = deleteMedication;
+
+    /**
+     * 복약 버튼 클릭 핸들러
+     * - 기록 없으면: 현재 시간 기록
+     * - 기록 있으면: 수정/삭제 메뉴
+     */
+    function handleMedicationClick(slotId, hasRecord, event) {
+      if (hasRecord) {
+        showMedicationActionMenu(slotId, event);
+      } else {
+        recordMedication(slotId);
+      }
+    }
+    window.handleMedicationClick = handleMedicationClick;
+
+    /**
+     * 복약 액션 메뉴 표시 (수정/삭제)
+     * 기존 rhythm-action-menu 패턴 재사용
+     */
+    function showMedicationActionMenu(slotId, event) {
+      hideRhythmActionMenu(); // 기존 메뉴 닫기
+
+      const overlay = document.createElement('div');
+      overlay.className = 'rhythm-action-menu-overlay';
+      overlay.onclick = hideRhythmActionMenu;
+
+      const menu = document.createElement('div');
+      menu.className = 'rhythm-action-menu';
+      menu.id = 'rhythm-action-menu';
+      menu.innerHTML = `
+        <button onclick="hideRhythmActionMenu(); editMedication('${escapeHtml(slotId)}')">✏️ 시간 수정</button>
+        <button class="danger" onclick="hideRhythmActionMenu(); deleteMedication('${escapeHtml(slotId)}')">🗑️ 기록 삭제</button>
+      `;
+
+      document.body.appendChild(overlay);
+      document.body.appendChild(menu);
+
+      const btn = event.currentTarget;
+      const rect = btn.getBoundingClientRect();
+      const menuHeight = 96;
+      const menuWidth = 140;
+
+      let top = rect.bottom + 4;
+      if (top + menuHeight > window.innerHeight) {
+        top = rect.top - menuHeight - 4;
+      }
+
+      let left = rect.left + rect.width / 2 - menuWidth / 2;
+      if (left < 8) left = 8;
+      if (left + menuWidth > window.innerWidth - 8) left = window.innerWidth - 8 - menuWidth;
+
+      menu.style.top = top + 'px';
+      menu.style.left = left + 'px';
+    }
+    window.showMedicationActionMenu = showMedicationActionMenu;
+
+    /**
+     * 필수 복약 연속일 계산
+     * 필수(required) 슬롯을 모두 복용한 날이 연속으로 며칠인지 계산
+     */
+    function getMedicationStreak() {
+      const slots = getMedicationSlots();
+      const requiredSlots = slots.filter(s => s.required);
+      if (requiredSlots.length === 0) return 0;
+
+      let streak = 0;
+      const today = new Date();
+      const todayStr = getLocalDateStr(today);
+
+      // 오늘부터 역순으로 확인
+      for (let i = 0; i < 365; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = getLocalDateStr(date);
+
+        let dayMeds;
+        if (dateStr === todayStr && appState.lifeRhythm.today.date === todayStr) {
+          dayMeds = appState.lifeRhythm.today.medications || {};
+        } else {
+          const histEntry = appState.lifeRhythm.history[dateStr];
+          dayMeds = histEntry ? (histEntry.medications || {}) : {};
+        }
+
+        // 필수 슬롯 모두 복용했는지 확인
+        const allTaken = requiredSlots.every(s => dayMeds[s.id]);
+        if (allTaken) {
+          streak++;
+        } else {
+          // 오늘은 아직 복용 안 했을 수 있으므로 스킵
+          if (i === 0) continue;
+          break;
+        }
+      }
+
+      return streak;
+    }
+
     // 로컬 타임존 기준 날짜 문자열 (YYYY-MM-DD) - UTC 변환 방지
     function getLocalDateStr(d) {
       const dt = d || new Date();
@@ -16562,7 +17103,8 @@
           workArrive: null,
           workDepart: null,
           homeArrive: null,
-          sleep: null
+          sleep: null,
+          medications: {}
         };
       }
 
@@ -16585,6 +17127,13 @@
       const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
       const diffMsg = getTimeDiffMessage(type, timeStr);
       showToast(diffMsg || labels[type] + ' 시간 기록: ' + timeStr, 'success');
+
+      // 통근 루트 태그 프롬프트
+      if (type === 'workArrive' && appState.lifeRhythm.today.homeDepart) {
+        setTimeout(function() { showCommuteTagPrompt('morning'); }, 500);
+      } else if (type === 'homeArrive' && appState.lifeRhythm.today.workDepart) {
+        setTimeout(function() { showCommuteTagPrompt('evening'); }, 500);
+      }
 
       // 햅틱 피드백
       if (navigator.vibrate) {
@@ -16634,7 +17183,8 @@
             workArrive: null,
             workDepart: null,
             homeArrive: null,
-            sleep: null
+            sleep: null,
+            medications: {}
           };
         }
 
@@ -17083,12 +17633,12 @@
       // 저장
       if (dateStr === today) {
         if (appState.lifeRhythm.today.date !== today) {
-          appState.lifeRhythm.today = { date: today, wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
+          appState.lifeRhythm.today = { date: today, wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
         }
         appState.lifeRhythm.today[type] = normalizedTime;
       } else {
         if (!appState.lifeRhythm.history[dateStr]) {
-          appState.lifeRhythm.history[dateStr] = { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null };
+          appState.lifeRhythm.history[dateStr] = { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
         }
         appState.lifeRhythm.history[dateStr][type] = normalizedTime;
       }
@@ -17142,7 +17692,8 @@
         workArrive: null,
         workDepart: null,
         homeArrive: null,
-        sleep: null
+        sleep: null,
+        medications: {}
       };
 
       saveLifeRhythm();
@@ -17151,6 +17702,411 @@
     }
     window.addRhythmHistoryDate = addRhythmHistoryDate;
 
+
+    // ============================================
+    // 통근 트래커
+    // ============================================
+
+    function saveCommuteTracker() {
+      localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+      if (appState.user) { syncToFirebase(); }
+    }
+
+    function loadCommuteTracker() {
+      const saved = localStorage.getItem('navigator-commute-tracker');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState.commuteTracker = {
+            routes: parsed.routes || [],
+            trips: parsed.trips || {},
+            settings: { ...appState.commuteTracker.settings, ...(parsed.settings || {}) }
+          };
+        } catch (e) { console.error('통근 트래커 데이터 로드 실패:', e); }
+      }
+    }
+
+    function setCommuteSubTab(tab) { appState.commuteSubTab = tab; renderStatic(); }
+    window.setCommuteSubTab = setCommuteSubTab;
+
+    function openCommuteRouteModal(routeId) {
+      appState.commuteRouteModal = routeId || 'add';
+      renderStatic();
+      setTimeout(() => { const el = document.getElementById('commute-route-name'); if (el) el.focus(); }, 100);
+    }
+    window.openCommuteRouteModal = openCommuteRouteModal;
+
+    function closeCommuteRouteModal() { appState.commuteRouteModal = null; renderStatic(); }
+    window.closeCommuteRouteModal = closeCommuteRouteModal;
+
+    function saveCommuteRoute() {
+      const nameEl = document.getElementById('commute-route-name');
+      const descEl = document.getElementById('commute-route-desc');
+      const typeEl = document.getElementById('commute-route-type');
+      const durationEl = document.getElementById('commute-route-duration');
+      const colorEl = document.querySelector('.commute-color-btn.selected');
+      const name = nameEl ? nameEl.value.trim() : '';
+      if (!name) { showToast('루트 이름을 입력해주세요', 'error'); return; }
+      const route = {
+        id: appState.commuteRouteModal === 'add' ? 'route-' + Date.now() : appState.commuteRouteModal,
+        name: name, type: typeEl ? typeEl.value : 'both',
+        description: descEl ? descEl.value.trim() : '',
+        expectedDuration: parseInt(durationEl ? durationEl.value : '45') || 45,
+        color: colorEl ? colorEl.dataset.color : '#667eea',
+        isActive: true, createdAt: new Date().toISOString()
+      };
+      if (appState.commuteRouteModal === 'add') {
+        appState.commuteTracker.routes.push(route);
+        showToast('🚌 루트 추가됨', 'success');
+      } else {
+        const idx = appState.commuteTracker.routes.findIndex(r => r.id === route.id);
+        if (idx >= 0) { route.createdAt = appState.commuteTracker.routes[idx].createdAt; appState.commuteTracker.routes[idx] = route; showToast('✏️ 루트 수정됨', 'success'); }
+      }
+      appState.commuteRouteModal = null;
+      saveCommuteTracker(); renderStatic();
+    }
+    window.saveCommuteRoute = saveCommuteRoute;
+
+    function deleteCommuteRoute(routeId) {
+      const route = appState.commuteTracker.routes.find(r => r.id === routeId);
+      if (!route || !confirm('루트 "' + route.name + '"을(를) 삭제하시겠습니까?')) return;
+      appState.commuteTracker.routes = appState.commuteTracker.routes.filter(r => r.id !== routeId);
+      appState.commuteRouteModal = null;
+      saveCommuteTracker(); renderStatic();
+      showToast('🗑️ 루트 삭제됨', 'success');
+    }
+    window.deleteCommuteRoute = deleteCommuteRoute;
+
+    function selectCommuteRoute(routeId, direction) {
+      const dir = direction || appState.commuteSubTab;
+      const today = getLocalDateStr();
+      if (!appState.commuteTracker.trips[today]) appState.commuteTracker.trips[today] = {};
+      const rhythm = appState.lifeRhythm.today;
+      let departTime = null, arriveTime = null, duration = null;
+      if (dir === 'morning') { departTime = rhythm.homeDepart; arriveTime = rhythm.workArrive; }
+      else { departTime = rhythm.workDepart; arriveTime = rhythm.homeArrive; }
+      if (departTime && arriveTime) {
+        const [dh, dm] = departTime.split(':').map(Number);
+        const [ah, am] = arriveTime.split(':').map(Number);
+        duration = (ah * 60 + am) - (dh * 60 + dm);
+        if (duration < 0) duration += 24 * 60;
+      }
+      appState.commuteTracker.trips[today][dir] = {
+        routeId: routeId, departTime: departTime, arriveTime: arriveTime,
+        duration: duration, conditions: (appState.commuteTracker.trips[today][dir] || {}).conditions || 'clear'
+      };
+      appState.commuteSelectedRoute[dir] = routeId;
+      saveCommuteTracker(); renderStatic();
+      showToast('🚌 루트가 기록되었습니다', 'success');
+    }
+    window.selectCommuteRoute = selectCommuteRoute;
+
+    function setCommuteCondition(condition) {
+      const today = getLocalDateStr();
+      const dir = appState.commuteSubTab;
+      if (appState.commuteTracker.trips[today] && appState.commuteTracker.trips[today][dir]) {
+        appState.commuteTracker.trips[today][dir].conditions = condition;
+        saveCommuteTracker(); renderStatic();
+      }
+    }
+    window.setCommuteCondition = setCommuteCondition;
+
+    function showCommuteTagPrompt(direction) {
+      if (!appState.commuteTracker.settings.enableAutoTag) return;
+      if (appState.commuteTracker.routes.length === 0) return;
+      const today = getLocalDateStr();
+      if (appState.commuteTracker.trips[today] && appState.commuteTracker.trips[today][direction] && appState.commuteTracker.trips[today][direction].routeId) return;
+      const routes = appState.commuteTracker.routes.filter(r => r.isActive && (r.type === direction || r.type === 'both'));
+      if (routes.length === 0) return;
+      const existing = document.getElementById('commute-tag-prompt');
+      if (existing) existing.remove();
+      const promptEl = document.createElement('div');
+      promptEl.id = 'commute-tag-prompt';
+      promptEl.className = 'commute-tag-prompt';
+      const dirLabel = direction === 'morning' ? '출근' : '퇴근';
+      let btns = routes.map(r => '<button class="commute-tag-prompt-btn" onclick="tagCommuteRoute(\'' + r.id + '\', \'' + direction + '\')" style="border-left:3px solid ' + r.color + '">' + escapeHtml(r.name) + '</button>').join('');
+      promptEl.innerHTML = '<div class="commute-tag-prompt-title">🚌 어느 루트로 ' + dirLabel + '하셨나요?</div><div class="commute-tag-prompt-routes">' + btns + '</div><div class="commute-tag-prompt-later" onclick="dismissCommuteTag()">나중에</div>';
+      document.body.appendChild(promptEl);
+      setTimeout(() => { const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }, 10000);
+    }
+
+    function tagCommuteRoute(routeId, direction) { selectCommuteRoute(routeId, direction); dismissCommuteTag(); }
+    window.tagCommuteRoute = tagCommuteRoute;
+
+    function dismissCommuteTag() { const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }
+    window.dismissCommuteTag = dismissCommuteTag;
+
+    function getCommuteRecommendation(routeId, direction) {
+      const trips = appState.commuteTracker.trips;
+      const route = appState.commuteTracker.routes.find(r => r.id === routeId);
+      if (!route) return null;
+      const settings = appState.commuteTracker.settings;
+      const durations = [];
+      const now = new Date();
+      for (let i = 0; i < 30; i++) {
+        const d = new Date(now); d.setDate(d.getDate() - i);
+        const dateStr = getLocalDateStr(d);
+        if (trips[dateStr] && trips[dateStr][direction] && trips[dateStr][direction].routeId === routeId && trips[dateStr][direction].duration) {
+          durations.push(trips[dateStr][direction].duration);
+        }
+      }
+      let safeDuration, confidence;
+      if (durations.length >= 10) {
+        const sorted = [...durations].sort((a, b) => a - b);
+        safeDuration = sorted[Math.floor(sorted.length * 0.75)]; confidence = 'high';
+      } else if (durations.length >= 5) {
+        const sorted = [...durations].sort((a, b) => a - b);
+        safeDuration = sorted[Math.floor(sorted.length * 0.75)]; confidence = 'medium';
+      } else if (durations.length >= 1) {
+        safeDuration = Math.max(...durations); confidence = 'low';
+      } else {
+        safeDuration = route.expectedDuration; confidence = 'low';
+      }
+      const [th, tm] = settings.targetArrivalTime.split(':').map(Number);
+      const targetMin = th * 60 + tm;
+      const departMin = targetMin - safeDuration - settings.bufferMinutes;
+      const departH = Math.floor(((departMin % (24*60)) + 24*60) % (24*60) / 60);
+      const departM = ((departMin % 60) + 60) % 60;
+      const avgDuration = durations.length > 0 ? Math.round(durations.reduce((a,b) => a+b, 0) / durations.length) : route.expectedDuration;
+      return {
+        recommendedDepartTime: String(departH).padStart(2, '0') + ':' + String(departM).padStart(2, '0'),
+        safeDuration, avgDuration, dataCount: durations.length, confidence
+      };
+    }
+
+    function getCommuteRouteStats(routeId) {
+      const trips = appState.commuteTracker.trips;
+      const allDurations = { morning: [], evening: [] };
+      const weekdayDurations = {};
+      Object.keys(trips).forEach(dateStr => {
+        const dayTrips = trips[dateStr];
+        ['morning', 'evening'].forEach(dir => {
+          if (dayTrips[dir] && dayTrips[dir].routeId === routeId && dayTrips[dir].duration) {
+            allDurations[dir].push(dayTrips[dir].duration);
+            const dow = new Date(dateStr).getDay();
+            if (!weekdayDurations[dow]) weekdayDurations[dow] = [];
+            weekdayDurations[dow].push(dayTrips[dir].duration);
+          }
+        });
+      });
+      const all = [...allDurations.morning, ...allDurations.evening];
+      if (all.length === 0) return null;
+      const avg = Math.round(all.reduce((a,b) => a+b, 0) / all.length);
+      return {
+        totalTrips: all.length, avg, min: Math.min(...all), max: Math.max(...all),
+        stddev: Math.round(Math.sqrt(all.reduce((sum, v) => sum + Math.pow(v - avg, 2), 0) / all.length)),
+        morningTrips: allDurations.morning.length, eveningTrips: allDurations.evening.length, weekdayDurations
+      };
+    }
+
+    function getRecentCommuteAvg(direction) {
+      const trips = appState.commuteTracker.trips;
+      const routeData = {};
+      const now = new Date();
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(now); d.setDate(d.getDate() - i);
+        const dateStr = getLocalDateStr(d);
+        if (trips[dateStr] && trips[dateStr][direction] && trips[dateStr][direction].routeId && trips[dateStr][direction].duration) {
+          const rid = trips[dateStr][direction].routeId;
+          if (!routeData[rid]) routeData[rid] = [];
+          routeData[rid].push(trips[dateStr][direction].duration);
+        }
+      }
+      return Object.keys(routeData).map(rid => {
+        const route = appState.commuteTracker.routes.find(r => r.id === rid);
+        const durations = routeData[rid];
+        return { routeId: rid, name: route ? route.name : '알 수 없음', color: route ? route.color : '#999',
+          avg: Math.round(durations.reduce((a,b) => a+b, 0) / durations.length), count: durations.length };
+      });
+    }
+
+    function renderCommuteTab() {
+      const routes = appState.commuteTracker.routes.filter(r => r.isActive);
+      const today = getLocalDateStr();
+      const todayTrips = appState.commuteTracker.trips[today] || {};
+      const subTab = appState.commuteSubTab;
+      const rhythm = appState.lifeRhythm.today;
+
+      let modalHtml = '';
+      if (appState.commuteRouteModal) {
+        const isEdit = appState.commuteRouteModal !== 'add';
+        const editRoute = isEdit ? appState.commuteTracker.routes.find(r => r.id === appState.commuteRouteModal) : null;
+        const colors = ['#667eea','#764ba2','#f56565','#ed8936','#48bb78','#4299e1','#9f7aea','#38b2ac'];
+        const currentColor = editRoute ? editRoute.color : '#667eea';
+        modalHtml = '<div class="commute-modal-overlay" onclick="if(event.target===this)closeCommuteRouteModal()">' +
+          '<div class="commute-modal">' +
+          '<div class="commute-modal-title">' + (isEdit ? '✏️ 루트 수정' : '➕ 새 루트 추가') + '</div>' +
+          '<div class="commute-modal-field"><label class="commute-modal-label">루트 이름</label><input class="commute-modal-input" id="commute-route-name" placeholder="예: 2호선+버스" value="' + escapeHtml(editRoute ? editRoute.name : '') + '"></div>' +
+          '<div class="commute-modal-field"><label class="commute-modal-label">설명 (선택)</label><input class="commute-modal-input" id="commute-route-desc" placeholder="예: 2호선 → 환승 → 버스" value="' + escapeHtml(editRoute ? editRoute.description : '') + '"></div>' +
+          '<div class="commute-modal-field"><label class="commute-modal-label">방향</label><select class="commute-modal-select" id="commute-route-type"><option value="both"' + ((!editRoute || editRoute.type === 'both') ? ' selected' : '') + '>양방향</option><option value="morning"' + (editRoute && editRoute.type === 'morning' ? ' selected' : '') + '>출근 전용</option><option value="evening"' + (editRoute && editRoute.type === 'evening' ? ' selected' : '') + '>퇴근 전용</option></select></div>' +
+          '<div class="commute-modal-field"><label class="commute-modal-label">예상 소요시간 (분)</label><input class="commute-modal-input" id="commute-route-duration" type="number" min="5" max="180" value="' + (editRoute ? editRoute.expectedDuration : 45) + '"></div>' +
+          '<div class="commute-modal-field"><label class="commute-modal-label">색상</label><div class="commute-color-options">' +
+          colors.map(c => '<button class="commute-color-btn' + (c === currentColor ? ' selected' : '') + '" data-color="' + c + '" style="background:' + c + '" onclick="this.parentElement.querySelectorAll(\'.commute-color-btn\').forEach(b=>b.classList.remove(\'selected\'));this.classList.add(\'selected\')" aria-label="색상 ' + c + '"></button>').join('') +
+          '</div></div>' +
+          '<div class="commute-modal-actions">' +
+          (isEdit ? '<button class="commute-modal-cancel" onclick="deleteCommuteRoute(\''+escapeHtml(appState.commuteRouteModal)+'\')">🗑️ 삭제</button>' : '<button class="commute-modal-cancel" onclick="closeCommuteRouteModal()">취소</button>') +
+          '<button class="commute-modal-save" onclick="saveCommuteRoute()">저장</button></div></div></div>';
+      }
+
+      if (routes.length === 0 && !appState.commuteRouteModal) {
+        return '<div class="commute-header"><div class="commute-title">🚌 통근 트래커</div></div>' +
+          '<div class="commute-empty"><div class="commute-empty-icon">🚌</div><div class="commute-empty-text">통근 루트를 추가해서 시작하세요</div>' +
+          '<button class="commute-add-btn" onclick="showCommuteOnboarding()" aria-label="루트 추가">➕ 기본 루트로 시작하기</button>' +
+          '<div style="margin-top:8px"><button class="commute-add-btn" style="background:var(--bg-secondary);color:var(--text-secondary)" onclick="openCommuteRouteModal()" aria-label="직접 추가">직접 추가</button></div></div>' + modalHtml;
+      }
+
+      let content = '<div class="commute-header"><div class="commute-title">🚌 통근 트래커</div>' +
+        '<button class="commute-route-action-btn" onclick="openCommuteRouteModal()" title="루트 추가" aria-label="루트 추가">➕</button></div>';
+      content += '<div class="commute-sub-tabs">' +
+        '<button class="commute-sub-tab ' + (subTab === 'morning' ? 'active' : '') + '" onclick="setCommuteSubTab(\'morning\')" aria-label="오늘 출근">🌅 출근</button>' +
+        '<button class="commute-sub-tab ' + (subTab === 'evening' ? 'active' : '') + '" onclick="setCommuteSubTab(\'evening\')" aria-label="오늘 퇴근">🌆 퇴근</button>' +
+        '<button class="commute-sub-tab ' + (subTab === 'stats' ? 'active' : '') + '" onclick="setCommuteSubTab(\'stats\')" aria-label="통계">📊 통계</button></div>';
+
+      if (subTab === 'morning' || subTab === 'evening') {
+        content += renderCommuteDayView(subTab, todayTrips, rhythm, routes);
+      } else { content += renderCommuteStatsView(routes); }
+      return content + modalHtml;
+    }
+
+    function renderCommuteDayView(direction, todayTrips, rhythm, routes) {
+      const dirLabel = direction === 'morning' ? '출근' : '퇴근';
+      const trip = todayTrips[direction];
+      const selectedRouteId = trip ? trip.routeId : (appState.commuteSelectedRoute[direction] || null);
+      const filteredRoutes = routes.filter(r => r.type === direction || r.type === 'both');
+      let html = '';
+      const depart = direction === 'morning' ? rhythm.homeDepart : rhythm.workDepart;
+      const arrive = direction === 'morning' ? rhythm.workArrive : rhythm.homeArrive;
+      const departLabel = direction === 'morning' ? '🚶 집 출발' : '🚀 회사 출발';
+      const arriveLabel = direction === 'morning' ? '🏢 회사 도착' : '🏠 집 도착';
+
+      html += '<div class="commute-time-display">';
+      html += '<div class="commute-time-row"><span class="commute-time-label">' + departLabel + '</span><span class="commute-time-value' + (depart ? '' : ' empty') + '">' + (depart || '--:--') + '</span></div>';
+      html += '<div class="commute-time-row"><span class="commute-time-label">' + arriveLabel + '</span><span class="commute-time-value' + (arrive ? '' : ' empty') + '">' + (arrive || '--:--') + '</span></div>';
+
+      if (trip && trip.duration) {
+        const route = appState.commuteTracker.routes.find(r => r.id === trip.routeId);
+        const expected = route ? route.expectedDuration : 45;
+        let cls = 'good';
+        if (trip.duration > expected * 1.2) cls = 'bad';
+        else if (trip.duration > expected) cls = 'normal';
+        html += '<div style="text-align:center"><span class="commute-duration-badge ' + cls + '">⏱️ ' + trip.duration + '분</span></div>';
+      }
+      html += '</div>';
+
+      if (trip && trip.routeId) {
+        const currentCondition = trip.conditions || 'clear';
+        html += '<div class="commute-conditions-row">';
+        [['clear','☀️ 맑음'],['rain','🌧️ 비'],['snow','❄️ 눈']].forEach(function(pair) {
+          html += '<button class="commute-condition-btn' + (currentCondition === pair[0] ? ' selected' : '') + '" onclick="setCommuteCondition(\'' + pair[0] + '\')">' + pair[1] + '</button>';
+        });
+        html += '</div><div style="height:12px"></div>';
+      }
+
+      if (direction === 'morning' && selectedRouteId) {
+        const rec = getCommuteRecommendation(selectedRouteId, 'morning');
+        if (rec) {
+          const confLabels = { high: '높음 (10회+)', medium: '중간 (5회+)', low: '낮음 (<5회)' };
+          html += '<div class="commute-recommend-card"><div class="commute-recommend-title">💡 추천 출발시간</div>';
+          html += '<div class="commute-recommend-time">' + rec.recommendedDepartTime + '</div>';
+          html += '<div class="commute-recommend-detail">평균 ' + rec.avgDuration + '분 · 안전값 ' + rec.safeDuration + '분 · 버퍼 ' + appState.commuteTracker.settings.bufferMinutes + '분</div>';
+          html += '<span class="commute-recommend-confidence ' + rec.confidence + '">신뢰도: ' + confLabels[rec.confidence] + '</span></div>';
+        }
+      }
+
+      html += '<div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px">' + dirLabel + ' 루트 선택</div>';
+      html += '<div class="commute-route-list">';
+      filteredRoutes.forEach(function(r) {
+        const isSelected = selectedRouteId === r.id;
+        html += '<div class="commute-route-card' + (isSelected ? ' selected' : '') + '" onclick="selectCommuteRoute(\'' + r.id + '\', \'' + direction + '\')">';
+        html += '<div class="commute-route-dot" style="background:' + escapeHtml(r.color) + '"></div>';
+        html += '<div class="commute-route-info"><div class="commute-route-name">' + escapeHtml(r.name) + '</div>';
+        if (r.description) html += '<div class="commute-route-desc">' + escapeHtml(r.description) + '</div>';
+        html += '</div><span class="commute-route-time">' + r.expectedDuration + '분</span>';
+        html += '<div class="commute-route-actions"><button class="commute-route-action-btn" onclick="event.stopPropagation();openCommuteRouteModal(\'' + r.id + '\')" title="수정" aria-label="루트 수정">✏️</button></div></div>';
+      });
+      html += '</div>';
+
+      const recentAvg = getRecentCommuteAvg(direction);
+      if (recentAvg.length > 0) {
+        html += '<div class="commute-recent-summary"><div class="commute-recent-title">📊 최근 7일 ' + dirLabel + '</div>';
+        recentAvg.forEach(function(r) {
+          html += '<div class="commute-recent-row"><div class="commute-recent-dot" style="background:' + escapeHtml(r.color) + '"></div><span class="commute-recent-name">' + escapeHtml(r.name) + '</span><span class="commute-recent-avg">평균 ' + r.avg + '분 (' + r.count + '회)</span></div>';
+        });
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function renderCommuteStatsView(routes) {
+      let html = '';
+      const allStats = routes.map(function(r) { return { route: r, stats: getCommuteRouteStats(r.id) }; }).filter(function(s) { return s.stats; });
+      if (allStats.length === 0) {
+        return '<div class="commute-empty"><div class="commute-empty-icon">📊</div><div class="commute-empty-text">통근 기록을 쌓으면 여기에 통계가 표시됩니다</div></div>';
+      }
+      const sorted = allStats.slice().sort(function(a, b) { return a.stats.avg - b.stats.avg; });
+      const best = sorted[0];
+      const maxTrips = Math.max.apply(null, allStats.map(function(s) { return s.stats.totalTrips; }));
+
+      html += '<div class="commute-stats-card"><div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:12px">📊 이용 빈도</div>';
+      allStats.forEach(function(s) {
+        const pct = maxTrips > 0 ? Math.round(s.stats.totalTrips / maxTrips * 100) : 0;
+        html += '<div class="commute-freq-bar-wrap"><span class="commute-freq-bar-label">' + escapeHtml(s.route.name) + '</span>';
+        html += '<div class="commute-freq-bar-track"><div class="commute-freq-bar-fill" style="width:' + pct + '%;background:' + escapeHtml(s.route.color) + '"></div></div>';
+        html += '<span class="commute-freq-bar-count">' + s.stats.totalTrips + '회</span></div>';
+      });
+      html += '</div>';
+
+      allStats.forEach(function(s) {
+        const isBest = s.route.id === best.route.id && allStats.length > 1;
+        html += '<div class="commute-stats-card"><div class="commute-stats-header"><div class="commute-route-dot" style="background:' + escapeHtml(s.route.color) + '"></div>';
+        html += '<span class="commute-stats-route-name">' + escapeHtml(s.route.name) + '</span><span class="commute-stats-count">' + s.stats.totalTrips + '회</span>';
+        if (isBest) html += '<span class="commute-best-badge">🏆 추천</span>';
+        html += '</div><div class="commute-stats-grid">';
+        html += '<div class="commute-stat-item"><div class="commute-stat-value">' + s.stats.avg + '분</div><div class="commute-stat-label">평균</div></div>';
+        html += '<div class="commute-stat-item"><div class="commute-stat-value">' + s.stats.min + '분</div><div class="commute-stat-label">최단</div></div>';
+        html += '<div class="commute-stat-item"><div class="commute-stat-value">' + s.stats.max + '분</div><div class="commute-stat-label">최장</div></div>';
+        html += '</div></div>';
+      });
+
+      const weekdayData = {};
+      const dayNames = ['일','월','화','수','목','금','토'];
+      allStats.forEach(function(s) {
+        Object.keys(s.stats.weekdayDurations).forEach(function(dow) {
+          if (!weekdayData[dow]) weekdayData[dow] = [];
+          weekdayData[dow] = weekdayData[dow].concat(s.stats.weekdayDurations[dow]);
+        });
+      });
+      if (Object.keys(weekdayData).length > 0) {
+        html += '<div class="commute-stats-card"><div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:12px">📅 요일별 평균</div>';
+        html += '<div class="commute-weekday-grid">';
+        for (var i = 0; i < 7; i++) {
+          var durations = weekdayData[i] || [];
+          var avg = durations.length > 0 ? Math.round(durations.reduce(function(a,b){return a+b;},0) / durations.length) : '-';
+          html += '<div class="commute-weekday-item"><div class="commute-weekday-label">' + dayNames[i] + '</div><div class="commute-weekday-value">' + (avg === '-' ? '-' : avg + '분') + '</div><div class="commute-weekday-count">' + durations.length + '회</div></div>';
+        }
+        html += '</div></div>';
+      }
+      return html;
+    }
+
+    function showCommuteOnboarding() {
+      var presets = [
+        { name: '🚐 셔틀버스', type: 'morning', description: '회사 셔틀버스', expectedDuration: 30, color: '#48bb78' },
+        { name: '🚇 지하철+버스', type: 'both', description: '지하철 → 환승 → 버스', expectedDuration: 55, color: '#667eea' },
+        { name: '🚌 버스 직행', type: 'both', description: '직행 버스', expectedDuration: 45, color: '#ed8936' }
+      ];
+      presets.forEach(function(p) {
+        appState.commuteTracker.routes.push({
+          id: 'route-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          name: p.name, type: p.type, description: p.description,
+          expectedDuration: p.expectedDuration, color: p.color,
+          isActive: true, createdAt: new Date().toISOString()
+        });
+      });
+      saveCommuteTracker(); renderStatic();
+      showToast('🚌 기본 루트 3개가 추가되었습니다', 'success');
+    }
+    window.showCommuteOnboarding = showCommuteOnboarding;
     /**
      * 라이프 리듬 저장
      */
@@ -17185,6 +18141,8 @@
             // 새 필드 초기화
             if (data.homeDepart === undefined) data.homeDepart = null;
             if (data.homeArrive === undefined) data.homeArrive = null;
+            // 복약 필드 초기화 (마이그레이션)
+            if (data.medications === undefined) data.medications = {};
             return data;
           };
 
@@ -19175,6 +20133,9 @@
           break;
         case '6':
           switchTab('history');
+          break;
+        case '7':
+          switchTab('commute');
           break;
         case 's':
           toggleShuttle();
