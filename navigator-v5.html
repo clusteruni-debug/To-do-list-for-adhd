@@ -14560,6 +14560,128 @@
 
                 <!-- 셔틀 상태는 헤더로 이동됨 -->
 
+                <!-- 🚨 마감 임박 (RIGHT → LEFT 이동) -->
+                ${urgentTasks.length > 0 ? `
+                  <div class="dashboard-section">
+                    <div class="dashboard-title">🚨 마감 임박</div>
+                    <div class="urgent-list">
+                      ${urgentTasks.slice(0, 3).map(task => `
+                        <div class="urgent-item">
+                          <div class="urgent-item-title">${escapeHtml(task.title)}</div>
+                          <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+
+                ${nextAction ? `
+                  <div class="next-action ${urgencyClass}">
+                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
+                    <div class="task-title">${nextAction.title}</div>
+                    <div class="task-meta">
+                      <span class="category ${nextAction.category}">${nextAction.category}</span>
+                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
+                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
+                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
+                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
+                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
+                        ${nextAction.link ? '🚀 GO' : '시작하기'}
+                      </button>
+                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
+                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
+                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
+                          '5분 집중'}</span>
+                      </button>
+                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
+                        ✓ 완료
+                      </button>
+                    </div>
+                  </div>
+                ` : `
+                  ${(() => {
+                    const rest = getRestActivity();
+                    const completedToday = appState.todayStats.completedToday;
+                    const streak = appState.streak.current;
+                    return `
+                      <div class="empty-state-enhanced">
+                        <div class="empty-state-icon-large">🎉</div>
+                        <div class="empty-state-title">모든 작업 완료!</div>
+                        <div class="empty-state-subtitle">
+                          오늘 <strong>${completedToday}개</strong> 완료했어요!
+                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
+                        </div>
+                        <div class="empty-state-actions">
+                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
+                            ➕ 새 작업 추가
+                          </button>
+                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
+                            ${rest.icon} ${rest.text}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  })()}
+                `}
+
+                <!-- 일일 목표 진행률 (게이미피케이션) -->
+                ${(() => {
+                  const dailyGoal = appState.settings.dailyGoal || 5;
+                  const completed = appState.todayStats.completedToday;
+                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
+                  const isComplete = completed >= dailyGoal;
+                  const remaining = dailyGoal - completed;
+
+                  // 동기부여 메시지
+                  let message = '';
+                  let messageClass = '';
+                  if (isComplete) {
+                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
+                    messageClass = 'positive';
+                  } else if (percentage >= 80) {
+                    message = '거의 다 왔어요! 조금만 더! 💪';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 50) {
+                    message = '반 이상 완료! 잘하고 있어요! ⭐';
+                    messageClass = 'encourage';
+                  } else if (percentage >= 20) {
+                    message = '좋은 시작이에요! 계속 가보자! 🚀';
+                    messageClass = '';
+                  } else if (completed > 0) {
+                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
+                    messageClass = '';
+                  } else {
+                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
+                    messageClass = '';
+                  }
+
+                  // 러너 이모지
+                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
+
+                  return `
+                    <div class="daily-goal-compact">
+                      <div class="daily-goal-header">
+                        <div class="daily-goal-info">
+                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
+                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
+                        </div>
+                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
+                      </div>
+                      <div class="daily-goal-track">
+                        <div class="daily-goal-bar" style="width: 100%">
+                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
+                            <span class="daily-goal-runner">${runner}</span>
+                          </div>
+                        </div>
+                        <span class="daily-goal-finish">🏁</span>
+                      </div>
+                      <div class="daily-goal-message ${messageClass}">${message}</div>
+                    </div>
+                  `;
+                })()}
+
                 <!-- 라이프 리듬 트래커 (6개 항목) -->
                 ${(() => {
                   const today = getLocalDateStr();
@@ -14716,149 +14838,6 @@
                   `;
                 })()}
 
-                <!-- 오늘의 명언 -->
-                ${(() => {
-                  const quote = getDailyQuote();
-                  return `
-                    <div class="daily-quote">
-                      <div class="daily-quote-text">"${quote.text}"</div>
-                      <div class="daily-quote-author">— ${quote.author}</div>
-                    </div>
-                  `;
-                })()}
-
-                <!-- 월요일 리마인더 -->
-                ${(() => {
-                  if (!checkMondayReminder()) return '';
-                  const focusTasks = appState.weeklyPlan.focusTasks
-                    .map(id => appState.tasks.find(t => t.id === id))
-                    .filter(t => t && !t.completed);
-                  if (focusTasks.length === 0) return '';
-                  return `
-                    <div class="monday-reminder">
-                      <div class="monday-reminder-header">
-                        <div class="monday-reminder-title">🎯 이번 주 집중할 작업</div>
-                        <button class="monday-reminder-close" onclick="dismissMondayReminder()">×</button>
-                      </div>
-                      <div class="monday-reminder-tasks">
-                        ${focusTasks.map((task, idx) => `
-                          <div class="monday-reminder-task" onclick="editTask(${task.id})">
-                            <span class="monday-reminder-task-num">${idx + 1}</span>
-                            <span>${escapeHtml(task.title)}</span>
-                          </div>
-                        `).join('')}
-                      </div>
-                    </div>
-                  `;
-                })()}
-
-                <!-- 일일 목표 진행률 (게이미피케이션) -->
-                ${(() => {
-                  const dailyGoal = appState.settings.dailyGoal || 5;
-                  const completed = appState.todayStats.completedToday;
-                  const percentage = Math.min((completed / dailyGoal) * 100, 100);
-                  const isComplete = completed >= dailyGoal;
-                  const remaining = dailyGoal - completed;
-
-                  // 동기부여 메시지
-                  let message = '';
-                  let messageClass = '';
-                  if (isComplete) {
-                    message = '목표 달성! 오늘 정말 잘했어요! 🏆';
-                    messageClass = 'positive';
-                  } else if (percentage >= 80) {
-                    message = '거의 다 왔어요! 조금만 더! 💪';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 50) {
-                    message = '반 이상 완료! 잘하고 있어요! ⭐';
-                    messageClass = 'encourage';
-                  } else if (percentage >= 20) {
-                    message = '좋은 시작이에요! 계속 가보자! 🚀';
-                    messageClass = '';
-                  } else if (completed > 0) {
-                    message = '첫 발을 뗐어요! 그게 제일 어려운 거예요! 👏';
-                    messageClass = '';
-                  } else {
-                    message = '오늘 하나 해볼까요? 시작이 반이에요! ✨';
-                    messageClass = '';
-                  }
-
-                  // 러너 이모지
-                  const runner = isComplete ? '🏅' : (percentage >= 50 ? '🏃' : '🚶');
-
-                  return `
-                    <div class="daily-goal-compact">
-                      <div class="daily-goal-header">
-                        <div class="daily-goal-info">
-                          <span class="daily-goal-emoji">${isComplete ? '🎉' : '🎯'}</span>
-                          <span class="daily-goal-text">오늘 <strong>${completed}</strong>/${dailyGoal}개</span>
-                        </div>
-                        <span class="daily-goal-percentage ${isComplete ? 'complete' : ''}">${Math.round(percentage)}%</span>
-                      </div>
-                      <div class="daily-goal-track">
-                        <div class="daily-goal-bar" style="width: 100%">
-                          <div class="daily-goal-bar-fill ${isComplete ? 'complete' : ''}" style="width: ${percentage}%">
-                            <span class="daily-goal-runner">${runner}</span>
-                          </div>
-                        </div>
-                        <span class="daily-goal-finish">🏁</span>
-                      </div>
-                      <div class="daily-goal-message ${messageClass}">${message}</div>
-                    </div>
-                  `;
-                })()}
-
-                ${nextAction ? `
-                  <div class="next-action ${urgencyClass}">
-                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
-                    <div class="task-title">${nextAction.title}</div>
-                    <div class="task-meta">
-                      <span class="category ${nextAction.category}">${nextAction.category}</span>
-                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
-                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
-                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
-                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
-                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
-                        ${nextAction.link ? '🚀 GO' : '시작하기'}
-                      </button>
-                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
-                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
-                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
-                          '5분 집중'}</span>
-                      </button>
-                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
-                        ✓ 완료
-                      </button>
-                    </div>
-                  </div>
-                ` : `
-                  ${(() => {
-                    const rest = getRestActivity();
-                    const completedToday = appState.todayStats.completedToday;
-                    const streak = appState.streak.current;
-                    return `
-                      <div class="empty-state-enhanced">
-                        <div class="empty-state-icon-large">🎉</div>
-                        <div class="empty-state-title">모든 작업 완료!</div>
-                        <div class="empty-state-subtitle">
-                          오늘 <strong>${completedToday}개</strong> 완료했어요!
-                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
-                        </div>
-                        <div class="empty-state-actions">
-                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
-                            ➕ 새 작업 추가
-                          </button>
-                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
-                            ${rest.icon} ${rest.text}
-                          </button>
-                        </div>
-                      </div>
-                    `;
-                  })()}
-                `}
-
                 ${hiddenCount > 0 ? `
                   <div class="hidden-tasks">
                     오늘 못 할 것 ${hiddenCount}개 숨김<br>
@@ -14891,45 +14870,6 @@
                     📝 상세 추가
                   </button>
                 </div>
-
-                <!-- 포모도로 타이머 -->
-                ${(() => {
-                  const pomo = appState.pomodoro;
-                  const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
-                  if (!pomo.isRunning && !pomo.isBreak && pomo.completedPomodoros === 0) {
-                    // 비활성 상태: 시작 버튼만
-                    return `
-                      <div class="pomodoro-section" style="margin-bottom: 12px;">
-                        <button class="btn btn-secondary" onclick="startPomodoro()" style="width: 100%; padding: 10px;" aria-label="포모도로 시작">
-                          🍅 포모도로 25분 집중 시작
-                        </button>
-                      </div>
-                    `;
-                  }
-                  // 활성/휴식 상태
-                  return `
-                    <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">
-                      <div class="pomodoro-title">${pomo.isBreak ? '☕ 휴식 중' : '🍅 포모도로'}</div>
-                      <div class="pomodoro-time" id="pomodoro-time">${formatPomodoroTime(pomo.timeLeft)}</div>
-                      ${currentTask ? `<div class="pomodoro-task">${escapeHtml(currentTask.title)}</div>` : ''}
-                      <div class="pomodoro-controls">
-                        ${pomo.isRunning ? `
-                          <button class="pomodoro-btn pause" onclick="pausePomodoro()" aria-label="일시정지">⏸ 일시정지</button>
-                        ` : `
-                          <button class="pomodoro-btn start" onclick="resumePomodoro()" aria-label="재개">▶ 재개</button>
-                        `}
-                        <button class="pomodoro-btn stop" onclick="stopPomodoro()" aria-label="중지">⏹ 중지</button>
-                        ${pomo.isBreak ? `<button class="pomodoro-btn skip" onclick="skipBreak()" aria-label="휴식 건너뛰기">⏭ 건너뛰기</button>` : ''}
-                      </div>
-                      <div class="pomodoro-stats">
-                        <div class="pomodoro-stat">
-                          <div class="pomodoro-stat-value">${pomo.completedPomodoros}</div>
-                          <div>완료</div>
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                })()}
 
                 <!-- 퀵 필터 섹션 -->
                 <div class="quick-filter-section">
@@ -15302,21 +15242,82 @@
                 ` : ''}
               </div>
 
-              <!-- 오른쪽 컬럼: 통계 + 설정 -->
+              <!-- 오른쪽 컬럼: 보조 정보 + 도구 -->
               <div class="pc-column-right">
-                ${urgentTasks.length > 0 ? `
-                  <div class="dashboard-section">
-                    <div class="dashboard-title">🚨 마감 임박</div>
-                    <div class="urgent-list">
-                      ${urgentTasks.slice(0, 3).map(task => `
-                        <div class="urgent-item">
-                          <div class="urgent-item-title">${escapeHtml(task.title)}</div>
-                          <div class="urgent-item-time">⏰ ${formatDeadline(task.deadline)}</div>
+                <!-- 포모도로 타이머 (CENTER → RIGHT 이동) -->
+                ${(() => {
+                  const pomo = appState.pomodoro;
+                  const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
+                  if (!pomo.isRunning && !pomo.isBreak && pomo.completedPomodoros === 0) {
+                    // 비활성 상태: 시작 버튼만
+                    return `
+                      <div class="pomodoro-section" style="margin-bottom: 12px;">
+                        <button class="btn btn-secondary" onclick="startPomodoro()" style="width: 100%; padding: 10px;" aria-label="포모도로 시작">
+                          🍅 포모도로 25분 집중 시작
+                        </button>
+                      </div>
+                    `;
+                  }
+                  // 활성/휴식 상태
+                  return `
+                    <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">
+                      <div class="pomodoro-title">${pomo.isBreak ? '☕ 휴식 중' : '🍅 포모도로'}</div>
+                      <div class="pomodoro-time" id="pomodoro-time">${formatPomodoroTime(pomo.timeLeft)}</div>
+                      ${currentTask ? `<div class="pomodoro-task">${escapeHtml(currentTask.title)}</div>` : ''}
+                      <div class="pomodoro-controls">
+                        ${pomo.isRunning ? `
+                          <button class="pomodoro-btn pause" onclick="pausePomodoro()" aria-label="일시정지">⏸ 일시정지</button>
+                        ` : `
+                          <button class="pomodoro-btn start" onclick="resumePomodoro()" aria-label="재개">▶ 재개</button>
+                        `}
+                        <button class="pomodoro-btn stop" onclick="stopPomodoro()" aria-label="중지">⏹ 중지</button>
+                        ${pomo.isBreak ? `<button class="pomodoro-btn skip" onclick="skipBreak()" aria-label="휴식 건너뛰기">⏭ 건너뛰기</button>` : ''}
+                      </div>
+                      <div class="pomodoro-stats">
+                        <div class="pomodoro-stat">
+                          <div class="pomodoro-stat-value">${pomo.completedPomodoros}</div>
+                          <div>완료</div>
                         </div>
-                      `).join('')}
+                      </div>
                     </div>
-                  </div>
-                ` : ''}
+                  `;
+                })()}
+
+                <!-- 오늘의 명언 (LEFT → RIGHT 이동) -->
+                ${(() => {
+                  const quote = getDailyQuote();
+                  return `
+                    <div class="daily-quote">
+                      <div class="daily-quote-text">"${quote.text}"</div>
+                      <div class="daily-quote-author">— ${quote.author}</div>
+                    </div>
+                  `;
+                })()}
+
+                <!-- 월요일 리마인더 (LEFT → RIGHT 이동) -->
+                ${(() => {
+                  if (!checkMondayReminder()) return '';
+                  const focusTasks = appState.weeklyPlan.focusTasks
+                    .map(id => appState.tasks.find(t => t.id === id))
+                    .filter(t => t && !t.completed);
+                  if (focusTasks.length === 0) return '';
+                  return `
+                    <div class="monday-reminder">
+                      <div class="monday-reminder-header">
+                        <div class="monday-reminder-title">🎯 이번 주 집중할 작업</div>
+                        <button class="monday-reminder-close" onclick="dismissMondayReminder()">×</button>
+                      </div>
+                      <div class="monday-reminder-tasks">
+                        ${focusTasks.map((task, idx) => `
+                          <div class="monday-reminder-task" onclick="editTask(${task.id})">
+                            <span class="monday-reminder-task-num">${idx + 1}</span>
+                            <span>${escapeHtml(task.title)}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    </div>
+                  `;
+                })()}
 
                 <!-- PWA 설치 배너 -->
                 <div id="install-banner" class="install-banner">
