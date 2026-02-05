@@ -9341,7 +9341,10 @@
       // Firebase 동기화
       user: null,                       // 로그인한 사용자
       syncStatus: 'offline',            // 동기화 상태: offline/syncing/synced/error
-      lastSyncTime: null                // 마지막 동기화 시간
+      lastSyncTime: null,               // 마지막 동기화 시간
+      // 태스크 완료 영구 기록 (날짜별)
+      // { "2026-02-05": [{ t, c, at, r?, rv?, st? }], ... }
+      completionLog: {}
     };
 
     // ============================================
@@ -9418,6 +9421,9 @@
         // 통근 트래커 로드
         loadCommuteTracker();
 
+        // 완료 기록 영구 로그 로드
+        loadCompletionLog();
+
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
 
@@ -9478,6 +9484,9 @@
 
         // 통근 트래커 저장
         localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+
+        // 완료 기록 영구 로그 저장
+        localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
 
         // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
@@ -9702,6 +9711,7 @@
           workTemplates: appState.workTemplates,
           lifeRhythm: appState.lifeRhythm,
           commuteTracker: appState.commuteTracker,
+          completionLog: appState.completionLog,
           weeklyPlan: appState.weeklyPlan,
           shuttleSuccess: appState.shuttleSuccess,
           theme: appState.theme,
@@ -9854,7 +9864,8 @@
           settings: appState.settings,
           lifeRhythm: appState.lifeRhythm,
           availableTags: appState.availableTags,
-          streak: appState.streak
+          streak: appState.streak,
+          completionLog: appState.completionLog
         };
 
         localStorage.setItem('navigator-sync-backup', JSON.stringify(backup));
@@ -9897,6 +9908,7 @@
         if (backup.lifeRhythm) appState.lifeRhythm = backup.lifeRhythm;
         if (backup.availableTags) appState.availableTags = backup.availableTags;
         if (backup.streak) appState.streak = backup.streak;
+        if (backup.completionLog) appState.completionLog = backup.completionLog;
 
         // 로컬 저장 + Firebase 동기화
         _doSaveState();
@@ -10070,6 +10082,11 @@
             appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
             localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
           }
+          // 완료 기록 영구 로그 병합
+          if (data.completionLog) {
+            appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
+            localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+          }
           // 주간 계획 병합
           if (data.weeklyPlan) {
             appState.weeklyPlan = data.weeklyPlan;
@@ -10194,6 +10211,11 @@
               };
               // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
               localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+            }
+            // 완료 기록 영구 로그 병합 (Firebase 재기록 방지)
+            if (data.completionLog) {
+              appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
+              localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
             }
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
@@ -11717,15 +11739,19 @@
         t.id === id ? { ...t, completed: true, completedAt: completedAt, updatedAt: completedAt } : t
       );
 
-      // 완료 히스토리 저장
-      saveCompletionHistory({
-        taskId: id,
-        title: task.title,
-        category: task.category,
-        completedAt: completedAt,
-        dayOfWeek: now.getDay(),
-        hour: now.getHours()
-      });
+      // completionLog에 영구 기록 저장
+      const dateKey = getLocalDateStr(now);
+      const timeStr = now.toTimeString().slice(0, 5); // "HH:MM"
+      const logEntry = { t: task.title, c: task.category, at: timeStr };
+      if (task.repeatType && task.repeatType !== 'none') logEntry.r = task.repeatType;
+      if (task.expectedRevenue) logEntry.rv = Number(task.expectedRevenue);
+      if (task.subtasks && task.subtasks.length > 0) {
+        const doneCount = task.subtasks.filter(s => s.completed).length;
+        if (doneCount > 0) logEntry.st = doneCount;
+      }
+      if (!appState.completionLog[dateKey]) appState.completionLog[dateKey] = [];
+      appState.completionLog[dateKey].push(logEntry);
+      saveCompletionLog();
 
       // 오늘 통계 업데이트
       appState.todayStats.completedToday++;
@@ -12162,6 +12188,25 @@
       // 오늘 완료한 작업인지 확인
       const wasCompletedToday = task.completedAt &&
         new Date(task.completedAt).toDateString() === new Date().toDateString();
+
+      // completionLog에서 해당 기록 제거
+      if (task.completedAt) {
+        const logDate = getLocalDateStr(new Date(task.completedAt));
+        const logTime = new Date(task.completedAt).toTimeString().slice(0, 5);
+        if (appState.completionLog[logDate]) {
+          const idx = appState.completionLog[logDate].findIndex(
+            e => e.t === task.title && e.at === logTime
+          );
+          if (idx !== -1) {
+            appState.completionLog[logDate].splice(idx, 1);
+            // 해당 날짜에 기록이 0개면 키 삭제
+            if (appState.completionLog[logDate].length === 0) {
+              delete appState.completionLog[logDate];
+            }
+            saveCompletionLog();
+          }
+        }
+      }
 
       appState.tasks = appState.tasks.map(t =>
         t.id === id ? { ...t, completed: false, completedAt: null, updatedAt: new Date().toISOString() } : t
@@ -13296,7 +13341,8 @@
           workProjects: appState.workProjects,
           workTemplates: appState.workTemplates,
           lifeRhythm: appState.lifeRhythm,
-          weeklyPlan: appState.weeklyPlan
+          weeklyPlan: appState.weeklyPlan,
+          completionLog: appState.completionLog
         };
 
         const json = JSON.stringify(data, null, 2);
@@ -13417,6 +13463,10 @@
             appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
             localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
           }
+            // 완료 기록 로그 병합
+            if (data.completionLog) {
+              appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
+            }
             // 주간 계획 병합
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
@@ -13621,29 +13671,90 @@
     }
 
     /**
-     * 완료 히스토리 저장
+     * completionLog localStorage 저장
      */
-    function saveCompletionHistory(entry) {
+    function saveCompletionLog() {
       try {
-        let history = safeParseJSON('navigator-completion-history', []);
-        history.push(entry);
-
-        // 최근 1000개만 유지
-        if (history.length > 1000) {
-          history = history.slice(-1000);
-        }
-
-        localStorage.setItem('navigator-completion-history', JSON.stringify(history));
+        localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
       } catch (e) {
-        console.error('완료 히스토리 저장 실패:', e);
+        console.error('완료 로그 저장 실패:', e);
       }
     }
 
     /**
-     * 완료 히스토리 로드
+     * completionLog localStorage 로드 + 기존 데이터 마이그레이션
      */
-    function getCompletionHistory() {
-      return safeParseJSON('navigator-completion-history', []);
+    function loadCompletionLog() {
+      const parsed = safeParseJSON('navigator-completion-log', null);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        appState.completionLog = parsed;
+      }
+
+      // 기존 사용자 마이그레이션: appState.tasks에 남아있는 완료 태스크를 completionLog로 이전
+      if (Object.keys(appState.completionLog).length === 0) {
+        let migrated = 0;
+        appState.tasks.forEach(t => {
+          if (t.completed && t.completedAt) {
+            const d = new Date(t.completedAt);
+            const dateKey = getLocalDateStr(d);
+            const timeStr = d.toTimeString().slice(0, 5);
+            if (!appState.completionLog[dateKey]) appState.completionLog[dateKey] = [];
+            const entry = { t: t.title, c: t.category || '기타', at: timeStr };
+            if (t.repeatType && t.repeatType !== 'none') entry.r = t.repeatType;
+            if (t.expectedRevenue) entry.rv = Number(t.expectedRevenue);
+            appState.completionLog[dateKey].push(entry);
+            migrated++;
+          }
+        });
+        // 기존 completion-history도 마이그레이션
+        const oldHistory = safeParseJSON('navigator-completion-history', []);
+        oldHistory.forEach(h => {
+          if (h.completedAt) {
+            const d = new Date(h.completedAt);
+            const dateKey = getLocalDateStr(d);
+            const timeStr = d.toTimeString().slice(0, 5);
+            if (!appState.completionLog[dateKey]) appState.completionLog[dateKey] = [];
+            // 중복 방지 (title+time 기준)
+            const exists = appState.completionLog[dateKey].some(e => e.t === h.title && e.at === timeStr);
+            if (!exists) {
+              appState.completionLog[dateKey].push({
+                t: h.title, c: h.category || '기타', at: timeStr
+              });
+              migrated++;
+            }
+          }
+        });
+        if (migrated > 0) {
+          saveCompletionLog();
+          console.log(`[migration] completionLog에 ${migrated}건 마이그레이션 완료`);
+        }
+      }
+    }
+
+    /**
+     * completionLog 병합 (Firebase 동기화용)
+     * 날짜별 합집합, title+at 기준 중복 제거
+     */
+    function mergeCompletionLog(local, cloud) {
+      const merged = {};
+      // 로컬 데이터 먼저 복사
+      for (const date of Object.keys(local || {})) {
+        merged[date] = [...(local[date] || [])];
+      }
+      // 클라우드 데이터 병합
+      for (const date of Object.keys(cloud || {})) {
+        if (!merged[date]) {
+          merged[date] = [...(cloud[date] || [])];
+        } else {
+          const existing = new Set(merged[date].map(e => e.t + '|' + e.at));
+          for (const entry of (cloud[date] || [])) {
+            if (!existing.has(entry.t + '|' + entry.at)) {
+              merged[date].push(entry);
+            }
+          }
+        }
+      }
+      return merged;
     }
 
     /**
