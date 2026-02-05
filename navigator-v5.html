@@ -3721,14 +3721,27 @@
 
     .work-projects-header {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 10px;
       margin-bottom: 16px;
+    }
+
+    /* 프로젝트명 + 일정을 한 줄로 배치 */
+    .work-project-info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
     }
 
     .work-projects-title {
       font-size: 18px;
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex-shrink: 1;
     }
 
     .work-section-title {
@@ -4258,6 +4271,7 @@
       background: var(--bg-tertiary);
       color: var(--text-muted);
       border: 1px dashed var(--border-color);
+      flex-shrink: 0;
     }
 
     /* 프로젝트 대시보드 */
@@ -4341,7 +4355,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 4px;
+      flex-shrink: 0;
     }
 
     /* 참여자 트래커 */
@@ -17348,18 +17362,19 @@
         <div class="work-project-detail">
           <!-- 프로젝트 헤더 -->
           <div class="work-projects-header">
-            <div>
-              <div class="work-projects-title" style="display: flex; align-items: center; gap: 12px;">
-                ${escapeHtml(project.name)}
-              </div>
+            <!-- 1줄: 프로젝트명 + 일정 + D-day -->
+            <div class="work-project-info-row">
+              <div class="work-projects-title">${escapeHtml(project.name)}</div>
               ${scheduleHtml}
-              <div class="work-project-progress" style="margin-top: 8px;">
-                <div class="work-project-progress-bar">
-                  <div class="work-project-progress-fill" style="width: ${progressPercent}%"></div>
-                </div>
-                <span class="work-project-progress-text">${completedTasks}/${totalTasks} 항목 · ${completedStages}/${project.stages.length} 단계</span>
-              </div>
             </div>
+            <!-- 진행률 바 -->
+            <div class="work-project-progress">
+              <div class="work-project-progress-bar">
+                <div class="work-project-progress-fill" style="width: ${progressPercent}%"></div>
+              </div>
+              <span class="work-project-progress-text">${completedTasks}/${totalTasks} 항목 · ${completedStages}/${project.stages.length} 단계</span>
+            </div>
+            <!-- 2줄: 액션 버튼 -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
               <button class="work-project-action-btn" onclick="copyProjectToSlack(${project.id})" aria-label="슬랙에 복사">💬 슬랙복사</button>
               <button class="work-project-action-btn" onclick="duplicateWorkProject(${project.id})" aria-label="프로젝트 복제">📋 복제</button>
