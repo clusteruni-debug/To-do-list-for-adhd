@@ -14215,7 +14215,9 @@
                   const medSlots = getMedicationSlots();
                   if (!medSlots || medSlots.length === 0) return '';
 
-                  const todayMeds = (rhythm.medications) || {};
+                  const todayStr = getLocalDateStr();
+                  const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
+                  const todayMeds = (todayRhythm.medications) || {};
                   const takenCount = medSlots.filter(s => todayMeds[s.id]).length;
                   const totalCount = medSlots.length;
                   const streak = getMedicationStreak();
