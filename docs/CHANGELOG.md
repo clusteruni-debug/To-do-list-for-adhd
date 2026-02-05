@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## [2026-02-05] (세션 9)
+
+### 작업 내용
+- **멀티디바이스 동기화 데이터 유실 방지 (P0 버그 수정)**
+  - 근본 원인: `onAuthStateChanged` → `appState.user` 설정 후 `loadFromFirebase()` 완료 전에 `syncToFirebase()`가 빈 데이터를 업로드하는 Race Condition
+  - `isLoadingFromCloud` 플래그: 클라우드 초기 로드 중 모든 Firebase 업로드 차단
+  - `loadFromFirebase()` 시작 시 `saveStateTimeout` 디바운스 타이머 강제 취소
+  - `checkDataShrinkage()`: 이전 데이터 수 대비 급격한 감소(→0) 감지 시 동기화 자동 차단
+  - `createSyncBackup()`: 매 동기화 전 현재 상태를 localStorage에 자동 백업
+  - `updateDataCounts()`: 성공적인 동기화 후 데이터 수 기록 (다음 축소 감지에 사용)
+  - `restoreFromSyncBackup()`: 데이터 유실 시 직전 동기화 백업에서 수동 복원
+  - 앱 시작 시 데이터 유실 자동 감지 → `confirm()` 복구 제안
+  - 설정 > 데이터 백업 섹션에 "🔄 동기화 백업에서 복원" 버튼 추가
+  - `loadFromFirebase()` try-finally 블록으로 에러 시에도 잠금 해제 보장
+
+### 보호 체계 요약
+```
+앱 시작 → loadState() → checkDataShrinkage() → 유실 감지 시 복구 제안
+로그인 → isLoadingFromCloud=true → saveStateTimeout 취소 → loadFromFirebase()
+       → 병합 완료 → isLoadingFromCloud=false → updateDataCounts() → syncToFirebase()
+syncToFirebase() 호출 시:
+  1. isLoadingFromCloud 체크 → 대기
+  2. checkDataShrinkage() → 차단
+  3. createSyncBackup() → 백업
+  4. Firebase 업로드
+  5. updateDataCounts() → 기록
+```
+
+### 이슈/메모
+- 수정 파일: `navigator-v5.html` (단일 파일)
+- DB 변경: 없음
+- 보호 범위: tasks, workProjects, templates, workTemplates 등 전체 데이터 타입
+- `_doSaveState()`, `saveWorkProjects()`, 온라인 복귀 이벤트 모두 `syncToFirebase()` 경유 → 자동 보호
+
+### 다음에 할 것
+- 반복 태스크(daily/weekdays) 자동 초기화 (오늘의 리듬)
+- SVG 아이콘 교체 (P2)
+
 ## [2026-02-05] (세션 8 - 전면 개선)
 
 ### 작업 내용

@@ -9011,6 +9011,21 @@
         // 백업 리마인더 체크
         checkBackupReminder();
 
+        // 데이터 유실 자동 감지: localStorage가 비어있지만 동기화 백업에 데이터가 있으면 복구 제안
+        const shrinkage = checkDataShrinkage();
+        if (shrinkage.blocked) {
+          console.warn('[startup] 데이터 유실 감지:', shrinkage.details);
+          setTimeout(() => {
+            if (confirm(
+              '⚠️ 데이터 유실이 감지되었습니다.\n\n' +
+              shrinkage.details + '\n\n' +
+              '동기화 백업에서 복원하시겠습니까?'
+            )) {
+              restoreFromSyncBackup();
+            }
+          }, 1000);
+        }
+
       } catch (error) {
         console.error('데이터 로드 실패:', error);
         showToast('데이터 로드 중 오류가 발생했습니다', 'error');
@@ -9073,6 +9088,7 @@
     let pendingSync = false; // 동기화 중 추가 변경 발생 시 재동기화 예약
     let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
+    let isLoadingFromCloud = false; // 클라우드 초기 로드 중 sync 차단 (빈 데이터 업로드 방지)
 
     /**
      * Google 로그인
@@ -9175,9 +9191,27 @@
     async function syncToFirebase() {
       if (!appState.user) return;
 
+      // 클라우드 초기 로드 중에는 동기화 차단 (빈 데이터 업로드 방지)
+      // → loadFromFirebase() 완료 후 pendingSync로 재시도됨
+      if (isLoadingFromCloud) {
+        pendingSync = true;
+        console.log('[sync] 클라우드 로드 중 - 동기화 대기');
+        return;
+      }
+
       // 동기화 중이면 다음 동기화 예약 (변경사항 누락 방지)
       if (isSyncing) {
         pendingSync = true;
+        return;
+      }
+
+      // 데이터 축소(유실) 감지: 이전에 데이터가 있었는데 지금 전부 사라졌으면 차단
+      const shrinkage = checkDataShrinkage();
+      if (shrinkage.blocked) {
+        console.warn('⚠️ 데이터 축소 감지, 동기화 차단:', shrinkage.details);
+        showToast('⚠️ 데이터 손실 감지 — 동기화를 차단했습니다. 설정 > 동기화 백업에서 복원하세요.', 'error');
+        appState.syncStatus = 'error';
+        updateSyncIndicator();
         return;
       }
 
@@ -9185,6 +9219,9 @@
         isSyncing = true;
         pendingSync = false;
         appState.syncStatus = 'syncing';
+
+        // 동기화 전 자동 백업 (데이터가 있을 때만 저장)
+        createSyncBackup();
 
         const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
         await window.firebaseSetDoc(userDoc, {
@@ -9205,6 +9242,9 @@
         appState.syncStatus = 'synced';
         appState.lastSyncTime = new Date();
         updateSyncIndicator();
+
+        // 성공적인 동기화 후 데이터 수 기록
+        updateDataCounts();
 
         // 동기화 성공 토스트 (30초 간격 제한)
         const now = Date.now();
@@ -9316,8 +9356,141 @@
       return merged;
     }
 
+    /**
+     * 동기화 전 자동 백업 생성
+     * Firebase에 쓰기 전 현재 상태를 localStorage에 스냅샷으로 저장
+     * 데이터 유실 시 복원 가능 (최근 1개 유지, 데이터가 있을 때만)
+     */
+    function createSyncBackup() {
+      try {
+        // 데이터가 하나도 없으면 백업할 가치 없음
+        if (appState.tasks.length === 0 && appState.workProjects.length === 0) return;
+
+        const backup = {
+          timestamp: new Date().toISOString(),
+          tasks: appState.tasks,
+          workProjects: appState.workProjects,
+          workTemplates: appState.workTemplates,
+          templates: appState.templates,
+          settings: appState.settings,
+          lifeRhythm: appState.lifeRhythm,
+          availableTags: appState.availableTags,
+          streak: appState.streak
+        };
+
+        localStorage.setItem('navigator-sync-backup', JSON.stringify(backup));
+      } catch (e) {
+        console.warn('동기화 백업 생성 실패:', e);
+      }
+    }
+
+    /**
+     * 동기화 백업에서 데이터 복원
+     * 데이터 유실 감지 시 또는 수동으로 호출
+     */
+    function restoreFromSyncBackup() {
+      const raw = localStorage.getItem('navigator-sync-backup');
+      if (!raw) {
+        showToast('복원할 동기화 백업이 없습니다', 'error');
+        return;
+      }
+
+      try {
+        const backup = JSON.parse(raw);
+        const taskCount = (backup.tasks || []).length;
+        const wpCount = (backup.workProjects || []).length;
+        const timeStr = new Date(backup.timestamp).toLocaleString('ko-KR');
+
+        if (!confirm(
+          `동기화 백업에서 복원하시겠습니까?\n\n` +
+          `백업 시각: ${timeStr}\n` +
+          `태스크: ${taskCount}개\n` +
+          `본업 프로젝트: ${wpCount}개\n\n` +
+          `현재 데이터를 백업 데이터로 교체합니다.`
+        )) return;
+
+        // 복원
+        if (backup.tasks) appState.tasks = validateTasks(backup.tasks);
+        if (backup.workProjects) appState.workProjects = backup.workProjects;
+        if (backup.workTemplates) appState.workTemplates = backup.workTemplates;
+        if (backup.templates) appState.templates = backup.templates;
+        if (backup.settings) appState.settings = { ...appState.settings, ...backup.settings };
+        if (backup.lifeRhythm) appState.lifeRhythm = backup.lifeRhythm;
+        if (backup.availableTags) appState.availableTags = backup.availableTags;
+        if (backup.streak) appState.streak = backup.streak;
+
+        // 로컬 저장 + Firebase 동기화
+        _doSaveState();
+
+        recomputeTodayStats();
+        renderStatic();
+        showToast('✅ 동기화 백업에서 복원 완료!', 'success');
+      } catch (e) {
+        console.error('백업 복원 실패:', e);
+        showToast('백업 복원 중 오류가 발생했습니다', 'error');
+      }
+    }
+    window.restoreFromSyncBackup = restoreFromSyncBackup;
+
+    /**
+     * 데이터 축소(유실) 감지
+     * 이전에 기록된 데이터 수와 비교하여 급격한 감소를 탐지
+     * @returns {{ blocked: boolean, details: string }}
+     */
+    function checkDataShrinkage() {
+      const raw = localStorage.getItem('navigator-last-data-counts');
+      if (!raw) return { blocked: false, details: '' };
+
+      try {
+        const last = JSON.parse(raw);
+        const issues = [];
+
+        // 이전에 데이터가 있었는데 지금 0이면 = 유실 가능성
+        if (last.tasks > 3 && appState.tasks.length === 0) {
+          issues.push(`tasks: ${last.tasks} → 0`);
+        }
+        if (last.workProjects > 0 && appState.workProjects.length === 0) {
+          issues.push(`workProjects: ${last.workProjects} → 0`);
+        }
+
+        return {
+          blocked: issues.length > 0,
+          details: issues.join(', ')
+        };
+      } catch (e) {
+        return { blocked: false, details: '' };
+      }
+    }
+
+    /**
+     * 현재 데이터 수 기록 (성공적인 동기화 후 호출)
+     * 다음 동기화 시 데이터 축소 감지에 사용
+     */
+    function updateDataCounts() {
+      try {
+        const counts = {
+          tasks: appState.tasks.length,
+          workProjects: appState.workProjects.length,
+          templates: (appState.templates || []).length,
+          workTemplates: (appState.workTemplates || []).length,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('navigator-last-data-counts', JSON.stringify(counts));
+      } catch (e) {
+        // 무시 - 필수 기능이 아님
+      }
+    }
+
     async function loadFromFirebase() {
       if (!appState.user) return;
+
+      // 진행 중인 saveState 디바운스 타이머 취소 (빈 데이터가 먼저 Firebase에 업로드되는 것 방지)
+      if (saveStateTimeout) {
+        clearTimeout(saveStateTimeout);
+        saveStateTimeout = null;
+      }
+
+      isLoadingFromCloud = true;
 
       try {
         appState.syncStatus = 'syncing';
@@ -9414,10 +9587,14 @@
 
           appState.syncStatus = 'synced';
 
-          // 병합된 데이터를 클라우드에도 반영
+          // 병합 완료 → 로드 잠금 해제 후 클라우드에 반영
+          isLoadingFromCloud = false;
+          updateDataCounts();
           await syncToFirebase();
         } else {
           // 클라우드에 데이터 없으면 현재 로컬 데이터 업로드
+          isLoadingFromCloud = false;
+          updateDataCounts();
           await syncToFirebase();
         }
 
@@ -9426,6 +9603,9 @@
       } catch (error) {
         console.error('데이터 로드 실패:', error);
         appState.syncStatus = 'error';
+      } finally {
+        // 에러 시에도 로드 잠금 해제 보장
+        isLoadingFromCloud = false;
       }
     }
 
@@ -15439,6 +15619,14 @@
                     </div>
                     <div class="settings-label-desc" style="text-align: center; margin-top: 8px; opacity: 0.6;">
                       주기적으로 백업하여 데이터를 안전하게 보관하세요
+                    </div>
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                      <button class="backup-btn" onclick="restoreFromSyncBackup()" style="width: 100%; background: #f5576c22; border-color: #f5576c; color: #f5576c;" aria-label="동기화 백업에서 데이터 복원">
+                        🔄 동기화 백업에서 복원
+                      </button>
+                      <div class="settings-label-desc" style="text-align: center; margin-top: 6px; opacity: 0.5; font-size: 11px;">
+                        동기화 중 데이터가 유실된 경우 직전 상태로 복원
+                      </div>
                     </div>
                   </div>
                 </div>
