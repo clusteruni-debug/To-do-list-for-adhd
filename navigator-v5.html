@@ -14721,64 +14721,6 @@
                   </div>
                 ` : ''}
 
-                ${nextAction ? `
-                  <div class="next-action ${urgencyClass}">
-                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
-                    <div class="task-title">${nextAction.title}</div>
-                    <div class="task-meta">
-                      <span class="category ${nextAction.category}">${nextAction.category}</span>
-                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
-                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
-                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
-                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
-                    </div>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
-                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
-                        ${nextAction.link ? '🚀 GO' : '시작하기'}
-                      </button>
-                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
-                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
-                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
-                          '5분 집중'}</span>
-                      </button>
-                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
-                        ✓ 완료
-                      </button>
-                    </div>
-                  </div>
-                ` : `
-                  ${(() => {
-                    const rest = getRestActivity();
-                    const completedToday = appState.todayStats.completedToday;
-                    const streak = appState.streak.current;
-                    return `
-                      <div class="empty-state-enhanced">
-                        <div class="empty-state-icon-large">🎉</div>
-                        <div class="empty-state-title">모든 작업 완료!</div>
-                        <div class="empty-state-subtitle">
-                          오늘 <strong>${completedToday}개</strong> 완료했어요!
-                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
-                        </div>
-                        <div class="empty-state-actions">
-                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
-                            ➕ 새 작업 추가
-                          </button>
-                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
-                            ${rest.icon} ${rest.text}
-                          </button>
-                        </div>
-                      </div>
-                    `;
-                  })()}
-                `}
-
-                ${hiddenCount > 0 ? `
-                  <div class="hidden-tasks">
-                    오늘 못 할 것 ${hiddenCount}개 숨김<br>
-                    <span style="font-size: 12px">내일 하면 됩니다</span>
-                  </div>
-                ` : ''}
-
                 <!-- 빠른 추가 -->
                 <div class="quick-add-simple">
                   <input
@@ -15132,8 +15074,67 @@
                 ` : ''}
               </div>
 
-              <!-- 오른쪽 컬럼: 집중 도구 -->
+              <!-- 오른쪽 컬럼: 지금 집중 -->
               <div class="pc-column-right">
+                <!-- ▶ 지금 할 것 -->
+                ${nextAction ? `
+                  <div class="next-action ${urgencyClass}">
+                    <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
+                    <div class="task-title">${nextAction.title}</div>
+                    <div class="task-meta">
+                      <span class="category ${nextAction.category}">${nextAction.category}</span>
+                      ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
+                      ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
+                      ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
+                      ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
+                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
+                        ${nextAction.link ? '🚀 GO' : '시작하기'}
+                      </button>
+                      <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer(${nextAction.id})" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
+                        ⏱ <span id="quick-timer-display" class="quick-timer-display">${appState.quickTimer.isRunning ?
+                          Math.floor(appState.quickTimer.timeLeft / 60) + ':' + String(appState.quickTimer.timeLeft % 60).padStart(2, '0') :
+                          '5분 집중'}</span>
+                      </button>
+                      <button class="btn btn-success" onclick="completeTask(${nextAction.id})">
+                        ✓ 완료
+                      </button>
+                    </div>
+                  </div>
+                ` : `
+                  ${(() => {
+                    const rest = getRestActivity();
+                    const completedToday = appState.todayStats.completedToday;
+                    const streak = appState.streak.current;
+                    return `
+                      <div class="empty-state-enhanced">
+                        <div class="empty-state-icon-large">🎉</div>
+                        <div class="empty-state-title">모든 작업 완료!</div>
+                        <div class="empty-state-subtitle">
+                          오늘 <strong>${completedToday}개</strong> 완료했어요!
+                          ${streak > 1 ? `<br>🔥 ${streak}일 연속 달성 중!` : ''}
+                        </div>
+                        <div class="empty-state-actions">
+                          <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
+                            ➕ 새 작업 추가
+                          </button>
+                          <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
+                            ${rest.icon} ${rest.text}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  })()}
+                `}
+
+                ${hiddenCount > 0 ? `
+                  <div class="hidden-tasks">
+                    오늘 못 할 것 ${hiddenCount}개 숨김<br>
+                    <span style="font-size: 12px">내일 하면 됩니다</span>
+                  </div>
+                ` : ''}
+
                 <!-- 🍅 포모도로 타이머 -->
                 ${(() => {
                   const pomo = appState.pomodoro;
