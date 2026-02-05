@@ -10872,23 +10872,24 @@
       const results = [];
       const seen = new Set();
 
-      // 1. completionLog에서 조회 (영구 기록)
+      // 1. completionLog에서 조회 (영구 기록) — 동일 제목+시간도 각각 표시
       const logEntries = (appState.completionLog || {})[dateStr] || [];
       logEntries.forEach((e, idx) => {
-        const key = e.t + '|' + e.at;
-        if (!seen.has(key)) {
-          seen.add(key);
-          results.push({
-            title: e.t,
-            category: e.c,
-            completedAt: dateStr + 'T' + e.at,
-            repeatType: e.r || null,
-            expectedRevenue: e.rv || 0,
-            estimatedTime: 0,
-            fromLog: true,
-            logIndex: idx  // completionLog 내 원래 인덱스 (수정/삭제용)
-          });
-        }
+        const key = 'log|' + idx + '|' + e.t + '|' + e.at;
+        seen.add(key);
+        // tasks 중복 체크용 별도 키도 등록
+        const dedupKey = e.t + '|' + e.at;
+        seen.add(dedupKey);
+        results.push({
+          title: e.t,
+          category: e.c,
+          completedAt: dateStr + 'T' + e.at,
+          repeatType: e.r || null,
+          expectedRevenue: e.rv || 0,
+          estimatedTime: 0,
+          fromLog: true,
+          logIndex: idx  // completionLog 내 원래 인덱스 (수정/삭제용)
+        });
       });
 
       // 2. appState.tasks에서 보완 (completionLog에 없는 항목)
@@ -10922,12 +10923,15 @@
           }
         });
       }
-      // appState.tasks 현재 데이터로 보완 (아직 completionLog에 없는 오늘 데이터 등)
+      // appState.tasks 현재 데이터로 보완 (completionLog와 중복되지 않는 항목만 추가)
       appState.tasks.forEach(t => {
         if (t.completed && t.completedAt) {
           const dateKey = getLocalDateStr(new Date(t.completedAt));
-          // completionLog에 이미 포함되지 않은 경우만 추가
-          if (!appState.completionLog[dateKey]) {
+          const timeStr = new Date(t.completedAt).toTimeString().slice(0, 5);
+          const logEntries = (appState.completionLog || {})[dateKey] || [];
+          // completionLog에 같은 제목+시간 항목이 없는 경우만 카운트
+          const isDuplicate = logEntries.some(e => e.t === t.title && e.at === timeStr);
+          if (!isDuplicate) {
             map[dateKey] = (map[dateKey] || 0) + 1;
           }
         }
@@ -11113,10 +11117,14 @@
       if (catIdx === null) return;
       const cat = categories[parseInt(catIdx) - 1] || '일상';
 
-      const now = new Date();
-      const defaultTime = now.toTimeString().slice(0, 5);
+      // 오늘이면 현재 시간, 과거 날짜면 12:00 기본값
+      const todayStr = getLocalDateStr(new Date());
+      const defaultTime = dateStr === todayStr ? new Date().toTimeString().slice(0, 5) : '12:00';
       const time = prompt('완료 시간 (HH:MM):', defaultTime);
       if (time === null) return;
+      if (time && !time.match(/^\d{2}:\d{2}$/)) {
+        showToast('시간 형식이 올바르지 않아 기본값을 사용합니다', 'warning');
+      }
       const finalTime = time.match(/^\d{2}:\d{2}$/) ? time : defaultTime;
 
       const revenueStr = prompt('수익 (원, 없으면 0):', '0');
@@ -11166,7 +11174,11 @@
       // 업데이트 적용
       entry.t = newTitle.trim();
       entry.c = newCat;
-      if (newTime.match(/^\d{2}:\d{2}$/)) entry.at = newTime;
+      if (newTime.match(/^\d{2}:\d{2}$/)) {
+        entry.at = newTime;
+      } else if (newTime.trim()) {
+        showToast('시간 형식이 올바르지 않아 기존 값을 유지합니다', 'warning');
+      }
       entry.rv = parseInt(newRevenue) || 0;
 
       saveState();
