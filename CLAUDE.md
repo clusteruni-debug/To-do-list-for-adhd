@@ -334,8 +334,21 @@ Navigator  ──(아티클 작성 Task)──▶  x-article-editor 초안 생�
 | 작업 | 우선순위 | 상태 |
 |------|---------|------|
 | SVG 아이콘 교체 | P2 | 🔴 대기 |
+| 라이프 리듬 30일 장기 통계 | P1 | 🔴 대기 |
 
-### ✅ 최근 완료 (2026-02-05)
+### ✅ 최근 완료 (2026-02-06, 세션 16)
+- [x] 캘린더 과거 날짜 완료 기록 추가 (addCompletionLogEntry) ✅
+- [x] 시간 입력 편의 파싱 — 1430, 930 등 콜론 없이 입력 (parseTimeInput) ✅
+- [x] 캘린더 카운트 버그 수정 (getCompletionMap 중복 체크) ✅
+- [x] completionLog 중복 기록 표시 수정 ✅
+- [x] 시간 검증 피드백 toast + 과거 날짜 기본 시간 12:00 ✅
+- [x] saveActualTime NaN 방어 ✅
+- [x] handleTouchEnd changedTouches 크래시 방지 ✅
+- [x] importData 파일 재선택 + handleFileImport 타입 검증 ✅
+- [x] showTimeInputModal 모달 중첩 방지 ✅
+- [x] setInterval 중복 등록 방지 (메모리 누수 예방) ✅
+
+### ✅ 이전 완료 (2026-02-05)
 - [x] XSS 전수 방어 - innerHTML 38곳 escapeHtml() 적용 ✅
 - [x] 접근성 65개 aria-label + 포커스 트랩 + WCAG 색상 대비 ✅
 - [x] renderStatic 스크롤/포커스 보존 ✅
