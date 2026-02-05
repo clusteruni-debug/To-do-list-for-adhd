@@ -16,22 +16,21 @@
   - CSS: .medication-tracker, .medication-btn, .medication-btn.taken 등 스타일
   - XSS 방어: escapeHtml() 적용 (slot.id, slot.label)
   - 접근성: button title 속성 (수정/삭제 안내)
-
-### 진행 중
-- 히스토리 렌더링 + 과거 날짜 복약 편집
-- 설정 UI (슬롯 추가/편집/삭제)
-- 대시보드 통계 (7일 복용률)
+  - 히스토리: 복약 행 추가 (아이콘✓/- 형태, 클릭으로 과거 날짜 편집)
+  - editMedicationHistory(): 과거 날짜 복약 기록 편집
+  - 설정 UI: 복약 슬롯 추가/편집/삭제 (이름, 아이콘, 필수 여부)
+  - 대시보드: 7일 필수/선택 복용률 + 연속일 통계
+  - hasAnyData에 복약 기록 포함 (복약만 있는 날도 히스토리에 표시)
 
 ### 이슈/메모
 - 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: lifeRhythm.today/history에 medications 필드 추가 (Firebase 자동 반영)
+- DB 변경: lifeRhythm.today/history에 medications 필드, settings에 medicationSlots 추가
 - 기존 사용자: medications 필드 없어도 `|| {}` 처리로 크래시 없음
+- 슬롯 삭제 시 기존 기록은 유지 (데이터 안전)
 
 ### 다음에 할 것
-- 히스토리에 복약 행 추가
-- 과거 날짜 복약 편집 기능
-- 설정 UI (슬롯 관리)
-- 대시보드 7일 복용률 통계
+- P1: 라이프 리듬 히스토리 30일 이후 자동 정리
+- P1: 동기화 백업 3개 로테이션
 - P2: SVG 아이콘 교체
 
 ---

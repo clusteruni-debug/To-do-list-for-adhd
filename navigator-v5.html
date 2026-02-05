@@ -5787,6 +5787,35 @@
       border-left-color: var(--success);
     }
 
+    /* 히스토리 복약 행 */
+    .rhythm-history-meds {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0;
+      flex-wrap: wrap;
+    }
+
+    .rhythm-history-med {
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .rhythm-history-med:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-history-med.taken {
+      color: var(--success);
+    }
+
+    .rhythm-history-med.missed {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
     /* 오늘의 명언 */
     .daily-quote {
       background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
@@ -15391,6 +15420,64 @@
                       `).join('')}
                     </div>
                   ` : ''}
+
+                  <!-- 복약 통계 (7일) -->
+                  ${(() => {
+                    const medSlots = getMedicationSlots();
+                    if (!medSlots || medSlots.length === 0) return '';
+
+                    const today = new Date();
+                    let totalRequired = 0, takenRequired = 0;
+                    let totalOptional = 0, takenOptional = 0;
+
+                    for (let i = 0; i < 7; i++) {
+                      const d = new Date(today);
+                      d.setDate(today.getDate() - i);
+                      const ds = getLocalDateStr(d);
+
+                      let dayMeds;
+                      if (i === 0 && appState.lifeRhythm.today.date === ds) {
+                        dayMeds = appState.lifeRhythm.today.medications || {};
+                      } else {
+                        const hist = appState.lifeRhythm.history[ds];
+                        dayMeds = hist ? (hist.medications || {}) : {};
+                      }
+
+                      medSlots.forEach(s => {
+                        if (s.required) {
+                          totalRequired++;
+                          if (dayMeds[s.id]) takenRequired++;
+                        } else {
+                          totalOptional++;
+                          if (dayMeds[s.id]) takenOptional++;
+                        }
+                      });
+                    }
+
+                    const reqRate = totalRequired > 0 ? Math.round((takenRequired / totalRequired) * 100) : 0;
+                    const optRate = totalOptional > 0 ? Math.round((takenOptional / totalOptional) * 100) : 0;
+                    const streak = getMedicationStreak();
+
+                    return `
+                      <div class="rhythm-work-section" style="margin-top: 16px;">
+                        <div class="rhythm-chart-title">💊 복약 (최근 7일)</div>
+                        <div class="rhythm-work-stats">
+                          <div class="rhythm-work-stat">
+                            <span class="rhythm-work-label">필수 복용률</span>
+                            <span class="rhythm-work-value ${reqRate >= 80 ? 'good' : ''}">${reqRate}%</span>
+                          </div>
+                          <div class="rhythm-work-stat">
+                            <span class="rhythm-work-label">선택 복용률</span>
+                            <span class="rhythm-work-value">${optRate}%</span>
+                          </div>
+                          <div class="rhythm-work-stat">
+                            <span class="rhythm-work-label">연속일</span>
+                            <span class="rhythm-work-value ${streak >= 7 ? 'good' : ''}">${streak}일</span>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+                  })()}
                 </div>
               `;
             })()}
@@ -16105,6 +16192,38 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div class="settings-section">
+                    <div class="settings-section-title">💊 복약/영양제 설정</div>
+
+                    <div style="margin-bottom: 12px;">
+                      ${(() => {
+                        const medSlots = getMedicationSlots();
+                        return medSlots.map((slot, idx) => `
+                          <div class="settings-row" style="padding: 10px 0; border-bottom: 1px solid var(--border-color);">
+                            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                              <span style="font-size: 18px;">${slot.icon}</span>
+                              <div style="flex: 1;">
+                                <div style="font-size: 14px; font-weight: 500;">${escapeHtml(slot.label)}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${slot.required ? '필수' : '선택'}</div>
+                              </div>
+                            </div>
+                            <div style="display: flex; gap: 4px;">
+                              <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;"
+                                      onclick="editMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 편집">✏️</button>
+                              <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; color: var(--danger);"
+                                      onclick="deleteMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 삭제">🗑️</button>
+                            </div>
+                          </div>
+                        `).join('');
+                      })()}
+                    </div>
+
+                    <button class="btn btn-secondary" style="width: 100%; font-size: 13px;"
+                            onclick="addMedicationSlot()" aria-label="복약 슬롯 추가">
+                      ➕ 복약 슬롯 추가
+                    </button>
                   </div>
 
                   <div class="settings-section">
@@ -16981,6 +17100,80 @@
     window.showMedicationActionMenu = showMedicationActionMenu;
 
     /**
+     * 복약 슬롯 추가 (설정)
+     */
+    function addMedicationSlot() {
+      const label = prompt('복약/영양제 이름:', '');
+      if (!label) return;
+
+      const icon = prompt('아이콘 (예: 💊, 🌿, 💉):', '💊') || '💊';
+      const required = confirm('필수 복약인가요? (확인=필수, 취소=선택)');
+
+      if (!appState.lifeRhythm.settings) appState.lifeRhythm.settings = {};
+      if (!appState.lifeRhythm.settings.medicationSlots) {
+        appState.lifeRhythm.settings.medicationSlots = getMedicationSlots();
+      }
+
+      const id = 'med_' + Date.now();
+      appState.lifeRhythm.settings.medicationSlots.push({ id, label, icon, required });
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast('복약 슬롯이 추가되었습니다: ' + label, 'success');
+    }
+    window.addMedicationSlot = addMedicationSlot;
+
+    /**
+     * 복약 슬롯 편집 (설정)
+     */
+    function editMedicationSlot(idx) {
+      if (!appState.lifeRhythm.settings) appState.lifeRhythm.settings = {};
+      if (!appState.lifeRhythm.settings.medicationSlots) {
+        appState.lifeRhythm.settings.medicationSlots = getMedicationSlots();
+      }
+
+      const slots = appState.lifeRhythm.settings.medicationSlots;
+      if (idx < 0 || idx >= slots.length) return;
+
+      const slot = slots[idx];
+      const newLabel = prompt('복약/영양제 이름:', slot.label);
+      if (newLabel === null) return;
+      if (!newLabel) { showToast('이름은 비워둘 수 없습니다', 'error'); return; }
+
+      const newIcon = prompt('아이콘:', slot.icon) || slot.icon;
+      const newRequired = confirm('필수 복약인가요? (확인=필수, 취소=선택)');
+
+      slot.label = newLabel;
+      slot.icon = newIcon;
+      slot.required = newRequired;
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast('복약 슬롯이 수정되었습니다', 'success');
+    }
+    window.editMedicationSlot = editMedicationSlot;
+
+    /**
+     * 복약 슬롯 삭제 (설정)
+     */
+    function deleteMedicationSlot(idx) {
+      if (!appState.lifeRhythm.settings || !appState.lifeRhythm.settings.medicationSlots) return;
+
+      const slots = appState.lifeRhythm.settings.medicationSlots;
+      if (idx < 0 || idx >= slots.length) return;
+
+      const slot = slots[idx];
+      if (!confirm(slot.label + ' 슬롯을 삭제하시겠습니까?\n(기존 기록은 유지됩니다)')) return;
+
+      slots.splice(idx, 1);
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast('복약 슬롯이 삭제되었습니다', 'success');
+    }
+    window.deleteMedicationSlot = deleteMedicationSlot;
+
+    /**
      * 필수 복약 연속일 계산
      * 필수(required) 슬롯을 모두 복용한 날이 연속으로 며칠인지 계산
      */
@@ -17484,7 +17677,8 @@
         }
 
         // 데이터가 있거나, 히스토리에 명시적으로 추가된 날짜면 표시
-        const hasAnyData = dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep);
+        const hasMedData = dayData && dayData.medications && Object.values(dayData.medications).some(v => v);
+        const hasAnyData = dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep || hasMedData);
         const isExplicitlyAdded = !isToday && appState.lifeRhythm.history.hasOwnProperty(dateStr);
         if (hasAnyData || isExplicitlyAdded) {
           // 수면 시간 계산
@@ -17551,6 +17745,7 @@
             workDepart: dayData.workDepart,
             homeArrive: dayData.homeArrive,
             sleep: dayData.sleep,
+            medications: dayData.medications || {},
             sleepDuration,
             workDuration,
             commuteToWork,
@@ -17587,6 +17782,24 @@
             '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
             '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
           '</div>' +
+          // 복약 히스토리 행
+          (() => {
+            const medSlots = getMedicationSlots();
+            if (!medSlots || medSlots.length === 0) return '';
+            const meds = r.medications || {};
+            const hasMedData = medSlots.some(s => meds[s.id]);
+            if (!hasMedData && !r.isToday) return '';
+            return '<div class="rhythm-history-meds">' +
+              medSlots.map(s => {
+                const taken = !!meds[s.id];
+                return '<span class="rhythm-history-med ' + (taken ? 'taken' : 'missed') + '" ' +
+                  'onclick="editMedicationHistory(\'' + r.date + '\', \'' + escapeHtml(s.id) + '\')" ' +
+                  'title="' + escapeHtml(s.label) + (taken ? ' ' + meds[s.id] : '') + '">' +
+                  s.icon + (taken ? '✓' : '-') +
+                '</span>';
+              }).join('') +
+            '</div>';
+          })() +
           '<div class="rhythm-history-summary">' +
             (r.sleepDuration ? '<span>💤' + r.sleepDuration + '</span>' : '') +
             (r.commuteToWork ? '<span>🚌' + r.commuteToWork + '</span>' : '') +
@@ -17702,6 +17915,56 @@
     }
     window.addRhythmHistoryDate = addRhythmHistoryDate;
 
+    /**
+     * 과거 날짜 복약 기록 편집
+     */
+    function editMedicationHistory(dateStr, slotId) {
+      const today = getLocalDateStr();
+      const slots = getMedicationSlots();
+      const slot = slots.find(s => s.id === slotId);
+      const label = slot ? slot.label : slotId;
+
+      let currentValue;
+      if (dateStr === today && appState.lifeRhythm.today.date === today) {
+        currentValue = (appState.lifeRhythm.today.medications || {})[slotId];
+      } else {
+        const hist = appState.lifeRhythm.history[dateStr];
+        currentValue = hist ? (hist.medications || {})[slotId] : null;
+      }
+
+      const newTime = prompt(dateStr + ' ' + label + ' 복용 시간 (HH:MM, 빈칸=삭제):', currentValue || '');
+      if (newTime === null) return;
+
+      if (newTime && !/^\d{1,2}:\d{2}$/.test(newTime)) {
+        showToast('올바른 시간 형식이 아닙니다 (예: 08:30)', 'error');
+        return;
+      }
+
+      let normalizedTime = null;
+      if (newTime) {
+        const [h, m] = newTime.split(':');
+        normalizedTime = h.padStart(2, '0') + ':' + m;
+      }
+
+      if (dateStr === today) {
+        if (appState.lifeRhythm.today.date !== today) {
+          appState.lifeRhythm.today = { date: today, wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
+        }
+        if (!appState.lifeRhythm.today.medications) appState.lifeRhythm.today.medications = {};
+        appState.lifeRhythm.today.medications[slotId] = normalizedTime;
+      } else {
+        if (!appState.lifeRhythm.history[dateStr]) {
+          appState.lifeRhythm.history[dateStr] = { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
+        }
+        if (!appState.lifeRhythm.history[dateStr].medications) appState.lifeRhythm.history[dateStr].medications = {};
+        appState.lifeRhythm.history[dateStr].medications[slotId] = normalizedTime;
+      }
+
+      saveLifeRhythm();
+      renderStatic();
+      showToast(label + ' 복용 기록이 수정되었습니다', 'success');
+    }
+    window.editMedicationHistory = editMedicationHistory;
 
     // ============================================
     // 통근 트래커
