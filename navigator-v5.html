@@ -8793,19 +8793,45 @@
     }
 
     /**
-     * 반복 태스크 일일 초기화 (날짜 변경 시 자동 실행)
+     * 논리적 날짜 계산 (하루 시작 시각 기반)
+     * 설정된 dayStartHour(기본 05:00) 이전이면 아직 "어제"로 취급
+     * → 새벽 1시에 활동해도 리셋되지 않음, 5시 이후에 리셋됨
+     */
+    function getLogicalDate(d) {
+      const dt = d || new Date();
+      const dayStartHour = (appState.settings && appState.settings.dayStartHour) || 5;
+
+      if (dt.getHours() < dayStartHour) {
+        // 하루 시작 시각 이전 → 아직 "어제"
+        const adjusted = new Date(dt);
+        adjusted.setDate(adjusted.getDate() - 1);
+        return getLocalDateStr(adjusted);
+      }
+      return getLocalDateStr(dt);
+    }
+
+    /**
+     * 반복 태스크 일일 초기화 (논리적 날짜 변경 시 자동 실행)
+     * - dayStartHour(기본 05:00) 기준으로 "하루"를 판단
      * - daily/weekdays 태스크: 완료 상태를 리셋하여 매일 새로 시작
      * - weekdays 태스크: 주말에는 초기화하지 않음 (금요일 완료 → 월요일에 리셋)
      * - 기존 createNextRepeatTask로 생긴 중복 태스크도 정리
      * - 스트릭: 어제 모든 반복 태스크 완료 시 유지, 아니면 리셋
+     * - 트리거: 앱 로딩, visibilitychange, setInterval(1분), 기상 버튼
      */
     function checkDailyReset() {
-      const today = getLocalDateStr();
+      const now = new Date();
+      const dayStartHour = (appState.settings && appState.settings.dayStartHour) || 5;
+
+      // 하루 시작 시각 이전이면 리셋하지 않음 (새벽 활동 보호)
+      if (now.getHours() < dayStartHour) return false;
+
+      const logicalToday = getLogicalDate();
       const lastResetDate = localStorage.getItem('navigator-last-reset-date');
 
-      if (lastResetDate === today) return false; // 이미 오늘 초기화됨
+      if (lastResetDate === logicalToday) return false; // 이미 오늘 초기화됨
 
-      const now = new Date();
+      // 논리적 "오늘"의 요일 (dayStartHour 이후이므로 now의 요일이 정확)
       const todayDay = now.getDay(); // 0=일, 6=토
       const isWeekday = todayDay !== 0 && todayDay !== 6;
 
@@ -8819,9 +8845,10 @@
         if (task.repeatType === 'weekdays' && !isWeekday) return;
 
         if (task.completed && task.completedAt) {
-          const completedDate = getLocalDateStr(new Date(task.completedAt));
-          if (completedDate !== today) {
-            // 오늘이 아닌 날에 완료된 태스크 → 초기화
+          // 완료 시점의 논리적 날짜와 오늘의 논리적 날짜 비교
+          const completedLogicalDate = getLogicalDate(new Date(task.completedAt));
+          if (completedLogicalDate !== logicalToday) {
+            // 이전 논리적 날짜에 완료된 태스크 → 초기화
             task.lastCompletedAt = task.completedAt; // 히스토리 보존
             task.completed = false;
             task.completedAt = null;
@@ -8867,10 +8894,10 @@
         checkDailyRepeatStreak();
       }
 
-      localStorage.setItem('navigator-last-reset-date', today);
+      localStorage.setItem('navigator-last-reset-date', logicalToday);
 
       if (changed) {
-        console.log('[daily-reset] 반복 태스크 초기화 완료');
+        console.log(`[daily-reset] 반복 태스크 초기화 완료 (하루 시작: ${dayStartHour}시)`);
       }
 
       return changed;
@@ -8878,13 +8905,16 @@
 
     /**
      * 반복 태스크 스트릭 체크
-     * 어제 모든 daily/weekdays 태스크를 완료했으면 스트릭 유지, 아니면 리셋
+     * 어제(논리적) 모든 daily/weekdays 태스크를 완료했으면 스트릭 유지, 아니면 리셋
      */
     function checkDailyRepeatStreak() {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = getLocalDateStr(yesterday);
-      const yesterdayDay = yesterday.getDay();
+      // "어제"를 논리적 날짜로 계산 (dayStartHour 기준)
+      const logicalToday = getLogicalDate();
+      const todayDate = new Date(logicalToday + 'T12:00:00'); // 정오 기준으로 Date 생성
+      const yesterdayDate = new Date(todayDate);
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = getLocalDateStr(yesterdayDate);
+      const yesterdayDay = yesterdayDate.getDay();
       const wasWeekday = yesterdayDay !== 0 && yesterdayDay !== 6;
 
       // daily + weekdays(어제가 평일인 경우만) 태스크 필터링
@@ -8897,11 +8927,11 @@
       if (repeatTasks.length === 0) return; // 반복 태스크 없으면 무시
 
       // 어제 모든 반복 태스크가 완료되었는지 확인
-      // (lastCompletedAt 또는 completedAt이 어제 날짜인지)
+      // (lastCompletedAt 또는 completedAt의 논리적 날짜가 어제인지)
       const allCompleted = repeatTasks.every(t => {
         const completedDateRaw = t.lastCompletedAt || t.completedAt;
         if (!completedDateRaw) return false;
-        return getLocalDateStr(new Date(completedDateRaw)) === yesterdayStr;
+        return getLogicalDate(new Date(completedDateRaw)) === yesterdayStr;
       });
 
       if (!allCompleted) {
@@ -9012,7 +9042,8 @@
         dailyGoal: 5,                 // 일일 목표 (완료 작업 수)
         weeklyGoal: 25,               // 주간 목표 (완료 작업 수)
         bedtimeReminder: true,        // 취침 알림 활성화
-        bedtimeReminderMinutes: 30    // 취침 몇 분 전 알림
+        bedtimeReminderMinutes: 30,   // 취침 몇 분 전 알림
+        dayStartHour: 5               // 하루 시작 시각 (이 시각 이후 반복 태스크 리셋, 기본 05:00)
       },
       templates: [],                    // 작업 템플릿 목록
       showSettings: false,             // 설정 모달 표시
@@ -15582,6 +15613,27 @@
 
                     <div class="settings-row">
                       <div class="settings-label">
+                        <span class="settings-label-icon">🔄</span>
+                        <div class="settings-label-text">
+                          <span class="settings-label-title">하루 시작 시각</span>
+                          <span class="settings-label-desc">이 시각 이후 반복 태스크 리셋</span>
+                        </div>
+                      </div>
+                      <select
+                        class="settings-input"
+                        value="${appState.settings.dayStartHour || 5}"
+                        onchange="updateSetting('dayStartHour', parseInt(this.value))"
+                      >
+                        <option value="3" ${appState.settings.dayStartHour === 3 ? 'selected' : ''}>03:00</option>
+                        <option value="4" ${appState.settings.dayStartHour === 4 ? 'selected' : ''}>04:00</option>
+                        <option value="5" ${(appState.settings.dayStartHour || 5) === 5 ? 'selected' : ''}>05:00</option>
+                        <option value="6" ${appState.settings.dayStartHour === 6 ? 'selected' : ''}>06:00</option>
+                        <option value="7" ${appState.settings.dayStartHour === 7 ? 'selected' : ''}>07:00</option>
+                      </select>
+                    </div>
+
+                    <div class="settings-row">
+                      <div class="settings-label">
                         <span class="settings-label-icon">🏢</span>
                         <div class="settings-label-text">
                           <span class="settings-label-title">출근 시간</span>
@@ -16450,6 +16502,14 @@
 
       // 시간 기록
       appState.lifeRhythm.today[type] = timeStr;
+
+      // 기상 기록 시 반복 태스크 자동 초기화 트리거
+      if (type === 'wakeUp') {
+        if (checkDailyReset()) {
+          recomputeTodayStats();
+          showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
+        }
+      }
 
       // 저장 및 렌더링
       saveLifeRhythm();
