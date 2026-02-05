@@ -5658,6 +5658,7 @@
       color: var(--text-primary);
       flex: 1;
       min-width: 120px;
+      max-width: 180px;
     }
 
     .medication-btn:hover {
@@ -5687,6 +5688,10 @@
       font-size: 12px;
       color: var(--text-secondary);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+      min-width: 0;
     }
 
     .medication-btn .med-time {
@@ -5695,6 +5700,7 @@
       color: var(--text-muted);
       font-family: 'SF Mono', Monaco, monospace;
       margin-left: auto;
+      flex-shrink: 0;
     }
 
     .medication-streak {
@@ -9031,25 +9037,37 @@
         }
       });
 
-      // 2단계: 중복 반복 태스크 정리 (같은 제목+카테고리+반복타입의 미완료 태스크가 여러 개면 하나만 남김)
+      // 2단계: 중복 반복 태스크 정리 (같은 제목+카테고리+반복타입 태스크가 여러 개면 하나만 남김)
+      // 완료 여부 상관없이 중복 정리하되, 완료된 것을 우선 유지
       const seen = new Map();
       const toRemove = [];
 
       appState.tasks.forEach(task => {
         if (task.repeatType !== 'daily' && task.repeatType !== 'weekdays') return;
-        if (task.completed) return; // 완료된 것은 cleanupOldCompletedTasks가 처리
 
         const key = `${task.title}|${task.repeatType}|${task.category}`;
         if (seen.has(key)) {
-          // 중복 발견: 더 최근에 생성된 것을 남기고 나머지 제거
+          // 중복 발견: 우선순위 결정 (완료된 것 > 미완료 / 최신 생성)
           const existing = seen.get(key);
-          const existingTime = new Date(existing.createdAt || 0).getTime();
-          const currentTime = new Date(task.createdAt || 0).getTime();
-          if (currentTime > existingTime) {
+
+          // 완료 상태 우선 비교
+          if (task.completed && !existing.completed) {
+            // 현재 태스크가 완료됨 → 기존 것 제거
             toRemove.push(existing.id);
             seen.set(key, task);
-          } else {
+          } else if (!task.completed && existing.completed) {
+            // 기존 것이 완료됨 → 현재 것 제거
             toRemove.push(task.id);
+          } else {
+            // 둘 다 같은 상태 → 더 최근에 생성된 것 유지
+            const existingTime = new Date(existing.createdAt || 0).getTime();
+            const currentTime = new Date(task.createdAt || 0).getTime();
+            if (currentTime > existingTime) {
+              toRemove.push(existing.id);
+              seen.set(key, task);
+            } else {
+              toRemove.push(task.id);
+            }
           }
         } else {
           seen.set(key, task);
@@ -18950,21 +18968,37 @@
             });
           }
 
-          // UTC→로컬 날짜 보정: 저장된 today.date가 오늘 로컬 날짜와 다르지만
-          // 데이터가 있으면 로컬 날짜로 보정 (UTC 날짜 저장 버그 수정)
+          // 날짜 변경 시 오늘의 리듬 자동 리셋
+          // 저장된 today.date가 오늘 로컬 날짜와 다르면 히스토리로 이동 후 초기화
           if (parsed.today && parsed.today.date) {
             const localToday = getLocalDateStr();
             const savedDate = parsed.today.date;
             if (savedDate !== localToday) {
-              // 저장된 날짜가 어제(로컬)인지 확인 - UTC 버그로 하루 차이 나는 경우
-              const yesterdayLocal = new Date();
-              yesterdayLocal.setDate(yesterdayLocal.getDate() - 1);
-              const yesterdayStr = getLocalDateStr(yesterdayLocal);
-              const hasData = Object.values(parsed.today).some(v => v && v !== savedDate);
-              if (savedDate === yesterdayStr && hasData) {
-                // 어제 UTC 날짜로 저장된 오늘 데이터 → 로컬 날짜로 보정
-                parsed.today.date = localToday;
+              const hasData = Object.values(parsed.today).some(v =>
+                v && v !== savedDate && typeof v !== 'object'
+              ) || (parsed.today.medications && Object.keys(parsed.today.medications).length > 0);
+
+              if (hasData) {
+                // 기존 데이터를 히스토리로 이동
+                if (!parsed.history) parsed.history = {};
+                const historyEntry = { ...parsed.today };
+                delete historyEntry.date; // 히스토리에는 date 키 없이 저장
+                parsed.history[savedDate] = historyEntry;
+                console.log(`[loadLifeRhythm] ${savedDate} 데이터를 히스토리로 이동`);
               }
+
+              // 오늘 날짜로 초기화
+              parsed.today = {
+                date: localToday,
+                wakeUp: null,
+                homeDepart: null,
+                workArrive: null,
+                workDepart: null,
+                homeArrive: null,
+                sleep: null,
+                medications: {}
+              };
+              console.log(`[loadLifeRhythm] 오늘(${localToday}) 리듬 초기화`);
             }
           }
 

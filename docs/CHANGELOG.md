@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## [2026-02-06] (세션 17 - Phase 1)
+
+### 작업 내용
+- **P0 버그 3건 수정**
+  - `loadLifeRhythm()`: 날짜 변경 시 오늘의 리듬 자동 리셋
+    - 기존 데이터를 히스토리로 이동 후 오늘 날짜로 초기화
+    - UTC 보정 로직 제거 → 명확한 날짜 변경 감지로 대체
+  - 복약 버튼 레이아웃 밀림 수정
+    - `.medication-btn`: max-width 180px 추가
+    - `.med-label`: overflow ellipsis + flex:1 + min-width:0
+    - `.med-time`: flex-shrink:0 추가
+  - `checkDailyReset()`: 일상 반복 태스크 중복 정리 개선
+    - 완료 여부 상관없이 중복 정리 (기존: 미완료만)
+    - 완료된 태스크 우선 유지 (기존: 최신 생성만 비교)
+
+### 상태
+- Phase 1: ✅ 완료
+- 다음: Phase 2 (이벤트 탭 개선)
+
+---
+
 ## [2026-02-06] (세션 16)
 
 ### 작업 내용
