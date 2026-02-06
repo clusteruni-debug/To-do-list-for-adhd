@@ -3979,6 +3979,47 @@
       border-bottom: 1px solid var(--border-light);
     }
 
+    .life-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-section-header .life-section-title {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .life-reset-btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .life-reset-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .life-all-done {
+      padding: 16px;
+      text-align: center;
+      color: var(--success);
+      font-size: 13px;
+      background: rgba(72, 187, 120, 0.1);
+      border-radius: 8px;
+    }
+
     .life-list {
       display: flex;
       flex-direction: column;
@@ -11802,6 +11843,40 @@
     window.quickAddLifeTask = quickAddLifeTask;
 
     /**
+     * 완료된 반복 작업 리셋 (일상 카테고리 반복 작업만)
+     */
+    function resetCompletedRepeatTasks() {
+      const repeatTasks = appState.tasks.filter(t =>
+        t.category === '일상' &&
+        t.completed &&
+        t.repeatType &&
+        t.repeatType !== 'none'
+      );
+
+      if (repeatTasks.length === 0) {
+        showToast('리셋할 반복 작업이 없습니다', 'info');
+        return;
+      }
+
+      appState.tasks = appState.tasks.map(t => {
+        if (t.category === '일상' && t.completed && t.repeatType && t.repeatType !== 'none') {
+          return {
+            ...t,
+            completed: false,
+            completedAt: null,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return t;
+      });
+
+      saveState();
+      renderStatic();
+      showToast(`${repeatTasks.length}개 반복 작업 리셋됨`, 'success');
+    }
+    window.resetCompletedRepeatTasks = resetCompletedRepeatTasks;
+
+    /**
      * 본업 빠른 추가 (프로젝트 없이)
      */
     function quickAddWorkTask() {
@@ -15958,10 +16033,15 @@
                 if (!b.deadline) return -1;
                 return new Date(a.deadline) - new Date(b.deadline);
               });
-              // 모든 완료 태스크 표시 (getTodayCompletedTasks는 오늘만 → 어제 완료 태스크 사라지는 버그)
+              // 모든 완료 태스크 표시
               const completedTasks = lifeTasks.filter(t => t.completed);
-              const dailyTasks = pendingTasks.filter(t => t.category === '일상');
+              // 일상을 반복/일회성으로 분리
+              const isRepeat = (t) => t.repeatType && t.repeatType !== 'none';
+              const repeatTasks = pendingTasks.filter(t => t.category === '일상' && isRepeat(t));
+              const onceTasks = pendingTasks.filter(t => t.category === '일상' && !isRepeat(t));
               const familyTasks = pendingTasks.filter(t => t.category === '가족');
+              // 완료된 반복 작업 (리셋 대상)
+              const completedRepeatTasks = completedTasks.filter(t => t.category === '일상' && isRepeat(t));
 
               return `
                 <div class="life-header">
@@ -15982,8 +16062,12 @@
 
                 <div class="life-summary">
                   <div class="life-summary-item">
-                    <div class="life-summary-value">${dailyTasks.length}</div>
-                    <div class="life-summary-label">🌅 일상</div>
+                    <div class="life-summary-value">${repeatTasks.length}</div>
+                    <div class="life-summary-label">🔁 반복</div>
+                  </div>
+                  <div class="life-summary-item">
+                    <div class="life-summary-value">${onceTasks.length}</div>
+                    <div class="life-summary-label">📌 일회성</div>
                   </div>
                   <div class="life-summary-item">
                     <div class="life-summary-value">${familyTasks.length}</div>
@@ -15995,18 +16079,49 @@
                   </div>
                 </div>
 
-                ${dailyTasks.length > 0 ? `
+                ${repeatTasks.length > 0 || completedRepeatTasks.length > 0 ? `
                   <div class="life-section">
-                    <div class="life-section-title">🌅 일상 (${dailyTasks.length})</div>
+                    <div class="life-section-header">
+                      <div class="life-section-title">🔁 일상 (반복) ${repeatTasks.length > 0 ? `(${repeatTasks.length})` : ''}</div>
+                      ${completedRepeatTasks.length > 0 ? `
+                        <button class="life-reset-btn" onclick="resetCompletedRepeatTasks()" title="완료된 반복 작업 리셋">
+                          ↺ 리셋 (${completedRepeatTasks.length})
+                        </button>
+                      ` : ''}
+                    </div>
+                    ${repeatTasks.length > 0 ? `
+                      <div class="life-list">
+                        ${repeatTasks.map(task => `
+                          <div class="life-item">
+                            <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
+                            <div class="life-item-content">
+                              <div class="life-item-title">${escapeHtml(task.title)}</div>
+                              <div class="life-item-meta">
+                                ${task.repeatType === 'daily' ? '매일' : task.repeatType === 'weekdays' ? '평일' : '반복'}
+                              </div>
+                            </div>
+                            <div class="life-item-actions">
+                              <button class="life-action-btn" onclick="editTask(${task.id})" title="수정" aria-label="작업 수정">✏️</button>
+                              <button class="life-action-btn delete" onclick="deleteTask(${task.id})" title="삭제" aria-label="작업 삭제">🗑️</button>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : `<div class="life-all-done">✓ 오늘 반복 작업 모두 완료!</div>`}
+                  </div>
+                ` : ''}
+
+                ${onceTasks.length > 0 ? `
+                  <div class="life-section">
+                    <div class="life-section-title">📌 일상 (일회성) (${onceTasks.length})</div>
                     <div class="life-list">
-                      ${dailyTasks.map(task => `
+                      ${onceTasks.map(task => `
                         <div class="life-item">
                           <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <div class="life-item-content">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
                             <div class="life-item-meta">
                               ${task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : ''}
-                              ${task.repeatType && task.repeatType !== 'none' ? ' 🔁' : ''}
                             </div>
                           </div>
                           <div class="life-item-actions">

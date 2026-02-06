@@ -60,9 +60,19 @@
   - detailedAdd() 초기화 2곳에 startDate 누락 수정
   - .work-modal-field-row, .work-modal-field.half 스타일 추가
 
+- **일상 탭 반복/일회성 분리**
+  - 일상(반복): repeatType이 daily/weekdays 등인 작업
+  - 일상(일회성): repeatType이 none인 작업
+  - 가족: 기존 그대로
+  - 요약 섹션 4칸: 반복 / 일회성 / 가족 / 완료
+  - `resetCompletedRepeatTasks()`: 완료된 반복 작업 수동 리셋 기능
+  - "↺ 리셋 (N)" 버튼으로 완료된 반복 작업 일괄 리셋
+  - 반복 작업 모두 완료 시 "✓ 오늘 반복 작업 모두 완료!" 표시
+
 ### 상태
 - Phase 1~4: ✅ 완료
 - 검토 후 누락 수정: ✅ 완료
+- 일상 탭 개선: ✅ 완료
 - 다음: 새 요청 대기
 
 ---
