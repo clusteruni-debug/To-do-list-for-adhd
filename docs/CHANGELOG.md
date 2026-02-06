@@ -15,9 +15,25 @@
     - 완료 여부 상관없이 중복 정리 (기존: 미완료만)
     - 완료된 태스크 우선 유지 (기존: 최신 생성만 비교)
 
+- **Phase 2: 이벤트 탭 개선 4건**
+  - `editCompletedAt()`: 완료된 이벤트의 완료 날짜 수정 기능
+    - 모달 UI로 datetime 입력
+    - completionLog 자동 갱신 (기존 날짜 제거 → 새 날짜 추가)
+  - Task description 필드 추가
+    - `detailedTask.description`: 작업 설명/메모 저장
+    - 상세 추가 폼에 textarea 추가
+    - 이벤트 카드에 description 일부(60자) 표시
+  - 이벤트 카드 표시 정보 확장
+    - organizer, eventType, expectedRevenue 메타 정보 표시
+    - 텔레그램 연동 이벤트에 📱 배지 표시
+  - 이벤트 기한별 그룹핑
+    - 기한 초과(🚨) / 오늘(⏰) / 3일 이내(⚡) / 여유 있음(📅) 4개 그룹
+    - 각 그룹별 카운트 헤더 표시
+
 ### 상태
 - Phase 1: ✅ 완료
-- 다음: Phase 2 (이벤트 탭 개선)
+- Phase 2: ✅ 완료
+- 다음: Phase 3 (텔레그램 연동 + 통근 트래커)
 
 ---
 

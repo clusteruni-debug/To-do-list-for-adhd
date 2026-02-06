@@ -2707,6 +2707,13 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
     }
 
+    /* textarea 스타일 */
+    .form-textarea {
+      resize: vertical;
+      min-height: 60px;
+      font-family: inherit;
+    }
+
     /* datetime-local, time, date 입력 스타일 */
     .form-input[type="datetime-local"],
     .form-input[type="time"],
@@ -7149,6 +7156,61 @@
       flex-shrink: 0;
     }
 
+    .event-completed-date {
+      font-size: 11px;
+      color: var(--success);
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .event-completed-date:hover {
+      background: rgba(72, 187, 120, 0.15);
+    }
+
+    .event-card-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .event-meta-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-description {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    .events-group {
+      margin-bottom: 16px;
+    }
+
+    .events-group-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .event-tg-badge {
+      margin-right: 4px;
+      font-size: 12px;
+    }
+
     .event-dday {
       font-size: 12px;
       font-weight: bold;
@@ -9151,6 +9213,7 @@
         estimatedTime: 10,
         link: '',
         expectedRevenue: '',
+        description: '',              // 작업 설명/메모
         repeatType: 'none',           // 반복 유형: none/daily/weekdays/weekends/weekly/custom/monthly
         repeatDays: [],               // 특정 요일 반복 시 요일 배열 (0=일, 1=월, ... 6=토)
         repeatMonthDay: null,         // 매월 반복 시 날짜 (1~31)
@@ -11788,6 +11851,7 @@
         estimatedTime: 10,
         link: '',
         expectedRevenue: '',
+        description: '',
         repeatType: 'none',
         repeatDays: [],
         repeatMonthDay: null,
@@ -11967,6 +12031,7 @@
               estimatedTime: 10,
               link: '',
               expectedRevenue: '',
+              description: '',
               repeatType: 'none',
               repeatDays: [],
               repeatMonthDay: null,
@@ -12016,6 +12081,7 @@
         estimatedTime: 10,
         link: '',
         expectedRevenue: '',
+        description: '',
         repeatType: 'none',
         repeatDays: [],
         repeatMonthDay: null,
@@ -12564,6 +12630,109 @@
     }
 
     /**
+     * 완료 날짜 수정
+     */
+    function editCompletedAt(id) {
+      const task = appState.tasks.find(t => t.id === id);
+      if (!task || !task.completedAt) return;
+
+      const oldDate = new Date(task.completedAt);
+      const oldDateStr = oldDate.toISOString().slice(0, 16); // datetime-local 형식
+
+      // 모달 생성
+      const modalHtml = `
+        <div class="work-modal-overlay" id="edit-completed-modal" onclick="if(event.target===this) closeEditCompletedModal()">
+          <div class="work-modal" onclick="event.stopPropagation()">
+            <div class="work-modal-header">
+              <h3>완료 날짜 수정</h3>
+              <button class="work-modal-close" onclick="closeEditCompletedModal()">✕</button>
+            </div>
+            <div class="work-modal-body">
+              <div class="work-modal-field">
+                <label class="work-modal-label">완료 시각</label>
+                <input type="datetime-local" class="work-modal-input" id="edit-completed-datetime" value="${oldDateStr}">
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">
+                작업: ${escapeHtml(task.title)}
+              </div>
+            </div>
+            <div class="work-modal-footer">
+              <button class="work-modal-btn secondary" onclick="closeEditCompletedModal()">취소</button>
+              <button class="work-modal-btn primary" onclick="saveCompletedAt(${id})">저장</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      document.getElementById('edit-completed-datetime').focus();
+    }
+    window.editCompletedAt = editCompletedAt;
+
+    function closeEditCompletedModal() {
+      const modal = document.getElementById('edit-completed-modal');
+      if (modal) modal.remove();
+    }
+    window.closeEditCompletedModal = closeEditCompletedModal;
+
+    function saveCompletedAt(id) {
+      const task = appState.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      const input = document.getElementById('edit-completed-datetime');
+      const newDateStr = input.value;
+      if (!newDateStr) {
+        showToast('날짜를 선택해주세요', 'error');
+        return;
+      }
+
+      const newDate = new Date(newDateStr);
+      const oldDate = task.completedAt ? new Date(task.completedAt) : null;
+
+      // completionLog 업데이트
+      if (oldDate) {
+        const oldLogDate = getLocalDateStr(oldDate);
+        const oldLogTime = oldDate.toTimeString().slice(0, 5);
+        if (appState.completionLog[oldLogDate]) {
+          const idx = appState.completionLog[oldLogDate].findIndex(
+            e => e.t === task.title && e.at === oldLogTime
+          );
+          if (idx !== -1) {
+            appState.completionLog[oldLogDate].splice(idx, 1);
+            if (appState.completionLog[oldLogDate].length === 0) {
+              delete appState.completionLog[oldLogDate];
+            }
+          }
+        }
+      }
+
+      // 새 날짜로 completionLog 추가
+      const newLogDate = getLocalDateStr(newDate);
+      const newLogTime = newDate.toTimeString().slice(0, 5);
+      if (!appState.completionLog[newLogDate]) {
+        appState.completionLog[newLogDate] = [];
+      }
+      appState.completionLog[newLogDate].push({
+        t: task.title,
+        c: task.category,
+        at: newLogTime,
+        rv: task.expectedRevenue || 0
+      });
+      saveCompletionLog();
+
+      // 태스크 업데이트
+      appState.tasks = appState.tasks.map(t =>
+        t.id === id ? { ...t, completedAt: newDate.toISOString(), updatedAt: new Date().toISOString() } : t
+      );
+      saveState();
+
+      closeEditCompletedModal();
+      renderStatic();
+      showToast('완료 날짜 수정됨', 'success');
+    }
+    window.saveCompletedAt = saveCompletedAt;
+
+    /**
      * 작업 수정 모드 진입 (빠른 수정 모달로 변경)
      */
     function editTask(id) {
@@ -12709,6 +12878,7 @@
         estimatedTime: 10,
         link: '',
         expectedRevenue: '',
+        description: '',
         repeatType: 'none',
         repeatDays: [],
         repeatMonthDay: null,
@@ -14987,6 +15157,10 @@
                       <label class="form-label">제목</label>
                       <input type="text" class="form-input" id="detailed-title" placeholder="작업 제목" value="${appState.detailedTask.title}">
                     </div>
+                    <div class="form-group">
+                      <label class="form-label">설명 (선택)</label>
+                      <textarea class="form-input form-textarea" id="detailed-description" placeholder="작업 내용, 요구사항, 메모 등" rows="2">${escapeHtml(appState.detailedTask.description || '')}</textarea>
+                    </div>
                     ${categoryFields[appState.detailedTask.category]}
 
                     <!-- 태그 입력 -->
@@ -15567,35 +15741,69 @@
                   </div>
                 </div>
 
-                ${pendingEvents.length > 0 ? `
-                  <div class="events-section">
-                    <div class="events-section-title">🔴 미제출 (${pendingEvents.length})</div>
-                    <div class="events-list">
-                      ${pendingEvents.map(task => {
-                        const days = getDaysLeft(task.deadline);
-                        const dateStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
-                        return `
-                          <div class="event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}">
-                            <div class="event-title">${escapeHtml(task.title)}</div>
-                            ${dateStr ? `<span class="event-compact-date">${dateStr}</span>` : ''}
-                            <div class="event-actions">
-                              ${task.link ? `<a href="${task.link}" target="_blank" class="btn btn-small btn-link">🔗</a>` : ''}
-                              <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
-                              <button class="btn btn-small btn-edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
-                              <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">🗑️</button>
-                            </div>
-                            <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  </div>
-                ` : `
-                  <div class="events-empty">
-                    <div class="events-empty-icon">🎉</div>
-                    <div class="events-empty-text">미제출 이벤트가 없습니다!</div>
-                  </div>
-                `}
+                ${(() => {
+                  if (pendingEvents.length === 0) {
+                    return `
+                      <div class="events-empty">
+                        <div class="events-empty-icon">🎉</div>
+                        <div class="events-empty-text">미제출 이벤트가 없습니다!</div>
+                      </div>
+                    `;
+                  }
+
+                  // 기한별 그룹화
+                  const overdue = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d < 0; });
+                  const today = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d === 0; });
+                  const soon = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d > 0 && d <= 3; });
+                  const later = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d === null || d > 3; });
+
+                  const renderEventCard = (task) => {
+                    const days = getDaysLeft(task.deadline);
+                    const dateStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
+                    const metaItems = [];
+                    if (task.organizer) metaItems.push(task.organizer);
+                    if (task.eventType) metaItems.push(task.eventType);
+                    if (task.expectedRevenue) metaItems.push('₩' + Number(task.expectedRevenue).toLocaleString());
+                    const metaStr = metaItems.join(' · ');
+                    const telegramBadge = task.source && task.source.type === 'telegram-event' ? '<span class="event-tg-badge" title="텔레그램 연동">📱</span>' : '';
+                    return `
+                      <div class="event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}">
+                        <div class="event-card-main">
+                          <div class="event-title">${telegramBadge}${escapeHtml(task.title)}</div>
+                          ${metaStr ? '<div class="event-meta-info">' + escapeHtml(metaStr) + '</div>' : ''}
+                          ${task.description ? '<div class="event-description">' + escapeHtml(task.description.slice(0, 60)) + (task.description.length > 60 ? '...' : '') + '</div>' : ''}
+                        </div>
+                        ${dateStr ? '<span class="event-compact-date">' + dateStr + '</span>' : ''}
+                        <div class="event-actions">
+                          ${task.link ? '<a href="' + task.link + '" target="_blank" class="btn btn-small btn-link">🔗</a>' : ''}
+                          <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                          <button class="btn btn-small btn-edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
+                          <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">🗑️</button>
+                        </div>
+                        <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
+                      </div>
+                    `;
+                  };
+
+                  const renderGroup = (title, icon, events, collapsed = false) => {
+                    if (events.length === 0) return '';
+                    return `
+                      <div class="events-group">
+                        <div class="events-group-header">${icon} ${title} (${events.length})</div>
+                        <div class="events-list ${collapsed ? 'collapsed' : ''}">
+                          ${events.map(renderEventCard).join('')}
+                        </div>
+                      </div>
+                    `;
+                  };
+
+                  return `
+                    ${renderGroup('기한 초과', '🚨', overdue)}
+                    ${renderGroup('오늘', '⏰', today)}
+                    ${renderGroup('3일 이내', '⚡', soon)}
+                    ${renderGroup('여유 있음', '📅', later, later.length > 5)}
+                  `;
+                })()}
 
                 ${submittedEvents.length > 0 ? `
                   <div class="events-section submitted">
@@ -15603,15 +15811,19 @@
                       ✅ 제출완료 (${submittedEvents.length}) <span class="toggle-icon">▼</span>
                     </div>
                     <div class="events-list submitted-list">
-                      ${submittedEvents.map(task => `
+                      ${submittedEvents.map(task => {
+                        const completedDate = task.completedAt ? new Date(task.completedAt) : null;
+                        const completedStr = completedDate ? completedDate.toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) + ' ' + completedDate.toTimeString().slice(0,5) : '';
+                        return `
                         <div class="event-card completed">
                           <div class="event-title">${escapeHtml(task.title)}</div>
+                          ${completedStr ? `<span class="event-completed-date" onclick="editCompletedAt(${task.id})" title="클릭하여 수정">✓ ${completedStr}</span>` : ''}
                           <div class="event-actions">
                             <button class="btn btn-small btn-undo" onclick="uncompleteTask(${task.id})" aria-label="완료 되돌리기">↩</button>
                             <button class="btn btn-small btn-delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">🗑</button>
                           </div>
                         </div>
-                      `).join('')}
+                      `}).join('')}
                     </div>
                   </div>
                 ` : ''}
@@ -16906,6 +17118,7 @@
       if (appState.showDetailedAdd) {
         const inputs = {
           title: document.getElementById('detailed-title'),
+          description: document.getElementById('detailed-description'),
           deadline: document.getElementById('detailed-deadline'),
           time: document.getElementById('detailed-time'),
           revenue: document.getElementById('detailed-revenue'),
@@ -16915,6 +17128,7 @@
         };
 
         if (inputs.title) inputs.title.oninput = (e) => appState.detailedTask.title = e.target.value;
+        if (inputs.description) inputs.description.oninput = (e) => appState.detailedTask.description = e.target.value;
         if (inputs.deadline) inputs.deadline.onchange = (e) => appState.detailedTask.deadline = e.target.value;
         if (inputs.time) inputs.time.oninput = (e) => appState.detailedTask.estimatedTime = parseInt(e.target.value) || 0;
         if (inputs.revenue) inputs.revenue.oninput = (e) => appState.detailedTask.expectedRevenue = e.target.value;
