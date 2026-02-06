@@ -11,13 +11,16 @@
 
 - **텔레그램 배지 클릭 → 이벤트 목록 모달**
   - 이벤트 탭 `🤖 텔레그램 미연동` 배지를 `<button>`으로 변경 (기존 `<div>`)
-  - `showTelegramEvents()`: Firestore에서 `events` 필드 읽기 + 미추가 이벤트 필터링
+  - `showTelegramEvents()`: **Supabase REST API**로 `telegram_messages` 직접 조회
+    - 봇은 Supabase 사용, Navigator는 Firebase → Supabase anon key로 크로스 조회
+    - analysis 필드 활용: title, summary, reward_usd, time_minutes, project, organizer
   - `showTelegramEventsModal()`: 체크박스 리스트 모달 UI
     - 전체 선택 / 개별 선택 지원
     - 미추가 이벤트 없으면 상태별 안내 메시지 (이벤트 없음 / 전부 추가됨)
     - 이벤트 제목, 마감일, 보상, 채널, 예상시간, 설명 표시
+    - ⭐ starred 이벤트 표시
   - `importSelectedTelegramEvents()`: 선택된 이벤트 일괄 Task 추가
-    - `source.type: 'telegram-event'` + `source.eventId` 설정
+    - `source` 구조: 봇 `exportToNavigator()` 형식과 동일 (type, eventId, channel, project, organizer)
     - localStorage + Firebase 동기화
   - CSS: `.tg-events-list`, `.tg-event-item`, `:has(input:checked)` 선택 스타일
   - 접근성: `aria-label`, `min-height: 44px` 터치 타겟
@@ -26,7 +29,7 @@
 ### 상태
 - ✅ P0 버그 2건 + 텔레그램 이벤트 목록 기능 완료
 - 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: 없음 (기존 `events` 필드 읽기 전용)
+- DB: Supabase `telegram_messages` 읽기 전용 (anon key, RLS 보호)
 
 ### 다음에 할 것
 - P2: SVG 아이콘 교체
