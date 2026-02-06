@@ -7104,19 +7104,11 @@
     }
 
     .tg-event-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
       padding: 12px;
       background: var(--bg-secondary);
       border-radius: 10px;
       border: 1px solid var(--border-color);
-      cursor: pointer;
       transition: border-color 0.2s;
-    }
-
-    .tg-event-item:hover {
-      border-color: var(--accent-blue);
     }
 
     .tg-event-item:has(input:checked) {
@@ -7124,9 +7116,16 @@
       background: rgba(74, 158, 255, 0.08);
     }
 
-    .tg-event-item input[type="checkbox"] {
-      margin-top: 2px;
+    .tg-event-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .tg-event-check {
       flex-shrink: 0;
+      padding: 2px;
+      cursor: pointer;
     }
 
     .tg-event-info {
@@ -7138,6 +7137,7 @@
       font-weight: 600;
       margin-bottom: 4px;
       word-break: break-word;
+      font-size: 14px;
     }
 
     .tg-event-meta {
@@ -7145,7 +7145,29 @@
       color: var(--text-secondary);
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px 10px;
+    }
+
+    .tg-event-expand {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .tg-event-expand:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .tg-event-detail {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
     }
 
     .tg-event-empty {
@@ -22093,14 +22115,40 @@
     const TG_SUPABASE_URL = 'https://hgygyilcrkygnvaquvko.supabase.co';
     const TG_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhneWd5aWxjcmt5Z252YXF1dmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMzE5NDIsImV4cCI6MjA4NDkwNzk0Mn0.iEVFwhZmfpjZqaaZyVVBiwK8GWNWfydXAtN-OaNsjFk';
 
+    // 날짜 포맷: YYYY-MM-DD → "2월 15일" (D-day 포함)
+    function formatTgDeadline(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return dateStr;
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const diff = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+      let dday = '';
+      if (diff < 0) dday = ' <span style="color:#f5576c">D+' + Math.abs(diff) + '</span>';
+      else if (diff === 0) dday = ' <span style="color:#f5576c">D-Day</span>';
+      else if (diff <= 3) dday = ' <span style="color:#ff9500">D-' + diff + '</span>';
+      else dday = ' D-' + diff;
+      return month + '월 ' + day + '일' + dday;
+    }
+
     async function showTelegramEvents() {
-      // 로딩 표시
       showToast('🤖 텔레그램 이벤트 불러오는 중...', 'info');
 
       try {
-        // Supabase REST API로 미아카이브 메시지 조회 (최근 100개)
+        // 봇 export 기준과 동일: 미참여 + (starred OR deadline 있음) + 미아카이브
+        const query = [
+          'select=id,content,original_channel,deadline,urls,analysis,starred,participated,date',
+          'archived_date=is.null',
+          'participated=eq.false',
+          'or=(starred.eq.true,deadline.not.is.null)',
+          'order=deadline.asc.nullslast,date.desc',
+          'limit=50'
+        ].join('&');
+
         const response = await fetch(
-          `${TG_SUPABASE_URL}/rest/v1/telegram_messages?select=id,content,original_channel,deadline,urls,analysis,starred,participated,date&archived_date=is.null&order=date.desc&limit=100`,
+          `${TG_SUPABASE_URL}/rest/v1/telegram_messages?${query}`,
           {
             headers: {
               'apikey': TG_SUPABASE_KEY,
@@ -22115,14 +22163,14 @@
 
         const messages = await response.json();
 
-        // 이미 추가된 eventId 목록 (tasks에서 source.eventId 수집)
+        // 이미 추가된 eventId 목록
         const importedEventIds = new Set(
           appState.tasks
             .filter(t => t.source && t.source.type === 'telegram-event' && t.source.eventId)
             .map(t => String(t.source.eventId))
         );
 
-        // 미추가 이벤트 필터 + Navigator 형식으로 변환
+        // Navigator 형식으로 변환
         const allEvents = messages.map(msg => {
           const analysis = msg.analysis || {};
           const firstLine = (msg.content || '').split('\n')[0].trim();
@@ -22130,16 +22178,21 @@
             id: msg.id,
             title: analysis.title || (firstLine.length > 50 ? firstLine.substring(0, 50) : firstLine) || '제목 없음',
             description: analysis.summary || (msg.content || '').substring(0, 200),
+            content: (msg.content || '').substring(0, 500),
             category: '부업',
             deadline: msg.deadline,
             link: (msg.urls || [])[0] || null,
+            urls: msg.urls || [],
             estimatedTime: analysis.time_minutes || (analysis.time_required ? parseInt(analysis.time_required) || 10 : 10),
             expectedRevenue: analysis.reward_usd ? `$${analysis.reward_usd}` : (analysis.reward || null),
             channel: msg.original_channel,
             project: analysis.project || null,
             organizer: analysis.organizer || null,
-            participated: msg.participated,
+            type: analysis.type || null,
+            difficulty: analysis.difficulty || null,
+            actionItems: analysis.action_items || [],
             starred: msg.starred,
+            date: msg.date,
             _imported: importedEventIds.has(String(msg.id))
           };
         });
@@ -22193,23 +22246,37 @@
           </label>
           <div class="tg-events-list">
             ${pendingEvents.map((event, i) => {
-              const deadline = event.deadline ? event.deadline : '';
+              const deadlineHtml = event.deadline ? formatTgDeadline(event.deadline) : '';
               const revenue = event.expectedRevenue ? escapeHtml(String(event.expectedRevenue)) : '';
               const channel = event.channel || '';
+              const hasDetail = event.description || event.content || (event.actionItems && event.actionItems.length > 0) || (event.urls && event.urls.length > 0);
               return `
-                <label class="tg-event-item" data-event-index="${i}">
-                  <input type="checkbox" value="${i}">
-                  <div class="tg-event-info">
-                    <div class="tg-event-title">${event.starred ? '⭐ ' : ''}${escapeHtml(event.title || '제목 없음')}</div>
-                    <div class="tg-event-meta">
-                      ${deadline ? '<span>📅 ' + escapeHtml(deadline) + '</span>' : ''}
-                      ${revenue ? '<span>💰 ' + revenue + '</span>' : ''}
-                      ${channel ? '<span>📢 ' + escapeHtml(channel) + '</span>' : ''}
-                      ${event.estimatedTime ? '<span>⏱ ' + event.estimatedTime + '분</span>' : ''}
+                <div class="tg-event-item" data-event-index="${i}">
+                  <div class="tg-event-row">
+                    <label class="tg-event-check" onclick="event.stopPropagation()">
+                      <input type="checkbox" value="${i}">
+                    </label>
+                    <div class="tg-event-info" onclick="toggleTgEventDetail(this.closest('.tg-event-item'))" style="cursor:pointer">
+                      <div class="tg-event-title">${event.starred ? '⭐ ' : ''}${escapeHtml(event.title || '제목 없음')}</div>
+                      <div class="tg-event-meta">
+                        ${deadlineHtml ? '<span>📅 ' + deadlineHtml + '</span>' : ''}
+                        ${revenue ? '<span>💰 ' + revenue + '</span>' : ''}
+                        ${channel ? '<span>📢 ' + escapeHtml(channel) + '</span>' : ''}
+                        ${event.estimatedTime ? '<span>⏱ ' + event.estimatedTime + '분</span>' : ''}
+                        ${event.type ? '<span>🏷 ' + escapeHtml(event.type) + '</span>' : ''}
+                        ${event.difficulty ? '<span>' + (event.difficulty === 'easy' ? '🟢' : event.difficulty === 'hard' ? '🔴' : '🟡') + ' ' + escapeHtml(event.difficulty) + '</span>' : ''}
+                      </div>
                     </div>
-                    ${event.description ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;max-height:40px;overflow:hidden">' + escapeHtml(event.description.substring(0, 100)) + '</div>' : ''}
+                    ${hasDetail ? '<button class="tg-event-expand" onclick="toggleTgEventDetail(this.closest(\'.tg-event-item\'))" title="상세 보기">▼</button>' : ''}
                   </div>
-                </label>`;
+                  <div class="tg-event-detail" style="display:none">
+                    ${event.description ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;white-space:pre-line">' + escapeHtml(event.description) + '</div>' : ''}
+                    ${event.actionItems && event.actionItems.length > 0 ? '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">할 일:</div>' + event.actionItems.map(a => '<div style="font-size:12px;padding:2px 0">• ' + escapeHtml(a) + '</div>').join('') + '</div>' : ''}
+                    ${event.urls && event.urls.length > 0 ? '<div style="margin-bottom:4px">' + event.urls.map(u => '<a href="' + escapeHtml(u) + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent-blue);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🔗 ' + escapeHtml(u.substring(0, 60)) + '</a>').join('') + '</div>' : ''}
+                    ${event.project ? '<span style="font-size:11px;color:var(--text-muted)">프로젝트: ' + escapeHtml(event.project) + '</span>' : ''}
+                    ${event.organizer ? '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">주최: ' + escapeHtml(event.organizer) + '</span>' : ''}
+                  </div>
+                </div>`;
             }).join('')}
           </div>`;
       }
@@ -22255,6 +22322,15 @@
         modal.classList.remove('active');
         setTimeout(() => modal.remove(), 300);
       }
+    }
+
+    function toggleTgEventDetail(item) {
+      const detail = item.querySelector('.tg-event-detail');
+      const expand = item.querySelector('.tg-event-expand');
+      if (!detail) return;
+      const isOpen = detail.style.display !== 'none';
+      detail.style.display = isOpen ? 'none' : 'block';
+      if (expand) expand.textContent = isOpen ? '▼' : '▲';
     }
 
     function toggleAllTelegramEvents(label) {
@@ -22327,6 +22403,7 @@
     window.showTelegramEvents = showTelegramEvents;
     window.closeTelegramEventsModal = closeTelegramEventsModal;
     window.toggleAllTelegramEvents = toggleAllTelegramEvents;
+    window.toggleTgEventDetail = toggleTgEventDetail;
     window.importSelectedTelegramEvents = importSelectedTelegramEvents;
     window.closeImportModal = closeImportModal;
     window.confirmImportTask = confirmImportTask;
