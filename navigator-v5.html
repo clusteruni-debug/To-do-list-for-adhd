@@ -4890,6 +4890,18 @@
       margin-bottom: 16px;
     }
 
+    .work-modal-field-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .work-modal-field.half {
+      flex: 1;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+
     .work-modal-label {
       display: block;
       font-size: 13px;
@@ -12065,6 +12077,7 @@
             appState.detailedTask = {
               title: '',
               category: '부업',
+              startDate: '',
               deadline: '',
               estimatedTime: 10,
               link: '',
@@ -12115,6 +12128,7 @@
       appState.detailedTask = {
         title: '',
         category: '부업',
+        startDate: '',
         deadline: '',
         estimatedTime: 10,
         link: '',
@@ -12795,6 +12809,10 @@
           <input type="text" class="work-modal-input" id="quick-edit-title" value="${escapeHtml(task.title)}" autofocus>
         </div>
         <div class="work-modal-field">
+          <label class="work-modal-label">설명 (선택)</label>
+          <textarea class="work-modal-input" id="quick-edit-description" rows="2" placeholder="작업 내용, 메모 등">${escapeHtml(task.description || '')}</textarea>
+        </div>
+        <div class="work-modal-field">
           <label class="work-modal-label">카테고리</label>
           <select class="work-modal-input" id="quick-edit-category">
             <option value="본업" ${task.category === '본업' ? 'selected' : ''}>💼 본업</option>
@@ -12803,9 +12821,15 @@
             <option value="가족" ${task.category === '가족' ? 'selected' : ''}>👨‍👩‍👧 가족</option>
           </select>
         </div>
-        <div class="work-modal-field">
-          <label class="work-modal-label">마감일</label>
-          <input type="datetime-local" class="work-modal-input" id="quick-edit-deadline" value="${task.deadline || ''}">
+        <div class="work-modal-field-row">
+          <div class="work-modal-field half">
+            <label class="work-modal-label">시작일</label>
+            <input type="datetime-local" class="work-modal-input" id="quick-edit-startDate" value="${task.startDate || ''}">
+          </div>
+          <div class="work-modal-field half">
+            <label class="work-modal-label">마감일</label>
+            <input type="datetime-local" class="work-modal-input" id="quick-edit-deadline" value="${task.deadline || ''}">
+          </div>
         </div>
         <div class="work-modal-field">
           <label class="work-modal-label">예상 시간 (분)</label>
@@ -12850,7 +12874,9 @@
         return;
       }
 
+      const description = document.getElementById('quick-edit-description').value.trim();
       const category = document.getElementById('quick-edit-category').value;
+      const startDate = document.getElementById('quick-edit-startDate').value;
       const deadline = document.getElementById('quick-edit-deadline').value;
       const estimatedTime = parseInt(document.getElementById('quick-edit-time').value) || null;
       const revenueEl = document.getElementById('quick-edit-revenue');
@@ -12861,7 +12887,9 @@
           return {
             ...t,
             title,
+            description,
             category,
+            startDate,
             deadline,
             estimatedTime,
             expectedRevenue: expectedRevenue !== null ? expectedRevenue : t.expectedRevenue,

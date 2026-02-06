@@ -53,12 +53,17 @@
     - 마감일만: "~1월10일"
     - 둘 다: "1월5일~1월10일"
 
+- **검토 후 추가 수정**
+  - 빠른 수정 모달에 description, startDate 필드 추가
+    - showQuickEditModal(): textarea + 시작일/마감일 가로 배치
+    - saveQuickEdit(): description, startDate 저장 로직 추가
+  - detailedAdd() 초기화 2곳에 startDate 누락 수정
+  - .work-modal-field-row, .work-modal-field.half 스타일 추가
+
 ### 상태
-- Phase 1: ✅ 완료
-- Phase 2: ✅ 완료
-- Phase 3: ✅ 완료
-- Phase 4: ✅ 완료
-- 다음: Phase 5 또는 새 요청 대기
+- Phase 1~4: ✅ 완료
+- 검토 후 누락 수정: ✅ 완료
+- 다음: 새 요청 대기
 
 ---
 
