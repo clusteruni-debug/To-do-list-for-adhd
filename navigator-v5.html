@@ -22298,9 +22298,12 @@
             ${listHtml}
           </div>
           ${pendingEvents.length > 0 ? `
-            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
-              <button class="btn btn-secondary" onclick="closeTelegramEventsModal()">닫기</button>
-              <button class="btn btn-primary" onclick="importSelectedTelegramEvents()">✅ 선택 추가</button>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: space-between; padding: 15px 20px; border-top: 1px solid var(--border-color);">
+              <button class="btn" style="color:#f5576c;background:rgba(245,87,108,0.1);border:1px solid rgba(245,87,108,0.3)" onclick="archiveSelectedTelegramEvents()">🗑 선택 삭제</button>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-secondary" onclick="closeTelegramEventsModal()">닫기</button>
+                <button class="btn btn-primary" onclick="importSelectedTelegramEvents()">✅ 선택 추가</button>
+              </div>
             </div>
           ` : `
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
@@ -22314,6 +22317,61 @@
       modal.dataset.events = JSON.stringify(pendingEvents);
       document.body.appendChild(modal);
       requestAnimationFrame(() => modal.classList.add('active'));
+    }
+
+    async function archiveSelectedTelegramEvents() {
+      const modal = document.getElementById('telegram-events-modal');
+      if (!modal) return;
+
+      const events = JSON.parse(modal.dataset.events || '[]');
+      const checkboxes = modal.querySelectorAll('.tg-events-list input[type="checkbox"]:checked');
+
+      if (checkboxes.length === 0) {
+        showToast('삭제할 이벤트를 선택해주세요', 'warning');
+        return;
+      }
+
+      if (!confirm(`선택한 ${checkboxes.length}개 이벤트를 삭제(아카이브)할까요?`)) return;
+
+      const now = new Date().toISOString();
+      let archivedCount = 0;
+      let failCount = 0;
+
+      for (const cb of checkboxes) {
+        const index = parseInt(cb.value);
+        const event = events[index];
+        if (!event) continue;
+
+        try {
+          // Supabase PATCH로 archived_date 설정 (소프트 삭제)
+          const res = await fetch(
+            `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${event.id}`,
+            {
+              method: 'PATCH',
+              headers: {
+                'apikey': TG_SUPABASE_KEY,
+                'Authorization': `Bearer ${TG_SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+              },
+              body: JSON.stringify({ archived_date: now })
+            }
+          );
+          if (res.ok) archivedCount++;
+          else failCount++;
+        } catch (e) {
+          failCount++;
+        }
+      }
+
+      if (archivedCount > 0) {
+        showToast(`🗑 ${archivedCount}개 삭제 완료${failCount > 0 ? ' (' + failCount + '개 실패)' : ''}`, 'success');
+        // 모달 닫고 새로고침
+        closeTelegramEventsModal();
+        setTimeout(() => showTelegramEvents(), 300);
+      } else {
+        showToast('삭제에 실패했습니다. 권한을 확인해주세요.', 'error');
+      }
     }
 
     function closeTelegramEventsModal() {
@@ -22405,6 +22463,7 @@
     window.toggleAllTelegramEvents = toggleAllTelegramEvents;
     window.toggleTgEventDetail = toggleTgEventDetail;
     window.importSelectedTelegramEvents = importSelectedTelegramEvents;
+    window.archiveSelectedTelegramEvents = archiveSelectedTelegramEvents;
     window.closeImportModal = closeImportModal;
     window.confirmImportTask = confirmImportTask;
 
