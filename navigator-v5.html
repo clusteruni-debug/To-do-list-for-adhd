@@ -22040,7 +22040,7 @@
 
         appState.tasks.unshift(newTask);
         saveState();
-        renderTasks();
+        renderStatic();
 
         closeImportModal();
         showToast('✅ Task가 추가되었습니다!', 'success');
@@ -22261,8 +22261,10 @@
       const checkbox = label.querySelector('input[type="checkbox"]');
       const modal = document.getElementById('telegram-events-modal');
       if (!modal) return;
+      // label onclick은 체크박스 토글 전에 실행됨 → 반전된 값 사용
+      const newState = !checkbox.checked;
       const checkboxes = modal.querySelectorAll('.tg-events-list input[type="checkbox"]');
-      checkboxes.forEach(cb => { cb.checked = checkbox.checked; });
+      checkboxes.forEach(cb => { cb.checked = newState; });
     }
 
     async function importSelectedTelegramEvents() {
@@ -22311,7 +22313,7 @@
 
       if (addedCount > 0) {
         saveState();
-        renderTasks();
+        renderStatic();
         closeTelegramEventsModal();
         showToast(`✅ ${addedCount}개 이벤트가 추가되었습니다!`, 'success');
 
