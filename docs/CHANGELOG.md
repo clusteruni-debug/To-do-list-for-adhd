@@ -13,23 +13,42 @@
   - 이벤트 탭 `🤖 텔레그램 미연동` 배지를 `<button>`으로 변경 (기존 `<div>`)
   - `showTelegramEvents()`: **Supabase REST API**로 `telegram_messages` 직접 조회
     - 봇은 Supabase 사용, Navigator는 Firebase → Supabase anon key로 크로스 조회
+    - 쿼리 필터: `participated=false` + `(starred OR deadline)` + `archived_date IS NULL`
     - analysis 필드 활용: title, summary, reward_usd, time_minutes, project, organizer
   - `showTelegramEventsModal()`: 체크박스 리스트 모달 UI
     - 전체 선택 / 개별 선택 지원
     - 미추가 이벤트 없으면 상태별 안내 메시지 (이벤트 없음 / 전부 추가됨)
-    - 이벤트 제목, 마감일, 보상, 채널, 예상시간, 설명 표시
+    - 날짜 포맷: `YYYY-MM-DD` → `2월 15일 D-3` + D-day 색상
+    - 난이도/타입/프로젝트/주최자 메타 표시
     - ⭐ starred 이벤트 표시
+  - **카드 상세 보기**: 제목 클릭 시 설명, 할 일 목록, 링크, 프로젝트/주최자 펼침 (▼/▲ 토글)
   - `importSelectedTelegramEvents()`: 선택된 이벤트 일괄 Task 추가
-    - `source` 구조: 봇 `exportToNavigator()` 형식과 동일 (type, eventId, channel, project, organizer)
+    - `source` 구조: 봇 `exportToNavigator()` 형식과 동일
     - localStorage + Firebase 동기화
-  - CSS: `.tg-events-list`, `.tg-event-item`, `:has(input:checked)` 선택 스타일
+  - `archiveSelectedTelegramEvents()`: 선택 이벤트 일괄 삭제(아카이브)
+    - Supabase PATCH로 `archived_date` 설정 (봇과 동일한 소프트 삭제)
+    - confirm 확인 후 처리, 삭제 후 목록 자동 새로고침
+  - CSS: `.tg-events-list`, `.tg-event-item`, `.tg-event-detail` 등
   - 접근성: `aria-label`, `min-height: 44px` 터치 타겟
   - XSS 방어: 모든 사용자 입력에 `escapeHtml()` 적용
 
+- **P0 추가 수정**
+  - `renderTasks()` → `renderStatic()` (미정의 함수 호출 2곳 수정)
+  - `toggleAllTelegramEvents`: label onclick 타이밍 버그 수정
+
+### 커밋 이력
+```
+d775a6c feat: 텔레그램 이벤트 일괄 삭제(아카이브) 기능
+7c8c53a fix: 텔레그램 이벤트 모달 3가지 개선
+0c585d6 fix: 텔레그램 이벤트 추가 안 되는 버그 수정
+dc929e8 refactor: 텔레그램 이벤트 조회를 Supabase 직접 조회로 변경
+dcf9f0c feat: 텔레그램 배지 클릭 → 이벤트 목록 모달 + P0 동기화 버그 수정
+```
+
 ### 상태
-- ✅ P0 버그 2건 + 텔레그램 이벤트 목록 기능 완료
+- ✅ P0 버그 3건 + 텔레그램 이벤트 연동 기능 완료
 - 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB: Supabase `telegram_messages` 읽기 전용 (anon key, RLS 보호)
+- DB: Supabase `telegram_messages` 읽기/아카이브 (anon key, RLS 보호)
 
 ### 다음에 할 것
 - P2: SVG 아이콘 교체
