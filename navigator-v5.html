@@ -2714,6 +2714,17 @@
       font-family: inherit;
     }
 
+    /* 가로 배치 폼 행 */
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .form-group.half {
+      flex: 1;
+      min-width: 0;
+    }
+
     /* datetime-local, time, date 입력 스타일 */
     .form-input[type="datetime-local"],
     .form-input[type="time"],
@@ -9234,6 +9245,7 @@
       detailedTask: {                 // 상세 추가/수정용 임시 데이터
         title: '',
         category: '부업',
+        startDate: '',                // 시작일 (일정 범위 표시용)
         deadline: '',
         estimatedTime: 10,
         link: '',
@@ -11872,6 +11884,7 @@
       appState.detailedTask = {
         title: '',
         category: '부업',
+        startDate: '',
         deadline: '',
         estimatedTime: 10,
         link: '',
@@ -12899,6 +12912,7 @@
       appState.detailedTask = {
         title: '',
         category: '부업',
+        startDate: '',
         deadline: '',
         estimatedTime: 10,
         link: '',
@@ -14617,9 +14631,15 @@
       // 카테고리별 입력 필드
       const categoryFields = {
         '본업': `
-          <div class="form-group">
-            <label class="form-label">마감시간</label>
-            <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label">시작일</label>
+              <input type="datetime-local" class="form-input" id="detailed-startDate" value="${appState.detailedTask.startDate || ''}">
+            </div>
+            <div class="form-group half">
+              <label class="form-label">마감일</label>
+              <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">예상 소요시간 (분)</label>
@@ -14656,9 +14676,15 @@
               <option value="기타" ${appState.detailedTask.eventType === '기타' ? 'selected' : ''}>기타</option>
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">마감시간</label>
-            <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label">시작일</label>
+              <input type="datetime-local" class="form-input" id="detailed-startDate" value="${appState.detailedTask.startDate || ''}">
+            </div>
+            <div class="form-group half">
+              <label class="form-label">마감일</label>
+              <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">링크</label>
@@ -14666,6 +14692,16 @@
           </div>
         `,
         '일상': `
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label">시작일 (선택)</label>
+              <input type="datetime-local" class="form-input" id="detailed-startDate" value="${appState.detailedTask.startDate || ''}">
+            </div>
+            <div class="form-group half">
+              <label class="form-label">마감일 (선택)</label>
+              <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+            </div>
+          </div>
           <div class="form-group">
             <label class="form-label">예상 소요시간 (분)</label>
             <input type="number" class="form-input" id="detailed-time" value="${appState.detailedTask.estimatedTime}">
@@ -14673,9 +14709,15 @@
           ${repeatField}
         `,
         '가족': `
-          <div class="form-group">
-            <label class="form-label">마감시간 (선택)</label>
-            <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+          <div class="form-row">
+            <div class="form-group half">
+              <label class="form-label">시작일 (선택)</label>
+              <input type="datetime-local" class="form-input" id="detailed-startDate" value="${appState.detailedTask.startDate || ''}">
+            </div>
+            <div class="form-group half">
+              <label class="form-label">마감일 (선택)</label>
+              <input type="datetime-local" class="form-input" id="detailed-deadline" value="${appState.detailedTask.deadline}">
+            </div>
           </div>
           <div class="form-group">
             <label class="form-label">예상 소요시간 (분)</label>
@@ -15784,7 +15826,16 @@
 
                   const renderEventCard = (task) => {
                     const days = getDaysLeft(task.deadline);
-                    const dateStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
+                    const startDateStr = task.startDate ? new Date(task.startDate).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
+                    const deadlineStr = task.deadline ? new Date(task.deadline).toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
+                    let dateDisplay = '';
+                    if (startDateStr && deadlineStr) {
+                      dateDisplay = startDateStr + '~' + deadlineStr;
+                    } else if (deadlineStr) {
+                      dateDisplay = '~' + deadlineStr;
+                    } else if (startDateStr) {
+                      dateDisplay = startDateStr + '~';
+                    }
                     const metaItems = [];
                     if (task.organizer) metaItems.push(task.organizer);
                     if (task.eventType) metaItems.push(task.eventType);
@@ -15798,7 +15849,7 @@
                           ${metaStr ? '<div class="event-meta-info">' + escapeHtml(metaStr) + '</div>' : ''}
                           ${task.description ? '<div class="event-description">' + escapeHtml(task.description.slice(0, 60)) + (task.description.length > 60 ? '...' : '') + '</div>' : ''}
                         </div>
-                        ${dateStr ? '<span class="event-compact-date">' + dateStr + '</span>' : ''}
+                        ${dateDisplay ? '<span class="event-compact-date">' + dateDisplay + '</span>' : ''}
                         <div class="event-actions">
                           ${task.link ? '<a href="' + task.link + '" target="_blank" class="btn btn-small btn-link">🔗</a>' : ''}
                           <button class="btn btn-small btn-submit" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
@@ -17146,6 +17197,7 @@
         const inputs = {
           title: document.getElementById('detailed-title'),
           description: document.getElementById('detailed-description'),
+          startDate: document.getElementById('detailed-startDate'),
           deadline: document.getElementById('detailed-deadline'),
           time: document.getElementById('detailed-time'),
           revenue: document.getElementById('detailed-revenue'),
@@ -17156,6 +17208,7 @@
 
         if (inputs.title) inputs.title.oninput = (e) => appState.detailedTask.title = e.target.value;
         if (inputs.description) inputs.description.oninput = (e) => appState.detailedTask.description = e.target.value;
+        if (inputs.startDate) inputs.startDate.onchange = (e) => appState.detailedTask.startDate = e.target.value;
         if (inputs.deadline) inputs.deadline.onchange = (e) => appState.detailedTask.deadline = e.target.value;
         if (inputs.time) inputs.time.oninput = (e) => appState.detailedTask.estimatedTime = parseInt(e.target.value) || 0;
         if (inputs.revenue) inputs.revenue.oninput = (e) => appState.detailedTask.expectedRevenue = e.target.value;
