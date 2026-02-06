@@ -7064,7 +7064,20 @@
       border: 1px solid var(--border-color);
       border-radius: 20px;
       font-size: 12px;
+      font-family: inherit;
       color: var(--text-tertiary);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      min-height: 44px;
+    }
+
+    .telegram-status:hover {
+      background: var(--bg-secondary);
+      border-color: var(--text-tertiary);
+    }
+
+    .telegram-status:active {
+      transform: scale(0.97);
     }
 
     .telegram-status.connected {
@@ -7073,8 +7086,94 @@
       color: #48bb78;
     }
 
+    .telegram-status.connected:hover {
+      background: rgba(72, 187, 120, 0.25);
+    }
+
     .telegram-icon {
       font-size: 14px;
+    }
+
+    /* 텔레그램 이벤트 목록 모달 */
+    .tg-events-list {
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tg-event-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .tg-event-item:hover {
+      border-color: var(--accent-blue);
+    }
+
+    .tg-event-item:has(input:checked) {
+      border-color: var(--accent-blue);
+      background: rgba(74, 158, 255, 0.08);
+    }
+
+    .tg-event-item input[type="checkbox"] {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .tg-event-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tg-event-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .tg-event-meta {
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tg-event-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .tg-event-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .tg-select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .tg-select-all:hover {
+      background: var(--bg-tertiary);
     }
 
     /* 이벤트 빠른 추가 */
@@ -9821,6 +9920,7 @@
         createSyncBackup();
 
         const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
+        // { merge: true } — 텔레그램 봇 등 외부에서 추가한 필드(events 등) 보존
         await window.firebaseSetDoc(userDoc, {
           tasks: appState.tasks,
           settings: appState.settings,
@@ -9837,7 +9937,7 @@
           theme: appState.theme,
           deletedIds: appState.deletedIds,
           lastUpdated: new Date().toISOString()
-        });
+        }, { merge: true });
 
         appState.syncStatus = 'synced';
         appState.lastSyncTime = new Date();
@@ -15877,10 +15977,10 @@
               return `
                 <div class="events-header">
                   <div class="events-title">💰 이벤트</div>
-                  <div class="telegram-status ${telegramLinkedCount > 0 ? 'connected' : ''}">
+                  <button class="telegram-status ${telegramLinkedCount > 0 ? 'connected' : ''}" onclick="showTelegramEvents()" aria-label="텔레그램 이벤트 목록 보기" title="클릭하여 텔레그램 이벤트 확인">
                     <span class="telegram-icon">🤖</span>
                     <span class="telegram-text">${telegramLinkedCount > 0 ? '텔레그램 연동 ' + telegramLinkedCount + '개' : '텔레그램 미연동'}</span>
-                  </div>
+                  </button>
                 </div>
 
                 <!-- 이벤트 빠른 추가 -->
@@ -21929,6 +22029,7 @@
           estimatedTime: taskData.estimatedTime || 10,
           expectedRevenue: taskData.expectedRevenue || null,
           deadline: taskData.deadline || null,
+          description: taskData.description || null,
           link: taskData.link || null,
           completed: false,
           pinned: false,
@@ -21946,7 +22047,7 @@
 
         // Firebase 동기화
         if (appState.user) {
-          syncToCloud();
+          syncToFirebase();
         }
       } catch (error) {
         console.error('Task 추가 오류:', error);
@@ -21985,7 +22086,218 @@
       }
     }
 
+    // ============================================
+    // 텔레그램 이벤트 목록 조회 + 선택 추가
+    // ============================================
+    async function showTelegramEvents() {
+      if (!appState.user) {
+        showToast('로그인이 필요합니다', 'error');
+        return;
+      }
+
+      // 로딩 표시
+      showToast('🤖 텔레그램 이벤트 불러오는 중...', 'info');
+
+      try {
+        const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
+        const docSnap = await window.firebaseGetDoc(userDoc);
+
+        if (!docSnap.exists()) {
+          showTelegramEventsModal([]);
+          return;
+        }
+
+        const data = docSnap.data();
+        const events = data.events || [];
+
+        // 이미 추가된 eventId 목록 (tasks에서 source.eventId 수집)
+        const importedEventIds = new Set(
+          appState.tasks
+            .filter(t => t.source && t.source.type === 'telegram-event' && t.source.eventId)
+            .map(t => t.source.eventId)
+        );
+
+        // 미추가 이벤트 필터링
+        const pendingEvents = events.filter(e => !importedEventIds.has(e.id));
+
+        showTelegramEventsModal(pendingEvents, events.length);
+      } catch (error) {
+        console.error('텔레그램 이벤트 조회 실패:', error);
+        showToast('이벤트 목록을 불러올 수 없습니다', 'error');
+      }
+    }
+
+    function showTelegramEventsModal(pendingEvents, totalCount = 0) {
+      // 기존 모달 제거
+      const existing = document.getElementById('telegram-events-modal');
+      if (existing) existing.remove();
+
+      const importedCount = totalCount - pendingEvents.length;
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.id = 'telegram-events-modal';
+
+      let listHtml = '';
+      if (pendingEvents.length === 0) {
+        if (totalCount === 0) {
+          // 텔레그램 봇에서 이벤트를 아직 안 보낸 경우
+          listHtml = `
+            <div class="tg-event-empty">
+              <div class="tg-event-empty-icon">🤖</div>
+              <div style="font-size: 15px; margin-bottom: 8px;">텔레그램 연동 이벤트가 없습니다</div>
+              <div style="font-size: 13px; color: var(--text-muted);">
+                텔레그램 봇에서 이벤트를 보내면<br>여기에 자동으로 표시됩니다
+              </div>
+            </div>`;
+        } else {
+          // 전부 이미 추가된 경우
+          listHtml = `
+            <div class="tg-event-empty">
+              <div class="tg-event-empty-icon">✅</div>
+              <div style="font-size: 15px; margin-bottom: 8px;">모든 이벤트가 추가되었습니다</div>
+              <div style="font-size: 13px; color: var(--text-muted);">
+                총 ${totalCount}개 이벤트 중 ${importedCount}개 추가 완료
+              </div>
+            </div>`;
+        }
+      } else {
+        listHtml = `
+          <label class="tg-select-all" onclick="toggleAllTelegramEvents(this)">
+            <input type="checkbox"> 전체 선택 (${pendingEvents.length}개)
+          </label>
+          <div class="tg-events-list">
+            ${pendingEvents.map((event, i) => {
+              const deadline = event.deadline ? event.deadline : '';
+              const revenue = event.expectedRevenue ? '₩' + Number(event.expectedRevenue).toLocaleString() : '';
+              const channel = event.channel || event.source?.channel || '';
+              return `
+                <label class="tg-event-item" data-event-index="${i}">
+                  <input type="checkbox" value="${i}">
+                  <div class="tg-event-info">
+                    <div class="tg-event-title">${escapeHtml(event.title || '제목 없음')}</div>
+                    <div class="tg-event-meta">
+                      ${deadline ? '<span>📅 ' + escapeHtml(deadline) + '</span>' : ''}
+                      ${revenue ? '<span>💰 ' + revenue + '</span>' : ''}
+                      ${channel ? '<span>📢 ' + escapeHtml(channel) + '</span>' : ''}
+                      ${event.estimatedTime ? '<span>⏱ ' + event.estimatedTime + '분</span>' : ''}
+                    </div>
+                    ${event.description ? '<div style="font-size:12px;color:var(--text-muted);margin-top:4px;max-height:40px;overflow:hidden">' + escapeHtml(event.description.substring(0, 100)) + '</div>' : ''}
+                  </div>
+                </label>`;
+            }).join('')}
+          </div>`;
+      }
+
+      modal.innerHTML = `
+        <div class="modal" style="max-width: 520px;">
+          <div class="modal-header">
+            <h2 style="display: flex; align-items: center; gap: 10px;">
+              <span>🤖</span> 텔레그램 이벤트
+            </h2>
+            <button class="modal-close" onclick="closeTelegramEventsModal()">&times;</button>
+          </div>
+          <div class="modal-body" style="padding: 16px;">
+            ${totalCount > 0 ? `
+              <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+                전체 ${totalCount}개 · 추가됨 ${importedCount}개 · 미추가 ${pendingEvents.length}개
+              </div>
+            ` : ''}
+            ${listHtml}
+          </div>
+          ${pendingEvents.length > 0 ? `
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
+              <button class="btn btn-secondary" onclick="closeTelegramEventsModal()">닫기</button>
+              <button class="btn btn-primary" onclick="importSelectedTelegramEvents()">✅ 선택 추가</button>
+            </div>
+          ` : `
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
+              <button class="btn btn-secondary" onclick="closeTelegramEventsModal()">닫기</button>
+            </div>
+          `}
+        </div>
+      `;
+
+      // 이벤트 데이터 저장
+      modal.dataset.events = JSON.stringify(pendingEvents);
+      document.body.appendChild(modal);
+      requestAnimationFrame(() => modal.classList.add('active'));
+    }
+
+    function closeTelegramEventsModal() {
+      const modal = document.getElementById('telegram-events-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        setTimeout(() => modal.remove(), 300);
+      }
+    }
+
+    function toggleAllTelegramEvents(label) {
+      const checkbox = label.querySelector('input[type="checkbox"]');
+      const modal = document.getElementById('telegram-events-modal');
+      if (!modal) return;
+      const checkboxes = modal.querySelectorAll('.tg-events-list input[type="checkbox"]');
+      checkboxes.forEach(cb => { cb.checked = checkbox.checked; });
+    }
+
+    async function importSelectedTelegramEvents() {
+      const modal = document.getElementById('telegram-events-modal');
+      if (!modal) return;
+
+      const events = JSON.parse(modal.dataset.events || '[]');
+      const checkboxes = modal.querySelectorAll('.tg-events-list input[type="checkbox"]:checked');
+
+      if (checkboxes.length === 0) {
+        showToast('추가할 이벤트를 선택해주세요', 'warning');
+        return;
+      }
+
+      let addedCount = 0;
+      checkboxes.forEach(cb => {
+        const index = parseInt(cb.value);
+        const event = events[index];
+        if (!event) return;
+
+        const newTask = {
+          id: Date.now() + addedCount,
+          title: event.title || '이벤트 참여',
+          category: event.category || '부업',
+          estimatedTime: event.estimatedTime || 10,
+          expectedRevenue: event.expectedRevenue || null,
+          deadline: event.deadline || null,
+          description: event.description || null,
+          link: event.link || null,
+          completed: false,
+          pinned: false,
+          source: {
+            type: 'telegram-event',
+            eventId: event.id,
+            channel: event.channel || event.source?.channel || 'telegram'
+          },
+          createdAt: new Date().toISOString()
+        };
+
+        appState.tasks.unshift(newTask);
+        addedCount++;
+      });
+
+      if (addedCount > 0) {
+        saveState();
+        renderTasks();
+        closeTelegramEventsModal();
+        showToast(`✅ ${addedCount}개 이벤트가 추가되었습니다!`, 'success');
+
+        if (appState.user) {
+          syncToFirebase();
+        }
+      }
+    }
+
     // 전역 함수 노출
+    window.showTelegramEvents = showTelegramEvents;
+    window.closeTelegramEventsModal = closeTelegramEventsModal;
+    window.toggleAllTelegramEvents = toggleAllTelegramEvents;
+    window.importSelectedTelegramEvents = importSelectedTelegramEvents;
     window.closeImportModal = closeImportModal;
     window.confirmImportTask = confirmImportTask;
 
