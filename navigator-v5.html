@@ -1962,6 +1962,7 @@
       cursor: pointer;
       transition: background var(--transition-fast);
       border-bottom: 1px solid var(--border-light);
+      border-left: 3px solid var(--task-cat-color, transparent);
     }
 
     .task-item-mini:last-child {
@@ -2302,6 +2303,7 @@
       border-radius: var(--radius-md);
       margin-bottom: 10px;
       border: 1px solid var(--border-color);
+      border-left: 4px solid var(--task-cat-color, var(--border-color));
       position: relative;
       overflow: hidden;
       transition: all var(--transition-normal);
@@ -4034,6 +4036,7 @@
       background: var(--bg-secondary);
       border-radius: var(--radius-md);
       border: 1px solid var(--border-color);
+      border-left: 4px solid var(--task-cat-color, var(--border-color));
     }
 
     .life-item-content {
@@ -6798,6 +6801,7 @@
       align-items: center;
       padding: 12px 15px;
       border-bottom: 1px solid var(--border-light);
+      border-left: 4px solid var(--task-cat-color, transparent);
       gap: 10px;
     }
 
@@ -15658,7 +15662,7 @@
                         .filter(t => !t.completed && t.id !== (nextAction ? nextAction.id : null))
                         .slice(0, 10)
                         .map(task => `
-                          <div class="task-item-mini" onclick="editTask(${task.id})">
+                          <div class="task-item-mini" onclick="editTask(${task.id})" style="--task-cat-color: var(--cat-${task.category})">
                             <div class="task-item-mini-left">
                               <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" aria-label="작업 완료">○</button>
                               <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
@@ -15819,6 +15823,7 @@
                         <div
                           id="task-${task.id}"
                           class="task-item ${task.urgency === 'urgent' ? 'urgent' : ''} ${task.urgency === 'warning' ? 'warning' : ''}"
+                          style="--task-cat-color: var(--cat-${task.category})"
                           draggable="true"
                           ondragstart="handleDragStart(event, ${task.id})"
                           ondragend="handleDragEnd(event)"
@@ -15918,7 +15923,7 @@
                     </div>
                     <div class="task-list show">
                       ${completedTasks.map((task, index) => `
-                        <div id="task-completed-${task.id}" class="task-item completed">
+                        <div id="task-completed-${task.id}" class="task-item completed" style="--task-cat-color: var(--cat-${task.category})">
                           <div class="task-item-header">
                             <div class="task-item-title completed">${index + 1}. ${escapeHtml(task.title)}</div>
                           </div>
@@ -16139,7 +16144,7 @@
                   ${filteredTasks
                     .filter(t => !t.completed)
                     .map(task => `
-                      <div class="task-item-mini" onclick="editTask(${task.id})">
+                      <div class="task-item-mini" onclick="editTask(${task.id})" style="--task-cat-color: var(--cat-${task.category})">
                         <div class="task-item-mini-left">
                           <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
@@ -16158,7 +16163,7 @@
                         .filter(t => t.completed)
                         .slice(0, 20)
                         .map(task => `
-                          <div class="task-item-mini" onclick="editTask(${task.id})" style="text-decoration: line-through;">
+                          <div class="task-item-mini" onclick="editTask(${task.id})" style="text-decoration: line-through; --task-cat-color: var(--cat-${task.category})">
                             <div class="task-item-mini-left">
                               <button class="task-check-btn" onclick="event.stopPropagation(); completeTask(${task.id})" style="border-color: #48bb78; color: #48bb78;">✓</button>
                               <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
@@ -16219,7 +16224,7 @@
                 <div class="dashboard-title">📌 마감 없는 작업 (${appState.tasks.filter(t => !t.completed && !t.deadline).length}개)</div>
                 <div class="task-list show">
                   ${appState.tasks.filter(t => !t.completed && !t.deadline).map((task, index) => `
-                    <div class="task-item">
+                    <div class="task-item" style="--task-cat-color: var(--cat-${task.category})">
                       <div class="task-item-header">
                         <div class="task-item-title">${index + 1}. ${escapeHtml(task.title)}</div>
                       </div>
@@ -16558,7 +16563,7 @@
                     ${repeatTasks.length > 0 ? `
                       <div class="life-list">
                         ${repeatTasks.map(task => `
-                          <div class="life-item">
+                          <div class="life-item" style="--task-cat-color: var(--cat-${task.category})">
                             <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                             <div class="life-item-content">
                               <div class="life-item-title">${escapeHtml(task.title)}</div>
@@ -16582,7 +16587,7 @@
                     <div class="life-section-title">📌 일상 (일회성) (${onceTasks.length})</div>
                     <div class="life-list">
                       ${onceTasks.map(task => `
-                        <div class="life-item">
+                        <div class="life-item" style="--task-cat-color: var(--cat-${task.category})">
                           <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <div class="life-item-content">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
@@ -16605,7 +16610,7 @@
                     <div class="life-section-title">👨‍👩‍👧 가족 (${familyTasks.length})</div>
                     <div class="life-list">
                       ${familyTasks.map(task => `
-                        <div class="life-item">
+                        <div class="life-item" style="--task-cat-color: var(--cat-${task.category})">
                           <button class="task-check-btn" onclick="completeTask(${task.id})" aria-label="작업 완료">○</button>
                           <div class="life-item-content">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
@@ -16636,7 +16641,7 @@
                     <div class="life-section-title">✓ 완료됨 (${completedTasks.length})</div>
                     <div class="life-list">
                       ${completedTasks.slice(0, 5).map(task => `
-                        <div class="life-item completed" style="opacity: 0.6;">
+                        <div class="life-item completed" style="opacity: 0.6; --task-cat-color: var(--cat-${task.category})">
                           <div class="task-check-btn checked" style="color: #48bb78;">✓</div>
                           <div class="life-item-content" style="text-decoration: line-through;">
                             <div class="life-item-title">${escapeHtml(task.title)}</div>
@@ -17117,6 +17122,7 @@
                     <div
                       id="task-dash-${task.id}"
                       class="task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}"
+                      style="--task-cat-color: var(--cat-${task.category})"
                     >
                       <div class="task-item-header">
                         <div class="task-item-title">${index + 1}. ${escapeHtml(task.title)}</div>
@@ -17149,7 +17155,7 @@
                 <div class="dashboard-title">✅ 완료한 작업 (${completedTasks.length}개)</div>
                 <div class="task-list show">
                   ${completedTasks.slice(0, 10).map((task, index) => `
-                    <div class="task-item completed">
+                    <div class="task-item completed" style="--task-cat-color: var(--cat-${task.category})">
                       <div class="task-item-header">
                         <div class="task-item-title completed">${index + 1}. ${escapeHtml(task.title)}</div>
                       </div>
@@ -17285,7 +17291,7 @@
                       ${pendingTasks.map(task => {
                         const urgency = getUrgencyLevel(task);
                         return `
-                          <div class="all-task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}">
+                          <div class="all-task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}" style="--task-cat-color: var(--cat-${task.category})">
                             <div class="all-task-content">
                               <div class="all-task-title">${escapeHtml(task.title)}</div>
                               <div class="all-task-meta">
@@ -17315,7 +17321,7 @@
                       </div>
                       <div class="all-task-list completed-list ${appState.showCompletedByCategory && appState.showCompletedByCategory[category] ? 'show' : ''}">
                         ${completedTasks.slice(0, 5).map(task => `
-                          <div class="all-task-item completed">
+                          <div class="all-task-item completed" style="--task-cat-color: var(--cat-${task.category})">
                             <div class="all-task-content">
                               <div class="all-task-title completed">${escapeHtml(task.title)}</div>
                             </div>
