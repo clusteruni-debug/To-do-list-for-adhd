@@ -9320,6 +9320,63 @@
     }
 
     /**
+     * 완료 스트릭 계산 — completionLog 기반 연속 완료일 수
+     * dayStartHour 반영: 새벽 완료는 전날로 간주
+     */
+    function calculateCompletionStreak() {
+      const log = appState.completionLog || {};
+      const dayStartHour = appState.settings?.dayStartHour || 5;
+
+      // 논리적 오늘 계산
+      const now = new Date();
+      let logicalToday = new Date(now);
+      if (now.getHours() < dayStartHour) {
+        logicalToday.setDate(logicalToday.getDate() - 1);
+      }
+
+      let streak = 0;
+      let checkDate = new Date(logicalToday);
+
+      // 오늘 완료가 있으면 오늘부터, 없으면 어제부터 카운트
+      const todayStr = getLocalDateStr(checkDate);
+      const todayEntries = log[todayStr];
+      const hasTodayCompletion = todayEntries && Array.isArray(todayEntries) && todayEntries.length > 0;
+
+      if (!hasTodayCompletion) {
+        // 오늘 완료 없으면 어제부터 체크 (스트릭 유지 가능)
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      // 연속 완료일 카운트
+      for (let i = 0; i < 365; i++) {
+        const dateStr = getLocalDateStr(checkDate);
+        const entries = log[dateStr];
+        if (entries && Array.isArray(entries) && entries.length > 0) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else if (entries && entries._summary && entries.count > 0) {
+          // 압축된 데이터
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      return { streak, hasTodayCompletion };
+    }
+
+    /**
+     * 스트릭 배지 텍스트 반환
+     */
+    function getStreakBadge(streak) {
+      if (streak >= 30) return '🏆 30일+';
+      if (streak >= 14) return '⭐ 14일+';
+      if (streak >= 7) return '💪 7일+';
+      return '';
+    }
+
+    /**
      * 오늘 완료된 태스크만 필터링 (UI 표시용)
      * 히스토리/캘린더/수익 통계와 무관하게, 탭의 "완료됨" 섹션에 오늘 것만 표시
      */
@@ -15489,6 +15546,23 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- 🔥 완료 스트릭 -->
+                ${(() => {
+                  const { streak, hasTodayCompletion } = calculateCompletionStreak();
+                  const badge = getStreakBadge(streak);
+                  if (streak === 0 && !hasTodayCompletion) return '';
+                  return `
+                    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 12px;">
+                      <span style="font-size: 22px;">🔥</span>
+                      <div style="flex: 1;">
+                        <div style="font-size: 15px; font-weight: 600; color: var(--text-primary);">${streak}일 연속 완료${hasTodayCompletion ? '' : ' <span style="font-size: 12px; color: var(--text-muted);">(오늘 아직)</span>'}</div>
+                        ${badge ? `<div style="font-size: 12px; color: var(--accent-warning); margin-top: 2px;">${badge}</div>` : ''}
+                      </div>
+                      <span style="font-size: 20px; font-weight: 700; color: ${streak >= 7 ? 'var(--accent-warning)' : 'var(--text-secondary)'};">${streak}</span>
+                    </div>
+                  `;
+                })()}
 
                 <!-- 📊 라이프 리듬 트래커 -->
                 ${(() => {
