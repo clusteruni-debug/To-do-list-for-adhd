@@ -18147,6 +18147,8 @@
       tagCommuteRoute, dismissCommuteTag, setCommuteCondition,
       // 설정
       openSettings, closeSettings, updateSetting,
+      // 리듬 통계
+      toggleRhythmStats,
       // 템플릿
       saveAsTemplate, deleteTemplate, addFromTemplate, saveCurrentAsTemplate,
     };
@@ -19428,11 +19430,21 @@
         '</button>' +
       '</div>';
 
+      // 통계 버튼
+      const statsBtn = '<div style="text-align: center; padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">' +
+        '<button onclick="toggleRhythmStats()" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;" aria-label="30일 통계 보기">' +
+          (_rhythmStatsVisible ? '📊 통계 숨기기' : '📊 30일 통계') +
+        '</button>' +
+      '</div>';
+
+      // 통계 섹션
+      const statsSection = renderRhythmStats();
+
       if (records.length === 0) {
-        return addDateBtn + '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
+        return addDateBtn + statsBtn + statsSection + '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
       }
 
-      return addDateBtn + '<div class="rhythm-history-list">' + records.map(r => {
+      return addDateBtn + statsBtn + statsSection + '<div class="rhythm-history-list">' + records.map(r => {
         return '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '">' +
           '<div class="rhythm-history-date">' +
             '<span class="rhythm-history-day">' + r.dayLabel + '</span>' +
@@ -19475,6 +19487,245 @@
           '</div>' +
         '</div>';
       }).join('') + '</div>';
+    }
+
+    // 리듬 통계 표시 토글 상태
+    let _rhythmStatsVisible = false;
+
+    /**
+     * 라이프 리듬 30일 통계 계산
+     */
+    function calculateRhythmStats(days = 30) {
+      const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+      const today = new Date();
+      const history = appState.lifeRhythm.history || {};
+      const todayStr = getLocalDateStr(today);
+      const medSlots = getMedicationSlots();
+
+      // 데이터 수집
+      const data = { wakeUp: [], sleep: [], homeDepart: [], workArrive: [], workDepart: [], homeArrive: [], commuteToWork: [], commuteToHome: [], sleepDuration: [], workDuration: [] };
+      const weekday = { wakeUp: [], sleep: [], commuteToWork: [], commuteToHome: [] };
+      const weekend = { wakeUp: [], sleep: [] };
+      const medStats = {}; // slotId → { total, taken, required }
+      medSlots.forEach(s => { medStats[s.id] = { total: 0, taken: 0, required: s.required, label: s.label, icon: s.icon }; });
+
+      for (let i = 0; i < days; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const dateStr = getLocalDateStr(date);
+        const dayOfWeek = date.getDay(); // 0=일, 6=토
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        let dayData;
+        if (i === 0 && appState.lifeRhythm.today.date === todayStr) {
+          dayData = appState.lifeRhythm.today;
+        } else {
+          dayData = history[dateStr];
+        }
+        if (!dayData) continue;
+
+        // 시간 데이터 수집
+        if (dayData.wakeUp) {
+          const m = toMins(dayData.wakeUp);
+          data.wakeUp.push(m);
+          if (isWeekend) weekend.wakeUp.push(m); else weekday.wakeUp.push(m);
+        }
+        if (dayData.sleep) {
+          let m = toMins(dayData.sleep);
+          // 자정 넘긴 취침 보정 (00:00~05:00 → +24h)
+          if (m < 5 * 60) m += 24 * 60;
+          data.sleep.push(m);
+          if (isWeekend) weekend.sleep.push(m); else weekday.sleep.push(m);
+        }
+        if (dayData.homeDepart) data.homeDepart.push(toMins(dayData.homeDepart));
+        if (dayData.workArrive) data.workArrive.push(toMins(dayData.workArrive));
+        if (dayData.workDepart) data.workDepart.push(toMins(dayData.workDepart));
+        if (dayData.homeArrive) data.homeArrive.push(toMins(dayData.homeArrive));
+
+        // 통근 시간
+        if (dayData.homeDepart && dayData.workArrive) {
+          const dur = toMins(dayData.workArrive) - toMins(dayData.homeDepart);
+          if (dur > 0 && dur < 180) {
+            data.commuteToWork.push(dur);
+            if (!isWeekend) weekday.commuteToWork.push(dur);
+          }
+        }
+        if (dayData.workDepart && dayData.homeArrive) {
+          const dur = toMins(dayData.homeArrive) - toMins(dayData.workDepart);
+          if (dur > 0 && dur < 180) {
+            data.commuteToHome.push(dur);
+            if (!isWeekend) weekday.commuteToHome.push(dur);
+          }
+        }
+
+        // 수면 시간 (전날 취침 ~ 오늘 기상)
+        if (i < days - 1 && dayData.wakeUp) {
+          const prevDate = new Date(date);
+          prevDate.setDate(prevDate.getDate() - 1);
+          const prevStr = getLocalDateStr(prevDate);
+          const prevData = history[prevStr] || {};
+          if (prevData.sleep) {
+            const sleepTime = toMins(prevData.sleep);
+            const wakeTime = toMins(dayData.wakeUp);
+            let duration = wakeTime + (24 * 60 - sleepTime);
+            if (sleepTime < 12 * 60) duration = wakeTime - sleepTime;
+            if (duration > 0 && duration < 16 * 60) {
+              data.sleepDuration.push(duration);
+            }
+          }
+        }
+
+        // 근무 시간
+        if (dayData.workArrive && dayData.workDepart) {
+          const dur = toMins(dayData.workDepart) - toMins(dayData.workArrive);
+          if (dur > 0) data.workDuration.push(dur);
+        }
+
+        // 복약 통계
+        const meds = dayData.medications || {};
+        medSlots.forEach(s => {
+          medStats[s.id].total++;
+          if (meds[s.id]) medStats[s.id].taken++;
+        });
+      }
+
+      // 평균 계산 헬퍼
+      const avg = (arr) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+      const minsToTime = (m) => {
+        if (m === null) return '--:--';
+        const adjusted = m % (24 * 60);
+        return String(Math.floor(adjusted / 60)).padStart(2, '0') + ':' + String(adjusted % 60).padStart(2, '0');
+      };
+      const minsToHM = (m) => {
+        if (m === null) return '--';
+        const h = Math.floor(m / 60);
+        const min = m % 60;
+        return h > 0 ? h + 'h ' + min + 'm' : min + '분';
+      };
+
+      return {
+        days,
+        dataPoints: Math.max(data.wakeUp.length, data.sleep.length, 1),
+        avgWakeUp: minsToTime(avg(data.wakeUp)),
+        avgSleep: minsToTime(avg(data.sleep)),
+        avgHomeDepart: minsToTime(avg(data.homeDepart)),
+        avgWorkArrive: minsToTime(avg(data.workArrive)),
+        avgWorkDepart: minsToTime(avg(data.workDepart)),
+        avgHomeArrive: minsToTime(avg(data.homeArrive)),
+        avgCommuteToWork: minsToHM(avg(data.commuteToWork)),
+        avgCommuteToHome: minsToHM(avg(data.commuteToHome)),
+        avgSleepDuration: minsToHM(avg(data.sleepDuration)),
+        avgWorkDuration: minsToHM(avg(data.workDuration)),
+        commuteToWorkCount: data.commuteToWork.length,
+        commuteToHomeCount: data.commuteToHome.length,
+        // 주중 vs 주말
+        weekdayWakeUp: minsToTime(avg(weekday.wakeUp)),
+        weekendWakeUp: minsToTime(avg(weekend.wakeUp)),
+        weekdaySleep: minsToTime(avg(weekday.sleep)),
+        weekendSleep: minsToTime(avg(weekend.sleep)),
+        weekdayCommuteToWork: minsToHM(avg(weekday.commuteToWork)),
+        weekdayCommuteToHome: minsToHM(avg(weekday.commuteToHome)),
+        // 복약
+        medStats
+      };
+    }
+
+    /**
+     * 라이프 리듬 통계 토글
+     */
+    function toggleRhythmStats() {
+      _rhythmStatsVisible = !_rhythmStatsVisible;
+      renderStatic();
+    }
+
+    /**
+     * 라이프 리듬 통계 섹션 렌더링
+     */
+    function renderRhythmStats() {
+      if (!_rhythmStatsVisible) return '';
+
+      const stats = calculateRhythmStats(30);
+
+      let medRows = '';
+      const medEntries = Object.values(stats.medStats);
+      if (medEntries.length > 0) {
+        medRows = medEntries.map(s => {
+          const rate = s.total > 0 ? Math.round((s.taken / s.total) * 100) : 0;
+          const color = rate >= 80 ? 'var(--accent-success)' : rate >= 50 ? 'var(--accent-warning)' : 'var(--accent-danger)';
+          return `<tr>
+            <td>${s.icon} ${escapeHtml(s.label)}${s.required ? ' <span style="color: var(--accent-danger); font-size: 10px;">필수</span>' : ''}</td>
+            <td style="color: ${color}; font-weight: 600;">${rate}% <span style="font-size: 11px; color: var(--text-muted);">(${s.taken}/${s.total})</span></td>
+          </tr>`;
+        }).join('');
+      }
+
+      return `
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 14px;">📊 30일 통계 <span style="font-size: 12px; color: var(--text-muted);">(${stats.dataPoints}일 데이터)</span></div>
+
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">☀️ 평균 기상</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgWakeUp}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">🌙 평균 취침</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgSleep}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">💤 평균 수면</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgSleepDuration}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">🚶 평균 출발</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgHomeDepart}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">🚌 출근 통근</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgCommuteToWork} <span style="font-size: 11px; color: var(--text-muted);">(${stats.commuteToWorkCount}회)</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">🏠 퇴근 통근</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgCommuteToHome} <span style="font-size: 11px; color: var(--text-muted);">(${stats.commuteToHomeCount}회)</span></td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 8px 4px; color: var(--text-secondary);">💼 평균 근무</td>
+              <td style="padding: 8px 4px; font-weight: 600;">${stats.avgWorkDuration}</td>
+            </tr>
+          </table>
+
+          <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">📅 주중 vs 주말</div>
+          <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 6px 4px; color: var(--text-secondary);"></td>
+              <td style="padding: 6px 4px; font-weight: 600; color: var(--accent-primary);">주중</td>
+              <td style="padding: 6px 4px; font-weight: 600; color: var(--accent-warning);">주말</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 6px 4px; color: var(--text-secondary);">☀️ 기상</td>
+              <td style="padding: 6px 4px;">${stats.weekdayWakeUp}</td>
+              <td style="padding: 6px 4px;">${stats.weekendWakeUp}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding: 6px 4px; color: var(--text-secondary);">🌙 취침</td>
+              <td style="padding: 6px 4px;">${stats.weekdaySleep}</td>
+              <td style="padding: 6px 4px;">${stats.weekendSleep}</td>
+            </tr>
+            <tr>
+              <td style="padding: 6px 4px; color: var(--text-secondary);">🚌 통근</td>
+              <td style="padding: 6px 4px;">${stats.weekdayCommuteToWork}</td>
+              <td style="padding: 6px 4px;">-</td>
+            </tr>
+          </table>
+
+          ${medRows ? `
+            <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">💊 복약 준수율</div>
+            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
+              ${medRows}
+            </table>
+          ` : ''}
+        </div>
+      `;
     }
 
     /**
