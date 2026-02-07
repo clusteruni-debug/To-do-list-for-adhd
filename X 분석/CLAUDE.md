@@ -142,22 +142,10 @@
 
 ```
 X 분석/
-├── scripts/
-│   ├── analyze_tweets.py         # 트윗 분석
-│   ├── deep_analysis.py          # 딥 분석
-│   ├── style_deep_analysis.py    # 스타일 분석
-│   ├── deboost_analysis.py       # 디부스트 분석
-│   ├── deboost_fair_comparison.py
-│   ├── top_tweets.py             # 인기 트윗 추출
-│   └── what_works_analysis.py    # 효과 분석
-├── data/                         # 원본 데이터
-├── assets/                       # 이미지/차트
-├── ANALYSIS_REPORT.md            # 분석 리포트
-├── MY_POSTS.md                   # 게시물 정리
-├── deep_analysis_result.json     # 딥 분석 결과
-├── tweet_analysis_result.json    # 트윗 분석 결과
-└── Your archive.html             # X 아카이브
+└── CLAUDE.md           # 프로젝트 컨텍스트 (분석 스크립트/데이터는 아직 미생성)
 ```
+
+> **참고**: scripts/, data/, assets/ 등은 향후 분석 작업 시 생성 예정
 
 ---
 
