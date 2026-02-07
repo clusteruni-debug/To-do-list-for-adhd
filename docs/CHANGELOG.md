@@ -8,13 +8,23 @@
   - loadState(), setInterval(1분), visibilitychange, wakeUp 트리거
   - 모바일에서 `beforeunload` 미발생 시 초기화 데이터 유실 방지
 
+- **이벤트 탭 일괄 삭제(다중 선택) 기능**
+  - `☑ 선택` 버튼 → 선택 모드 진입: 체크박스 표시 + 액션바(전체/삭제/취소)
+  - 개별/전체 선택 → `🗑 삭제 (N)` → confirm → soft-delete(deletedIds 패턴)
+  - 선택 모드에서 액션 버튼 숨김 (오조작 방지)
+  - 비영속적 상태: `_eventBulkSelectMode`, `_eventBulkSelectedIds` (새로고침 시 초기화)
+  - 접근성: aria-label, 44px 터치 타겟
+  - XSS 방어: escapeHtml() 적용
+
 ### 커밋 이력
 ```
-(작성 중)
+530b898 fix: 반복 태스크 일일 초기화 saveState() 누락 수정 (모바일 데이터 유실 방지)
+(Phase 2 커밋 예정)
 ```
 
 ### 상태
-- 🟡 진행 중
+- ✅ Phase 1 완료 (saveState 누락 수정)
+- ✅ Phase 2 완료 (이벤트 일괄 삭제)
 
 ---
 
