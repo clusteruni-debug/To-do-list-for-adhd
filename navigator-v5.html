@@ -9671,6 +9671,7 @@
         const dailyResetDone = checkDailyReset();
         if (dailyResetDone) {
           recomputeTodayStats(); // 초기화 후 오늘 통계 재계산
+          saveState(); // 모바일에서 beforeunload 미발생 시 데이터 유실 방지
         }
 
         // 첫 방문 시 온보딩
@@ -18411,6 +18412,7 @@
       if (type === 'wakeUp') {
         if (checkDailyReset()) {
           recomputeTodayStats();
+          saveState(); // 모바일에서 beforeunload 미발생 시 데이터 유실 방지
           showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
         }
       }
@@ -21915,6 +21917,7 @@
       setInterval(() => {
         if (checkDailyReset()) {
           recomputeTodayStats();
+          saveState(); // 모바일에서 beforeunload 미발생 시 데이터 유실 방지
           renderStatic();
           showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
         }
@@ -21926,6 +21929,7 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && checkDailyReset()) {
         recomputeTodayStats();
+        saveState(); // 모바일에서 beforeunload 미발생 시 데이터 유실 방지
         renderStatic();
         showToast('🔄 새로운 하루! 반복 태스크가 초기화되었습니다', 'info');
       }

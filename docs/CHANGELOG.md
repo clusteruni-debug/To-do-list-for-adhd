@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [2026-02-07] (세션 19)
+
+### 작업 내용
+- **P0 버그 수정: 반복 태스크 일일 초기화 saveState() 누락**
+  - `checkDailyReset()` 후 `saveState()` 호출 추가 (4곳)
+  - loadState(), setInterval(1분), visibilitychange, wakeUp 트리거
+  - 모바일에서 `beforeunload` 미발생 시 초기화 데이터 유실 방지
+
+### 커밋 이력
+```
+(작성 중)
+```
+
+### 상태
+- 🟡 진행 중
+
+---
+
 ## [2026-02-06] (세션 18)
 
 ### 작업 내용
