@@ -2503,6 +2503,7 @@
     .task-item-actions .btn-small.edit,
     .task-item-actions .btn-small.delete,
     .task-item-actions .btn-small[title="내일로 미루기"],
+    .task-item-actions .btn-small[title="이 작업에 포모도로 집중"],
     .task-item-actions .btn-small.copy {
       opacity: 0;
       pointer-events: none;
@@ -2513,6 +2514,7 @@
     .task-item:hover .task-item-actions .btn-small.edit,
     .task-item:hover .task-item-actions .btn-small.delete,
     .task-item:hover .task-item-actions .btn-small[title="내일로 미루기"],
+    .task-item:hover .task-item-actions .btn-small[title="이 작업에 포모도로 집중"],
     .task-item:hover .task-item-actions .btn-small.copy {
       opacity: 1;
       pointer-events: auto;
@@ -2523,6 +2525,7 @@
       .task-item-actions .btn-small.edit,
       .task-item-actions .btn-small.delete,
       .task-item-actions .btn-small[title="내일로 미루기"],
+      .task-item-actions .btn-small[title="이 작업에 포모도로 집중"],
       .task-item-actions .btn-small.copy {
         opacity: 1;
         pointer-events: auto;
@@ -16037,6 +16040,7 @@
                           <div class="task-item-actions">
                             ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
                             <button class="btn-small complete" onclick="completeTask(${task.id})" aria-label="작업 완료">✓</button>
+                            <button class="btn-small" onclick="startPomodoro(${task.id})" title="이 작업에 포모도로 집중" aria-label="포모도로 시작" style="background: rgba(245, 87, 108, 0.1); color: #f5576c;">🍅</button>
                             <button class="btn-small" onclick="postponeTask(${task.id})" title="내일로 미루기" aria-label="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
                             <button class="btn-small edit" onclick="editTask(${task.id})" aria-label="작업 수정">✏️</button>
                             <button class="btn-small delete" onclick="deleteTask(${task.id})" aria-label="작업 삭제">×</button>
@@ -16160,7 +16164,7 @@
                     <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">
                       <div class="pomodoro-title">${pomo.isBreak ? '☕ 휴식 중' : '🍅 포모도로'}</div>
                       <div class="pomodoro-time" id="pomodoro-time">${formatPomodoroTime(pomo.timeLeft)}</div>
-                      ${currentTask ? `<div class="pomodoro-task">${escapeHtml(currentTask.title)}</div>` : ''}
+                      ${currentTask ? `<div class="pomodoro-task" style="font-size: 13px; color: var(--text-secondary); margin-top: 4px; text-align: center;">🎯 ${escapeHtml(currentTask.title)}${currentTask.actualTime ? ` (누적 ${currentTask.actualTime}분)` : ''}</div>` : ''}
                       <div class="pomodoro-controls">
                         ${pomo.isRunning ? `
                           <button class="pomodoro-btn pause" onclick="pausePomodoro()" aria-label="일시정지">⏸ 일시정지</button>
@@ -22335,8 +22339,26 @@
           pomo.completedPomodoros++;
           pomo.isBreak = true;
           pomo.timeLeft = pomo.breakDuration;
-          showNotification('포모도로 완료!', '5분 휴식하세요');
-          showToast(`포모도로 완료! (${pomo.completedPomodoros}회) 5분 휴식`, 'success');
+
+          // 연결된 태스크에 25분 집중 시간 자동 기록
+          if (pomo.currentTaskId) {
+            const linkedTask = appState.tasks.find(t => t.id === pomo.currentTaskId);
+            if (linkedTask) {
+              const prevTime = parseInt(linkedTask.actualTime) || 0;
+              linkedTask.actualTime = prevTime + 25;
+              saveState();
+              showNotification('포모도로 완료!', `${escapeHtml(linkedTask.title)}에 25분 기록`);
+              showToast(`포모도로 완료! ${escapeHtml(linkedTask.title)}에 25분 기록 (${pomo.completedPomodoros}회)`, 'success');
+            } else {
+              // 태스크가 삭제된 경우
+              pomo.currentTaskId = null;
+              showNotification('포모도로 완료!', '5분 휴식하세요');
+              showToast(`포모도로 완료! (${pomo.completedPomodoros}회) 5분 휴식`, 'success');
+            }
+          } else {
+            showNotification('포모도로 완료!', '5분 휴식하세요');
+            showToast(`포모도로 완료! (${pomo.completedPomodoros}회) 5분 휴식`, 'success');
+          }
         }
 
         if (navigator.vibrate) {
