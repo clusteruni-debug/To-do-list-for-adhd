@@ -16,6 +16,12 @@
   - 접근성: aria-label, 44px 터치 타겟
   - XSS 방어: escapeHtml() 적용
 
+- **이벤트 탭 그룹 재편 + 접기 기능**
+  - 그룹 변경: 기한초과/오늘/3일이내/여유 → 긴급(D-1이하)/마감전(D-2~D-5)/미제출/제출완료
+  - 모든 그룹 헤더 클릭 시 접기/펼치기 (▼/▶ 토글)
+  - `_collapsedEventGroups` Set으로 접힘 상태 관리 (비영속적)
+  - 제출완료 섹션도 동일한 events-group 패턴으로 통일
+
 - **복약 트래커 레이아웃 개선**
   - `medication-slots` flex → `grid-template-columns: 1fr 1fr` (2열 고정 그리드)
   - PC에서 3+1 → 2+2, 모바일에서 1+1+1+1 → 2+2로 통일

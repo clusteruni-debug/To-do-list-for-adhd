@@ -7277,7 +7277,7 @@
       gap: 14px;
     }
 
-    .events-list.submitted-list.collapsed {
+    .events-list.collapsed {
       display: none;
     }
 
@@ -7383,6 +7383,18 @@
       margin-bottom: 8px;
       padding: 4px 0;
       border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .events-group-header:hover {
+      color: var(--text-primary);
+    }
+    .events-group-header .toggle-icon {
+      font-size: 11px;
+      transition: transform 0.2s;
     }
 
     .event-tg-badge {
@@ -9475,10 +9487,11 @@
     }
 
     // ============================================
-    // 이벤트 일괄 선택 상태 (비영속적 — 새로고침 시 초기화)
+    // 이벤트 탭 UI 상태 (비영속적 — 새로고침 시 초기화)
     // ============================================
     let _eventBulkSelectMode = false;
     const _eventBulkSelectedIds = new Set();
+    const _collapsedEventGroups = new Set(); // 접힌 그룹 ID
 
     // ============================================
     // 앱 상태 관리
@@ -13305,6 +13318,18 @@
     }
 
     /**
+     * 이벤트 그룹 접기/펼치기
+     */
+    function toggleEventGroup(groupId) {
+      if (_collapsedEventGroups.has(groupId)) {
+        _collapsedEventGroups.delete(groupId);
+      } else {
+        _collapsedEventGroups.add(groupId);
+      }
+      renderStatic();
+    }
+
+    /**
      * 작업 복사
      */
     function copyTask(id) {
@@ -16124,7 +16149,7 @@
 
               const urgentCount = pendingEvents.filter(t => {
                 const d = getDaysLeft(t.deadline);
-                return d !== null && d <= 3;
+                return d !== null && d <= 1;
               }).length;
 
               // 텔레그램 연동 작업 수 확인
@@ -16171,7 +16196,7 @@
                   </div>
                   <div class="events-summary-item">
                     <div class="events-summary-value" style="color: #ff9500">${urgentCount}</div>
-                    <div class="events-summary-label">긴급 (3일내)</div>
+                    <div class="events-summary-label">긴급 (D-1)</div>
                   </div>
                   <div class="events-summary-item">
                     <div class="events-summary-value" style="color: #48bb78">${submittedEvents.length}</div>
@@ -16189,11 +16214,10 @@
                     `;
                   }
 
-                  // 기한별 그룹화
-                  const overdue = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d < 0; });
-                  const today = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d === 0; });
-                  const soon = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d > 0 && d <= 3; });
-                  const later = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d === null || d > 3; });
+                  // 기한별 그룹화: 긴급(D-1 이하) / 마감 전(D-2~D-5) / 미제출(나머지)
+                  const urgent = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d <= 1; });
+                  const approaching = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d !== null && d >= 2 && d <= 5; });
+                  const pending = pendingEvents.filter(t => { const d = getDaysLeft(t.deadline); return d === null || d > 5; });
 
                   const renderEventCard = (task) => {
                     const days = getDaysLeft(task.deadline);
@@ -16235,12 +16259,16 @@
                     `;
                   };
 
-                  const renderGroup = (title, icon, events, collapsed = false) => {
+                  const renderGroup = (groupId, title, icon, events) => {
                     if (events.length === 0) return '';
+                    const isCollapsed = _collapsedEventGroups.has(groupId);
                     return `
                       <div class="events-group">
-                        <div class="events-group-header">${icon} ${title} (${events.length})</div>
-                        <div class="events-list ${collapsed ? 'collapsed' : ''}">
+                        <div class="events-group-header" onclick="toggleEventGroup('${groupId}')">
+                          <span>${icon} ${title} (${events.length})</span>
+                          <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
+                        </div>
+                        <div class="events-list ${isCollapsed ? 'collapsed' : ''}">
                           ${events.map(renderEventCard).join('')}
                         </div>
                       </div>
@@ -16248,19 +16276,19 @@
                   };
 
                   return `
-                    ${renderGroup('기한 초과', '🚨', overdue)}
-                    ${renderGroup('오늘', '⏰', today)}
-                    ${renderGroup('3일 이내', '⚡', soon)}
-                    ${renderGroup('여유 있음', '📅', later, later.length > 5)}
+                    ${renderGroup('urgent', '긴급', '🚨', urgent)}
+                    ${renderGroup('approaching', '마감 전', '⚡', approaching)}
+                    ${renderGroup('pending', '미제출', '📅', pending)}
                   `;
                 })()}
 
                 ${submittedEvents.length > 0 ? `
-                  <div class="events-section submitted">
-                    <div class="events-section-title" onclick="document.querySelector('.submitted-list').classList.toggle('collapsed')">
-                      ✅ 제출완료 (${submittedEvents.length}) <span class="toggle-icon">▼</span>
+                  <div class="events-group">
+                    <div class="events-group-header" onclick="toggleEventGroup('submitted')">
+                      <span>✅ 제출완료 (${submittedEvents.length})</span>
+                      <span class="toggle-icon">${_collapsedEventGroups.has('submitted') ? '▶' : '▼'}</span>
                     </div>
-                    <div class="events-list submitted-list">
+                    <div class="events-list ${_collapsedEventGroups.has('submitted') ? 'collapsed' : ''}">
                       ${submittedEvents.map(task => {
                         const completedDate = task.completedAt ? new Date(task.completedAt) : null;
                         const completedStr = completedDate ? completedDate.toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) + ' ' + completedDate.toTimeString().slice(0,5) : '';
@@ -17712,7 +17740,7 @@
       // 작업 CRUD
       quickAdd, detailedAdd, completeTask, uncompleteTask, editTask, cancelEdit, deleteTask,
       // 이벤트 일괄 선택
-      toggleEventBulkSelect, toggleEventSelection, toggleEventSelectAll, bulkDeleteEvents,
+      toggleEventBulkSelect, toggleEventSelection, toggleEventSelectAll, bulkDeleteEvents, toggleEventGroup,
       handleGo, toggleTaskList, toggleCompletedTasks, toggleDetailedAdd,
       updateDetailedTaskCategory, updateDetailedTaskRepeat,
       // 터치/스와이프
