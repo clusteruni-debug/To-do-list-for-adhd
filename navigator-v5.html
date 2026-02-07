@@ -11749,6 +11749,79 @@
     window.deleteCompletionLogEntry = deleteCompletionLogEntry;
 
     /**
+     * completionLog 항목 수정 (날짜/시간 변경)
+     */
+    function editCompletionLogEntry(dateStr, index) {
+      const entries = (appState.completionLog || {})[dateStr];
+      if (!entries || !entries[index]) return;
+      const entry = entries[index];
+
+      // 모달 HTML
+      const modalId = 'edit-log-modal';
+      if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+      const modal = document.createElement('div');
+      modal.id = modalId;
+      modal.className = 'modal-overlay';
+      modal.style.cssText = 'display:flex;z-index:10000';
+      modal.innerHTML = `
+        <div class="modal" style="max-width:340px">
+          <div class="modal-header">
+            <h3 style="margin:0;font-size:16px">📝 기록 수정</h3>
+            <button class="modal-close" onclick="document.getElementById('${modalId}').remove()" aria-label="닫기">×</button>
+          </div>
+          <div class="modal-body" style="padding:16px">
+            <div style="margin-bottom:12px;font-size:14px;color:var(--text-secondary)">${escapeHtml(entry.t)}</div>
+            <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600">날짜</label>
+            <input type="date" id="edit-log-date" value="${dateStr}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:15px;margin-bottom:12px">
+            <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600">시간</label>
+            <input type="text" id="edit-log-time" value="${entry.at || '12:00'}" placeholder="HH:MM (예: 1430, 9:30)" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:15px">
+          </div>
+          <div class="modal-footer" style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">취소</button>
+            <button class="btn btn-primary" onclick="applyEditCompletionLog('${dateStr}', ${index})">저장</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      // 오버레이 클릭으로 닫기
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+      document.getElementById('edit-log-time').focus();
+    }
+    window.editCompletionLogEntry = editCompletionLogEntry;
+
+    function applyEditCompletionLog(origDate, origIndex) {
+      const entries = (appState.completionLog || {})[origDate];
+      if (!entries || !entries[origIndex]) return;
+      const entry = entries[origIndex];
+
+      const newDate = document.getElementById('edit-log-date').value;
+      const rawTime = document.getElementById('edit-log-time').value;
+      const newTime = parseTimeInput(rawTime);
+
+      if (!newDate) { showToast('날짜를 입력해주세요', 'error'); return; }
+      if (!newTime) { showToast('올바른 시간을 입력해주세요 (예: 14:30, 930)', 'error'); return; }
+
+      // 기존 위치에서 제거
+      entries.splice(origIndex, 1);
+      if (entries.length === 0) delete appState.completionLog[origDate];
+
+      // 새 위치에 추가
+      if (!appState.completionLog[newDate]) appState.completionLog[newDate] = [];
+      appState.completionLog[newDate].push({ ...entry, at: newTime });
+
+      // 모달 닫기
+      const modal = document.getElementById('edit-log-modal');
+      if (modal) modal.remove();
+
+      saveState();
+      recomputeTodayStats();
+      renderStatic();
+      showToast('기록이 수정되었습니다', 'success');
+    }
+    window.applyEditCompletionLog = applyEditCompletionLog;
+
+    /**
      * 선택된 날짜의 상세 정보 렌더링
      */
     function renderDayDetail() {
@@ -11941,7 +12014,7 @@
                       <div class="history-task">
                         <span class="history-task-check">✓</span>
                         <span class="history-task-title">${escapeHtml(task.title)}</span>
-                        <span class="history-task-time">${time}</span>
+                        ${hasLog ? `<span class="history-task-time" onclick="editCompletionLogEntry('${task._logDate}', ${task._logIndex})" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" title="클릭하여 날짜/시간 수정">${time}</span>` : `<span class="history-task-time">${time}</span>`}
                         ${hasLog ? `<button class="btn-small delete" onclick="deleteCompletionLogEntry('${task._logDate}', ${task._logIndex})" title="기록 삭제" aria-label="기록 삭제" style="padding:2px 6px;font-size:12px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>` : ''}
                       </div>
                     `;
