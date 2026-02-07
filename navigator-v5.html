@@ -11860,13 +11860,16 @@
 
       // 1. completionLog 기반 (영구 기록)
       for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        if (!Array.isArray(entries)) continue; // 압축 데이터 스킵
         if (!grouped[dateKey]) grouped[dateKey] = [];
-        entries.forEach(e => {
+        entries.forEach((e, idx) => {
           grouped[dateKey].push({
             title: e.t,
             category: e.c,
             completedAt: dateKey + 'T' + e.at,
-            expectedRevenue: e.rv || 0
+            expectedRevenue: e.rv || 0,
+            _logDate: dateKey,
+            _logIndex: idx
           });
         });
       }
@@ -11933,11 +11936,13 @@
                     const time = new Date(task.completedAt).toLocaleTimeString('ko-KR', {
                       hour: '2-digit', minute: '2-digit'
                     });
+                    const hasLog = task._logDate !== undefined && task._logIndex !== undefined;
                     return `
                       <div class="history-task">
                         <span class="history-task-check">✓</span>
                         <span class="history-task-title">${escapeHtml(task.title)}</span>
                         <span class="history-task-time">${time}</span>
+                        ${hasLog ? `<button class="btn-small delete" onclick="deleteCompletionLogEntry('${task._logDate}', ${task._logIndex})" title="기록 삭제" aria-label="기록 삭제" style="padding:2px 6px;font-size:12px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>` : ''}
                       </div>
                     `;
                   }).join('')}
@@ -16627,12 +16632,19 @@
                   `;
                 })()}
 
-                ${submittedEvents.length > 0 ? `
+                ${submittedEvents.length > 0 ? (() => {
+                  const submittedIds = submittedEvents.map(t => t.id);
+                  const allSubmittedChecked = _eventBulkSelectMode && submittedIds.every(id => _eventBulkSelectedIds.has(id));
+                  return `
                   <div class="events-group">
                     <div class="events-group-header" onclick="toggleEventGroup('submitted')">
-                      <span>✅ 제출완료 (${submittedEvents.length})</span>
+                      <span>
+                        ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allSubmittedChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([' + submittedIds.join(',') + '])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                        ✅ 제출완료 (${submittedEvents.length})
+                      </span>
                       <span class="toggle-icon">${_collapsedEventGroups.has('submitted') ? '▶' : '▼'}</span>
-                    </div>
+                    </div>`;
+                })() + `
                     <div class="events-list ${_collapsedEventGroups.has('submitted') ? 'collapsed' : ''}">
                       ${submittedEvents.map(task => {
                         const completedDate = task.completedAt ? new Date(task.completedAt) : null;
