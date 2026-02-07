@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## [2026-02-07] (세션 20)
+
+### 작업 내용
+- **크로스 디바이스 동기화 수정 (Firestore 단일 진실 소스)**
+  - Phase 1: Firestore 오프라인 퍼시스턴스 활성화 (IndexedDB 캐시)
+    - `getFirestore` → `initializeFirestore` + `persistentLocalCache` + `persistentSingleTabManager`
+    - 오프라인에서도 Firestore SDK가 자동 캐시 데이터 반환
+  - Phase 2: 동기화 디바운스 5초→1.5초 단축 (반응성 개선)
+  - Phase 3: beforeunload/visibilitychange 동기화 안정성 개선
+    - `_doSaveStateLocalOnly()` 함수 추가 — beforeunload에서 동기 저장만 수행
+    - visibilitychange hidden 시 대기 중인 Firebase 동기화 즉시 플러시
+  - Phase 4: onSnapshot 병합 후 Firebase 재업로드 (핑퐁 방지 포함)
+    - `lastOwnWriteTimestamp`로 자기 쓰기 식별 → 무한 루프 차단
+    - 다른 기기 변경 수신 시 병합 결과 재업로드 (디바운스 적용)
+  - Phase 5: 로그인 사용자 localStorage 캐싱 제거
+    - `_doSaveState`, onSnapshot, loadFromFirebase 등 ~30곳 localStorage.setItem 조건부 래핑
+    - 로그인 사용자: Firestore IndexedDB만 사용 (localStorage 캐싱 스킵)
+    - 비로그인 사용자: 기존 localStorage 동작 유지
+    - 프라이빗 브라우징: `isIndexedDBAvailable` 체크로 localStorage 폴백
+    - 로그아웃 시 `_doSaveStateLocalOnly()` 한번 덤프 (비로그인 상태 대비)
+
+### 다음 작업
+- SVG 아이콘 교체 (P2)
+
+---
+
 ## [2026-02-07] (세션 19)
 
 ### 작업 내용

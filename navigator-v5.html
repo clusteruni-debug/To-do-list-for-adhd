@@ -22,7 +22,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
     import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     // Firebase 설정
     // ⚠️ 보안 참고: Firebase API 키는 클라이언트 측에서 사용되도록 설계되었습니다.
@@ -48,7 +48,11 @@
     // Firebase 초기화
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentSingleTabManager({ forceOwnership: true })
+      })
+    });
     const provider = new GoogleAuthProvider();
 
     // 전역 변수로 노출
@@ -9576,7 +9580,9 @@
       if (!allCompleted) {
         // 어제 반복 태스크를 전부 완료하지 못함 → 스트릭 리셋
         appState.streak.current = 0;
-        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        if (!appState.user) {
+          localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        }
         console.log('[daily-reset] 어제 미완료 반복 태스크 있음 → 스트릭 리셋');
       }
     }
@@ -9898,30 +9904,24 @@
      */
     function _doSaveState(immediate = false) {
       try {
-        localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
-        localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
-        localStorage.setItem('navigator-theme', appState.theme);
-        localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
-        localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
-        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
-        localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
-        localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
-
-        // 본업 프로젝트 저장
-        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-
-        // 통근 트래커 저장
-        localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
-
-        // 완료 기록 영구 로그 저장
-        localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
-
-        // Soft-Delete 추적 데이터 저장
-        localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
-
-        // 휴지통 저장
-        localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
+        // 로그인 사용자: Firestore IndexedDB가 주 저장소 → localStorage 캐싱 스킵
+        // 비로그인 또는 IndexedDB 사용 불가(프라이빗 브라우징): localStorage 폴백
+        if (!appState.user || !isIndexedDBAvailable) {
+          localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
+          localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
+          localStorage.setItem('navigator-theme', appState.theme);
+          localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+          localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+          localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+          localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
+          localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+          localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+          localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+          localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+          localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+          localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
+        }
 
         // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
@@ -9959,6 +9959,29 @@
       _doSaveState(true);
     }
 
+    // localStorage에만 동기적으로 저장 (Firebase 호출 없음)
+    // beforeunload에서 사용 — async setDoc은 브라우저가 기다리지 않으므로
+    function _doSaveStateLocalOnly() {
+      try {
+        localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
+        localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
+        localStorage.setItem('navigator-theme', appState.theme);
+        localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+        localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
+        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
+        localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
+        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+        localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+        localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+        localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+        localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
+      } catch (error) {
+        console.error('로컬 저장 실패:', error);
+      }
+    }
+
     // ============================================
     // Firebase 동기화
     // ============================================
@@ -9970,7 +9993,18 @@
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
     let isLoadingFromCloud = false; // 클라우드 초기 로드 중 sync 차단 (빈 데이터 업로드 방지)
     let syncDebounceTimer = null; // syncToFirebase 디바운스 타이머
-    const SYNC_DEBOUNCE_MS = 5000; // 동기화 디바운스 간격 (5초)
+    const SYNC_DEBOUNCE_MS = 1500; // 동기화 디바운스 간격 (1.5초)
+    let lastOwnWriteTimestamp = null; // 핑퐁 방지: 자기가 마지막으로 쓴 timestamp
+
+    // IndexedDB 가용성 체크 (프라이빗 브라우징에서 사용 불가 시 localStorage 폴백)
+    let isIndexedDBAvailable = true;
+    try {
+      const testReq = indexedDB.open('__idb_test__');
+      testReq.onerror = () => { isIndexedDBAvailable = false; };
+      testReq.onsuccess = () => { testReq.result.close(); indexedDB.deleteDatabase('__idb_test__'); };
+    } catch (e) {
+      isIndexedDBAvailable = false;
+    }
 
     /**
      * Google 로그인
@@ -10009,6 +10043,9 @@
      */
     async function logout() {
       try {
+        // 로그아웃 전 현재 데이터를 localStorage에 덤프 (비로그인 상태 대비)
+        _doSaveStateLocalOnly();
+
         await window.firebaseSignOut(window.firebaseAuth);
         appState.user = null;
         appState.syncStatus = 'offline';
@@ -10042,20 +10079,11 @@
 
       try {
         showToast('🔄 동기화 갱신 중...', 'info');
-        // 로컬 변경사항을 localStorage에만 저장 (Firebase는 loadFromFirebase에서 처리)
+        // 디바운스 타이머 취소 (loadFromFirebase에서 병합 후 syncToFirebase 호출)
         if (saveStateTimeout) {
           clearTimeout(saveStateTimeout);
           saveStateTimeout = null;
         }
-        localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
-        localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
-        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-        localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
-        localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
-          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
-        localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
-        localStorage.setItem('navigator-theme', appState.theme);
         // 클라우드에서 가져와 병합 후 업로드 (loadFromFirebase 내에서 syncToFirebase 호출)
         await loadFromFirebase();
         recomputeTodayStats();
@@ -10136,6 +10164,7 @@
         createSyncBackup();
 
         const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
+        const writeTimestamp = new Date().toISOString();
         // { merge: true } — 텔레그램 봇 등 외부에서 추가한 필드(events 등) 보존
         await window.firebaseSetDoc(userDoc, {
           tasks: appState.tasks,
@@ -10153,8 +10182,11 @@
           theme: appState.theme,
           deletedIds: appState.deletedIds,
           trash: appState.trash,
-          lastUpdated: new Date().toISOString()
+          lastUpdated: writeTimestamp
         }, { merge: true });
+
+        // 핑퐁 방지: 자기가 쓴 timestamp 기록 → onSnapshot에서 자기 것인지 판별
+        lastOwnWriteTimestamp = writeTimestamp;
 
         appState.syncStatus = 'synced';
         appState.lastSyncTime = new Date();
@@ -10600,8 +10632,7 @@
               today: mergedToday,
               settings: mergedRhythmSettings
             };
-            // localStorage만 저장 (아래 syncToFirebase()에서 전체 동기화됨)
-            localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+            // Firestore IndexedDB가 캐시 담당 → localStorage 캐싱 불필요
           }
           // 통근 트래커 병합
           if (data.commuteTracker) {
@@ -10614,12 +10645,10 @@
             const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
             appState.commuteTracker.trips = mergedTrips;
             appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
-            localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
           }
           // 완료 기록 영구 로그 병합
           if (data.completionLog) {
             appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
-            localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
           }
           // 주간 계획 병합
           if (data.weeklyPlan) {
@@ -10633,18 +10662,7 @@
             appState.theme = data.theme;
           }
 
-          // 로컬에도 저장
-          localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
-          localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
-          localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
-          localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
-          localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
-          localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-          localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
-          localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
-          localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
-          localStorage.setItem('navigator-theme', appState.theme);
-          localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+          // Firestore IndexedDB가 캐시 담당 → localStorage 캐싱 불필요
 
           appState.syncStatus = 'synced';
 
@@ -10688,7 +10706,6 @@
             // Soft-Delete: 삭제 기록 병합 (merge 전에 수행)
             if (data.deletedIds) {
               appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
-              localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
             }
             // 휴지통 실시간 병합
             if (Array.isArray(data.trash)) {
@@ -10701,17 +10718,14 @@
                 }
               });
               appState.trash = Array.from(trashMap.values());
-              localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
             }
             if (data.tasks) {
               // 태스크별 병합 (deletedIds 전달하여 삭제 항목 제외)
               const cloudTasks = validateTasks(data.tasks);
               appState.tasks = mergeTasks(appState.tasks, cloudTasks, appState.deletedIds.tasks);
-              localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
             }
             if (data.settings) {
               appState.settings = { ...appState.settings, ...data.settings };
-              localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
             }
             if (data.streak) {
               const cloudStreak = data.streak;
@@ -10722,21 +10736,16 @@
                 current: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
                   ? appState.streak.current : cloudStreak.current
               };
-              localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
             }
             // 템플릿: ID 기반 병합 (deletedIds 전달)
             appState.templates = mergeById(appState.templates, data.templates, appState.deletedIds.templates);
-            localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
             if (data.availableTags) {
               appState.availableTags = [...new Set([...(appState.availableTags || []), ...data.availableTags])];
-              localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
             }
             // 본업 프로젝트: ID 기반 병합 (deletedIds 전달)
             appState.workProjects = mergeById(appState.workProjects, data.workProjects, appState.deletedIds.workProjects);
-            localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
             // 본업 템플릿: ID 기반 병합 (deletedIds 전달)
             appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates, appState.deletedIds.workTemplates);
-            localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
             // 라이프 리듬 병합 (필드별)
             if (data.lifeRhythm) {
               const cloudRhythm = data.lifeRhythm;
@@ -10776,25 +10785,20 @@
                 today: mergedToday,
                 settings: mergedRhythmSettingsRT
               };
-              // localStorage만 저장 (Firebase 재기록 방지 - 핑퐁 루프 차단)
-              localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+              // Firestore IndexedDB가 캐시 담당 → localStorage 캐싱 불필요
             }
-            // 완료 기록 영구 로그 병합 (Firebase 재기록 방지)
+            // 완료 기록 영구 로그 병합
             if (data.completionLog) {
               appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
-              localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
             }
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
-              localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
             }
             if (data.shuttleSuccess !== undefined) {
               appState.shuttleSuccess = data.shuttleSuccess;
-              localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
             }
             if (data.theme) {
               appState.theme = data.theme;
-              localStorage.setItem('navigator-theme', appState.theme);
             }
 
             appState.lastSyncTime = cloudUpdated;
@@ -10802,11 +10806,7 @@
 
             // 오늘 통계 재계산 + 오래된 완료 태스크 정리
             recomputeTodayStats();
-            const cleanedCount = cleanupOldCompletedTasks();
-            // cleanup으로 태스크가 제거되었으면 localStorage에 반영
-            if (cleanedCount > 0) {
-              localStorage.setItem('navigator-tasks', JSON.stringify(appState.tasks));
-            }
+            cleanupOldCompletedTasks();
 
             renderStatic();
             updateSyncIndicator();
@@ -10816,6 +10816,12 @@
               isFirstRealtimeLoad = false;
             } else {
               showToast('📲 다른 기기에서 변경사항 수신됨', 'success');
+            }
+
+            // 핑퐁 방지 재업로드: 다른 기기에서 온 변경이면 병합 결과를 Firebase에 재업로드
+            // 자기가 쓴 것(lastOwnWriteTimestamp)이면 스킵 → 무한 루프 차단
+            if (data.lastUpdated && data.lastUpdated !== lastOwnWriteTimestamp) {
+              syncToFirebase(); // 디바운스 적용
             }
           }
         }
@@ -12193,7 +12199,9 @@
      */
     function saveTemplates() {
       try {
-        localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
+        if (!appState.user) {
+          localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
+        }
         // Firebase 동기화 (로그인된 경우)
         if (appState.user) {
           syncToFirebase();
@@ -14988,7 +14996,9 @@
           appState.streak.best = appState.streak.current;
         }
 
-        localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        if (!appState.user) {
+          localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        }
 
         if (appState.streak.current > 1) {
           showToast(`🔥 ${appState.streak.current}일 연속 달성!`, 'success');
@@ -15001,7 +15011,10 @@
      */
     function saveCompletionLog() {
       try {
-        localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+        if (!appState.user) {
+          localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
+        }
+        // 로그인 사용자는 syncToFirebase()로 Firestore에 저장됨 (_doSaveState 경유)
       } catch (e) {
         console.error('완료 로그 저장 실패:', e);
       }
@@ -19972,7 +19985,9 @@
     // ============================================
 
     function saveCommuteTracker() {
-      localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+      if (!appState.user) {
+        localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+      }
       if (appState.user) { syncToFirebase(); }
     }
 
@@ -20516,7 +20531,9 @@
     }
 
     function saveLifeRhythm() {
-      localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+      if (!appState.user) {
+        localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+      }
       // 라이프 리듬 변경 시 Firebase에도 동기화
       if (appState.user) {
         syncToFirebase();
@@ -21113,7 +21130,10 @@
       };
 
       appState.workTemplates.push(template);
-      localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+      if (!appState.user) {
+        localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+      }
+      if (appState.user) { syncToFirebase(); }
       showToast('템플릿 저장됨', 'success');
     }
     window.saveAsTemplate = saveAsTemplate;
@@ -21566,7 +21586,9 @@
             };
 
             appState.workTemplates.push(template);
-            localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+            if (!appState.user) {
+              localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+            }
             syncToFirebase();
             showToast(`"${escapeHtml(template.name)}" 템플릿 가져오기 완료`, 'success');
             renderStatic();
@@ -22164,7 +22186,9 @@
      * 프로젝트 저장
      */
     function saveWorkProjects() {
-      localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+      if (!appState.user) {
+        localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
+      }
       // Firebase 동기화 (로그인된 경우)
       if (appState.user) {
         syncToFirebase();
@@ -22850,9 +22874,9 @@
     });
     updateOnlineStatus();
 
-    // 페이지 종료 시 즉시 저장 (디바운스된 저장이 남아있을 수 있음)
+    // 페이지 종료 시 localStorage만 동기 저장 (async Firebase는 브라우저가 기다리지 않음)
     window.addEventListener('beforeunload', () => {
-      saveStateImmediate();
+      _doSaveStateLocalOnly();
     });
 
     renderStatic();
@@ -22882,9 +22906,17 @@
     ];
     checkDeadlinesAndNotify(); // 초기 실행
 
-    // 반복 태스크 일일 초기화: 탭 포커스 시 체크
+    // 탭 전환/숨김 시 대기 중인 Firebase 동기화 즉시 실행 + 탭 복귀 시 일일 초기화
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
+      if (document.hidden) {
+        // 탭 전환/앱 최소화: 대기 중인 Firebase 동기화 즉시 플러시
+        if (appState.user && syncDebounceTimer) {
+          clearTimeout(syncDebounceTimer);
+          syncDebounceTimer = null;
+          _doSyncToFirebase();
+        }
+      } else {
+        // 탭 복귀: 반복 태스크 일일 초기화 체크
         let changed = false;
         if (checkDailyReset()) {
           recomputeTodayStats();
