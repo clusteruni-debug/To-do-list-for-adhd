@@ -9662,7 +9662,9 @@
         workProjects: {},
         templates: {},
         workTemplates: {}
-      }
+      },
+      // 휴지통: 삭제된 태스크 보관 (30일 후 자동 정리)
+      trash: []
     };
 
     // ============================================
@@ -9749,6 +9751,11 @@
         // 30일 이상 된 deletedIds 자동 정리
         cleanupOldDeletedIds();
 
+        // 휴지통 로드 + 30일 자동 정리
+        const parsedTrash = safeParseJSON('navigator-trash', null);
+        if (Array.isArray(parsedTrash)) appState.trash = parsedTrash;
+        cleanupOldTrash();
+
         // 오늘 완료한 작업 수 계산
         recomputeTodayStats();
 
@@ -9817,6 +9824,9 @@
 
         // Soft-Delete 추적 데이터 저장
         localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+
+        // 휴지통 저장
+        localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
 
         // Firebase 동기화 (로그인된 경우, 디바운스 적용)
         if (appState.user) {
@@ -10047,6 +10057,7 @@
           shuttleSuccess: appState.shuttleSuccess,
           theme: appState.theme,
           deletedIds: appState.deletedIds,
+          trash: appState.trash,
           lastUpdated: new Date().toISOString()
         }, { merge: true });
 
@@ -10405,6 +10416,19 @@
           // Soft-Delete: 삭제 기록 병합 (merge 전에 수행해야 삭제된 항목 필터링 가능)
           appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
 
+          // 휴지통 병합 (ID 기준 합집합, 더 최근 deletedAt 우선)
+          if (Array.isArray(data.trash)) {
+            const trashMap = new Map();
+            (appState.trash || []).forEach(t => trashMap.set(t.id, t));
+            data.trash.forEach(t => {
+              const existing = trashMap.get(t.id);
+              if (!existing || (t.deletedAt && (!existing.deletedAt || t.deletedAt > existing.deletedAt))) {
+                trashMap.set(t.id, t);
+              }
+            });
+            appState.trash = Array.from(trashMap.values());
+          }
+
           const cloudTasks = validateTasks(data.tasks || []);
           const localTasks = appState.tasks || [];
 
@@ -10570,6 +10594,19 @@
             if (data.deletedIds) {
               appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
               localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
+            }
+            // 휴지통 실시간 병합
+            if (Array.isArray(data.trash)) {
+              const trashMap = new Map();
+              (appState.trash || []).forEach(t => trashMap.set(t.id, t));
+              data.trash.forEach(t => {
+                const existing = trashMap.get(t.id);
+                if (!existing || (t.deletedAt && (!existing.deletedAt || t.deletedAt > existing.deletedAt))) {
+                  trashMap.set(t.id, t);
+                }
+              });
+              appState.trash = Array.from(trashMap.values());
+              localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
             }
             if (data.tasks) {
               // 태스크별 병합 (deletedIds 전달하여 삭제 항목 제외)
@@ -13249,14 +13286,19 @@
      * 작업 삭제
      */
     function deleteTask(id) {
-      if (!confirm('정말 삭제하시겠습니까?')) return;
+      if (!confirm('정말 삭제하시겠습니까? (휴지통에서 복원 가능)')) return;
 
+      const task = appState.tasks.find(t => t.id === id);
+      if (task) {
+        // 휴지통으로 이동 (30일 보관)
+        appState.trash.push({ ...task, deletedAt: new Date().toISOString() });
+      }
       // Soft-Delete: 삭제 기록 남기기 (동기화 시 부활 방지)
       appState.deletedIds.tasks[id] = new Date().toISOString();
       appState.tasks = appState.tasks.filter(t => t.id !== id);
       saveState();
       renderStatic();
-      showToast('삭제되었습니다', 'success');
+      showToast('휴지통으로 이동했습니다 (30일 보관)', 'success');
     }
 
     /**
@@ -13301,10 +13343,14 @@
     function bulkDeleteEvents() {
       const count = _eventBulkSelectedIds.size;
       if (count === 0) return;
-      if (!confirm(count + '개 이벤트를 삭제하시겠습니까?')) return;
+      if (!confirm(count + '개 이벤트를 삭제하시겠습니까? (휴지통에서 복원 가능)')) return;
 
       const now = new Date().toISOString();
       _eventBulkSelectedIds.forEach(id => {
+        const task = appState.tasks.find(t => t.id === id);
+        if (task) {
+          appState.trash.push({ ...task, deletedAt: now });
+        }
         appState.deletedIds.tasks[id] = now;
       });
       appState.tasks = appState.tasks.filter(t => !_eventBulkSelectedIds.has(t.id));
@@ -13325,6 +13371,75 @@
         _collapsedEventGroups.delete(groupId);
       } else {
         _collapsedEventGroups.add(groupId);
+      }
+      renderStatic();
+    }
+
+    /**
+     * 휴지통에서 태스크 복원
+     */
+    function restoreFromTrash(id) {
+      const idx = appState.trash.findIndex(t => t.id === id);
+      if (idx === -1) return;
+
+      const task = { ...appState.trash[idx] };
+      delete task.deletedAt;
+
+      // deletedIds에서도 제거 (동기화 시 다시 삭제되지 않도록)
+      delete appState.deletedIds.tasks[id];
+
+      appState.tasks.push(task);
+      appState.trash.splice(idx, 1);
+      saveState();
+      renderStatic();
+      showToast('"' + (task.title || '작업') + '" 복원되었습니다', 'success');
+    }
+
+    /**
+     * 휴지통에서 영구 삭제
+     */
+    function permanentDeleteFromTrash(id) {
+      if (!confirm('영구 삭제하면 복원할 수 없습니다. 진행하시겠습니까?')) return;
+      appState.trash = appState.trash.filter(t => t.id !== id);
+      saveState();
+      renderStatic();
+      showToast('영구 삭제되었습니다', 'info');
+    }
+
+    /**
+     * 휴지통 비우기
+     */
+    function emptyTrash() {
+      if (appState.trash.length === 0) return;
+      if (!confirm('휴지통을 비우면 ' + appState.trash.length + '개 항목이 영구 삭제됩니다. 진행하시겠습니까?')) return;
+      appState.trash = [];
+      saveState();
+      renderStatic();
+      showToast('휴지통을 비웠습니다', 'info');
+    }
+
+    /**
+     * 30일 이상 된 휴지통 항목 자동 정리
+     */
+    function cleanupOldTrash() {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const before = appState.trash.length;
+      appState.trash = appState.trash.filter(t => t.deletedAt && t.deletedAt > thirtyDaysAgo);
+      if (appState.trash.length < before) {
+        console.log('[trash] ' + (before - appState.trash.length) + '개 만료 항목 정리');
+      }
+    }
+
+    /**
+     * 이벤트 그룹별 전체 선택
+     */
+    function toggleEventGroupSelect(taskIds) {
+      // taskIds 배열의 모든 항목이 이미 선택되어 있으면 해제, 아니면 전체 선택
+      const allSelected = taskIds.every(id => _eventBulkSelectedIds.has(id));
+      if (allSelected) {
+        taskIds.forEach(id => _eventBulkSelectedIds.delete(id));
+      } else {
+        taskIds.forEach(id => _eventBulkSelectedIds.add(id));
       }
       renderStatic();
     }
@@ -14264,7 +14379,8 @@
           workTemplates: appState.workTemplates,
           lifeRhythm: appState.lifeRhythm,
           weeklyPlan: appState.weeklyPlan,
-          completionLog: appState.completionLog
+          completionLog: appState.completionLog,
+          trash: appState.trash
         };
 
         const json = JSON.stringify(data, null, 2);
@@ -14400,6 +14516,15 @@
             // 주간 계획 병합
             if (data.weeklyPlan) {
               appState.weeklyPlan = data.weeklyPlan;
+            }
+            // 휴지통 병합
+            if (Array.isArray(data.trash)) {
+              const trashMap = new Map();
+              (appState.trash || []).forEach(t => trashMap.set(t.id, t));
+              data.trash.forEach(t => {
+                if (!trashMap.has(t.id)) trashMap.set(t.id, t);
+              });
+              appState.trash = Array.from(trashMap.values());
             }
             saveState();
             recomputeTodayStats();
@@ -16262,10 +16387,15 @@
                   const renderGroup = (groupId, title, icon, events) => {
                     if (events.length === 0) return '';
                     const isCollapsed = _collapsedEventGroups.has(groupId);
+                    const groupIds = events.map(e => e.id);
+                    const allChecked = _eventBulkSelectMode && groupIds.every(id => _eventBulkSelectedIds.has(id));
                     return `
                       <div class="events-group">
                         <div class="events-group-header" onclick="toggleEventGroup('${groupId}')">
-                          <span>${icon} ${title} (${events.length})</span>
+                          <span>
+                            ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([' + groupIds.join(',') + '])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                            ${icon} ${title} (${events.length})
+                          </span>
                           <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
                         </div>
                         <div class="events-list ${isCollapsed ? 'collapsed' : ''}">
@@ -16310,6 +16440,40 @@
                     </div>
                   </div>
                 ` : ''}
+
+                ${(() => {
+                  const eventTrash = appState.trash.filter(t => t.category === '부업');
+                  if (eventTrash.length === 0) return '';
+                  const isCollapsed = _collapsedEventGroups.has('trash');
+                  return `
+                    <div class="events-group" style="margin-top:16px">
+                      <div class="events-group-header" onclick="toggleEventGroup('trash')" style="color:var(--text-muted)">
+                        <span>🗑 휴지통 (${eventTrash.length})</span>
+                        <span style="display:flex;align-items:center;gap:8px">
+                          <button onclick="event.stopPropagation(); emptyTrash()" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-muted);cursor:pointer;min-height:44px" aria-label="휴지통 비우기">비우기</button>
+                          <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
+                        </span>
+                      </div>
+                      <div class="events-list ${isCollapsed ? 'collapsed' : ''}">
+                        ${eventTrash.sort((a, b) => (b.deletedAt || '').localeCompare(a.deletedAt || '')).map(task => {
+                          const deletedDate = task.deletedAt ? new Date(task.deletedAt) : null;
+                          const deletedStr = deletedDate ? deletedDate.toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) + ' 삭제' : '';
+                          const daysLeft = task.deletedAt ? Math.max(0, 30 - Math.floor((Date.now() - new Date(task.deletedAt).getTime()) / (1000*60*60*24))) : 30;
+                          return '<div class="event-card" style="opacity:0.7">' +
+                            '<div class="event-card-main">' +
+                              '<div class="event-title">' + escapeHtml(task.title) + '</div>' +
+                              '<div class="event-meta-info" style="font-size:11px;color:var(--text-muted)">' + deletedStr + ' · ' + daysLeft + '일 후 영구삭제</div>' +
+                            '</div>' +
+                            '<div class="event-actions">' +
+                              '<button class="btn btn-small btn-undo" onclick="restoreFromTrash(' + task.id + ')" aria-label="복원" title="복원">↩</button>' +
+                              '<button class="btn btn-small btn-delete" onclick="permanentDeleteFromTrash(' + task.id + ')" aria-label="영구삭제" title="영구삭제">✕</button>' +
+                            '</div>' +
+                          '</div>';
+                        }).join('')}
+                      </div>
+                    </div>
+                  `;
+                })()}
               `;
             })()}
           </div>
@@ -17741,6 +17905,7 @@
       quickAdd, detailedAdd, completeTask, uncompleteTask, editTask, cancelEdit, deleteTask,
       // 이벤트 일괄 선택
       toggleEventBulkSelect, toggleEventSelection, toggleEventSelectAll, bulkDeleteEvents, toggleEventGroup,
+      toggleEventGroupSelect, restoreFromTrash, permanentDeleteFromTrash, emptyTrash,
       handleGo, toggleTaskList, toggleCompletedTasks, toggleDetailedAdd,
       updateDetailedTaskCategory, updateDetailedTaskRepeat,
       // 터치/스와이프

@@ -16,6 +16,20 @@
   - 접근성: aria-label, 44px 터치 타겟
   - XSS 방어: escapeHtml() 적용
 
+- **휴지통 기능 (삭제 태스크 복원)**
+  - `appState.trash` 배열 추가 — 삭제된 태스크 30일 보관
+  - `deleteTask()`, `bulkDeleteEvents()` → 태스크를 trash로 이동 (기존: 즉시 소멸)
+  - `restoreFromTrash(id)` — 복원 시 deletedIds에서도 제거 (동기화 부활 방지)
+  - `permanentDeleteFromTrash(id)`, `emptyTrash()` — 영구 삭제
+  - `cleanupOldTrash()` — 30일 만료 자동 정리 (loadState 시 실행)
+  - localStorage + Firebase 동기화 (실시간 병합 포함)
+  - export/import에 trash 포함
+  - 이벤트 탭 하단 🗑 휴지통 섹션: 삭제일, 남은 보관일 표시, 복원/영구삭제 버튼
+
+- **이벤트 일괄 삭제 — 그룹별 선택 기능**
+  - 선택 모드에서 각 그룹 헤더에 체크박스 추가
+  - 그룹 체크박스 클릭 시 해당 그룹 전체 선택/해제
+
 - **이벤트 탭 그룹 재편 + 접기 기능**
   - 그룹 변경: 기한초과/오늘/3일이내/여유 → 긴급(D-1이하)/마감전(D-2~D-5)/미제출/제출완료
   - 모든 그룹 헤더 클릭 시 접기/펼치기 (▼/▶ 토글)
