@@ -16,6 +16,11 @@
   - 접근성: aria-label, 44px 터치 타겟
   - XSS 방어: escapeHtml() 적용
 
+- **복약 트래커 레이아웃 개선**
+  - `medication-slots` flex → `grid-template-columns: 1fr 1fr` (2열 고정 그리드)
+  - PC에서 3+1 → 2+2, 모바일에서 1+1+1+1 → 2+2로 통일
+  - `med-label` ellipsis 제거 → 텍스트 자연 줄바꿈 허용
+
 ### 커밋 이력
 ```
 5a38824 feat: 이벤트 탭 일괄 삭제(다중 선택) 기능
