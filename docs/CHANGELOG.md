@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-08] (세션 21)
-> 📦 `navigator-v5.html`, `js/commute.js`(신규), `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +1100/-650 | 🗄️ DB: 없음
+> 📦 `navigator-v5.html`, `js/commute.js`(신규), `js/rhythm.js`(신규), `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +2700/-2900 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **리팩토링 Prompt 1: ID 생성 방식 교체 (Date.now → crypto.randomUUID)**
@@ -55,16 +55,25 @@ hash type: 메시지
   - `<script src="js/commute.js"></script>` 태그 추가
   - 의존성: appState, renderStatic, syncToFirebase, showToast, escapeHtml, getLocalDateStr, generateId
 
+- **리팩토링 Prompt 6: 모듈 분리 — 라이프 리듬 → js/rhythm.js**
+  - 30개 리듬/복약 함수를 `js/rhythm.js`로 분리 (~1150줄)
+  - `mergeRhythmHistory` (Firebase 병합 영역)도 함께 이동
+  - navigator-v5.html에서 ~1180줄 제거
+  - `getLocalDateStr`/`getLocalDateTimeStr` 공유 유틸리티는 HTML 유지
+  - **스크립트 아키텍처 개선**: 메인 `<script>`를 함수 정의부 / 초기화부로 분할
+    - 외부 모듈(commute.js, rhythm.js)을 두 파트 사이에 배치
+    - `loadState()` 호출 시점에 모든 외부 함수 사용 가능 (초기화 시점 버그 수정)
+
 ### 커밋
 ```
 158ba60 refactor: Date.now() ID 생성을 crypto.randomUUID()로 교체
 a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
 39cb7a2 docs: 핵심 테스트 시나리오 CLAUDE.md 문서화 (Prompt 3)
 87079e3 docs: CHANGELOG 메타데이터 블록 구조 개선 (Prompt 4)
+1d2869e refactor: 통근 트래커 모듈 분리 js/commute.js (Prompt 5)
 ```
 
 ### 다음 작업
-- 리팩토링 Prompt 6: 모듈 분리 — 라이프 리듬 → js/rhythm.js
 - 리팩토링 Prompt 7: renderStatic 부분 렌더링 최적화
 
 ---
