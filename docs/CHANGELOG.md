@@ -1,6 +1,27 @@
 # CHANGELOG
 
+<!--
+## 세션 엔트리 템플릿
+각 세션은 아래 형식을 따릅니다.
+
+## [YYYY-MM-DD] (세션 N)
+> 📦 파일: `file1`, `file2` | 📊 +insertions/-deletions | 🗄️ DB: 없음
+
+### 작업 내용
+- **기능/수정 제목**
+  - 상세 내용
+
+### 커밋
+```
+hash type: 메시지
+```
+
+### 다음 작업
+- 항목
+-->
+
 ## [2026-02-08] (세션 21)
+> 📦 `navigator-v5.html`, `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +598/-136 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **리팩토링 Prompt 1: ID 생성 방식 교체 (Date.now → crypto.randomUUID)**
@@ -21,15 +42,27 @@
 - **리팩토링 Prompt 3: 핵심 테스트 시나리오 CLAUDE.md 문서화**
   - 10개 카테고리 × 체크리스트 형식: Task CRUD, 반복 작업, Firebase 동기화, ID 호환성, 본업 프로젝트, 라이프 리듬, 통근 트래커, UI 렌더링, 데이터 내보내기/가져오기, 엣지 케이스
   - 수정 범위에 해당하는 항목만 선택 검증하는 방식 (전수 불필요)
-  - 보안 체크리스트 섹션 바로 앞에 배치
+
+- **리팩토링 Prompt 4: CHANGELOG 메타데이터 블록 구조 개선**
+  - 세션별 메타데이터 블록(파일/라인변경/DB) 추가
+  - 세션 템플릿 가이드 상단 배치
+  - 섹션명 통일: 작업 내용 / 커밋 / 다음 작업
+
+### 커밋
+```
+158ba60 refactor: Date.now() ID 생성을 crypto.randomUUID()로 교체
+a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
+39cb7a2 docs: 핵심 테스트 시나리오 CLAUDE.md 문서화 (Prompt 3)
+```
 
 ### 다음 작업
-- 리팩토링 Prompt 4: CHANGELOG 메타데이터 블록 구조 개선
-- 리팩토링 Prompt 5~7 순차 진행
+- 리팩토링 Prompt 5: 모듈 분리 — 통근 트래커
+- 리팩토링 Prompt 6~7 순차 진행
 
 ---
 
 ## [2026-02-07] (세션 20)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음 (Firestore 초기화 방식 변경)
 
 ### 작업 내용
 - **크로스 디바이스 동기화 수정 (Firestore 단일 진실 소스)**
@@ -56,6 +89,7 @@
 ---
 
 ## [2026-02-07] (세션 19)
+> 📦 `navigator-v5.html` | 📊 12 커밋 | 🗄️ DB: `appState.trash` 필드 추가
 
 ### 작업 내용
 - **P0 버그 수정: 반복 태스크 일일 초기화 saveState() 누락**
@@ -144,7 +178,7 @@
   - 날짜 변경 시 기존 날짜에서 제거 → 새 날짜로 이동
   - `parseTimeInput()` 재사용 (1430, 930 등 간편 입력 지원)
 
-### 커밋 이력
+### 커밋
 ```
 e305841 feat: 히스토리 완료 날짜/시간 수정 기능
 2977b4d fix: 히스토리 개별 삭제 + 제출완료 그룹 체크박스
@@ -160,19 +194,14 @@ f34ad44 feat: 휴지통 복원 기능 + 이벤트 그룹별 선택
 530b898 fix: 반복 태스크 일일 초기화 saveState() 누락 수정 (모바일 데이터 유실 방지)
 ```
 
-### 상태
-- ✅ Phase 1 완료 (saveState 누락 수정)
-- ✅ Phase 2 완료 (이벤트 일괄 삭제 + 휴지통 + 그룹 재편)
-- ✅ Phase 3 완료 (UX 개선 5건: 컬러바, 브레인 덤프, 포모도로 연결, 스트릭, 30일 리듬 통계)
-- ✅ Phase 4 완료 (히스토리 삭제/수정 + 제출완료 그룹 체크박스)
-
-### 다음에 할 것
+### 다음 작업
 - P2: SVG 아이콘 교체
 - Supabase RLS 확인 (대시보드에서 수동 확인 필요)
 
 ---
 
 ## [2026-02-06] (세션 18)
+> 📦 `navigator-v5.html` | 📊 5 커밋 | 🗄️ DB: Supabase `telegram_messages` 읽기/아카이브
 
 ### 작업 내용
 - **P0 버그 수정: 텔레그램 연동 2건**
@@ -217,18 +246,14 @@ dc929e8 refactor: 텔레그램 이벤트 조회를 Supabase 직접 조회로 변
 dcf9f0c feat: 텔레그램 배지 클릭 → 이벤트 목록 모달 + P0 동기화 버그 수정
 ```
 
-### 상태
-- ✅ P0 버그 3건 + 텔레그램 이벤트 연동 기능 완료
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB: Supabase `telegram_messages` 읽기/아카이브 (anon key, RLS 보호)
-
-### 다음에 할 것
+### 다음 작업
 - P2: SVG 아이콘 교체
 - P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
 
 ---
 
 ## [2026-02-06] (세션 17)
+> 📦 `navigator-v5.html` | 📊 6 커밋 | 🗄️ DB: 없음 (startDate, description optional 필드)
 
 ### 작업 내용
 - **P0 버그 3건 수정**
@@ -307,18 +332,14 @@ bed5f0f feat: 텔레그램 연동 상태 표시 + 통근 히스토리 탭
 c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아웃, 반복 태스크 중복
 ```
 
-### 상태
-- ✅ 13개 계획 이슈 + 검토 수정 + 일상 탭 개선 완료
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: 없음 (startDate, description은 optional 필드)
-
-### 다음에 할 것
+### 다음 작업
 - P2: SVG 아이콘 교체
 - P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
 
 ---
 
 ## [2026-02-06] (세션 16)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음 (completionLog 기존 구조 유지)
 
 ### 작업 내용
 - **캘린더 과거 날짜 완료 기록 추가 기능**
@@ -354,17 +375,14 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - `showTimeInputModal()`: 기존 모달 닫고 새로 열어 중첩 방지
   - setInterval 중복 등록 방지: `window._navIntervals`로 ID 추적, 재실행 시 기존 정리
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: 없음 (completionLog 기존 구조 `{t, c, at, rv}` 그대로)
-
-### 다음에 할 것
+### 다음 작업
 - P2: SVG 아이콘 교체
 - P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
 
 ---
 
 ## [2026-02-06] (세션 15)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **PC 4K 레이아웃 균등 재배치 (UX 대폭 개선)**
@@ -380,13 +398,10 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - CENTER "할 일": 마감 임박 → Next Action → 빠른 추가 → 퀵 필터 → 작업 목록 → 상세 폼
   - RIGHT "집중 도구": 포모도로 → 포커스 모드 → 월요일 리마인더 → PWA
 
-### 상태
-- 완료: 4K 4열 CSS + 카테고리별 콘텐츠 재그룹핑
-- 다음: 브라우저에서 확인
-
 ---
 
 ## [2026-02-06] (세션 14)
+> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `deletedIds` 필드 추가
 
 ### 작업 내용
 - **Soft-Delete 동기화 버그 수정 (P0)**
@@ -419,14 +434,10 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - `_doSaveState()`: commuteTracker 중복 저장 제거
   - `_doSaveState()`: streak, templates localStorage 저장 누락 추가
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: Firebase users 문서에 `deletedIds` 필드 추가
-- 검증: 기기 간 삭제 동기화, 점심약 슬롯 2개 표시, 과거 기록 수정/삭제
-
 ---
 
 ## [2026-02-05] (세션 13)
+> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `completionLog` 필드 추가
 
 ### 작업 내용
 - **태스크 완료 영구 기록 (completionLog) — 장기 통계 분석**
@@ -461,13 +472,6 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - `getCompletionMap()`/`getCompletionLogEntries()`: 압축 데이터 지원
   - 앱 시작 시 1일 1회 자동 실행
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: Firebase users 문서에 `completionLog` 필드 추가
-- 용량 추정: 하루 5건 기준 1년 ~146KB, 3년 ~438KB (Firestore 1MB 한도 안전)
-- 기존 `cleanupOldCompletedTasks()` 동작 유지 (appState.tasks 정리) — completionLog는 별도 영구 보존
-- 기존 사용자: completionLog 없어도 `|| {}` 처리로 크래시 없음
-
 ### 버그 수정 (세션 13 추가)
 - **일상/전체 작업 목록 완료 태스크 사라짐 버그 수정**
   - 원인: `getTodayCompletedTasks()`가 오늘 완료한 태스크만 반환 → 어제 완료 태스크가 pending에도 completedTasks에도 안 보이는 "블랙홀"
@@ -478,7 +482,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - 기존 데이터 마이그레이션: loadLifeRhythm, mergeRhythmHistory, loadFromFirebase, startRealtimeSync 4곳 자동 변환
   - 기존 `med_afternoon` 기록 → `med_afternoon_adhd`로 이전 (ADHD약이 필수이므로)
 
-### 다음에 할 것
+### 다음 작업
 - P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
 - P1: 동기화 백업 3개 로테이션
 - P2: SVG 아이콘 교체
@@ -486,6 +490,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
 ---
 
 ## [2026-02-05] (세션 12)
+> 📦 `navigator-v5.html` | 🗄️ DB: `lifeRhythm.medications` + `settings.medicationSlots` 추가
 
 ### 작업 내용
 - **복약/영양제 트래커 — 라이프 리듬 통합 (P1)**
@@ -507,13 +512,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - 대시보드: 7일 필수/선택 복용률 + 연속일 통계
   - hasAnyData에 복약 기록 포함 (복약만 있는 날도 히스토리에 표시)
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: lifeRhythm.today/history에 medications 필드, settings에 medicationSlots 추가
-- 기존 사용자: medications 필드 없어도 `|| {}` 처리로 크래시 없음
-- 슬롯 삭제 시 기존 기록은 유지 (데이터 안전)
-
-### 다음에 할 것
+### 다음 작업
 - P1: 라이프 리듬 히스토리 30일 이후 자동 정리
 - P1: 동기화 백업 3개 로테이션
 - P2: SVG 아이콘 교체
@@ -521,6 +520,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
 ---
 
 ## [2026-02-05] (세션 11)
+> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `commuteTracker` 필드 추가
 
 ### 작업 내용
 - **통근 트래커 탭 신규 추가 (P1)**
@@ -542,13 +542,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - XSS 방어: 모든 사용자 입력 escapeHtml() 적용
   - 접근성: aria-label, 최소 터치타겟 44px
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: commuteTracker 필드 추가 (Firebase users 문서)
-- localStorage 키: `navigator-commute-tracker`
-- 시간 데이터는 lifeRhythm에 저장, 루트/메타데이터만 commuteTracker에 저장 (중복 없음)
-
-### 다음에 할 것
+### 다음 작업
 - Phase 4: 날씨 조건별 분석, CSV 내보내기
 - P1: 라이프 리듬 히스토리 30일 이후 자동 정리
 - P2: SVG 아이콘 교체
@@ -556,6 +550,7 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
 ---
 
 ## [2026-02-05] (세션 10)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **본업 프로젝트 상세 헤더 레이아웃 개선**
@@ -582,18 +577,13 @@ c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아�
   - `saveStateImmediate()`: 앱 종료 전 디바운스 타이머 즉시 실행
   - 효과: 빠른 연속 변경 시 Firebase 쓰기 1회로 통합 (비용/부하 감소)
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: 없음
-- 즉시 동기화 경로: `loadFromFirebase()` 머지 후, 온라인 복귀 시
-- 디바운스 동기화 경로: `_doSaveState()`, `saveLifeRhythm()`, `saveWorkProjects()`, 템플릿 저장
-
-### 다음에 할 것
+### 다음 작업
 - P1: 라이프 리듬 히스토리 30일 이후 자동 정리
 - P1: 동기화 백업 3개 로테이션
 - P2: SVG 아이콘 교체
 
 ## [2026-02-05] (세션 9)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **반복 태스크(daily/weekdays) 날짜 변경 자동 초기화**
@@ -640,17 +630,12 @@ syncToFirebase() 호출 시:
   5. updateDataCounts() → 기록
 ```
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: 없음
-- 보호 범위: tasks, workProjects, templates, workTemplates 등 전체 데이터 타입
-- `_doSaveState()`, `saveWorkProjects()`, 온라인 복귀 이벤트 모두 `syncToFirebase()` 경유 → 자동 보호
-
-### 다음에 할 것
+### 다음 작업
 - 반복 태스크(daily/weekdays) 자동 초기화 (오늘의 리듬)
 - SVG 아이콘 교체 (P2)
 
 ## [2026-02-05] (세션 8 - 전면 개선)
+> 📦 `navigator-v5.html`, `sw.js` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **XSS 잔여 3곳 수정**: subcatData.name, sub.name, stageName confirm에 escapeHtml 적용
@@ -677,17 +662,13 @@ syncToFirebase() 호출 시:
 - 모바일(390), 데스크탑(1440), 4K(3840) 스크린샷 검증 완료
 - 포모도로, 라이프 리듬, 필터, 더보기 탭, 색상 대비 등 모든 신규 기능 정상 확인
 
-### 이슈/메모
-- 수정 파일: navigator-v5.html, sw.js, docs/CHANGELOG.md
-- DB 변경: 없음
-- 동기화: localStorage 1차 + Firebase onSnapshot 실시간 + 오프라인→온라인 자동 동기화
-
-### 다음에 할 것
+### 다음 작업
 - SVG 아이콘 교체 (P2)
 
 ---
 
 ## [2026-02-05] (세션 8)
+> 📦 `navigator-v5.html`, `CLAUDE.md` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **UTC 날짜 버그 전수 수정**: 캘린더, 히스토리, 자산 내보내기, 백업 파일명 등 14곳의 `toISOString().split('T')[0]` → `getLocalDateStr()` 교체
@@ -713,17 +694,13 @@ syncToFirebase() 호출 시:
   - task-check-btn 5곳에 aria-label="작업 완료" 추가
   - Escape 키로 모달/드롭다운 닫기 기능 추가
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`, `CLAUDE.md`
-- DB 변경: 없음
-- JSON.parse 전수 점검 결과 10곳 모두 이미 try-catch 적용 완료
-
-### 다음에 할 것
+### 다음 작업
 - SVG 아이콘 교체 (P2)
 - 포모도로 통합 (P2)
 - 온보딩 가이드 (P1)
 
 ## [2026-02-04] (세션 7)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **본업 완료 로그 압축**: "✓ 완료" 로그가 누적되던 것을 "✓ N회 완료 (최근: M/D)" 형태로 요약 표시
@@ -732,17 +709,14 @@ syncToFirebase() 호출 시:
 - **진행률 섹션 제거**: 오늘의 진행률 + 카테고리별 현황 섹션 삭제
 - **마감 알림 → 헤더 통합**: 별도 섹션에서 헤더 🔔 아이콘 드롭다운으로 이동
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `docs/CHANGELOG.md`
-- DB 변경: 없음
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
+### 다음 작업
+- UTC 날짜 사용 부분 점검
 - SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+
+---
 
 ## [2026-02-04] (세션 6)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **중분류/소분류 완료 체크박스 추가**
@@ -757,17 +731,10 @@ syncToFirebase() 호출 시:
   - 소분류: 📅✏️ → ✏️📅 순서, 텍스트 '삭제' → 🗑️ 통일
   - 전 계층 ✏️→📅→🗑️→[추가] 순서 통일
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: 없음
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
-- SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+---
 
 ## [2026-02-04] (세션 5)
+> 📦 `navigator-v5.html`, `ROADMAP.md`, `.gitignore` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **내장 템플릿 하드코딩 제거 (보안)**
@@ -798,18 +765,10 @@ syncToFirebase() 호출 시:
   - `git rebase` + `force push`로 과거 커밋 history 완전 정리
   - GitHub에서 이전 커밋 접근 불가(404) 확인 완료
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html`, `ROADMAP.md`, `docs/CHANGELOG.md`, `.gitignore`
-- DB 변경: 없음
-- 사용자 데이터(Firebase/localStorage)는 UID 기반 비공개로 안전
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
-- SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+---
 
 ## [2026-02-04] (세션 4)
+> 📦 `navigator-v5.html` | 🗄️ DB: `workTemplates.stageNames` 필드 추가
 
 ### 작업 내용
 - **내장 템플릿 시스템 추가**
@@ -825,18 +784,10 @@ syncToFirebase() 호출 시:
   - 프로젝트 상세보기에서 슬랙복사 버튼
   - 진행 상태 포함한 체크리스트 텍스트 클립보드 복사
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: 없음 (workTemplates에 stageNames 필드 추가만)
-- 템플릿은 사용자 데이터(localStorage/Firebase)로 관리
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
-- SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+---
 
 ## [2026-02-04] (세션 3)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **대시보드 속성명 불일치 버그 수정**
@@ -859,17 +810,10 @@ syncToFirebase() 호출 시:
   - ±15분 이내 = 녹색(good), 그 외 = 빨강(bad)
   - "목표 대비" 수면 시간: 7시간 하드코딩 → 설정 기반 `targetSleepHours`로 개선
 
-### 이슈/메모
-- 수정 파일: `navigator-v5.html` (단일 파일)
-- DB 변경: 없음
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요
-- SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+---
 
 ## [2026-02-04] (세션 2)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - **본업 프로젝트 '보류' 기능 추가** (`fc38a74`)
@@ -885,28 +829,20 @@ syncToFirebase() 호출 시:
   - Firebase 머지 시 동률이면 로컬 데이터 우선 (`>=` → `>`)
   - 기존 UTC 날짜로 저장된 데이터 자동 보정 마이그레이션 추가
 
-### 프롬프트 요약
-- 본업 프로젝트에 archived와 유사한 패턴으로 '보류' 기능 요청
-- 오늘의 리듬이 초기화되는 버그 리포트 → UTC 날짜 문제 발견 및 수정
-
-### 이슈/메모
-- `toISOString().split('T')[0]`은 UTC 기준이라 한국 시간대에서 날짜 불일치 발생
-- 라이프 리듬 외 다른 기능(수익, 캘린더 등)에도 동일한 UTC 문제가 잠재적으로 존재할 수 있음
-
-### 다음에 할 것
-- 다른 기능의 UTC 날짜 사용 부분도 점검 필요 (수익 대시보드, 캘린더, 완료 히스토리 등)
-- SVG 아이콘 교체 (P2)
-- 접근성 개선 (P2)
-- 포모도로 통합 (P2)
+---
 
 ## [2026-02-04] (세션 1)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - 완료 태스크 일별 갱신 (오늘 완료만 표시, 오래된 완료 자동 정리)
 - 동기화 토스트 추가 (업로드 성공/다른 기기 수신 알림)
 - 멀티디바이스 동기화 핑퐁 루프 및 데이터 누락 수정
 
-## [2026-02-03]
+---
+
+## [2026-02-03] (세션 0)
+> 📦 `navigator-v5.html` | 🗄️ DB: 없음
 
 ### 작업 내용
 - 더보기 드롭다운 버그 수정
