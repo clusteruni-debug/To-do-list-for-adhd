@@ -9346,6 +9346,45 @@
     }
 
     /**
+     * 중복 항목 제거 (ID 기준)
+     * ID 타입 불일치(숫자 vs 문자열)로 병합 시 중복 생성된 항목을 정리
+     * 같은 ID가 여러 개면 updatedAt이 가장 최신인 것만 보존
+     */
+    function deduplicateAll() {
+      const dedup = (arr) => {
+        if (!Array.isArray(arr) || arr.length === 0) return arr;
+        const map = new Map();
+        for (const item of arr) {
+          const key = String(item.id);
+          const existing = map.get(key);
+          if (!existing) {
+            map.set(key, item);
+          } else {
+            // updatedAt이 더 최신인 쪽 보존
+            const existTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+            const itemTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
+            if (itemTime > existTime) map.set(key, item);
+          }
+        }
+        return Array.from(map.values());
+      };
+
+      const prevTaskCount = appState.tasks.length;
+      const prevWorkCount = appState.workProjects.length;
+
+      appState.tasks = dedup(appState.tasks);
+      appState.templates = dedup(appState.templates);
+      appState.workProjects = dedup(appState.workProjects);
+      appState.workTemplates = dedup(appState.workTemplates || []);
+      appState.trash = dedup(appState.trash || []);
+
+      const removed = (prevTaskCount - appState.tasks.length) + (prevWorkCount - appState.workProjects.length);
+      if (removed > 0) {
+        console.log(`[dedup] 중복 ${removed}개 제거 (tasks: ${prevTaskCount}→${appState.tasks.length}, workProjects: ${prevWorkCount}→${appState.workProjects.length})`);
+      }
+    }
+
+    /**
      * XSS 방지: HTML 이스케이핑
      */
     function escapeHtml(text) {
@@ -10267,6 +10306,9 @@
         // 기존 숫자 ID → 문자열 마이그레이션 (crypto.randomUUID 전환 호환)
         migrateNumericIds();
 
+        // 중복 항목 제거 (ID 타입 불일치 병합 버그로 생긴 중복 정리)
+        deduplicateAll();
+
         // 백업 리마인더 체크
         checkBackupReminder();
 
@@ -10618,8 +10660,10 @@
     function mergeTasks(localTasks, cloudTasks, deletedIds) {
       // deletedIds가 없으면 appState에서 가져오기
       const deleted = deletedIds || (appState.deletedIds && appState.deletedIds.tasks) || {};
-      const localMap = new Map(localTasks.map(t => [t.id, t]));
-      const cloudMap = new Map(cloudTasks.map(t => [t.id, t]));
+      // ID를 문자열로 정규화 — Map은 숫자/문자열 키를 다르게 취급하므로 타입 통일 필수
+      const normalizeId = (arr) => (arr || []).map(t => t.id !== undefined && typeof t.id !== 'string' ? { ...t, id: String(t.id) } : t);
+      const localMap = new Map(normalizeId(localTasks).map(t => [t.id, t]));
+      const cloudMap = new Map(normalizeId(cloudTasks).map(t => [t.id, t]));
       const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
       const merged = [];
 
@@ -10653,8 +10697,10 @@
      */
     function mergeById(localArr, cloudArr, deletedIds) {
       const deleted = deletedIds || {};
-      const localMap = new Map((localArr || []).map(p => [p.id, p]));
-      const cloudMap = new Map((cloudArr || []).map(p => [p.id, p]));
+      // ID를 문자열로 정규화 — Map은 숫자/문자열 키를 다르게 취급하므로 타입 통일 필수
+      const normalizeId = (arr) => (arr || []).map(p => p.id !== undefined && typeof p.id !== 'string' ? { ...p, id: String(p.id) } : p);
+      const localMap = new Map(normalizeId(localArr).map(p => [p.id, p]));
+      const cloudMap = new Map(normalizeId(cloudArr).map(p => [p.id, p]));
       const allIds = new Set([...localMap.keys(), ...cloudMap.keys()]);
       const merged = [];
 
@@ -11022,6 +11068,7 @@
 
           // 병합 완료 후 숫자 ID → 문자열 마이그레이션 (클라우드 데이터 호환)
           migrateNumericIds();
+          deduplicateAll();
           // 병합 완료 → 로드 잠금 해제 후 클라우드에 즉시 반영
           isLoadingFromCloud = false;
           updateDataCounts();
@@ -11162,6 +11209,7 @@
 
             // 숫자 ID → 문자열 ID 마이그레이션 (다른 기기에서 온 데이터 포함)
             migrateNumericIds();
+            deduplicateAll();
 
             // 오늘 통계 재계산 + 오래된 완료 태스크 정리
             recomputeTodayStats();
@@ -21210,12 +21258,14 @@
       }
     }
 
-    window.addEventListener('online', () => {
+    window.addEventListener('online', async () => {
       updateOnlineStatus();
-      // 온라인 복귀 시 즉시 동기화 (오프라인 중 쌓인 변경사항 반영)
+      // 온라인 복귀 시 클라우드 먼저 가져와서 병합 → 업로드 (loadFromFirebase 내부에서 syncToFirebase 호출)
+      // ⚠️ syncToFirebase만 호출하면 다른 기기의 오프라인 변경사항을 덮어쓰는 위험
       if (appState.user) {
         showToast('온라인 복귀 - 동기화 중...', 'success');
-        syncToFirebase(true);
+        await loadFromFirebase();
+        renderStatic();
       }
     });
     window.addEventListener('offline', () => {

@@ -49,8 +49,14 @@ hash type: 메시지
   - `role="main"` 메인 콘텐츠 랜드마크 (#root)
   - 작업 완료/삭제 시 스크린 리더 안내 (srAnnounce)
 
+- **동기화 중복 버그 수정 (본업/일상 항목 중복)**
+  - **근본 원인**: `mergeTasks()`/`mergeById()`에서 Map 키 타입 불일치 — 로컬(문자열 ID) vs 클라우드(숫자 ID)를 서로 다른 항목으로 인식
+  - `mergeTasks()`, `mergeById()` — 병합 전 `normalizeId()`로 ID를 문자열로 정규화
+  - `deduplicateAll()` 함수 추가 — ID 기준 중복 제거 (updatedAt 최신 우선)
+  - 앱 시작(`loadState`), Firebase 로드(`loadFromFirebase`), 실시간 동기화(`startRealtimeSync`) 3곳에서 호출
+
 ### 다음 작업
-- SVG 아이콘 + 접근성 개선 완료 ✅
+- 동기화 중복 수정 완료 ✅
 
 ---
 
