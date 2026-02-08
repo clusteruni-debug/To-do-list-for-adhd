@@ -36,7 +36,12 @@ hash type: 메시지
 
 ### 커밋
 ```
-(이번 커밋)
+0b1103c feat: SVG 아이콘 시스템 구축 + 이모지→SVG 교체 (탭/액션 버튼 36개)
+9b57bfc feat: 접근성 개선 심화 — aria-live, skip-nav, 포커스 관리, 시맨틱 랜드마크
+c3249d5 fix: 동기화 중복 버그 수정 — ID 타입 불일치 + online 핸들러 순서 교정
+3da6ada fix: P0+P1 버그 수정 — saveCompletedAt 따옴표 + 중복 함수 정의 3건 제거
+61e94e6 fix: 전체 버그 스캔 — P0×7 + P1×12 + P2×6 수정
+81397fa fix: 2차 검증 — XSS 11곳 + _summary 2곳 + _navFunctions ReferenceError 수정
 ```
 
 - **접근성 개선 심화 (WCAG 2.1 Level AA)**
@@ -87,7 +92,9 @@ hash type: 메시지
   - **`_navFunctions` 미정의 함수 10개 제거**: 외부 JS(commute.js/rhythm.js)에서 window에 직접 등록하므로 인라인에서 참조 불필요 → ReferenceError 방지
 
 ### 다음 작업
-- 전체 2차 버그 검증 완료 ✅
+- 전체 3차 최종 검증 완료 ✅ — 잔여 버그 0건 확인
+- SVG 아이콘 추가 교체 (P2, 대기)
+- 라이프 리듬 30일 장기 통계 ✅ 완료
 
 ---
 
