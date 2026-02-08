@@ -128,5 +128,11 @@ env/
 # 예: 개인 설정 파일, 비밀 키, 임시 파일 등
 backups/
 
+# Claude Code
+.claude/
+
+# 임시 파일
+all_funcs.txt
+
 # 세션 잠금
 .claude-lock
