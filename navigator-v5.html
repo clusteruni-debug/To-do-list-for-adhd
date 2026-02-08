@@ -15912,6 +15912,7 @@
 
           <!-- 실행 탭 -->
           <div class="tab-content ${appState.currentTab === 'action' ? 'active' : ''}">
+            ${appState.currentTab === 'action' ? `
             <!-- PC 3단 레이아웃 / 모바일 1단 -->
             <div class="pc-layout">
               <!-- 왼쪽 컬럼: 상태 + Next Action -->
@@ -16772,10 +16773,12 @@
                 ` : ''}
               </div>
             </div>
+            ` : ''}
           </div>
 
           <!-- 일정 탭 -->
           <div class="tab-content ${appState.currentTab === 'schedule' ? 'active' : ''}">
+            ${appState.currentTab === 'schedule' ? `
             <div class="schedule-filter">
               <button class="schedule-filter-btn ${appState.scheduleFilter === 'all' ? 'active' : ''}" onclick="setScheduleFilter('all')">
                 전체
@@ -16836,6 +16839,7 @@
                   `).join('')}
                 </div>
               </div>
+            ` : ''}
             ` : ''}
           </div>
 
@@ -17087,7 +17091,7 @@
                   `;
                 })()}
               `;
-            })()}
+            })() : ''}
           </div>
 
           <!-- 일상/가족 탭 -->
@@ -17264,7 +17268,7 @@
                   </div>
                 ` : ''}
               `;
-            })()}
+            })() : ''}
           </div>
 
 
@@ -17276,6 +17280,7 @@
 
           <!-- 대시보드 탭 -->
           <div class="tab-content ${appState.currentTab === 'dashboard' ? 'active' : ''}">
+            ${appState.currentTab === 'dashboard' ? `
             <div class="dashboard-section">
               <div class="dashboard-title">📈 오늘 요약</div>
               <div class="stats">
@@ -17867,10 +17872,12 @@
                 </div>
               `;
             })()}
+            ` : ''}
           </div>
 
           <!-- 전체 목록 탭 -->
           <div class="tab-content ${appState.currentTab === 'all' ? 'active' : ''}">
+            ${appState.currentTab === 'all' ? `
             <div class="all-tasks-header">
               <h2>📋 전체 작업 목록</h2>
               <div class="all-tasks-summary">
@@ -17957,6 +17964,7 @@
                 </div>
               </div>
             ` : ''}
+            ` : ''}
           </div>
 
           <!-- 히스토리 탭 -->
@@ -18037,7 +18045,7 @@
                 </div>
                 `}
               `;
-            })()}
+            })() : ''}
           </div>
 
           <!-- 온보딩 모달 -->
@@ -18497,15 +18505,6 @@
         const mode = getCurrentMode();
         modeTimeEl.textContent = getModeTimeRemaining(mode, hour, now);
       }
-
-      // 스크롤/포커스 복원
-      requestAnimationFrame(() => {
-        window.scrollTo(0, _scrollY);
-        if (_activeId) {
-          const el = document.getElementById(_activeId);
-          if (el) el.focus();
-        }
-      });
     }
 
     // ============================================
@@ -21223,13 +21222,20 @@
     function checkUrlImport() {
       const urlParams = new URLSearchParams(window.location.search);
       const importData = urlParams.get('import');
+      const autoImport = urlParams.get('autoImport') === 'true';
 
       if (importData) {
         try {
           // Unicode 안전한 Base64 디코딩
           const decoded = decodeURIComponent(escape(atob(importData)));
           const taskData = JSON.parse(decoded);
-          showImportConfirmModal(taskData);
+
+          if (autoImport) {
+            // 자동 추가 — 확인 모달 없이 바로 Task 생성
+            importTaskDirectly(taskData);
+          } else {
+            showImportConfirmModal(taskData);
+          }
 
           // URL에서 파라미터 제거 (히스토리 정리)
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -21237,6 +21243,38 @@
           console.error('Import 파싱 오류:', error);
           showToast('잘못된 import 데이터입니다', 'error');
         }
+      }
+    }
+
+    // autoImport용 — 확인 없이 바로 Task 추가
+    function importTaskDirectly(taskData) {
+      try {
+        const newTask = {
+          id: generateId(),
+          title: taskData.title || '이벤트 참여',
+          category: taskData.category || '부업',
+          estimatedTime: taskData.estimatedTime || 10,
+          expectedRevenue: taskData.expectedRevenue || null,
+          deadline: taskData.deadline || null,
+          description: taskData.description || null,
+          link: taskData.link || null,
+          completed: false,
+          pinned: false,
+          source: taskData.source || null,
+          createdAt: new Date().toISOString()
+        };
+
+        appState.tasks.unshift(newTask);
+        saveState();
+        renderStatic();
+        showToast('✅ Task가 자동으로 추가되었습니다!', 'success');
+
+        if (appState.user) {
+          syncToFirebase();
+        }
+      } catch (error) {
+        console.error('자동 Task 추가 오류:', error);
+        showToast('Task 추가 실패', 'error');
       }
     }
 
