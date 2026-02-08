@@ -9085,6 +9085,8 @@
     .commute-condition-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); font-size: 13px; cursor: pointer; min-height: 36px; transition: all 0.15s; }
     .commute-condition-btn.selected { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.1); color: var(--accent-primary); font-weight: 600; }
     @keyframes commuteSlideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    /* SVG 아이콘 시스템 */
+    .svg-icon { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -9240,6 +9242,41 @@
      */
     function generateId() {
       return crypto.randomUUID();
+    }
+
+    // ============================================
+    // 🎨 SVG 아이콘 시스템 (Lucide 스타일)
+    // ============================================
+    const SVG_ICONS = {
+      // 탭 네비게이션
+      target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/>',
+      briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+      dollar: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+      home: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+      menu: '<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>',
+      bus: '<rect x="4" y="3" width="16" height="13" rx="2"/><path d="M4 10h16"/><circle cx="8" cy="18" r="1.5" fill="currentColor"/><circle cx="16" cy="18" r="1.5" fill="currentColor"/>',
+      'bar-chart': '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+      calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+      list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+      'chevron-down': '<polyline points="6 9 12 15 18 9"/>',
+      // 액션 아이콘
+      edit: '<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+      trash: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+      plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      check: '<polyline points="20 6 9 17 4 12"/>',
+      bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+      clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      play: '<polygon points="6 3 20 12 6 21"/>',
+      pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+      search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+    };
+
+    /** SVG 아이콘 렌더링 — stroke 기반, currentColor 상속 */
+    function svgIcon(name, size = 18) {
+      const path = SVG_ICONS[name];
+      if (!path) return '';
+      return '<svg class="svg-icon" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
     }
 
     /**
@@ -12151,7 +12188,7 @@
               <div class="day-detail-date">${dateTitle}</div>
               <button onclick="addCompletionLogEntry('${selectedDate}')"
                 style="background:var(--accent-color);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:13px;cursor:pointer;white-space:nowrap;"
-                aria-label="이 날짜에 기록 추가">➕ 기록 추가</button>
+                aria-label="이 날짜에 기록 추가">${svgIcon('plus', 16)} 기록 추가</button>
             </div>
             <div class="day-detail-stats">
               <div class="day-detail-stat completed">✓ ${tasks.length}개 완료</div>
@@ -12202,7 +12239,7 @@
                       <div class="day-task-actions" style="display:flex;gap:4px;align-items:center;">
                         <button onclick="editCompletionLogEntry('${selectedDate}', ${task.logIndex})"
                           style="background:none;border:none;cursor:pointer;padding:4px;font-size:14px;"
-                          aria-label="기록 수정" title="수정">✏️</button>
+                          aria-label="기록 수정" title="수정">${svgIcon('edit', 14)}</button>
                         <button onclick="deleteCompletionLogEntry('${selectedDate}', ${task.logIndex})"
                           style="background:none;border:none;cursor:pointer;padding:4px;font-size:14px;"
                           aria-label="기록 삭제" title="삭제">❌</button>
@@ -12218,7 +12255,7 @@
               <div>이 날 완료한 작업이 없습니다</div>
               <button onclick="addCompletionLogEntry('${selectedDate}')"
                 style="margin-top:12px;background:var(--accent-color);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:14px;cursor:pointer;"
-                aria-label="이 날짜에 기록 추가">➕ 기록 추가</button>
+                aria-label="이 날짜에 기록 추가">${svgIcon('plus', 16)} 기록 추가</button>
             </div>
           `}
         </div>
@@ -15873,33 +15910,33 @@
           <!-- 탭 네비게이션 (5개 + 더보기) -->
           <div class="tab-nav">
             <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')" aria-label="오늘 탭">
-              🎯 오늘
+              ${svgIcon('target')} 오늘
             </button>
             <button class="tab-btn ${appState.currentTab === 'work' ? 'active' : ''}" onclick="switchTab('work')" aria-label="본업 탭">
-              💼 본업
+              ${svgIcon('briefcase')} 본업
             </button>
             <button class="tab-btn ${appState.currentTab === 'events' ? 'active' : ''}" onclick="switchTab('events')" aria-label="이벤트 탭">
-              💰 이벤트
+              ${svgIcon('dollar')} 이벤트
             </button>
             <button class="tab-btn ${appState.currentTab === 'life' ? 'active' : ''}" onclick="switchTab('life')" aria-label="일상 탭">
-              🏠 일상
+              ${svgIcon('home')} 일상
             </button>
             <div class="tab-more-dropdown">
               <button class="tab-btn ${['commute', 'dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
-                📋 더보기 ▾
+                ${svgIcon('menu')} 더보기 ▾
               </button>
               <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}" role="menu">
               <button class="more-menu-item ${appState.currentTab === 'commute' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('commute');" role="menuitem" aria-label="통근 탭">
-                🚌 통근
+                ${svgIcon('bus')} 통근
               </button>
                 <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');" role="menuitem" aria-label="통계 탭">
-                  📊 통계
+                  ${svgIcon('bar-chart')} 통계
                 </button>
                 <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');" role="menuitem" aria-label="전체 탭">
-                  📋 전체
+                  ${svgIcon('list')} 전체
                 </button>
                 <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('history');" role="menuitem" aria-label="히스토리 탭">
-                  📅 히스토리
+                  ${svgIcon('calendar')} 히스토리
                 </button>
               </div>
             </div>
@@ -16270,7 +16307,7 @@
 
                 ${appState.showDetailedAdd ? `
                   <div class="add-task-section">
-                    <h3>${appState.editingTaskId ? '✏️ 작업 수정' : '📝 상세 추가'}</h3>
+                    <h3>${appState.editingTaskId ? svgIcon('edit', 16) + ' 작업 수정' : svgIcon('plus', 16) + ' 상세 추가'}</h3>
                     <div class="form-group">
                       <label class="form-label">카테고리</label>
                       <select class="form-select" id="detailed-category" onchange="updateDetailedTaskCategory(this.value)">
@@ -16498,7 +16535,7 @@
                             <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                             <button class="btn-small" onclick="startPomodoro('${task.id}')" title="이 작업에 포모도로 집중" aria-label="포모도로 시작" style="background: rgba(245, 87, 108, 0.1); color: #f5576c;">🍅</button>
                             <button class="btn-small" onclick="postponeTask('${task.id}')" title="내일로 미루기" aria-label="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
-                            <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">✏️</button>
+                            <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                             <button class="btn-small delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">×</button>
                           </div>
                         </div>
@@ -16585,7 +16622,7 @@
                         </div>
                         <div class="empty-state-actions">
                           <button class="empty-state-btn primary" onclick="toggleDetailedAdd()">
-                            ➕ 새 작업 추가
+                            ${svgIcon('plus', 16)} 새 작업 추가
                           </button>
                           <button class="empty-state-btn" onclick="showToast('${rest.icon} ${rest.text}: ${rest.desc}', 'success')">
                             ${rest.icon} ${rest.text}
@@ -16827,7 +16864,7 @@
                         ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                       </div>
                       <div class="task-item-actions">
-                        <button class="btn-small edit" onclick="editTask('${task.id}')">✏️ 마감 추가</button>
+                        <button class="btn-small edit" onclick="editTask('${task.id}')">${svgIcon('edit', 14)} 마감 추가</button>
                         <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                       </div>
                     </div>
@@ -16979,8 +17016,8 @@
                           ${_eventBulkSelectMode ? '' : `<div class="event-actions">
                             ${task.link ? '<a href="' + task.link + '" target="_blank" class="btn btn-small btn-link">🔗</a>' : ''}
                             <button class="btn btn-small btn-submit" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
-                            <button class="btn btn-small btn-edit" onclick="editTask('${task.id}')" aria-label="작업 수정">✏️</button>
-                            <button class="btn btn-small btn-delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">🗑️</button>
+                            <button class="btn btn-small btn-edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
+                            <button class="btn btn-small btn-delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
                           </div>`}
                           <div class="event-dday">${days !== null ? (days < 0 ? 'D+' + Math.abs(days) : (days === 0 ? 'D-Day' : 'D-' + days)) : ''}</div>
                         </div>
@@ -17178,8 +17215,8 @@
                               </div>
                             </div>
                             <div class="life-item-actions">
-                              <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">✏️</button>
-                              <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">🗑️</button>
+                              <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
+                              <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
                             </div>
                           </div>
                         `).join('')}
@@ -17202,8 +17239,8 @@
                             </div>
                           </div>
                           <div class="life-item-actions">
-                            <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">✏️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">🗑️</button>
+                            <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
+                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
                           </div>
                         </div>
                       `).join('')}
@@ -17226,8 +17263,8 @@
                             </div>
                           </div>
                           <div class="life-item-actions">
-                            <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">✏️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">🗑️</button>
+                            <button class="life-action-btn" onclick="editTask('${task.id}')" title="수정" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
+                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
                           </div>
                         </div>
                       `).join('')}
@@ -17254,7 +17291,7 @@
                           </div>
                           <div class="life-item-actions" style="opacity: 1;">
                             <button class="life-action-btn" onclick="uncompleteTask('${task.id}')" title="되돌리기" aria-label="완료 되돌리기">↩️</button>
-                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">🗑️</button>
+                            <button class="life-action-btn delete" onclick="deleteTask('${task.id}')" title="삭제" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
                           </div>
                         </div>
                       `).join('')}
@@ -17742,7 +17779,7 @@
                       <div class="task-item-actions">
                         ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
                         <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
-                        <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">✏️</button>
+                        <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                         <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
                         <button class="btn-small delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">×</button>
                       </div>
@@ -17913,7 +17950,7 @@
                             <div class="all-task-actions">
                               ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
                               <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
-                              <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">✏️</button>
+                              <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                               <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
                               <button class="btn-small delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">×</button>
                             </div>
@@ -18269,9 +18306,9 @@
                             </div>
                             <div style="display: flex; gap: 4px;">
                               <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;"
-                                      onclick="editMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 편집">✏️</button>
+                                      onclick="editMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 편집">${svgIcon('edit', 14)}</button>
                               <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; color: var(--danger);"
-                                      onclick="deleteMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 삭제">🗑️</button>
+                                      onclick="deleteMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 삭제">${svgIcon('trash', 14)}</button>
                             </div>
                           </div>
                         `).join('');
@@ -18280,7 +18317,7 @@
 
                     <button class="btn btn-secondary" style="width: 100%; font-size: 13px;"
                             onclick="addMedicationSlot()" aria-label="복약 슬롯 추가">
-                      ➕ 복약 슬롯 추가
+                      ${svgIcon('plus', 16)} 복약 슬롯 추가
                     </button>
                   </div>
 
@@ -19064,7 +19101,7 @@
               <button class="work-project-action-btn" onclick="holdWorkProject('${project.id}')" aria-label="${project.onHold ? '프로젝트 재개' : '프로젝트 보류'}">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
               <button class="work-project-action-btn" onclick="archiveWorkProject('${project.id}')" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
               <button class="work-project-action-btn" onclick="saveAsTemplate('${project.id}')" aria-label="템플릿으로 저장">💾 템플릿</button>
-              <button class="work-project-action-btn delete" onclick="deleteWorkProject('${project.id}')" aria-label="프로젝트 삭제">🗑️ 삭제</button>
+              <button class="work-project-action-btn delete" onclick="deleteWorkProject('${project.id}')" aria-label="프로젝트 삭제">${svgIcon('trash', 14)} 삭제</button>
             </div>
           </div>
 
@@ -19123,9 +19160,9 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">✏️</button>
+                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', '${project.id}', ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
-                      <button class="work-stage-add-task" onclick="deleteProjectStage('${project.id}', ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">🗑️</button>
+                      <button class="work-stage-add-task" onclick="deleteProjectStage('${project.id}', ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', '${project.id}', ${stageIdx})">+ 중분류</button>
                     </div>
                   </div>
@@ -19156,9 +19193,9 @@
                             })() : ''}
                           </div>
                           <div class="work-subcategory-actions">
-                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">✏️</button>
+                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">${svgIcon('edit', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('subcat-deadline', '${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 일정" aria-label="중분류 일정 설정">📅</button>
-                            <button class="work-task-action" onclick="deleteSubcategory('${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">🗑️</button>
+                            <button class="work-task-action" onclick="deleteSubcategory('${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('task', '${project.id}', ${stageIdx}, ${subcatIdx})">+ 항목</button>
                           </div>
                         </div>
@@ -19458,10 +19495,10 @@
                   title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
             ${deadlineHtml}
             <div class="work-task-actions">
-              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">✏️</button>
+              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">${svgIcon('edit', 14)}</button>
               <button class="work-task-action" onclick="promptTaskDeadline('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정" aria-label="마감일 설정">📅</button>
               <button class="work-task-action" onclick="showWorkModal('log', '${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" aria-label="기록 추가">+ 기록</button>
-              <button class="work-task-action" onclick="deleteWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--danger);">🗑️</button>
+              <button class="work-task-action" onclick="deleteWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
             </div>
           </div>
           ${task.logs && task.logs.length > 0 ? `

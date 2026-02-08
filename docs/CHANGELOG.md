@@ -20,6 +20,30 @@ hash type: 메시지
 - 항목
 -->
 
+## [2026-02-08] (세션 22)
+> 📦 `navigator-v5.html`, `docs/CHANGELOG.md` | 🗄️ DB: 없음
+
+### 작업 내용
+- **SVG 아이콘 시스템 구축 + 이모지 → SVG 교체**
+  - `SVG_ICONS` 상수 + `svgIcon(name, size)` 헬퍼 함수 추가 (Lucide 스타일, stroke 기반)
+  - 20개 아이콘 정의: target, briefcase, dollar, home, menu, bus, bar-chart, calendar, list, chevron-down, edit, trash, plus, x, check, bell, clock, play, pause, search
+  - `.svg-icon` CSS 클래스 추가 (inline-block, vertical-align, currentColor 상속)
+  - **탭 네비게이션 9개 이모지 → SVG**: 🎯→target, 💼→briefcase, 💰→dollar, 🏠→home, 📋→menu, 🚌→bus, 📊→bar-chart, 📋→list, 📅→calendar
+  - **편집 버튼 12개 ✏️ → svgIcon('edit', 14)**
+  - **삭제 버튼 10개 🗑️ → svgIcon('trash', 14)**
+  - **추가 버튼 5개 ➕/📝 → svgIcon('plus', 16)**
+  - 크로스 플랫폼 아이콘 일관성 확보 (OS별 이모지 렌더링 차이 해소)
+
+### 커밋
+```
+(이번 커밋)
+```
+
+### 다음 작업
+- 접근성 개선 심화 (aria-live, 포커스 관리, skip nav, 헤딩 계층)
+
+---
+
 ## [2026-02-08] (세션 21)
 > 📦 `navigator-v5.html`, `js/commute.js`(신규), `js/rhythm.js`(신규), `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +2700/-2900 | 🗄️ DB: 없음
 
