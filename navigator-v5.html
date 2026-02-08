@@ -9508,10 +9508,6 @@
         if (entries && Array.isArray(entries) && entries.length > 0) {
           streak++;
           checkDate.setDate(checkDate.getDate() - 1);
-        } else if (entries && entries._summary && entries.count > 0) {
-          // 압축된 데이터
-          streak++;
-          checkDate.setDate(checkDate.getDate() - 1);
         } else {
           break;
         }
@@ -12101,47 +12097,6 @@
     window.addCompletionLogEntry = addCompletionLogEntry;
 
     /**
-     * completionLog 항목 수정 (과거 완료 기록 수정)
-     */
-    function editCompletionLogEntry(dateStr, index) {
-      const entries = (appState.completionLog || {})[dateStr];
-      if (!entries || !entries[index]) return;
-      const entry = entries[index];
-
-      const newTitle = prompt('제목:', entry.t);
-      if (newTitle === null) return; // 취소
-      if (!newTitle.trim()) { showToast('제목을 입력해주세요', 'error'); return; }
-
-      const categories = ['본업', '부업', '일상', '가족'];
-      const catIdx = prompt(`카테고리 (1:본업, 2:부업, 3:일상, 4:가족):\n현재: ${entry.c}`, String(categories.indexOf(entry.c) + 1));
-      if (catIdx === null) return;
-      const newCat = categories[parseInt(catIdx) - 1] || entry.c;
-
-      const newTime = prompt('완료 시간 (예: 1430, 930, 9, 14:30):', entry.at);
-      if (newTime === null) return;
-
-      const newRevenue = prompt('수익 (원, 없으면 0):', String(entry.rv || 0));
-      if (newRevenue === null) return;
-
-      // 업데이트 적용
-      entry.t = newTitle.trim();
-      entry.c = newCat;
-      const parsedTime = parseTimeInput(newTime);
-      if (parsedTime) {
-        entry.at = parsedTime;
-      } else if (newTime.trim()) {
-        showToast('시간 형식이 올바르지 않아 기존 값을 유지합니다', 'warning');
-      }
-      entry.rv = parseInt(newRevenue) || 0;
-
-      saveState();
-      recomputeTodayStats();
-      renderStatic();
-      showToast('기록이 수정되었습니다', 'success');
-    }
-    window.editCompletionLogEntry = editCompletionLogEntry;
-
-    /**
      * completionLog 항목 삭제 (과거 완료 기록 삭제)
      */
     function deleteCompletionLogEntry(dateStr, index) {
@@ -12506,25 +12461,6 @@
     // ============================================
 
     /**
-     * 현재 작업을 템플릿으로 저장
-     */
-    function saveAsTemplate(task) {
-      const template = {
-        id: generateId(),
-        title: task.title,
-        category: task.category,
-        estimatedTime: task.estimatedTime,
-        tags: task.tags || [],
-        icon: getCategoryIcon(task.category)
-      };
-
-      appState.templates.push(template);
-      saveTemplates();
-      showToast('템플릿으로 저장되었습니다', 'success');
-      renderStatic();
-    }
-
-    /**
      * 카테고리별 아이콘 반환
      */
     function getCategoryIcon(category) {
@@ -12546,37 +12482,6 @@
       appState.templates = appState.templates.filter(t => t.id !== templateId);
       saveTemplates();
       renderStatic();
-    }
-
-    /**
-     * 템플릿으로 작업 추가
-     */
-    function addFromTemplate(templateId) {
-      const template = appState.templates.find(t => t.id === templateId);
-      if (!template) return;
-
-      const now = new Date().toISOString();
-      appState.tasks.push({
-        id: generateId(),
-        title: template.title,
-        category: template.category,
-        deadline: '',
-        estimatedTime: template.estimatedTime,
-        link: '',
-        expectedRevenue: '',
-        tags: template.tags || [],
-        completed: false,
-        createdAt: now,
-        updatedAt: now
-      });
-
-      saveState();
-      renderStatic();
-      showToast(`"${template.title}" 추가됨`, 'success');
-
-      if (navigator.vibrate) {
-        navigator.vibrate(50);
-      }
     }
 
     /**
@@ -13727,7 +13632,7 @@
             </div>
             <div class="work-modal-footer">
               <button class="work-modal-btn secondary" onclick="closeEditCompletedModal()">취소</button>
-              <button class="work-modal-btn primary" onclick="saveCompletedAt(${id})">저장</button>
+              <button class="work-modal-btn primary" onclick="saveCompletedAt('${id}')">저장</button>
             </div>
           </div>
         </div>

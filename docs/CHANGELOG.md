@@ -55,8 +55,15 @@ hash type: 메시지
   - `deduplicateAll()` 함수 추가 — ID 기준 중복 제거 (updatedAt 최신 우선)
   - 앱 시작(`loadState`), Firebase 로드(`loadFromFirebase`), 실시간 동기화(`startRealtimeSync`) 3곳에서 호출
 
+- **버그 수정 (P0 + P1)**
+  - **P0**: `saveCompletedAt(${id})` → `saveCompletedAt('${id}')` — UUID 미따옴표로 onclick 깨짐
+  - **P1**: `editCompletionLogEntry` 중복 정의 제거 — prompt 기반(dead) 삭제, 모달 기반(active) 유지
+  - **P1**: `addFromTemplate` 중복 정의 제거 — appState.templates 기반(dead) 삭제, quickTemplates 기반(active) 유지
+  - **P1**: `saveAsTemplate` 중복 정의 제거 — task 객체 기반(dead) 삭제, workProject 기반(active) 유지
+  - **P1**: `calculateCompletionStreak` dead else-if 분기 제거 — 압축 데이터는 배열이라 Array.isArray 조건에서 이미 처리됨
+
 ### 다음 작업
-- 동기화 중복 수정 완료 ✅
+- P2 버그: `getRevenueStats` completionLog 과거 수익 데이터 누락
 
 ---
 
