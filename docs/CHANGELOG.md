@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [2026-02-08] (세션 21)
+
+### 작업 내용
+- **리팩토링 Prompt 1: ID 생성 방식 교체 (Date.now → crypto.randomUUID)**
+  - `generateId()` 헬퍼 함수 추가 — 모든 ID 생성을 단일 함수로 통합
+  - 29개 `Date.now()` ID 생성 지점을 `generateId()`로 교체
+  - `migrateNumericIds()` 함수 추가 — 기존 숫자 ID를 문자열로 자동 마이그레이션
+    - tasks, templates, workProjects(+stages/subcategories/tasks), workTemplates, trash, activeWorkProject 대상
+    - loadState(), loadFromFirebase(), startRealtimeSync() 3곳에서 호출
+  - ~85개 onclick 핸들러에서 ID 인수에 따옴표 추가 (UUID 문자열 호환)
+  - `parseInt(projectId)` → `String(projectId)` 등 숫자 ID 파싱 코드 수정
+  - 기존 데이터와 100% 하위 호환 (마이그레이션 자동 실행)
+
+### 다음 작업
+- 리팩토링 Prompt 2: appState JSDoc 스키마 문서화
+- 리팩토링 Prompt 3~7 순차 진행
+
+---
+
 ## [2026-02-07] (세션 20)
 
 ### 작업 내용
