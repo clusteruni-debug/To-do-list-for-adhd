@@ -186,6 +186,104 @@ docs/CHANGELOG.md에 기록:
 
 ---
 
+## 🧪 핵심 테스트 시나리오 (코드 수정 후 반드시 확인)
+
+> 코드 변경 시 아래 시나리오 중 **영향받는 항목**을 반드시 검증.
+> 전체를 매번 돌릴 필요 없고, 수정 범위에 해당하는 것만 체크.
+
+### 1. 작업 CRUD (Task Lifecycle)
+```
+□ 퀵 추가: 입력 → 엔터 → 목록에 표시 + saveState 호출
+□ 상세 추가: 모든 필드 입력 → 저장 → 새로고침 후 데이터 유지
+□ 수정: 기존 작업 편집 → 저장 → 변경 반영 (editingTaskId 정리)
+□ 삭제: 삭제 → confirm → trash 이동 + deletedIds 기록 + 목록에서 제거
+□ 완료: 체크 → completedAt 기록 + completionLog 추가 + todayStats 증가
+□ 완료 취소: undoComplete → completed=false + completionLog에서 제거 + todayStats 감소
+□ 브레인덤프: 여러 줄 입력 → 각 줄이 개별 Task로 생성 (#카테고리 파싱)
+```
+
+### 2. 반복 작업 (Repeat Tasks)
+```
+□ daily 반복: 완료 → 다음날 새 Task 생성 (createNextRepeatTask)
+□ weekdays/weekends/weekly/monthly: 각 유형별 다음 실행일 계산 정확성
+□ 일일 리셋: checkDailyReset() → 완료 상태 초기화 + saveState 호출
+□ 리셋 후 재완료: 리셋된 작업 다시 완료 시 completionLog 중복 없음
+```
+
+### 3. Firebase 동기화 (Sync)
+```
+□ 로그인 → loadFromFirebase → 클라우드 데이터 병합 + migrateNumericIds
+□ 로컬 변경 → syncToFirebase (1.5초 디바운스) → Firestore 반영
+□ 다른 기기 변경 → onSnapshot → 병합 + renderStatic + 토스트
+□ 오프라인 → 변경 저장 → 온라인 복귀 시 자동 동기화
+□ 핑퐁 방지: 자기 쓰기(lastOwnWriteTimestamp)면 재업로드 스킵
+□ deletedIds: 삭제한 항목이 다른 기기에서 부활하지 않음
+□ 비로그인: localStorage만 사용 (Firebase 호출 없음)
+```
+
+### 4. ID 호환성 (UUID Migration)
+```
+□ 기존 숫자 ID 데이터 로드 → migrateNumericIds → 문자열로 변환
+□ 새 Task 생성 → generateId() → UUID 형식
+□ onclick 핸들러에서 UUID ID 정상 전달 (따옴표 포함)
+□ find(t => t.id === id) 비교 시 타입 일치 (===)
+```
+
+### 5. 본업 프로젝트 (Work Projects)
+```
+□ 프로젝트 생성: 이름 + 마감일 → stages 자동 생성
+□ 중분류 추가/삭제: subcategories CRUD → 프로젝트 updatedAt 갱신
+□ 작업 추가: 중분류 내 WorkTask 생성 (status: not-started)
+□ 프로젝트 아카이브/복원: archived 토글 → 목록 표시 변경
+□ 프로젝트 전환: activeWorkProject 변경 → 대시보드/상세 뷰 갱신
+```
+
+### 6. 라이프 리듬 (Life Rhythm)
+```
+□ 기록: recordLifeRhythm(type) → today 객체 업데이트 + history 저장
+□ 날짜 변경: 자정 이후 → today 초기화 + 어제 데이터 history로 이동
+□ 복약 기록: medications[slotId] = 'HH:MM' 또는 null (토글)
+□ 통계: 7일/30일 평균 계산 → NaN/null 방어
+□ 캘린더 연동: historyView='rhythm' → 날짜별 리듬 데이터 표시
+```
+
+### 7. 통근 트래커 (Commute)
+```
+□ 루트 CRUD: 추가/수정/삭제 → commuteTracker.routes 반영
+□ 루트 선택: selectCommuteRoute → trips[date][direction] 기록
+□ 소요시간 계산: departTime/arriveTime → duration (음수 방어)
+□ 교통 상황: conditions 변경 → 해당 날짜 trip 업데이트
+```
+
+### 8. UI 렌더링 (renderStatic)
+```
+□ 탭 전환: currentTab 변경 → 해당 탭 콘텐츠만 렌더링
+□ 스크롤 보존: renderStatic 후 스크롤 위치 유지
+□ 포커스 보존: 입력 중 renderStatic → 포커스 + 커서 위치 복원
+□ XSS 방어: 모든 사용자 입력 → escapeHtml() 통과 후 DOM 삽입
+□ 빈 상태: tasks=[] → 빈 상태 메시지 표시 (에러 아님)
+```
+
+### 9. 데이터 내보내기/가져오기
+```
+□ 내보내기: exportData → JSON 파일 다운로드 (모든 appState 키 포함)
+□ 가져오기: importData → 파일 선택 → validateTasks → 병합/덮어쓰기
+□ 파일 형식 검증: JSON 아닌 파일 → 에러 토스트
+□ 빈 파일/손상 파일 → 기존 데이터 유지 + 에러 메시지
+```
+
+### 10. 엣지 케이스
+```
+□ 빠른 연속 클릭: 완료 버튼 더블클릭 → 중복 처리 방지
+□ 빈 제목: 제목 없이 저장 시도 → 토스트 에러 (Task 생성 안 됨)
+□ 장시간 백그라운드: visibilitychange → checkDailyReset + 동기화
+□ 모달 중첩: showTimeInputModal 등 → 기존 모달 제거 후 생성
+□ 터치 이벤트: handleTouchEnd → changedTouches 존재 확인
+□ setInterval 중복: 타이머 재등록 방지 (ID 체크)
+```
+
+---
+
 ## 🔐 보안 체크리스트 (작업 시작 전 확인)
 
 ### 필수 확인사항
