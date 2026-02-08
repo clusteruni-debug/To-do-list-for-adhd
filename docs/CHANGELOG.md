@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-08] (세션 21)
-> 📦 `navigator-v5.html`, `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +598/-136 | 🗄️ DB: 없음
+> 📦 `navigator-v5.html`, `js/commute.js`(신규), `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +1100/-650 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **리팩토링 Prompt 1: ID 생성 방식 교체 (Date.now → crypto.randomUUID)**
@@ -48,16 +48,24 @@ hash type: 메시지
   - 세션 템플릿 가이드 상단 배치
   - 섹션명 통일: 작업 내용 / 커밋 / 다음 작업
 
+- **리팩토링 Prompt 5: 모듈 분리 — 통근 트래커 → js/commute.js**
+  - 22개 통근 함수를 `js/commute.js`로 분리 (~515줄)
+  - navigator-v5.html에서 ~512줄 제거, 주석 대체
+  - 10개 함수 `window.xxx` 전역 등록 (onclick 핸들러 호환)
+  - `<script src="js/commute.js"></script>` 태그 추가
+  - 의존성: appState, renderStatic, syncToFirebase, showToast, escapeHtml, getLocalDateStr, generateId
+
 ### 커밋
 ```
 158ba60 refactor: Date.now() ID 생성을 crypto.randomUUID()로 교체
 a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
 39cb7a2 docs: 핵심 테스트 시나리오 CLAUDE.md 문서화 (Prompt 3)
+87079e3 docs: CHANGELOG 메타데이터 블록 구조 개선 (Prompt 4)
 ```
 
 ### 다음 작업
-- 리팩토링 Prompt 5: 모듈 분리 — 통근 트래커
-- 리팩토링 Prompt 6~7 순차 진행
+- 리팩토링 Prompt 6: 모듈 분리 — 라이프 리듬 → js/rhythm.js
+- 리팩토링 Prompt 7: renderStatic 부분 렌더링 최적화
 
 ---
 
