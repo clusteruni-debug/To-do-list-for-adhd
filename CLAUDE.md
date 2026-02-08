@@ -520,6 +520,8 @@ Navigator  ──(아티클 작성 Task)──▶  x-article-editor 초안 생�
 - **context7**: 라이브러리 최신 문서 자동 주입 (`resolve-library-id` → `get-library-docs`)
 - **claude-mem**: 세션 히스토리 압축 + 컨텍스트 유실 방지
 - **ccusage**: `npx ccusage@latest daily` — 토큰 비용 확인
+- **firebase MCP**: Firestore/Auth 관리 (첫 사용 시 인증 필요)
+- **github MCP**: GitHub 이슈/PR/Actions 관리
 
 ---
 
