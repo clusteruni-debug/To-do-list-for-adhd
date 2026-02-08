@@ -80,8 +80,14 @@ hash type: 메시지
   - **P2 `syncToFirebase` 가드**: template-import에서 미로그인 시 불필요한 호출 방지
   - **P2 `quickAddValue` escapeHtml**: value 속성 injection 방지
 
+- **2차 검증 — 추가 발견 버그 수정**
+  - **XSS 미이스케이프 11곳 추가**: st.text(본업 서브태스크), stageName(HTML+onclick 2곳), subcat.name(onclick 2곳), task.title(onclick 2곳), stageNameForModal(label 2곳), t.stageNames(템플릿), nextAction.link, filteredTasks[0].link, entry.at(input value)
+  - **`getCompletedTasksByDate` _summary 건너뛰기**: 캘린더 상세에서 "undefined" 표시 방지
+  - **`mergeCompletionLog` _summary 충돌 해결**: 로컬/클라우드 한쪽만 압축된 경우 상세 데이터 우선
+  - **`_navFunctions` 미정의 함수 10개 제거**: 외부 JS(commute.js/rhythm.js)에서 window에 직접 등록하므로 인라인에서 참조 불필요 → ReferenceError 방지
+
 ### 다음 작업
-- 전체 버그 스캔 완료 ✅
+- 전체 2차 버그 검증 완료 ✅
 
 ---
 

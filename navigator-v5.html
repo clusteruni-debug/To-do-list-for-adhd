@@ -11852,6 +11852,7 @@
       // 1. completionLog에서 조회 (영구 기록) — 동일 제목+시간도 각각 표시
       const logEntries = (appState.completionLog || {})[dateStr] || [];
       logEntries.forEach((e, idx) => {
+        if (e._summary) return; // 압축된 요약 데이터 건너뛰기
         const key = 'log|' + idx + '|' + e.t + '|' + e.at;
         seen.add(key);
         // tasks 중복 체크용 별도 키도 등록
@@ -12197,7 +12198,7 @@
             <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600">날짜</label>
             <input type="date" id="edit-log-date" value="${dateStr}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:15px;margin-bottom:12px">
             <label style="display:block;margin-bottom:8px;font-size:13px;font-weight:600">시간</label>
-            <input type="text" id="edit-log-time" value="${entry.at || '12:00'}" placeholder="HH:MM (예: 1430, 9:30)" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:15px">
+            <input type="text" id="edit-log-time" value="${escapeHtml(entry.at || '12:00')}" placeholder="HH:MM (예: 1430, 9:30)" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:15px">
           </div>
           <div class="modal-footer" style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end">
             <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">취소</button>
@@ -15465,10 +15466,24 @@
         if (!merged[date]) {
           merged[date] = [...(cloud[date] || [])];
         } else {
-          const existing = new Set(merged[date].map(e => e.t + '|' + e.at));
-          for (const entry of (cloud[date] || [])) {
-            if (!existing.has(entry.t + '|' + entry.at)) {
-              merged[date].push(entry);
+          // 한쪽이 압축 데이터(_summary)면 더 많은 데이터를 가진 쪽 우선
+          const localIsSummary = merged[date].length === 1 && merged[date][0]?._summary;
+          const cloudEntries = cloud[date] || [];
+          const cloudIsSummary = cloudEntries.length === 1 && cloudEntries[0]?._summary;
+
+          if (localIsSummary && !cloudIsSummary && cloudEntries.length > 0) {
+            // 클라우드에 상세 데이터가 있으면 클라우드 우선
+            merged[date] = [...cloudEntries];
+          } else if (!localIsSummary && cloudIsSummary) {
+            // 로컬에 상세 데이터가 있으면 로컬 유지
+          } else {
+            // 둘 다 일반 데이터이거나 둘 다 압축 — 기존 로직
+            const existing = new Set(merged[date].map(e => (e.t || '') + '|' + (e.at || '')));
+            for (const entry of cloudEntries) {
+              if (entry._summary) continue; // 압축 항목은 병합하지 않음
+              if (!existing.has((entry.t || '') + '|' + (entry.at || ''))) {
+                merged[date].push(entry);
+              }
             }
           }
         }
@@ -16642,7 +16657,7 @@
                       ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
-                      <button class="btn btn-primary" onclick="handleGo('${nextAction.link || ''}')">
+                      <button class="btn btn-primary" onclick="handleGo('${escapeHtml(nextAction.link || '')}')">
                         ${nextAction.link ? '🚀 GO' : '시작하기'}
                       </button>
                       <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer('${nextAction.id}')" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
@@ -16754,7 +16769,7 @@
                           ✓ 완료!
                         </button>
                         ${filteredTasks[0].link ? `
-                          <button class="btn btn-secondary" onclick="handleGo('${filteredTasks[0].link}')">
+                          <button class="btn btn-secondary" onclick="handleGo('${escapeHtml(filteredTasks[0].link)}')">
                             🔗 열기
                           </button>
                         ` : ''}
@@ -18617,14 +18632,10 @@
       showTimeInputModal, saveActualTime, closeTimeInputModal,
       // 히스토리/캘린더
       prevMonth, nextMonth, selectDate, toggleHistoryDate,
-      // 통근 트래커
-      setCommuteSubTab, openCommuteRouteModal, closeCommuteRouteModal,
-      saveCommuteRoute, deleteCommuteRoute, selectCommuteRoute,
-      tagCommuteRoute, dismissCommuteTag, setCommuteCondition,
+      // 통근 트래커: js/commute.js에서 window에 직접 등록
+      // 리듬 통계: js/rhythm.js에서 window에 직접 등록
       // 설정
       openSettings, closeSettings, updateSetting,
-      // 리듬 통계
-      toggleRhythmStats,
       // 템플릿
       saveAsTemplate, deleteTemplate, addFromTemplate, saveCurrentAsTemplate,
     };
@@ -18834,7 +18845,7 @@
                         ${task.subtasks.map((st, idx) => `
                           <div class="work-general-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete('${task.id}', ${idx})">
                             <span class="subtask-check">${st.completed ? '✓' : '○'}</span>
-                            <span>${st.text}</span>
+                            <span>${escapeHtml(st.text)}</span>
                           </div>
                         `).join('')}
                       </div>
@@ -19186,7 +19197,7 @@
                         ${stage.completed ? '✓' : ''}
                       </div>
                       <span class="work-stage-number">${stageIdx + 1}</span>
-                      <span class="work-stage-name" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" style="cursor: pointer;" title="클릭하여 이름 변경">${stageName}</span>
+                      <span class="work-stage-name" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeHtml(stageName).replace(/'/g, "\\'")}')" style="cursor: pointer;" title="클릭하여 이름 변경">${escapeHtml(stageName)}</span>
                       ${(stage.startDate || stage.deadline) ? (() => {
                         const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
                         let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 12px; color: var(--text-muted);">';
@@ -19208,7 +19219,7 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${stageName.replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
+                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeHtml(stageName).replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', '${project.id}', ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
                       <button class="work-stage-add-task" onclick="deleteProjectStage('${project.id}', ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', '${project.id}', ${stageIdx})">+ 중분류</button>
@@ -19224,7 +19235,7 @@
                                  onclick="toggleSubcategoryComplete('${project.id}', ${stageIdx}, ${subcatIdx})">
                               ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? '✓' : ''}
                             </div>
-                            <span class="work-subcategory-name" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
+                            <span class="work-subcategory-name" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeHtml(subcat.name).replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
@@ -19241,7 +19252,7 @@
                             })() : ''}
                           </div>
                           <div class="work-subcategory-actions">
-                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${subcat.name.replace(/'/g, "\\'")}')" title="중분류 이름 변경">${svgIcon('edit', 14)}</button>
+                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeHtml(subcat.name).replace(/'/g, "\\'")}')" title="중분류 이름 변경">${svgIcon('edit', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('subcat-deadline', '${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 일정" aria-label="중분류 일정 설정">📅</button>
                             <button class="work-task-action" onclick="deleteSubcategory('${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('task', '${project.id}', ${stageIdx}, ${subcatIdx})">+ 항목</button>
@@ -19539,11 +19550,11 @@
               ${statusInfo.label}
             </span>
             <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
-                  onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')"
+                  onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')"
                   title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
             ${deadlineHtml}
             <div class="work-task-actions">
-              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${task.title.replace(/'/g, "\\'")}')">${svgIcon('edit', 14)}</button>
+              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">${svgIcon('edit', 14)}</button>
               <button class="work-task-action" onclick="promptTaskDeadline('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정" aria-label="마감일 설정">📅</button>
               <button class="work-task-action" onclick="showWorkModal('log', '${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" aria-label="기록 추가">+ 기록</button>
               <button class="work-task-action" onclick="deleteWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
@@ -19665,11 +19676,11 @@
           const stageNameForModal = getStageName(project, stageIdx);
           bodyHtml = `
             <div class="work-modal-field">
-              <label class="work-modal-label">${stageNameForModal} 시작일</label>
+              <label class="work-modal-label">${escapeHtml(stageNameForModal)} 시작일</label>
               <input type="date" class="work-modal-input" id="work-input-startdate" value="${stageData.startDate || ''}">
             </div>
             <div class="work-modal-field">
-              <label class="work-modal-label">${stageNameForModal} 마감일</label>
+              <label class="work-modal-label">${escapeHtml(stageNameForModal)} 마감일</label>
               <input type="date" class="work-modal-input" id="work-input-deadline" value="${stageData.deadline || ''}">
             </div>
           `;
@@ -19721,7 +19732,7 @@
                       <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px; flex: 1;">
                         <div style="font-weight: 500;">${escapeHtml(t.name)}</div>
                         <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                          ${(t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → ')}
+                          ${escapeHtml((t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → '))}
                         </div>
                         <div style="font-size: 11px; color: var(--text-muted);">
                           ${totalTaskCount(t)}개 항목
