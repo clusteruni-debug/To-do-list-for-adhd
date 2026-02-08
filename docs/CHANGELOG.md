@@ -39,8 +39,18 @@ hash type: 메시지
 (이번 커밋)
 ```
 
+- **접근성 개선 심화 (WCAG 2.1 Level AA)**
+  - `srAnnounce()` 유틸리티 — aria-live assertive 영역으로 스크린 리더 실시간 안내
+  - Toast 알림에 `role="status"` + `aria-live="polite"` 추가 (96개 showToast 호출 전체 적용)
+  - Skip-to-content 링크 (`본문으로 건너뛰기`) — 키보드 사용자 네비게이션 건너뛰기
+  - `.sr-only` CSS 유틸리티 클래스 — 시각적 숨김 + 스크린 리더 접근 가능
+  - 탭 전환 시 포커스 자동 이동 (tabContent.focus) + 스크린 리더 안내
+  - `role="navigation"` + `aria-label="탭 네비게이션"` 시맨틱 랜드마크
+  - `role="main"` 메인 콘텐츠 랜드마크 (#root)
+  - 작업 완료/삭제 시 스크린 리더 안내 (srAnnounce)
+
 ### 다음 작업
-- 접근성 개선 심화 (aria-live, 포커스 관리, skip nav, 헤딩 계층)
+- SVG 아이콘 + 접근성 개선 완료 ✅
 
 ---
 
