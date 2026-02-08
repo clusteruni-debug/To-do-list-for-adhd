@@ -1,4 +1,32 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(git fetch:*)",
+      "Bash(git commit:*)",
+      "Bash(npx serve -p 5050 -l tcp)",
+      "Bash(npx serve -p 5050)",
+      "Bash(npx playwright:*)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm ls:*)",
+      "Bash(where:*)",
+      "Bash(echo:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(powershell.exe -NoProfile -Command:*)",
+      "WebSearch",
+      "Bash(python:*)",
+      "Bash(del:*)",
+      "Bash(cat:*)",
+      "Bash(renderCommuteTab)",
+      "Bash(grep:*)",
+      "Bash(/tmp/check_funcs.py:*)",
+      "Bash(__NEW_LINE_6bbd04b8642a2289__ python /tmp/check_funcs.py)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
@@ -25,27 +53,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(git clone:*)",
-      "Bash(git add:*)",
-      "Bash(git push)",
-      "Bash(git fetch:*)",
-      "Bash(git commit:*)",
-      "Bash(npx serve -p 5050 -l tcp)",
-      "Bash(npx serve -p 5050)",
-      "Bash(npx playwright:*)",
-      "Bash(npm install:*)",
-      "Bash(node:*)",
-      "Bash(npm ls:*)",
-      "Bash(where:*)",
-      "Bash(echo:*)",
-      "Bash(curl:*)",
-      "Bash(ls:*)",
-      "Bash(powershell.exe -NoProfile -Command:*)",
-      "WebSearch"
     ]
   }
 }
