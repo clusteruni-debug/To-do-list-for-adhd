@@ -13,9 +13,14 @@
   - `parseInt(projectId)` → `String(projectId)` 등 숫자 ID 파싱 코드 수정
   - 기존 데이터와 100% 하위 호환 (마이그레이션 자동 실행)
 
+- **리팩토링 Prompt 2: appState JSDoc 스키마 문서화**
+  - 12개 `@typedef` 정의: Task, Subtask, WorkProject, WorkStage, WorkSubcategory, WorkTask, CompletionLogEntry, CommuteRoute, CommuteTrip, MedicationSlot, LifeRhythmDay, AppState
+  - AppState typedef에 모든 프로퍼티 + 중첩 객체 필드 문서화 (~180줄)
+  - `@type {AppState}` 어노테이션으로 IDE 자동완성/타입 체크 지원
+
 ### 다음 작업
-- 리팩토링 Prompt 2: appState JSDoc 스키마 문서화
-- 리팩토링 Prompt 3~7 순차 진행
+- 리팩토링 Prompt 3: 핵심 테스트 시나리오 CLAUDE.md 문서화
+- 리팩토링 Prompt 4~7 순차 진행
 
 ---
 
