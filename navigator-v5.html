@@ -9450,6 +9450,9 @@
       if (task.repeatMonthDay) validated.repeatMonthDay = task.repeatMonthDay;
       if (task.lastCompletedAt) validated.lastCompletedAt = task.lastCompletedAt;
       if (task.source) validated.source = task.source;
+      if (task.description) validated.description = task.description;
+      if (task.startDate) validated.startDate = task.startDate;
+      if (task.telegramEventId) validated.telegramEventId = task.telegramEventId;
 
       return validated;
     }
@@ -11518,8 +11521,6 @@
      * 수익 통계 계산 (월별/카테고리별)
      */
     function getRevenueStats() {
-      const completedTasks = appState.tasks.filter(t => t.completed && t.expectedRevenue);
-
       // 월별 수익 (최근 6개월)
       const monthlyRevenue = {};
       const now = new Date();
@@ -11535,26 +11536,64 @@
       // 총 수익
       let totalRevenue = 0;
       let thisMonthRevenue = 0;
+      let taskCount = 0;
       const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-      completedTasks.forEach(task => {
+      // 1) completionLog 기반 — 모든 과거+현재 완료 기록 포함
+      const loggedDates = new Set();
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        if (!Array.isArray(entries)) continue;
+        const monthKey = dateKey.slice(0, 7); // "YYYY-MM"
+
+        entries.forEach(e => {
+          if (e._summary) {
+            // 압축된 데이터 — totalRevenue만 사용 (카테고리별 분배 불가)
+            const rev = e.totalRevenue || 0;
+            totalRevenue += rev;
+            taskCount += e.count || 0;
+            if (monthlyRevenue[monthKey]) {
+              monthlyRevenue[monthKey].revenue += rev;
+              monthlyRevenue[monthKey].count += e.count || 0;
+            }
+            if (monthKey === thisMonthKey) thisMonthRevenue += rev;
+          } else {
+            const rev = e.rv || 0;
+            taskCount++;
+            if (rev > 0) {
+              totalRevenue += rev;
+              if (monthlyRevenue[monthKey]) {
+                monthlyRevenue[monthKey].revenue += rev;
+                monthlyRevenue[monthKey].count++;
+              }
+              if (monthKey === thisMonthKey) thisMonthRevenue += rev;
+              if (e.c && categoryRevenue.hasOwnProperty(e.c)) {
+                categoryRevenue[e.c] += rev;
+              }
+            }
+          }
+        });
+        loggedDates.add(dateKey);
+      }
+
+      // 2) appState.tasks 보완 — completionLog 도입 전 완료된 태스크
+      appState.tasks.forEach(task => {
+        if (!task.completed || !task.expectedRevenue) return;
         const revenue = parseInt(task.expectedRevenue) || 0;
+        if (revenue <= 0) return;
+
+        const completedDate = task.completedAt ? new Date(task.completedAt) : null;
+        if (!completedDate) return; // completedAt 없으면 날짜 불명 → 이미 log에 있을 가능성 높음
+        const dateKey = getLocalDateStr(completedDate);
+        if (loggedDates.has(dateKey)) return; // 해당 날짜에 log가 있으면 이미 집계됨
+
         totalRevenue += revenue;
-
-        // 완료일 기준 월별 집계
-        const completedDate = task.completedAt ? new Date(task.completedAt) : new Date();
+        taskCount++;
         const monthKey = `${completedDate.getFullYear()}-${String(completedDate.getMonth() + 1).padStart(2, '0')}`;
-
         if (monthlyRevenue[monthKey]) {
           monthlyRevenue[monthKey].revenue += revenue;
           monthlyRevenue[monthKey].count++;
         }
-
-        if (monthKey === thisMonthKey) {
-          thisMonthRevenue += revenue;
-        }
-
-        // 카테고리별 집계
+        if (monthKey === thisMonthKey) thisMonthRevenue += revenue;
         if (categoryRevenue.hasOwnProperty(task.category)) {
           categoryRevenue[task.category] += revenue;
         }
@@ -11580,7 +11619,7 @@
         monthlyData,
         maxMonthlyRevenue,
         categoryData,
-        taskCount: completedTasks.length
+        taskCount
       };
     }
 
@@ -11686,6 +11725,7 @@
       // completionLog 기반 시간대별 집계
       for (const entries of Object.values(appState.completionLog || {})) {
         (entries || []).forEach(e => {
+          if (e._summary) return; // 압축된 데이터는 시간 정보 없음
           const hour = parseInt(e.at.split(':')[0], 10);
           if (hour >= 0 && hour < 24) hourlyData[hour]++;
         });
@@ -11748,6 +11788,16 @@
       // completionLog 기반 카테고리 분포
       for (const entries of Object.values(appState.completionLog || {})) {
         (entries || []).forEach(e => {
+          if (e._summary) {
+            // 압축된 데이터 — 카테고리별 count 사용
+            if (e.categories) {
+              Object.entries(e.categories).forEach(([cat, cnt]) => {
+                distribution[cat] = (distribution[cat] || 0) + cnt;
+                total += cnt;
+              });
+            }
+            return;
+          }
           const cat = e.c || '기타';
           distribution[cat] = (distribution[cat] || 0) + 1;
           total++;
@@ -11771,8 +11821,12 @@
 
       // completionLog 기반 요일별 집계
       for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
-        const day = new Date(dateKey).getDay();
-        dayData[day] += (entries || []).length;
+        const day = new Date(dateKey + 'T12:00:00').getDay(); // UTC 시차 방지
+        let count = 0;
+        (entries || []).forEach(e => {
+          count += (e._summary && e.count) ? e.count : 1;
+        });
+        dayData[day] += count;
       }
 
       const maxDay = dayData.indexOf(Math.max(...dayData));
@@ -12304,6 +12358,7 @@
         if (!Array.isArray(entries)) continue; // 압축 데이터 스킵
         if (!grouped[dateKey]) grouped[dateKey] = [];
         entries.forEach((e, idx) => {
+          if (e._summary) return; // 압축된 요약 데이터 건너뛰기
           grouped[dateKey].push({
             title: e.t,
             category: e.c,
@@ -13690,7 +13745,7 @@
         t: task.title,
         c: task.category,
         at: newLogTime,
-        rv: task.expectedRevenue || 0
+        rv: Number(task.expectedRevenue) || 0
       });
       saveCompletionLog();
 
@@ -14569,7 +14624,9 @@
       // UI 업데이트
       const items = document.querySelectorAll('.weekly-plan-item');
       items.forEach(item => {
-        const id = parseInt(item.getAttribute('onclick').match(/\d+/)[0]);
+        const match = item.getAttribute('onclick')?.match(/toggleFocusTask\('([^']+)'\)/);
+        if (!match) return;
+        const id = match[1];
         if (appState.weeklyPlan.focusTasks.includes(id)) {
           item.classList.add('selected');
           item.querySelector('.weekly-plan-check').textContent = '✓';
@@ -15759,7 +15816,7 @@
           ${repeatField}
           <div class="form-group">
             <label class="form-label">링크</label>
-            <input type="url" class="form-input" id="detailed-link" placeholder="https://" value="${appState.detailedTask.link}">
+            <input type="url" class="form-input" id="detailed-link" placeholder="https://" value="${escapeHtml(appState.detailedTask.link)}">
           </div>
         `,
         '부업': `
@@ -15799,7 +15856,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">링크</label>
-            <input type="url" class="form-input" id="detailed-link" placeholder="https://t.me/..." value="${appState.detailedTask.link}">
+            <input type="url" class="form-input" id="detailed-link" placeholder="https://t.me/..." value="${escapeHtml(appState.detailedTask.link)}">
           </div>
         `,
         '일상': `
@@ -15837,7 +15894,7 @@
           ${repeatField}
           <div class="form-group">
             <label class="form-label">메모/링크 (선택)</label>
-            <input type="text" class="form-input" id="detailed-link" placeholder="메모 또는 URL" value="${appState.detailedTask.link}">
+            <input type="text" class="form-input" id="detailed-link" placeholder="메모 또는 URL" value="${escapeHtml(appState.detailedTask.link)}">
           </div>
         `
       };
@@ -16215,7 +16272,7 @@
                     id="quick-add-input"
                     class="quick-add-input"
                     placeholder="+ 새 작업 (#부업 #본업 #일상)"
-                    value="${appState.quickAddValue}"
+                    value="${escapeHtml(appState.quickAddValue)}"
                     onkeypress="if(event.key==='Enter') quickAdd()"
                   >
                   <button class="quick-add-btn" onclick="quickAdd()" aria-label="빠른 작업 추가">+</button>
@@ -16354,7 +16411,7 @@
 
                     <div class="form-group">
                       <label class="form-label">제목</label>
-                      <input type="text" class="form-input" id="detailed-title" placeholder="작업 제목" value="${appState.detailedTask.title}">
+                      <input type="text" class="form-input" id="detailed-title" placeholder="작업 제목" value="${escapeHtml(appState.detailedTask.title)}">
                     </div>
                     <div class="form-group">
                       <label class="form-label">설명 (선택)</label>
@@ -16402,7 +16459,7 @@
                           const totalCount = subtasks.length;
                           if (totalCount > 0 && completedCount === totalCount && appState.editingTaskId) {
                             return `
-                              <button class="complete-all-subtasks-btn" onclick="completeTask(${appState.editingTaskId}); cancelEdit();">
+                              <button class="complete-all-subtasks-btn" onclick="completeTask('${appState.editingTaskId}'); cancelEdit();">
                                 🎉 모든 서브태스크 완료! 작업 완료하기
                               </button>
                             `;
@@ -16500,7 +16557,7 @@
                                 </div>
                                 ${!isExpanded ? `
                                   <div class="subtask-preview" onclick="event.stopPropagation(); toggleSubtaskExpand('${task.id}')">
-                                    ${nextSubtask ? '▸ 다음: ' : '🎉 '}${previewText.length > 30 ? previewText.substring(0, 30) + '...' : previewText}
+                                    ${nextSubtask ? '▸ 다음: ' : '🎉 '}${escapeHtml(previewText.length > 30 ? previewText.substring(0, 30) + '...' : previewText)}
                                   </div>
                                 ` : ''}
                                 ${isExpanded ? `
@@ -16522,7 +16579,7 @@
                             })()}
                           ` : ''}
                           <div class="task-item-actions">
-                            ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
+                            ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
                             <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                             <button class="btn-small" onclick="startPomodoro('${task.id}')" title="이 작업에 포모도로 집중" aria-label="포모도로 시작" style="background: rgba(245, 87, 108, 0.1); color: #f5576c;">🍅</button>
                             <button class="btn-small" onclick="postponeTask('${task.id}')" title="내일로 미루기" aria-label="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
@@ -16576,7 +16633,7 @@
                 ${nextAction ? `
                   <div class="next-action ${urgencyClass}">
                     <div class="next-action-label">${urgencyLabel[urgencyClass]}</div>
-                    <div class="task-title">${nextAction.title}</div>
+                    <div class="task-title">${escapeHtml(nextAction.title)}</div>
                     <div class="task-meta">
                       <span class="category ${nextAction.category}">${nextAction.category}</span>
                       ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType)}</span>` : ''}
@@ -16676,7 +16733,7 @@
                       <span class="focus-mode-hint">가장 중요한 작업에 집중하세요</span>
                     </div>
                     <div class="focus-task">
-                      <div class="focus-task-title">${filteredTasks[0].title}</div>
+                      <div class="focus-task-title">${escapeHtml(filteredTasks[0].title)}</div>
                       <div class="focus-task-meta">
                         <span class="category ${filteredTasks[0].category}">${filteredTasks[0].category}</span>
                         ${filteredTasks[0].estimatedTime ? ` · ${filteredTasks[0].estimatedTime}분` : ''}
@@ -16687,7 +16744,7 @@
                           ${filteredTasks[0].subtasks.map((st, idx) => `
                             <div class="focus-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete('${filteredTasks[0].id}', ${idx})">
                               <span class="focus-subtask-check">${st.completed ? '✓' : '○'}</span>
-                              <span>${st.text}</span>
+                              <span>${escapeHtml(st.text)}</span>
                             </div>
                           `).join('')}
                         </div>
@@ -16996,7 +17053,7 @@
                     const telegramBadge = task.source && task.source.type === 'telegram-event' ? '<span class="event-tg-badge" title="텔레그램 연동">📱</span>' : '';
                     return `
                       <div class="event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}" style="${_eventBulkSelectMode ? 'display:flex;align-items:center' : ''}">
-                        ${_eventBulkSelectMode ? '<div class="event-check-col"><input type="checkbox" ' + (_eventBulkSelectedIds.has(task.id) ? 'checked' : '') + ' onchange="toggleEventSelection(' + task.id + ')" aria-label="' + escapeHtml(task.title) + ' 선택"></div>' : ''}
+                        ${_eventBulkSelectMode ? '<div class="event-check-col"><input type="checkbox" ' + (_eventBulkSelectedIds.has(task.id) ? 'checked' : '') + ' onchange="toggleEventSelection(\'' + task.id + '\')" aria-label="' + escapeHtml(task.title) + ' 선택"></div>' : ''}
                         <div style="flex:1;min-width:0">
                           <div class="event-card-main">
                             <div class="event-title">${telegramBadge}${escapeHtml(task.title)}</div>
@@ -17005,7 +17062,7 @@
                           </div>
                           ${dateDisplay ? '<span class="event-compact-date">' + dateDisplay + '</span>' : ''}
                           ${_eventBulkSelectMode ? '' : `<div class="event-actions">
-                            ${task.link ? '<a href="' + task.link + '" target="_blank" class="btn btn-small btn-link">🔗</a>' : ''}
+                            ${task.link ? '<a href="' + escapeHtml(task.link) + '" target="_blank" rel="noopener" class="btn btn-small btn-link">🔗</a>' : ''}
                             <button class="btn btn-small btn-submit" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                             <button class="btn btn-small btn-edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                             <button class="btn btn-small btn-delete" onclick="deleteTask('${task.id}')" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
@@ -17025,7 +17082,7 @@
                       <div class="events-group">
                         <div class="events-group-header" onclick="toggleEventGroup('${groupId}')">
                           <span>
-                            ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([' + groupIds.join(',') + '])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                            ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + groupIds.join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
                             ${icon} ${title} (${events.length})
                           </span>
                           <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
@@ -17051,7 +17108,7 @@
                   <div class="events-group">
                     <div class="events-group-header" onclick="toggleEventGroup('submitted')">
                       <span>
-                        ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allSubmittedChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([' + submittedIds.join(',') + '])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                        ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allSubmittedChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + submittedIds.join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
                         ✅ 제출완료 (${submittedEvents.length})
                       </span>
                       <span class="toggle-icon">${_collapsedEventGroups.has('submitted') ? '▶' : '▼'}</span>
@@ -17064,7 +17121,7 @@
                         const isTelegram = task.source && task.source.type === 'telegram-event';
                         return `
                         <div class="event-card completed" style="${_eventBulkSelectMode ? 'display:flex;align-items:center' : ''}">
-                          ${_eventBulkSelectMode ? '<div class="event-check-col"><input type="checkbox" ' + (_eventBulkSelectedIds.has(task.id) ? 'checked' : '') + ' onchange="toggleEventSelection(' + task.id + ')" aria-label="' + escapeHtml(task.title) + ' 선택"></div>' : ''}
+                          ${_eventBulkSelectMode ? '<div class="event-check-col"><input type="checkbox" ' + (_eventBulkSelectedIds.has(task.id) ? 'checked' : '') + ' onchange="toggleEventSelection(\'' + task.id + '\')" aria-label="' + escapeHtml(task.title) + ' 선택"></div>' : ''}
                           <div style="flex:1;min-width:0">
                             <div class="event-title">${isTelegram ? '<span class="event-tg-badge">📱</span>' : ''}${escapeHtml(task.title)}</div>
                             ${completedStr ? `<span class="event-completed-date" onclick="editCompletedAt('${task.id}')" title="클릭하여 수정">✓ ${completedStr}</span>` : ''}
@@ -17104,8 +17161,8 @@
                               '<div class="event-meta-info" style="font-size:11px;color:var(--text-muted)">' + deletedStr + ' · ' + daysLeft + '일 후 영구삭제</div>' +
                             '</div>' +
                             '<div class="event-actions">' +
-                              '<button class="btn btn-small btn-undo" onclick="restoreFromTrash(' + task.id + ')" aria-label="복원" title="복원">↩</button>' +
-                              '<button class="btn btn-small btn-delete" onclick="permanentDeleteFromTrash(' + task.id + ')" aria-label="영구삭제" title="영구삭제">✕</button>' +
+                              '<button class="btn btn-small btn-undo" onclick="restoreFromTrash(\'' + task.id + '\')" aria-label="복원" title="복원">↩</button>' +
+                              '<button class="btn btn-small btn-delete" onclick="permanentDeleteFromTrash(\'' + task.id + '\')" aria-label="영구삭제" title="영구삭제">✕</button>' +
                             '</div>' +
                           '</div>';
                         }).join('')}
@@ -17768,7 +17825,7 @@
                         ${task.deadline ? ` · ${formatDeadline(task.deadline)}` : ''}
                       </div>
                       <div class="task-item-actions">
-                        ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
+                        ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
                         <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                         <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                         <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
@@ -17939,7 +17996,7 @@
                               </div>
                             </div>
                             <div class="all-task-actions">
-                              ${task.link ? `<button class="btn-small go" onclick="handleGo('${task.link}')">GO</button>` : ''}
+                              ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
                               <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                               <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                               <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
@@ -19509,7 +19566,7 @@
                 }
                 otherLogs.forEach(log => {
                   const actualIdx = task.logs.indexOf(log);
-                  html += '<div class="work-task-log"><span class="work-task-log-date">' + log.date + '</span><span class="work-task-log-content">' + log.content + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(' + projectId + ', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button></div></div>';
+                  html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><span class="work-task-log-content">' + escapeHtml(log.content) + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(\'' + projectId + '\', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button></div></div>';
                 });
                 return html;
               })()}
@@ -19887,7 +19944,7 @@
             if (!appState.user) {
               localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
             }
-            syncToFirebase();
+            if (appState.user) { syncToFirebase(); }
             showToast(`"${escapeHtml(template.name)}" 템플릿 가져오기 완료`, 'success');
             renderStatic();
           } catch (e) {
@@ -20254,12 +20311,12 @@
       if (!project) return;
 
       const newStage = project.currentStage + direction;
-      if (newStage >= 0 && newStage < appState.workProjectStages.length) {
+      if (newStage >= 0 && newStage < project.stages.length) {
         project.currentStage = newStage;
         project.updatedAt = new Date().toISOString();
         saveWorkProjects();
         renderStatic();
-        showToast(`${appState.workProjectStages[newStage]} 단계로 이동`, 'success');
+        showToast(`${getStageName(project, newStage)} 단계로 이동`, 'success');
       }
     }
     window.moveWorkProjectStage = moveWorkProjectStage;
@@ -20445,14 +20502,14 @@
       if (!project) return;
 
       let text = `📋 ${project.name}\n`;
-      text += `현재 단계: ${appState.workProjectStages[project.currentStage]}\n`;
+      text += `현재 단계: ${getStageName(project, project.currentStage)}\n`;
       text += `─────────────────\n\n`;
 
       project.stages.forEach((stage, idx) => {
         const hasContent = stage.subcategories && stage.subcategories.some(s => s.tasks.length > 0);
         if (!hasContent) return;
 
-        const stageName = appState.workProjectStages[idx];
+        const stageName = getStageName(project, idx);
         const isCurrent = idx === project.currentStage;
         text += `${isCurrent ? '▶ ' : ''}${idx + 1}. ${stageName}\n`;
 
@@ -20821,9 +20878,10 @@
 
       // Escape 키: 모달/드롭다운 닫기 (어디서든 동작)
       if (e.key === 'Escape') {
-        if (appState.showSettings) { closeSettings(); render(); return; }
-        if (appState.showOnboarding) { appState.showOnboarding = false; render(); return; }
-        if (appState.showDetailedAdd) { appState.showDetailedAdd = false; appState.editingTaskId = null; render(); return; }
+        if (showShortcutsHelp) { toggleShortcutsHelp(); return; }
+        if (appState.showSettings) { closeSettings(); renderStatic(); return; }
+        if (appState.showOnboarding) { appState.showOnboarding = false; renderStatic(); return; }
+        if (appState.showDetailedAdd) { appState.showDetailedAdd = false; appState.editingTaskId = null; renderStatic(); return; }
         // 알림 드롭다운 닫기
         const notifDropdown = document.getElementById('notification-dropdown');
         if (notifDropdown && notifDropdown.classList.contains('show')) { notifDropdown.classList.remove('show'); return; }

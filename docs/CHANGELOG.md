@@ -62,8 +62,26 @@ hash type: 메시지
   - **P1**: `saveAsTemplate` 중복 정의 제거 — task 객체 기반(dead) 삭제, workProject 기반(active) 유지
   - **P1**: `calculateCompletionStreak` dead else-if 분기 제거 — 압축 데이터는 배열이라 Array.isArray 조건에서 이미 처리됨
 
+- **전체 버그 스캔 + 대규모 수정 (P0×7 + P1×12 + P2×6)**
+  - **P0 onclick 따옴표 누락 6건**: `completeTask`, `toggleEventSelection`(2곳), `toggleEventGroupSelect`(2곳), `restoreFromTrash`/`permanentDeleteFromTrash`, `deleteWorkLog` — UUID가 JS 변수로 해석되어 기능 완전 고장
+  - **P0 `render()` → `renderStatic()`**: Escape 키 모달 닫기 3곳에서 존재하지 않는 `render()` 호출 → crash
+  - **P0 `getHourlyProductivity()` _summary 크래시**: 압축 데이터의 `e.at` undefined → TypeError
+  - **P1 `getCategoryDistribution()` _summary 오집계**: 압축 카테고리 데이터 활용하도록 수정
+  - **P1 `getDayOfWeekProductivity()` _summary count + UTC 시차**: `entries.length` → `e.count` 사용, UTC 방지 `T12:00:00`
+  - **P1 `toggleFocusTask()` parseInt → UUID 정규식 파싱**: parseInt로 UUID 파싱 실패 수정
+  - **P1 `moveWorkProjectStage`/`copyWorkProjectToClipboard`**: 글로벌 stage 배열 → `getStageName()` 사용
+  - **P1 XSS 미이스케이프 10곳**: nextAction.title, filteredTasks[0].title, st.text, previewText, task.link(onclick 3+href 1), detailedTask.title, detailedTask.link(3곳)
+  - **P1 XSS `log.content`/`log.date`**: work task log에 escapeHtml 적용
+  - **P2 `getRevenueStats` completionLog 통합**: appState.tasks만 → completionLog 기반 전체 수익 집계
+  - **P2 `renderRecentHistory` _summary 건너뛰기**: "undefined" 표시 방지
+  - **P2 `saveCompletedAt` 수익 타입**: `task.expectedRevenue` → `Number(task.expectedRevenue)`
+  - **P2 `validateTask` 필드 누락**: description, startDate, telegramEventId 보존 추가
+  - **P2 Escape shortcuts help 닫기**: dead code였던 shortcuts help dismiss를 early handler로 이동
+  - **P2 `syncToFirebase` 가드**: template-import에서 미로그인 시 불필요한 호출 방지
+  - **P2 `quickAddValue` escapeHtml**: value 속성 injection 방지
+
 ### 다음 작업
-- P2 버그: `getRevenueStats` completionLog 과거 수익 데이터 누락
+- 전체 버그 스캔 완료 ✅
 
 ---
 
