@@ -15643,11 +15643,6 @@
      * 전체 화면 렌더링 (상태 변경 시 호출)
      */
     function renderStatic() {
-      // 스크롤/포커스 보존
-      const _scrollY = window.scrollY;
-      const _activeId = document.activeElement?.id || '';
-      const _activeClass = document.activeElement?.className || '';
-
       const now = new Date();
       const hour = now.getHours();
       const filteredTasks = getFilteredTasks();

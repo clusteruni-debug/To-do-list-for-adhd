@@ -64,6 +64,15 @@ hash type: 메시지
     - 외부 모듈(commute.js, rhythm.js)을 두 파트 사이에 배치
     - `loadState()` 호출 시점에 모든 외부 함수 사용 가능 (초기화 시점 버그 수정)
 
+- **리팩토링 Prompt 7: renderStatic 부분 렌더링 최적화**
+  - 9개 탭 전체에 조건부 렌더링 적용 — 활성 탭만 HTML 생성, 비활성 탭은 빈 문자열
+    - inline 탭(action, schedule, dashboard, all): `${currentTab === 'X' ? \`...\` : ''}`
+    - IIFE 탭(events, life, history): `${currentTab === 'X' ? (() => {...})() : ''}`
+    - 함수 탭(work, commute): `${currentTab === 'X' ? renderFn() : ''}`
+  - 비활성 8개 탭의 ~2000줄 템플릿 평가 + DOM 생성 스킵
+  - `updateTime()` 데드코드 제거 (`_scrollY`/`_activeId` RAF 복원 — 범위 밖 변수 참조)
+  - `renderStatic()` 데드코드 제거 (`_scrollY`/`_activeId`/`_activeClass` 미사용 변수)
+
 ### 커밋
 ```
 158ba60 refactor: Date.now() ID 생성을 crypto.randomUUID()로 교체
@@ -71,10 +80,11 @@ a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
 39cb7a2 docs: 핵심 테스트 시나리오 CLAUDE.md 문서화 (Prompt 3)
 87079e3 docs: CHANGELOG 메타데이터 블록 구조 개선 (Prompt 4)
 1d2869e refactor: 통근 트래커 모듈 분리 js/commute.js (Prompt 5)
+05b9383 refactor: 라이프 리듬 모듈 분리 js/rhythm.js + 스크립트 아키텍처 개선 (Prompt 6)
 ```
 
 ### 다음 작업
-- 리팩토링 Prompt 7: renderStatic 부분 렌더링 최적화
+- Prompt 1-7 리팩토링 완료 ✅
 
 ---
 
