@@ -42,16 +42,24 @@ hash type: 메시지
   - ESC 키: 6개 누락 모달에 닫기 추가 (time input, work, quick edit, import, edit completed, edit log, telegram, weekly review)
   - Tab 포커스 트랩: `.work-modal-overlay`, `.time-input-modal.show` 셀렉터 추가
 
+- **2차 검토 수정** ⭐
+  - XSS 누락 1곳: `editLifeRhythm/deleteLifeRhythm` onclick에 `escapeAttr` 적용
+  - `toMins()` 3곳: 잘못된 시간 형식(빈 문자열, 콜론 없음) NaN 방어
+  - `minsToTime/minsToHM`: undefined/NaN 방어 + Math.round로 소수점/"07:60" 방지
+  - `getCommuteRecommendation`: settings.targetArrivalTime null 크래시 방어
+  - ESC 핸들러 2곳 추가: rhythm 액션 메뉴 + commute 루트 모달
+
 ### 커밋
 ```
 5f5842d fix: onclick XSS 전수 방어 — escapeAttr() 함수 추가 및 적용
 b82fcf6 fix: 방어적 코딩 — 자정 넘김 복약 날짜 오류 + settings null 방어
 f1b987c fix: 타이머 메모리 누수 수정 — commute tag timeout + pomodoro resume
 65f7345 fix: 모달 UX 개선 — brain dump 데이터 손실 방지 + ESC/포커스 트랩 전수 적용
+236774f fix: 2차 검토 — XSS 누락 1곳 + NaN 방어 + ESC 핸들러 2곳 추가
 ```
 
 ### 다음 작업
-- 없음 (전체 검토 항목 모두 완료)
+- 없음 (1차 + 2차 전체 검토 완료)
 
 ---
 
