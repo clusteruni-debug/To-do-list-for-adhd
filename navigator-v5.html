@@ -11016,14 +11016,22 @@
             // 병합 결과를 localStorage에도 반영
             localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
           }
-          // 통근 트래커 병합 (deletedIds로 삭제된 루트 필터링)
+          // 통근 트래커 병합 (deletedIds 필터링 + updatedAt 기반 최신 우선)
           if (data.commuteTracker) {
             const cloud = data.commuteTracker;
             const local = appState.commuteTracker;
             const deletedRoutes = appState.deletedIds.commuteRoutes || {};
             const routeMap = {};
             (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
-            (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => {
+              if (deletedRoutes[r.id]) return;
+              const existing = routeMap[r.id];
+              if (!existing) { routeMap[r.id] = r; return; }
+              // updatedAt 비교: 최신 쪽 우선 (없으면 createdAt 폴백)
+              const eTime = existing.updatedAt || existing.createdAt || '';
+              const cTime = r.updatedAt || r.createdAt || '';
+              if (cTime > eTime) routeMap[r.id] = r;
+            });
             appState.commuteTracker.routes = Object.values(routeMap);
             const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
             appState.commuteTracker.trips = mergedTrips;
@@ -11155,15 +11163,21 @@
               // 병합 결과를 localStorage에도 반영 — 새로고침 시 이전 데이터로 되돌아가는 문제 방지
               localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
             }
-            // 통근 트래커 병합 (실시간 동기화, deletedIds 필터링)
+            // 통근 트래커 병합 (실시간 동기화, deletedIds 필터링 + updatedAt 최신 우선)
             if (data.commuteTracker) {
               const cloud = data.commuteTracker;
               const local = appState.commuteTracker;
               const deletedRoutes = appState.deletedIds.commuteRoutes || {};
-              // 루트: ID 기반 병합 (삭제된 루트 제외, 로컬 우선)
               const routeMap = {};
               (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
-              (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
+              (cloud.routes || []).forEach(r => {
+                if (deletedRoutes[r.id]) return;
+                const existing = routeMap[r.id];
+                if (!existing) { routeMap[r.id] = r; return; }
+                const eTime = existing.updatedAt || existing.createdAt || '';
+                const cTime = r.updatedAt || r.createdAt || '';
+                if (cTime > eTime) routeMap[r.id] = r;
+              });
               appState.commuteTracker.routes = Object.values(routeMap);
               // 통근 기록: 양쪽 병합 (로컬 우선)
               const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
@@ -15134,14 +15148,21 @@
               };
               saveLifeRhythm();
             }
-          // 통근 트래커 병합 (deletedIds 필터링)
+          // 통근 트래커 병합 (deletedIds 필터링 + updatedAt 최신 우선)
           if (data.commuteTracker) {
             const cloud = data.commuteTracker;
             const local = appState.commuteTracker;
             const deletedRoutes = appState.deletedIds.commuteRoutes || {};
             const routeMap = {};
             (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
-            (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => {
+              if (deletedRoutes[r.id]) return;
+              const existing = routeMap[r.id];
+              if (!existing) { routeMap[r.id] = r; return; }
+              const eTime = existing.updatedAt || existing.createdAt || '';
+              const cTime = r.updatedAt || r.createdAt || '';
+              if (cTime > eTime) routeMap[r.id] = r;
+            });
             appState.commuteTracker.routes = Object.values(routeMap);
             const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
             appState.commuteTracker.trips = mergedTrips;

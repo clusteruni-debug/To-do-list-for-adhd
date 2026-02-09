@@ -45,20 +45,26 @@ function saveCommuteRoute() {
   const colorEl = document.querySelector('.commute-color-btn.selected');
   const name = nameEl ? nameEl.value.trim() : '';
   if (!name) { showToast('루트 이름을 입력해주세요', 'error'); return; }
+  const now = new Date().toISOString();
   const route = {
     id: appState.commuteRouteModal === 'add' ? 'route-' + generateId() : appState.commuteRouteModal,
     name: name, type: typeEl ? typeEl.value : 'both',
     description: descEl ? descEl.value.trim() : '',
     expectedDuration: parseInt(durationEl ? durationEl.value : '45') || 45,
     color: colorEl ? colorEl.dataset.color : '#667eea',
-    isActive: true, createdAt: new Date().toISOString()
+    isActive: true, createdAt: now, updatedAt: now
   };
   if (appState.commuteRouteModal === 'add') {
     appState.commuteTracker.routes.push(route);
     showToast('🚌 루트 추가됨', 'success');
   } else {
     const idx = appState.commuteTracker.routes.findIndex(r => r.id === route.id);
-    if (idx >= 0) { route.createdAt = appState.commuteTracker.routes[idx].createdAt; appState.commuteTracker.routes[idx] = route; showToast('✏️ 루트 수정됨', 'success'); }
+    if (idx >= 0) {
+      route.createdAt = appState.commuteTracker.routes[idx].createdAt;
+      route.updatedAt = now; // 수정 시점 기록 — 기기 간 병합에서 최신 판별용
+      appState.commuteTracker.routes[idx] = route;
+      showToast('✏️ 루트 수정됨', 'success');
+    }
   }
   appState.commuteRouteModal = null;
   saveCommuteTracker(); renderStatic();
