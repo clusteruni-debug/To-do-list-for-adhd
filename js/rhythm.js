@@ -211,8 +211,8 @@ function showRhythmActionMenu(type, event) {
   menu.className = 'rhythm-action-menu';
   menu.id = 'rhythm-action-menu';
   menu.innerHTML = `
-    <button onclick="hideRhythmActionMenu(); editLifeRhythm('${type}')">✏️ 시간 수정</button>
-    <button class="danger" onclick="hideRhythmActionMenu(); deleteLifeRhythm('${type}')">🗑️ 기록 삭제</button>
+    <button onclick="hideRhythmActionMenu(); editLifeRhythm('${escapeAttr(type)}')">✏️ 시간 수정</button>
+    <button class="danger" onclick="hideRhythmActionMenu(); deleteLifeRhythm('${escapeAttr(type)}')">🗑️ 기록 삭제</button>
   `;
 
   document.body.appendChild(overlay);
@@ -744,7 +744,7 @@ function getLifeRhythmStats() {
   const bedtimes = [];
 
   // 시간을 분으로 변환하는 헬퍼
-  const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+  const toMins = (t) => { if (!t || typeof t !== 'string') return null; const p = t.split(':'); if (p.length !== 2) return null; const h = parseInt(p[0], 10), m = parseInt(p[1], 10); return isNaN(h) || isNaN(m) ? null : h * 60 + m; };
 
   // 최근 7일 데이터 수집
   for (let i = 6; i >= 0; i--) {
@@ -983,7 +983,7 @@ function renderLifeRhythmHistory() {
   const records = [];
 
   // 시간을 분으로 변환
-  const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+  const toMins = (t) => { if (!t || typeof t !== 'string') return null; const p = t.split(':'); if (p.length !== 2) return null; const h = parseInt(p[0], 10), m = parseInt(p[1], 10); return isNaN(h) || isNaN(m) ? null : h * 60 + m; };
   const formatDur = (mins) => {
     if (!mins || mins <= 0) return null;
     const h = Math.floor(mins / 60);
@@ -1162,7 +1162,7 @@ let _rhythmStatsVisible = false;
  * 라이프 리듬 30일 통계 계산
  */
 function calculateRhythmStats(days = 30) {
-  const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+  const toMins = (t) => { if (!t || typeof t !== 'string') return null; const p = t.split(':'); if (p.length !== 2) return null; const h = parseInt(p[0], 10), m = parseInt(p[1], 10); return isNaN(h) || isNaN(m) ? null : h * 60 + m; };
   const today = new Date();
   const history = appState.lifeRhythm.history || {};
   const todayStr = getLocalDateStr(today);
@@ -1258,14 +1258,15 @@ function calculateRhythmStats(days = 30) {
   // 평균 계산 헬퍼
   const avg = (arr) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
   const minsToTime = (m) => {
-    if (m === null) return '--:--';
-    const adjusted = m % (24 * 60);
+    if (m === null || m === undefined || isNaN(m)) return '--:--';
+    const adjusted = Math.round(m) % (24 * 60);
     return String(Math.floor(adjusted / 60)).padStart(2, '0') + ':' + String(adjusted % 60).padStart(2, '0');
   };
   const minsToHM = (m) => {
-    if (m === null) return '--';
-    const h = Math.floor(m / 60);
-    const min = m % 60;
+    if (m === null || m === undefined || isNaN(m)) return '--';
+    const rounded = Math.round(m);
+    const h = Math.floor(rounded / 60);
+    const min = rounded % 60;
     return h > 0 ? h + 'h ' + min + 'm' : min + '분';
   };
 

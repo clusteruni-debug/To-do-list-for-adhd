@@ -152,6 +152,7 @@ function getCommuteRecommendation(routeId, direction) {
   const route = appState.commuteTracker.routes.find(r => r.id === routeId);
   if (!route) return null;
   const settings = appState.commuteTracker.settings;
+  if (!settings || !settings.targetArrivalTime) return null;
   const durations = [];
   const now = new Date();
   for (let i = 0; i < 30; i++) {

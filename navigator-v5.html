@@ -20912,6 +20912,12 @@
         // 알림 드롭다운 닫기
         const notifDropdown = document.getElementById('notification-dropdown');
         if (notifDropdown && notifDropdown.classList.contains('show')) { notifDropdown.classList.remove('show'); return; }
+        // 리듬 액션 메뉴 ESC 닫기
+        const rhythmMenu = document.getElementById('rhythm-action-menu');
+        if (rhythmMenu) { hideRhythmActionMenu(); return; }
+        // 통근 루트 모달 ESC 닫기
+        const commuteModal = document.querySelector('.commute-modal-overlay');
+        if (commuteModal) { closeCommuteRouteModal(); return; }
         // 동적 모달 ESC 닫기 — brain dump은 데이터 손실 확인 포함
         const brainDump = document.getElementById('brain-dump-modal');
         if (brainDump) {
