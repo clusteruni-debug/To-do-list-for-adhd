@@ -20,8 +20,8 @@ hash type: 메시지
 - 항목
 -->
 
-## [2026-02-09] (세션 23)
-> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 📊 +127/-73 | 🗄️ DB: deletedIds.commuteRoutes 추가
+## [2026-02-09] (세션 23-24)
+> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 📊 +160/-73 | 🗄️ DB: deletedIds.commuteRoutes 추가, today.updatedAt 추가
 
 ### 작업 내용
 - **라이프 리듬 기기 간 동기화 버그 수정**
@@ -30,9 +30,18 @@ hash type: 메시지
   - loadFromFirebase / onSnapshot / handleFileImport 3곳 모두 적용
   - `today.date` undefined 방어 (`|| null` 명시)
 
-- **"변경사항 수신됨" 토스트 알림 과다 수정**
-  - `lastOwnWriteTimestamp` 비교 → 자기 쓰기 시 토스트 미표시
-  - 3초 쿨다운 추가 (`lastRealtimeSyncToastTime`)
+- **리듬 삭제가 다른 기기에서 되돌아가는 버그 수정** ⭐
+  - 근본 원인: `||` 연산자로 병합 시 `null || "07:00"` = `"07:00"` → 삭제 전파 불가
+  - 해결: `saveLifeRhythm()`에 `updatedAt` 타임스탬프 추가
+  - `mergeRhythmToday()`에서 `updatedAt` 기반 "last writer wins" 전략 구현
+  - 양쪽 `updatedAt` 있으면 → 최신 쪽이 today 전체 지배 (null 포함 = 삭제 전파)
+  - 한쪽만 `updatedAt` → 최신 코드 쪽 우선
+  - 양쪽 다 없으면 → 기존 `||` 병합 (하위호환)
+  - loadFromFirebase/onSnapshot 병합 후 `localStorage.setItem` 추가 (새로고침 시 되돌림 방지)
+
+- **"변경사항 수신됨" 토스트 완전 제거**
+  - 핑퐁 루프 제거 (onSnapshot 끝의 syncToFirebase 삭제)
+  - 토스트 자체 제거 — sync-indicator로 충분
 
 - **통근 트래커 동기화 버그 수정**
   - onSnapshot 핸들러에 commuteTracker 병합 추가 (누락되어 있었음)
@@ -46,6 +55,8 @@ hash type: 메시지
 ### 커밋
 ```
 a5e4ad0 fix: 기기 간 동기화 버그 8건 수정 — 리듬/통근/토스트
+8ce320a fix: onSnapshot 핑퐁 루프 제거
+84f92ad fix: 동기화 수신 토스트 제거
 ```
 
 ### 다음 작업

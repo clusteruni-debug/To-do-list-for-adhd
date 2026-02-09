@@ -98,10 +98,40 @@ function mergeRhythmToday(localToday, cloudToday, mergedHistory) {
     return { today: newer, history };
   }
 
-  // 날짜가 같거나 한쪽만 있는 경우: 필드별 병합 (값이 있는 쪽 우선)
+  // 날짜가 같거나 한쪽만 있는 경우
+  // updatedAt 기반 "last writer wins" — 삭제(null)도 정상 전파되도록
+  const lUpdated = lt.updatedAt || null;
+  const cUpdated = ct.updatedAt || null;
+
+  // 양쪽 다 updatedAt이 있으면 → 최신 쪽이 today 전체를 지배 (null 필드 = 의도적 삭제)
+  // 한쪽만 updatedAt이 있으면 → 그쪽이 최신 코드 (우선)
+  // 양쪽 다 없으면 → 기존 || 병합 (하위호환)
+  let winner = null;
+  if (lUpdated && cUpdated) {
+    winner = lUpdated >= cUpdated ? lt : ct;
+  } else if (lUpdated && !cUpdated) {
+    winner = lt;
+  } else if (!lUpdated && cUpdated) {
+    winner = ct;
+  }
+
+  if (winner) {
+    // 최신 기기의 데이터를 그대로 사용 (null 포함 — 삭제가 전파됨)
+    const today = { date: winner.date || lt.date || ct.date || null };
+    for (const f of rhythmFields) {
+      today[f] = winner[f] !== undefined ? winner[f] : null;
+    }
+    // 복약 데이터도 최신 기기 우선
+    const wMeds = { ...(winner.medications || {}) };
+    if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
+    today.medications = wMeds;
+    today.updatedAt = winner.updatedAt;
+    return { today, history };
+  }
+
+  // 하위호환: 양쪽 다 updatedAt 없으면 기존 || 병합
   const lMeds = { ...(lt.medications || {}) };
   const cMeds = { ...(ct.medications || {}) };
-  // med_afternoon → med_afternoon_adhd 마이그레이션
   if (lMeds.med_afternoon !== undefined) { lMeds.med_afternoon_adhd = lMeds.med_afternoon; delete lMeds.med_afternoon; }
   if (cMeds.med_afternoon !== undefined) { cMeds.med_afternoon_adhd = cMeds.med_afternoon; delete cMeds.med_afternoon; }
   const allMedSlots = new Set([...Object.keys(lMeds), ...Object.keys(cMeds)]);
@@ -1521,6 +1551,10 @@ function checkRhythmDayChange() {
 }
 
 function saveLifeRhythm() {
+  // 수정 시점 기록 — 기기 간 병합에서 최신 데이터 판별용
+  if (appState.lifeRhythm.today) {
+    appState.lifeRhythm.today.updatedAt = new Date().toISOString();
+  }
   // 항상 localStorage에 저장 (로그인 여부 무관 — 오프라인 폴백 보장)
   localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
   if (appState.user) {
