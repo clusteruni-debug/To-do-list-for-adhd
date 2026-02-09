@@ -21,47 +21,53 @@ hash type: 메시지
 -->
 
 ## [2026-02-09] (세션 23-24)
-> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 📊 +160/-73 | 🗄️ DB: deletedIds.commuteRoutes 추가, today.updatedAt 추가
+> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 🗄️ DB: deletedIds.commuteRoutes, today.updatedAt, history[date].updatedAt, route.updatedAt 추가
 
 ### 작업 내용
 - **라이프 리듬 기기 간 동기화 버그 수정**
   - `mergeRhythmToday()` 함수 신규 (rhythm.js) — 날짜 비교 후 병합
   - today 날짜 불일치 시: 새 날짜 → today, 오래된 데이터 → history 이동
   - loadFromFirebase / onSnapshot / handleFileImport 3곳 모두 적용
-  - `today.date` undefined 방어 (`|| null` 명시)
 
 - **리듬 삭제가 다른 기기에서 되돌아가는 버그 수정** ⭐
   - 근본 원인: `||` 연산자로 병합 시 `null || "07:00"` = `"07:00"` → 삭제 전파 불가
-  - 해결: `saveLifeRhythm()`에 `updatedAt` 타임스탬프 추가
-  - `mergeRhythmToday()`에서 `updatedAt` 기반 "last writer wins" 전략 구현
-  - 양쪽 `updatedAt` 있으면 → 최신 쪽이 today 전체 지배 (null 포함 = 삭제 전파)
-  - 한쪽만 `updatedAt` → 최신 코드 쪽 우선
-  - 양쪽 다 없으면 → 기존 `||` 병합 (하위호환)
-  - loadFromFirebase/onSnapshot 병합 후 `localStorage.setItem` 추가 (새로고침 시 되돌림 방지)
+  - `saveLifeRhythm()`에 `updatedAt`, `mergeRhythmToday()`에 "last writer wins" 적용
+  - loadFromFirebase/onSnapshot 병합 후 `localStorage.setItem` 추가
+
+- **mergeRhythmHistory도 updatedAt 기반 last-writer-wins 적용**
+  - 히스토리 항목 편집 시 updatedAt 타임스탬프 기록
+  - editLifeRhythmHistory, editMedicationHistory에 updatedAt 추가
+
+- **통근 루트 수정 동기화** ⭐
+  - `saveCommuteRoute()`에 `updatedAt` 타임스탬프 추가
+  - loadFromFirebase/onSnapshot/handleFileImport 루트 병합 시 updatedAt 비교
+  - 기존 루트는 createdAt 폴백으로 하위호환
 
 - **"변경사항 수신됨" 토스트 완전 제거**
-  - 핑퐁 루프 제거 (onSnapshot 끝의 syncToFirebase 삭제)
-  - 토스트 자체 제거 — sync-indicator로 충분
+  - 핑퐁 루프 제거 + 토스트 자체 제거 — sync-indicator로 충분
 
 - **통근 트래커 동기화 버그 수정**
-  - onSnapshot 핸들러에 commuteTracker 병합 추가 (누락되어 있었음)
-  - 루트 삭제 부활 방지: `deletedIds.commuteRoutes` Soft-Delete 추적
-  - loadFromFirebase / onSnapshot / handleFileImport 3곳 deletedIds 필터링
+  - onSnapshot에 commuteTracker 병합 추가, deletedIds.commuteRoutes Soft-Delete
 
-- **localStorage 오프라인 폴백 보장**
-  - `saveCommuteTracker()` — 로그인 시에도 항상 localStorage 저장
-  - `saveLifeRhythm()` — 로그인 시에도 항상 localStorage 저장
+- **SVG 아이콘 교체** ⭐
+  - SVG_ICONS에 12개 아이콘 추가 (sun, moon, walk, building, rocket 등)
+  - 라이프 리듬 메인 UI 6개 + 히스토리 6개 + 통계 전체 교체
+  - 테마 토글 ☀️/🌙 → SVG, 동기화 상태 🔄/☁️/⚠️ → SVG
+  - 복약 트래커 제목/통계, 수면 패턴 제목 교체
 
 ### 커밋
 ```
-a5e4ad0 fix: 기기 간 동기화 버그 8건 수정 — 리듬/통근/토스트
+a5e4ad0 fix: 기기 간 동기화 버그 8건 수정
 8ce320a fix: onSnapshot 핑퐁 루프 제거
 84f92ad fix: 동기화 수신 토스트 제거
+2788d29 fix: 리듬 삭제 다른 기기에서 되돌아가는 버그 수정 (updatedAt)
+9784a8a fix: mergeRhythmHistory도 updatedAt 기반 last-writer-wins
+9e6806c fix: 통근 루트 수정 동기화 (updatedAt)
+b07b54e feat: SVG 아이콘 교체 — 라이프 리듬/상태/복약 영역
 ```
 
 ### 다음 작업
-- 루트 수정 동기화 (updatedAt 기반, 스키마 변경 필요)
-- DEVICE_ID 기반 자기 쓰기 감지 (선택적 개선)
+- 없음 (모든 대기 항목 완료)
 
 ---
 
