@@ -10429,7 +10429,7 @@
     let syncDebounceTimer = null; // syncToFirebase 디바운스 타이머
     const SYNC_DEBOUNCE_MS = 1500; // 동기화 디바운스 간격 (1.5초)
     let lastOwnWriteTimestamp = null; // 핑퐁 방지: 자기가 마지막으로 쓴 timestamp
-    let lastRealtimeSyncToastTime = 0; // 실시간 동기화 토스트 쿨다운 (3초)
+    // lastRealtimeSyncToastTime 제거 — 동기화 수신 토스트 자체를 삭제함
 
     // IndexedDB 가용성 체크 (프라이빗 브라우징에서 사용 불가 시 localStorage 폴백)
     let isIndexedDBAvailable = true;
@@ -11196,21 +11196,11 @@
             renderStatic();
             updateSyncIndicator();
 
-            // 다른 기기에서 변경사항 수신 토스트
-            // 조건: 첫 로드 아님 + 자기 쓰기 아님 + 30초 쿨다운
+            // 동기화 수신 시 토스트 제거 — sync-indicator로 충분하고 토스트는 방해만 됨
+            // 첫 로드 플래그만 유지 (다른 곳에서 참조 가능성)
             if (isFirstRealtimeLoad) {
               isFirstRealtimeLoad = false;
-            } else if (data.lastUpdated && data.lastUpdated !== lastOwnWriteTimestamp) {
-              const now = Date.now();
-              if (now - lastRealtimeSyncToastTime > 3000) {
-                lastRealtimeSyncToastTime = now;
-                showToast('📲 다른 기기에서 변경사항 수신됨', 'success');
-              }
             }
-
-            // 재업로드 제거: 로컬 변경은 자체 saveState→syncToFirebase로 처리됨
-            // 기존 재업로드가 핑퐁 루프의 원인이었음 (기기A→B→A→B... 무한 반복)
-            // 오프라인 중 쌓인 변경은 online 이벤트 핸들러가 동기화 담당
           }
         }
       });
