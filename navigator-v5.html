@@ -21092,6 +21092,7 @@
      */
     function resumePomodoro() {
       appState.pomodoro.isRunning = true;
+      if (pomodoroInterval) clearInterval(pomodoroInterval);
       pomodoroInterval = setInterval(pomodoroTick, 1000);
       renderStatic();
     }

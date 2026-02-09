@@ -134,13 +134,17 @@ function showCommuteTagPrompt(direction) {
   let btns = routes.map(r => '<button class="commute-tag-prompt-btn" onclick="tagCommuteRoute(\'' + escapeAttr(r.id) + '\', \'' + escapeAttr(direction) + '\')" style="border-left:3px solid ' + escapeAttr(r.color) + '">' + escapeHtml(r.name) + '</button>').join('');
   promptEl.innerHTML = '<div class="commute-tag-prompt-title">🚌 어느 루트로 ' + dirLabel + '하셨나요?</div><div class="commute-tag-prompt-routes">' + btns + '</div><div class="commute-tag-prompt-later" onclick="dismissCommuteTag()">나중에</div>';
   document.body.appendChild(promptEl);
-  setTimeout(() => { const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }, 10000);
+  if (window._commuteTagTimeout) clearTimeout(window._commuteTagTimeout);
+  window._commuteTagTimeout = setTimeout(() => { window._commuteTagTimeout = null; const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }, 10000);
 }
 
 function tagCommuteRoute(routeId, direction) { selectCommuteRoute(routeId, direction); dismissCommuteTag(); }
 window.tagCommuteRoute = tagCommuteRoute;
 
-function dismissCommuteTag() { const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }
+function dismissCommuteTag() {
+  if (window._commuteTagTimeout) { clearTimeout(window._commuteTagTimeout); window._commuteTagTimeout = null; }
+  const el = document.getElementById('commute-tag-prompt'); if (el) el.remove();
+}
 window.dismissCommuteTag = dismissCommuteTag;
 
 function getCommuteRecommendation(routeId, direction) {
