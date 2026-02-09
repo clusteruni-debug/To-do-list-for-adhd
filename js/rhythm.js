@@ -1106,12 +1106,12 @@ function renderLifeRhythmHistory() {
         (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') +
       '</div>' +
       '<div class="rhythm-history-timeline six-items">' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? svgIcon('sun', 13) + r.wakeUp : '<span class="empty">' + svgIcon('sun', 13) + '--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? svgIcon('walk', 13) + r.homeDepart : '<span class="empty">' + svgIcon('walk', 13) + '--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? svgIcon('building', 13) + r.workArrive : '<span class="empty">' + svgIcon('building', 13) + '--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? svgIcon('rocket', 13) + r.workDepart : '<span class="empty">' + svgIcon('rocket', 13) + '--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? svgIcon('home-arrive', 13) + r.homeArrive : '<span class="empty">' + svgIcon('home-arrive', 13) + '--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="취침">' + (r.sleep ? svgIcon('moon', 13) + r.sleep : '<span class="empty">' + svgIcon('moon', 13) + '--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
       '</div>' +
       // 복약 히스토리 행
       (() => {
@@ -1132,12 +1132,12 @@ function renderLifeRhythmHistory() {
         '</div>';
       })() +
       '<div class="rhythm-history-summary">' +
-        (r.sleepDuration ? '<span>' + svgIcon('moon', 12) + r.sleepDuration + '</span>' : '') +
-        (r.commuteToWork ? '<span>' + svgIcon('bus', 12) + r.commuteToWork + '</span>' : '') +
-        (r.workDuration ? '<span>' + svgIcon('briefcase', 12) + r.workDuration + '</span>' : '') +
-        (r.commuteToHome ? '<span>' + svgIcon('home', 12) + r.commuteToHome + '</span>' : '') +
-        (r.totalOut ? '<span class="total">' + svgIcon('map-pin', 12) + r.totalOut + '</span>' : '') +
-        (r.completedTasks > 0 ? '<span>' + svgIcon('check', 12) + r.completedTasks + '개</span>' : '') +
+        (r.sleepDuration ? '<span>💤' + r.sleepDuration + '</span>' : '') +
+        (r.commuteToWork ? '<span>🚌' + r.commuteToWork + '</span>' : '') +
+        (r.workDuration ? '<span>💼' + r.workDuration + '</span>' : '') +
+        (r.commuteToHome ? '<span>🏠' + r.commuteToHome + '</span>' : '') +
+        (r.totalOut ? '<span class="total">📍' + r.totalOut + '</span>' : '') +
+        (r.completedTasks > 0 ? '<span>✅' + r.completedTasks + '개</span>' : '') +
       '</div>' +
     '</div>';
   }).join('') + '</div>';
@@ -1316,40 +1316,40 @@ function renderRhythmStats() {
 
   return `
     <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
-      <div style="font-size: 16px; font-weight: 600; margin-bottom: 14px;">${svgIcon('bar-chart', 16)} 30일 통계 <span style="font-size: 12px; color: var(--text-muted);">(${stats.dataPoints}일 데이터)</span></div>
+      <div style="font-size: 16px; font-weight: 600; margin-bottom: 14px;">📊 30일 통계 <span style="font-size: 12px; color: var(--text-muted);">(${stats.dataPoints}일 데이터)</span></div>
 
       <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('sun', 14)} 평균 기상</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">☀️ 평균 기상</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgWakeUp}</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('moon', 14)} 평균 취침</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">🌙 평균 취침</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgSleep}</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('moon', 14)} 평균 수면</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">💤 평균 수면</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgSleepDuration}</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('walk', 14)} 평균 출발</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">🚶 평균 출발</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgHomeDepart}</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('bus', 14)} 출근 통근</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">🚌 출근 통근</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgCommuteToWork} <span style="font-size: 11px; color: var(--text-muted);">(${stats.commuteToWorkCount}회)</span></td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('home', 14)} 퇴근 통근</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">🏠 퇴근 통근</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgCommuteToHome} <span style="font-size: 11px; color: var(--text-muted);">(${stats.commuteToHomeCount}회)</span></td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 8px 4px; color: var(--text-secondary);">${svgIcon('briefcase', 14)} 평균 근무</td>
+          <td style="padding: 8px 4px; color: var(--text-secondary);">💼 평균 근무</td>
           <td style="padding: 8px 4px; font-weight: 600;">${stats.avgWorkDuration}</td>
         </tr>
       </table>
 
-      <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">${svgIcon('calendar', 14)} 주중 vs 주말</div>
+      <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">📅 주중 vs 주말</div>
       <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
         <tr style="border-bottom: 1px solid var(--border-light);">
           <td style="padding: 6px 4px; color: var(--text-secondary);"></td>
@@ -1357,24 +1357,24 @@ function renderRhythmStats() {
           <td style="padding: 6px 4px; font-weight: 600; color: var(--accent-warning);">주말</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 6px 4px; color: var(--text-secondary);">${svgIcon('sun', 13)} 기상</td>
+          <td style="padding: 6px 4px; color: var(--text-secondary);">☀️ 기상</td>
           <td style="padding: 6px 4px;">${stats.weekdayWakeUp}</td>
           <td style="padding: 6px 4px;">${stats.weekendWakeUp}</td>
         </tr>
         <tr style="border-bottom: 1px solid var(--border-light);">
-          <td style="padding: 6px 4px; color: var(--text-secondary);">${svgIcon('moon', 13)} 취침</td>
+          <td style="padding: 6px 4px; color: var(--text-secondary);">🌙 취침</td>
           <td style="padding: 6px 4px;">${stats.weekdaySleep}</td>
           <td style="padding: 6px 4px;">${stats.weekendSleep}</td>
         </tr>
         <tr>
-          <td style="padding: 6px 4px; color: var(--text-secondary);">${svgIcon('bus', 13)} 통근</td>
+          <td style="padding: 6px 4px; color: var(--text-secondary);">🚌 통근</td>
           <td style="padding: 6px 4px;">${stats.weekdayCommuteToWork}</td>
           <td style="padding: 6px 4px;">-</td>
         </tr>
       </table>
 
       ${medRows ? `
-        <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">${svgIcon('pill', 14)} 복약 준수율</div>
+        <div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">💊 복약 준수율</div>
         <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
           ${medRows}
         </table>
