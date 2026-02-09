@@ -1600,7 +1600,8 @@ function saveLifeRhythm() {
   // 항상 localStorage에 저장 (로그인 여부 무관 — 오프라인 폴백 보장)
   localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
   if (appState.user) {
-    syncToFirebase();
+    // 리듬 기록은 즉시 동기화 — 디바운스 중 브라우저 닫기로 유실 방지
+    syncToFirebase(true);
   }
 }
 

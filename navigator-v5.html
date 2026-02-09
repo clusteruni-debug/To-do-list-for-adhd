@@ -10417,6 +10417,8 @@
         localStorage.setItem('navigator-completion-log', JSON.stringify(appState.completionLog));
         localStorage.setItem('navigator-deleted-ids', JSON.stringify(appState.deletedIds));
         localStorage.setItem('navigator-trash', JSON.stringify(appState.trash));
+        // 라이프 리듬도 로컬 백업 (beforeunload 시 유실 방지)
+        localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
       } catch (error) {
         console.error('로컬 저장 실패:', error);
       }
@@ -21329,7 +21331,8 @@
     // 탭 전환/숨김 시 대기 중인 Firebase 동기화 즉시 실행 + 탭 복귀 시 일일 초기화
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
-        // 탭 전환/앱 최소화: 대기 중인 Firebase 동기화 즉시 플러시
+        // 탭 전환/앱 최소화: 리듬 데이터 로컬 백업 + 대기 중인 Firebase 동기화 즉시 플러시
+        localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
         if (appState.user && syncDebounceTimer) {
           clearTimeout(syncDebounceTimer);
           syncDebounceTimer = null;
