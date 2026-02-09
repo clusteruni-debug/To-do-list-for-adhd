@@ -20,6 +20,41 @@ hash type: 메시지
 - 항목
 -->
 
+## [2026-02-09] (세션 25)
+> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 🗄️ DB: 없음
+
+### 작업 내용
+- **XSS onclick 전수 방어** ⭐
+  - `escapeAttr()` 함수 추가: 백슬래시+따옴표 JS 이스케이프 후 HTML 이스케이프
+  - commute.js 5곳, rhythm.js 9곳, navigator-v5.html 5곳 적용
+  - 기존 `escapeHtml().replace()` 패턴도 `escapeAttr()`로 통일
+
+- **방어적 코딩 — 자정 넘김 + settings null 방어**
+  - editMedication: 자정 넘김 시 today → history 이동 후 새 today 생성
+  - showCommuteTagPrompt: settings null 방어
+
+- **타이머 메모리 누수 수정**
+  - commute tag prompt 10초 타이머를 수동 닫기 시 clearTimeout
+  - resumePomodoro 기존 interval 먼저 정리 후 재등록
+
+- **모달 UX 개선** ⭐
+  - brain dump 모달: 외부 클릭/취소/ESC 시 작성 내용 있으면 confirm 확인
+  - ESC 키: 6개 누락 모달에 닫기 추가 (time input, work, quick edit, import, edit completed, edit log, telegram, weekly review)
+  - Tab 포커스 트랩: `.work-modal-overlay`, `.time-input-modal.show` 셀렉터 추가
+
+### 커밋
+```
+5f5842d fix: onclick XSS 전수 방어 — escapeAttr() 함수 추가 및 적용
+b82fcf6 fix: 방어적 코딩 — 자정 넘김 복약 날짜 오류 + settings null 방어
+f1b987c fix: 타이머 메모리 누수 수정 — commute tag timeout + pomodoro resume
+65f7345 fix: 모달 UX 개선 — brain dump 데이터 손실 방지 + ESC/포커스 트랩 전수 적용
+```
+
+### 다음 작업
+- 없음 (전체 검토 항목 모두 완료)
+
+---
+
 ## [2026-02-09] (세션 23-24)
 > 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 🗄️ DB: deletedIds.commuteRoutes, today.updatedAt, history[date].updatedAt, route.updatedAt 추가
 
@@ -49,11 +84,8 @@ hash type: 메시지
 - **통근 트래커 동기화 버그 수정**
   - onSnapshot에 commuteTracker 병합 추가, deletedIds.commuteRoutes Soft-Delete
 
-- **SVG 아이콘 교체** ⭐
-  - SVG_ICONS에 12개 아이콘 추가 (sun, moon, walk, building, rocket 등)
-  - 라이프 리듬 메인 UI 6개 + 히스토리 6개 + 통계 전체 교체
-  - 테마 토글 ☀️/🌙 → SVG, 동기화 상태 🔄/☁️/⚠️ → SVG
-  - 복약 트래커 제목/통계, 수면 패턴 제목 교체
+- **SVG 아이콘 교체 → 리버트**
+  - SVG 아이콘 적용 후 사용자 피드백으로 리버트 (이모지가 가시성 우수)
 
 ### 커밋
 ```
@@ -63,11 +95,11 @@ a5e4ad0 fix: 기기 간 동기화 버그 8건 수정
 2788d29 fix: 리듬 삭제 다른 기기에서 되돌아가는 버그 수정 (updatedAt)
 9784a8a fix: mergeRhythmHistory도 updatedAt 기반 last-writer-wins
 9e6806c fix: 통근 루트 수정 동기화 (updatedAt)
-b07b54e feat: SVG 아이콘 교체 — 라이프 리듬/상태/복약 영역
+b07b54e feat: SVG 아이콘 교체 (reverted: 06454d0)
 ```
 
 ### 다음 작업
-- 없음 (모든 대기 항목 완료)
+- 전체 코드 검토 → 세션 25에서 수정
 
 ---
 
