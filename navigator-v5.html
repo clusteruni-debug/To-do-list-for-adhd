@@ -12931,7 +12931,15 @@
       const modal = document.createElement('div');
       modal.id = 'brain-dump-modal';
       modal.className = 'modal-overlay';
-      modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          const textarea = document.getElementById('brain-dump-input');
+          if (textarea && textarea.value.trim()) {
+            if (!confirm('작성 중인 내용이 있습니다. 닫으시겠습니까?')) return;
+          }
+          modal.remove();
+        }
+      };
       modal.innerHTML = `
         <div class="modal" style="max-width: 500px;">
           <div class="modal-header">
@@ -12947,7 +12955,7 @@
             <div class="brain-dump-count" id="brain-dump-count">0줄</div>
           </div>
           <div class="modal-footer" style="flex-direction: row; justify-content: flex-end;">
-            <button class="btn-small" onclick="document.getElementById('brain-dump-modal').remove()" style="padding: 10px 20px; font-size: 15px;">취소</button>
+            <button class="btn-small" onclick="const t=document.getElementById('brain-dump-input'); if(t&&t.value.trim()&&!confirm('작성 중인 내용이 있습니다. 닫으시겠습니까?'))return; document.getElementById('brain-dump-modal').remove()" style="padding: 10px 20px; font-size: 15px;">취소</button>
             <button class="btn-small complete" onclick="processBrainDump()" style="padding: 10px 20px; font-size: 15px;">추가</button>
           </div>
         </div>
@@ -20889,9 +20897,9 @@
      * 키보드 이벤트 핸들러
      */
     document.addEventListener('keydown', (e) => {
-      // Tab 키: 모달 포커스 트랩
+      // Tab 키: 모달 포커스 트랩 — 모든 모달 타입 커버
       if (e.key === 'Tab') {
-        const activeModal = document.querySelector('.modal-overlay') || document.querySelector('.work-modal.show');
+        const activeModal = document.querySelector('.modal-overlay') || document.querySelector('.work-modal.show') || document.querySelector('.work-modal-overlay') || document.querySelector('.time-input-modal.show');
         if (activeModal) { trapFocusInModal(activeModal, e); return; }
       }
 
@@ -20904,6 +20912,29 @@
         // 알림 드롭다운 닫기
         const notifDropdown = document.getElementById('notification-dropdown');
         if (notifDropdown && notifDropdown.classList.contains('show')) { notifDropdown.classList.remove('show'); return; }
+        // 동적 모달 ESC 닫기 — brain dump은 데이터 손실 확인 포함
+        const brainDump = document.getElementById('brain-dump-modal');
+        if (brainDump) {
+          const ta = document.getElementById('brain-dump-input');
+          if (ta && ta.value.trim() && !confirm('작성 중인 내용이 있습니다. 닫으시겠습니까?')) return;
+          brainDump.remove(); return;
+        }
+        const timeModal = document.getElementById('time-input-modal');
+        if (timeModal && timeModal.classList.contains('show')) { closeTimeInputModal(); return; }
+        const workModal = document.getElementById('work-input-modal');
+        if (workModal && workModal.classList.contains('show')) { closeWorkModal(); return; }
+        const quickEdit = document.getElementById('quick-edit-modal');
+        if (quickEdit && quickEdit.classList.contains('show')) { closeQuickEditModal(); return; }
+        const importModal = document.getElementById('import-confirm-modal');
+        if (importModal) { importModal.remove(); return; }
+        const editCompleted = document.getElementById('edit-completed-modal');
+        if (editCompleted) { editCompleted.remove(); return; }
+        const editLog = document.getElementById('edit-log-modal');
+        if (editLog) { editLog.remove(); return; }
+        const telegramModal = document.getElementById('telegram-events-modal');
+        if (telegramModal) { closeTelegramEventsModal(); return; }
+        const weeklyReview = document.getElementById('weekly-review-modal');
+        if (weeklyReview && weeklyReview.style.display !== 'none') { closeWeeklyReview(); return; }
         // 입력 필드에서 blur
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') { e.target.blur(); }
         return;
