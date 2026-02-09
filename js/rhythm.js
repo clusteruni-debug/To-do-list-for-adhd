@@ -403,8 +403,8 @@ function showMedicationActionMenu(slotId, event) {
   menu.className = 'rhythm-action-menu';
   menu.id = 'rhythm-action-menu';
   menu.innerHTML = `
-    <button onclick="hideRhythmActionMenu(); editMedication('${escapeHtml(slotId)}')">✏️ 시간 수정</button>
-    <button class="danger" onclick="hideRhythmActionMenu(); deleteMedication('${escapeHtml(slotId)}')">🗑️ 기록 삭제</button>
+    <button onclick="hideRhythmActionMenu(); editMedication('${escapeAttr(slotId)}')">✏️ 시간 수정</button>
+    <button class="danger" onclick="hideRhythmActionMenu(); deleteMedication('${escapeAttr(slotId)}')">🗑️ 기록 삭제</button>
   `;
 
   document.body.appendChild(overlay);
@@ -1106,12 +1106,12 @@ function renderLifeRhythmHistory() {
         (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') +
       '</div>' +
       '<div class="rhythm-history-timeline six-items">' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + r.date + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
       '</div>' +
       // 복약 히스토리 행
       (() => {
@@ -1124,7 +1124,7 @@ function renderLifeRhythmHistory() {
           medSlots.map(s => {
             const taken = !!meds[s.id];
             return '<span class="rhythm-history-med ' + (taken ? 'taken' : 'missed') + '" ' +
-              'onclick="editMedicationHistory(\'' + r.date + '\', \'' + escapeHtml(s.id) + '\')" ' +
+              'onclick="editMedicationHistory(\'' + escapeAttr(r.date) + '\', \'' + escapeAttr(s.id) + '\')" ' +
               'title="' + escapeHtml(s.label) + (taken ? ' ' + meds[s.id] : '') + '">' +
               s.icon + (taken ? '✓' : '-') +
             '</span>';

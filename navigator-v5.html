@@ -9394,6 +9394,12 @@
       return div.innerHTML;
     }
 
+    /** onclick 속성 내 JS 문자열 이스케이프 — 백슬래시+따옴표를 JS 레벨로 이스케이프 후 HTML 속성용 이스케이프 */
+    function escapeAttr(text) {
+      if (text === null || text === undefined) return '';
+      return escapeHtml(String(text)).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
     /**
      * localStorage에서 JSON을 안전하게 파싱
      */
@@ -16183,7 +16189,7 @@
                           const timeVal = todayMeds[slot.id] || '--:--';
                           return `
                             <button class="medication-btn ${taken ? 'taken' : ''} ${slot.required ? 'required' : ''}"
-                                    onclick="handleMedicationClick('${escapeHtml(slot.id)}', ${taken}, event)"
+                                    onclick="handleMedicationClick('${escapeAttr(slot.id)}', ${taken}, event)"
                                     title="${taken ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                               <span class="med-icon">${slot.icon}</span>
                               <span class="med-label">${escapeHtml(slot.label)}</span>
@@ -16596,7 +16602,7 @@
                             })()}
                           ` : ''}
                           <div class="task-item-actions">
-                            ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
+                            ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(task.link)}')">GO</button>` : ''}
                             <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                             <button class="btn-small" onclick="startPomodoro('${task.id}')" title="이 작업에 포모도로 집중" aria-label="포모도로 시작" style="background: rgba(245, 87, 108, 0.1); color: #f5576c;">🍅</button>
                             <button class="btn-small" onclick="postponeTask('${task.id}')" title="내일로 미루기" aria-label="내일로 미루기" style="background: rgba(255, 149, 0, 0.1); color: #ff9500;">⏰</button>
@@ -16659,7 +16665,7 @@
                       ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 15px;">
-                      <button class="btn btn-primary" onclick="handleGo('${escapeHtml(nextAction.link || '')}')">
+                      <button class="btn btn-primary" onclick="handleGo('${escapeAttr(nextAction.link || '')}')">
                         ${nextAction.link ? '🚀 GO' : '시작하기'}
                       </button>
                       <button class="quick-timer-btn ${appState.quickTimer.isRunning ? 'running' : ''}" onclick="startQuickTimer('${nextAction.id}')" aria-label="${appState.quickTimer.isRunning ? '타이머 정지' : '5분 집중 타이머 시작'}">
@@ -16771,7 +16777,7 @@
                           ✓ 완료!
                         </button>
                         ${filteredTasks[0].link ? `
-                          <button class="btn btn-secondary" onclick="handleGo('${escapeHtml(filteredTasks[0].link)}')">
+                          <button class="btn btn-secondary" onclick="handleGo('${escapeAttr(filteredTasks[0].link)}')">
                             🔗 열기
                           </button>
                         ` : ''}
@@ -17099,7 +17105,7 @@
                       <div class="events-group">
                         <div class="events-group-header" onclick="toggleEventGroup('${groupId}')">
                           <span>
-                            ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + groupIds.join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                            ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + groupIds.map(id => escapeAttr(id)).join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
                             ${icon} ${title} (${events.length})
                           </span>
                           <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
@@ -17125,7 +17131,7 @@
                   <div class="events-group">
                     <div class="events-group-header" onclick="toggleEventGroup('submitted')">
                       <span>
-                        ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allSubmittedChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + submittedIds.join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
+                        ${_eventBulkSelectMode ? '<input type="checkbox" ' + (allSubmittedChecked ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleEventGroupSelect([\'' + submittedIds.map(id => escapeAttr(id)).join("','") + '\'])" style="width:18px;height:18px;margin-right:6px;vertical-align:middle;cursor:pointer;min-width:44px;min-height:44px;accent-color:var(--accent-primary)">' : ''}
                         ✅ 제출완료 (${submittedEvents.length})
                       </span>
                       <span class="toggle-icon">${_collapsedEventGroups.has('submitted') ? '▶' : '▼'}</span>
@@ -17842,7 +17848,7 @@
                         ${task.deadline ? ` · ${formatDeadline(task.deadline)}` : ''}
                       </div>
                       <div class="task-item-actions">
-                        ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
+                        ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(task.link)}')">GO</button>` : ''}
                         <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                         <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                         <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
@@ -18013,7 +18019,7 @@
                               </div>
                             </div>
                             <div class="all-task-actions">
-                              ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeHtml(task.link)}')">GO</button>` : ''}
+                              ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(task.link)}')">GO</button>` : ''}
                               <button class="btn-small complete" onclick="completeTask('${task.id}')" aria-label="작업 완료">✓</button>
                               <button class="btn-small edit" onclick="editTask('${task.id}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                               <button class="btn-small copy" onclick="copyTask('${task.id}')">📋</button>
@@ -19199,7 +19205,7 @@
                         ${stage.completed ? '✓' : ''}
                       </div>
                       <span class="work-stage-number">${stageIdx + 1}</span>
-                      <span class="work-stage-name" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeHtml(stageName).replace(/'/g, "\\'")}')" style="cursor: pointer;" title="클릭하여 이름 변경">${escapeHtml(stageName)}</span>
+                      <span class="work-stage-name" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeAttr(stageName)}')" style="cursor: pointer;" title="클릭하여 이름 변경">${escapeHtml(stageName)}</span>
                       ${(stage.startDate || stage.deadline) ? (() => {
                         const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
                         let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 12px; color: var(--text-muted);">';
@@ -19221,7 +19227,7 @@
                       })() : ''}
                     </div>
                     <div style="display: flex; gap: 6px;">
-                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeHtml(stageName).replace(/'/g, "\\'")}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
+                      <button class="work-stage-add-task" onclick="promptRenameStage('${project.id}', ${stageIdx}, '${escapeAttr(stageName)}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', '${project.id}', ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
                       <button class="work-stage-add-task" onclick="deleteProjectStage('${project.id}', ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                       <button class="work-stage-add-task" onclick="showWorkModal('subcategory', '${project.id}', ${stageIdx})">+ 중분류</button>
@@ -19237,7 +19243,7 @@
                                  onclick="toggleSubcategoryComplete('${project.id}', ${stageIdx}, ${subcatIdx})">
                               ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? '✓' : ''}
                             </div>
-                            <span class="work-subcategory-name" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeHtml(subcat.name).replace(/'/g, "\\'")}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
+                            <span class="work-subcategory-name" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeAttr(subcat.name)}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
@@ -19254,7 +19260,7 @@
                             })() : ''}
                           </div>
                           <div class="work-subcategory-actions">
-                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeHtml(subcat.name).replace(/'/g, "\\'")}')" title="중분류 이름 변경">${svgIcon('edit', 14)}</button>
+                            <button class="work-task-action" onclick="promptRenameSubcategory('${project.id}', ${stageIdx}, ${subcatIdx}, '${escapeAttr(subcat.name)}')" title="중분류 이름 변경">${svgIcon('edit', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('subcat-deadline', '${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 일정" aria-label="중분류 일정 설정">📅</button>
                             <button class="work-task-action" onclick="deleteSubcategory('${project.id}', ${stageIdx}, ${subcatIdx})" title="중분류 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
                             <button class="work-task-action" onclick="showWorkModal('task', '${project.id}', ${stageIdx}, ${subcatIdx})">+ 항목</button>
@@ -19552,11 +19558,11 @@
               ${statusInfo.label}
             </span>
             <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
-                  onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')"
+                  onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeAttr(task.title)}')"
                   title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
             ${deadlineHtml}
             <div class="work-task-actions">
-              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeHtml(task.title).replace(/'/g, "\\'")}')">${svgIcon('edit', 14)}</button>
+              <button class="work-task-action" onclick="promptRenameWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeAttr(task.title)}')">${svgIcon('edit', 14)}</button>
               <button class="work-task-action" onclick="promptTaskDeadline('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정" aria-label="마감일 설정">📅</button>
               <button class="work-task-action" onclick="showWorkModal('log', '${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" aria-label="기록 추가">+ 기록</button>
               <button class="work-task-action" onclick="deleteWorkTask('${projectId}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
@@ -19579,7 +19585,7 @@
                 }
                 otherLogs.forEach(log => {
                   const actualIdx = task.logs.indexOf(log);
-                  html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><span class="work-task-log-content">' + escapeHtml(log.content) + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(\'' + projectId + '\', ' + stageIdx + ', ' + subcatIdx + ', ' + taskIdx + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button></div></div>';
+                  html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><span class="work-task-log-content">' + escapeHtml(log.content) + '</span><div class="work-task-log-actions"><button class="work-task-log-action" onclick="deleteWorkLog(\'' + escapeAttr(projectId) + '\', ' + Number(stageIdx) + ', ' + Number(subcatIdx) + ', ' + Number(taskIdx) + ', ' + Number(actualIdx) + ')" aria-label="기록 삭제">×</button></div></div>';
                 });
                 return html;
               })()}

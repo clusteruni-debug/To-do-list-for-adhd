@@ -131,7 +131,7 @@ function showCommuteTagPrompt(direction) {
   promptEl.id = 'commute-tag-prompt';
   promptEl.className = 'commute-tag-prompt';
   const dirLabel = direction === 'morning' ? '출근' : '퇴근';
-  let btns = routes.map(r => '<button class="commute-tag-prompt-btn" onclick="tagCommuteRoute(\'' + r.id + '\', \'' + direction + '\')" style="border-left:3px solid ' + r.color + '">' + escapeHtml(r.name) + '</button>').join('');
+  let btns = routes.map(r => '<button class="commute-tag-prompt-btn" onclick="tagCommuteRoute(\'' + escapeAttr(r.id) + '\', \'' + escapeAttr(direction) + '\')" style="border-left:3px solid ' + escapeAttr(r.color) + '">' + escapeHtml(r.name) + '</button>').join('');
   promptEl.innerHTML = '<div class="commute-tag-prompt-title">🚌 어느 루트로 ' + dirLabel + '하셨나요?</div><div class="commute-tag-prompt-routes">' + btns + '</div><div class="commute-tag-prompt-later" onclick="dismissCommuteTag()">나중에</div>';
   document.body.appendChild(promptEl);
   setTimeout(() => { const el = document.getElementById('commute-tag-prompt'); if (el) el.remove(); }, 10000);
@@ -283,7 +283,7 @@ function renderCommuteTab() {
       colors.map(c => '<button class="commute-color-btn' + (c === currentColor ? ' selected' : '') + '" data-color="' + c + '" style="background:' + c + '" onclick="this.parentElement.querySelectorAll(\'.commute-color-btn\').forEach(b=>b.classList.remove(\'selected\'));this.classList.add(\'selected\')" aria-label="색상 ' + c + '"></button>').join('') +
       '</div></div>' +
       '<div class="commute-modal-actions">' +
-      (isEdit ? '<button class="commute-modal-cancel" onclick="deleteCommuteRoute(\''+escapeHtml(appState.commuteRouteModal)+'\')">🗑️ 삭제</button>' : '<button class="commute-modal-cancel" onclick="closeCommuteRouteModal()">취소</button>') +
+      (isEdit ? '<button class="commute-modal-cancel" onclick="deleteCommuteRoute(\''+escapeAttr(appState.commuteRouteModal)+'\')">🗑️ 삭제</button>' : '<button class="commute-modal-cancel" onclick="closeCommuteRouteModal()">취소</button>') +
       '<button class="commute-modal-save" onclick="saveCommuteRoute()">저장</button></div></div></div>';
   }
 
@@ -339,7 +339,7 @@ function renderCommuteDayView(direction, todayTrips, rhythm, routes) {
     const currentCondition = trip.conditions || 'clear';
     html += '<div class="commute-conditions-row">';
     [['clear','☀️ 맑음'],['rain','🌧️ 비'],['snow','❄️ 눈']].forEach(function(pair) {
-      html += '<button class="commute-condition-btn' + (currentCondition === pair[0] ? ' selected' : '') + '" onclick="setCommuteCondition(\'' + pair[0] + '\')">' + pair[1] + '</button>';
+      html += '<button class="commute-condition-btn' + (currentCondition === pair[0] ? ' selected' : '') + '" onclick="setCommuteCondition(\'' + escapeAttr(pair[0]) + '\')">' + pair[1] + '</button>';
     });
     html += '</div><div style="height:12px"></div>';
   }
@@ -359,12 +359,12 @@ function renderCommuteDayView(direction, todayTrips, rhythm, routes) {
   html += '<div class="commute-route-list">';
   filteredRoutes.forEach(function(r) {
     const isSelected = selectedRouteId === r.id;
-    html += '<div class="commute-route-card' + (isSelected ? ' selected' : '') + '" onclick="selectCommuteRoute(\'' + r.id + '\', \'' + direction + '\')">';
+    html += '<div class="commute-route-card' + (isSelected ? ' selected' : '') + '" onclick="selectCommuteRoute(\'' + escapeAttr(r.id) + '\', \'' + escapeAttr(direction) + '\')">';
     html += '<div class="commute-route-dot" style="background:' + escapeHtml(r.color) + '"></div>';
     html += '<div class="commute-route-info"><div class="commute-route-name">' + escapeHtml(r.name) + '</div>';
     if (r.description) html += '<div class="commute-route-desc">' + escapeHtml(r.description) + '</div>';
     html += '</div><span class="commute-route-time">' + r.expectedDuration + '분</span>';
-    html += '<div class="commute-route-actions"><button class="commute-route-action-btn" onclick="event.stopPropagation();openCommuteRouteModal(\'' + r.id + '\')" title="수정" aria-label="루트 수정">✏️</button></div></div>';
+    html += '<div class="commute-route-actions"><button class="commute-route-action-btn" onclick="event.stopPropagation();openCommuteRouteModal(\'' + escapeAttr(r.id) + '\')" title="수정" aria-label="루트 수정">✏️</button></div></div>';
   });
   html += '</div>';
 
