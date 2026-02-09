@@ -20,6 +20,40 @@ hash type: 메시지
 - 항목
 -->
 
+## [2026-02-09] (세션 23)
+> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 📊 +127/-73 | 🗄️ DB: deletedIds.commuteRoutes 추가
+
+### 작업 내용
+- **라이프 리듬 기기 간 동기화 버그 수정**
+  - `mergeRhythmToday()` 함수 신규 (rhythm.js) — 날짜 비교 후 병합
+  - today 날짜 불일치 시: 새 날짜 → today, 오래된 데이터 → history 이동
+  - loadFromFirebase / onSnapshot / handleFileImport 3곳 모두 적용
+  - `today.date` undefined 방어 (`|| null` 명시)
+
+- **"변경사항 수신됨" 토스트 알림 과다 수정**
+  - `lastOwnWriteTimestamp` 비교 → 자기 쓰기 시 토스트 미표시
+  - 3초 쿨다운 추가 (`lastRealtimeSyncToastTime`)
+
+- **통근 트래커 동기화 버그 수정**
+  - onSnapshot 핸들러에 commuteTracker 병합 추가 (누락되어 있었음)
+  - 루트 삭제 부활 방지: `deletedIds.commuteRoutes` Soft-Delete 추적
+  - loadFromFirebase / onSnapshot / handleFileImport 3곳 deletedIds 필터링
+
+- **localStorage 오프라인 폴백 보장**
+  - `saveCommuteTracker()` — 로그인 시에도 항상 localStorage 저장
+  - `saveLifeRhythm()` — 로그인 시에도 항상 localStorage 저장
+
+### 커밋
+```
+(커밋 후 기록)
+```
+
+### 다음 작업
+- 루트 수정 동기화 (updatedAt 기반, 스키마 변경 필요)
+- DEVICE_ID 기반 자기 쓰기 감지 (선택적 개선)
+
+---
+
 ## [2026-02-08] (세션 22)
 > 📦 `navigator-v5.html`, `docs/CHANGELOG.md` | 🗄️ DB: 없음
 

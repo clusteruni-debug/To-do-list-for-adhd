@@ -10189,7 +10189,8 @@
         tasks: {},          // { "task-uuid": "2026-02-05T..." }
         workProjects: {},
         templates: {},
-        workTemplates: {}
+        workTemplates: {},
+        commuteRoutes: {}   // 삭제된 통근 루트 추적
       },
       // 휴지통: 삭제된 태스크 보관 (30일 후 자동 정리)
       trash: []
@@ -10428,6 +10429,7 @@
     let syncDebounceTimer = null; // syncToFirebase 디바운스 타이머
     const SYNC_DEBOUNCE_MS = 1500; // 동기화 디바운스 간격 (1.5초)
     let lastOwnWriteTimestamp = null; // 핑퐁 방지: 자기가 마지막으로 쓴 timestamp
+    let lastRealtimeSyncToastTime = 0; // 실시간 동기화 토스트 쿨다운 (3초)
 
     // IndexedDB 가용성 체크 (프라이빗 브라우징에서 사용 불가 시 localStorage 폴백)
     let isIndexedDBAvailable = true;
@@ -10990,36 +10992,16 @@
           }
           // 본업 템플릿: ID 기반 병합 (deletedIds 전달)
           appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates, appState.deletedIds.workTemplates);
-          // 라이프 리듬 병합 (히스토리 필드별 병합, 오늘 데이터도 필드별)
+          // 라이프 리듬 병합 (히스토리 필드별 병합, 오늘 데이터는 날짜 비교 후 병합)
           if (data.lifeRhythm) {
             const cloudRhythm = data.lifeRhythm;
             const localRhythm = appState.lifeRhythm;
             // 히스토리: 날짜별 + 필드별 병합 (양쪽 기록 보존)
             const mergedHistory = mergeRhythmHistory(localRhythm.history, cloudRhythm.history);
-            // 오늘 데이터: 필드별 병합 (양쪽 값 보존)
-            const localToday = localRhythm.today || {};
-            const cloudToday = cloudRhythm.today || {};
-            // 복약 기록 병합 (슬롯별)
-            const lMedsToday = (localToday.medications || {});
-            const cMedsToday = (cloudToday.medications || {});
-            // med_afternoon → med_afternoon_adhd 마이그레이션
-            if (lMedsToday.med_afternoon !== undefined) { lMedsToday.med_afternoon_adhd = lMedsToday.med_afternoon; delete lMedsToday.med_afternoon; }
-            if (cMedsToday.med_afternoon !== undefined) { cMedsToday.med_afternoon_adhd = cMedsToday.med_afternoon; delete cMedsToday.med_afternoon; }
-            const allMedSlots = new Set([...Object.keys(lMedsToday), ...Object.keys(cMedsToday)]);
-            const mergedMeds = {};
-            for (const slot of allMedSlots) {
-              mergedMeds[slot] = lMedsToday[slot] || cMedsToday[slot] || null;
-            }
-            const mergedToday = {
-              date: localToday.date || cloudToday.date,
-              wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
-              homeDepart: localToday.homeDepart || cloudToday.homeDepart || null,
-              workArrive: localToday.workArrive || cloudToday.workArrive || null,
-              workDepart: localToday.workDepart || cloudToday.workDepart || null,
-              homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
-              sleep: localToday.sleep || cloudToday.sleep || null,
-              medications: mergedMeds
-            };
+            // 오늘 데이터: 날짜 비교 후 병합 (날짜 다르면 오래된 쪽 → history 이동)
+            const { today: mergedToday, history: updatedHistory } = mergeRhythmToday(
+              localRhythm.today, cloudRhythm.today, mergedHistory
+            );
             // settings 병합 시 medicationSlots는 로컬 우선 (마이그레이션 결과 보호)
             const mergedRhythmSettings = { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) };
             if (localRhythm.settings?.medicationSlots) {
@@ -11027,19 +11009,19 @@
             }
             appState.lifeRhythm = {
               ...localRhythm,
-              history: mergedHistory,
+              history: updatedHistory,
               today: mergedToday,
               settings: mergedRhythmSettings
             };
-            // Firestore IndexedDB가 캐시 담당 → localStorage 캐싱 불필요
           }
-          // 통근 트래커 병합
+          // 통근 트래커 병합 (deletedIds로 삭제된 루트 필터링)
           if (data.commuteTracker) {
             const cloud = data.commuteTracker;
             const local = appState.commuteTracker;
+            const deletedRoutes = appState.deletedIds.commuteRoutes || {};
             const routeMap = {};
-            (local.routes || []).forEach(r => { routeMap[r.id] = r; });
-            (cloud.routes || []).forEach(r => { if (!routeMap[r.id]) routeMap[r.id] = r; });
+            (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
             appState.commuteTracker.routes = Object.values(routeMap);
             const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
             appState.commuteTracker.trips = mergedTrips;
@@ -11148,34 +11130,15 @@
             appState.workProjects = mergeById(appState.workProjects, data.workProjects, appState.deletedIds.workProjects);
             // 본업 템플릿: ID 기반 병합 (deletedIds 전달)
             appState.workTemplates = mergeById(appState.workTemplates, data.workTemplates, appState.deletedIds.workTemplates);
-            // 라이프 리듬 병합 (필드별)
+            // 라이프 리듬 병합 (날짜 비교 포함)
             if (data.lifeRhythm) {
               const cloudRhythm = data.lifeRhythm;
               const localRhythm = appState.lifeRhythm;
               const mergedHistory = mergeRhythmHistory(localRhythm.history, cloudRhythm.history);
-              const localToday = localRhythm.today || {};
-              const cloudToday = cloudRhythm.today || {};
-              // 복약 기록 병합 (슬롯별)
-              const lMedsRT = (localToday.medications || {});
-              const cMedsRT = (cloudToday.medications || {});
-              // med_afternoon → med_afternoon_adhd 마이그레이션
-              if (lMedsRT.med_afternoon !== undefined) { lMedsRT.med_afternoon_adhd = lMedsRT.med_afternoon; delete lMedsRT.med_afternoon; }
-              if (cMedsRT.med_afternoon !== undefined) { cMedsRT.med_afternoon_adhd = cMedsRT.med_afternoon; delete cMedsRT.med_afternoon; }
-              const allMedSlotsRT = new Set([...Object.keys(lMedsRT), ...Object.keys(cMedsRT)]);
-              const mergedMedsRT = {};
-              for (const slot of allMedSlotsRT) {
-                mergedMedsRT[slot] = lMedsRT[slot] || cMedsRT[slot] || null;
-              }
-              const mergedToday = {
-                date: localToday.date || cloudToday.date,
-                wakeUp: localToday.wakeUp || cloudToday.wakeUp || null,
-                homeDepart: localToday.homeDepart || cloudToday.homeDepart || null,
-                workArrive: localToday.workArrive || cloudToday.workArrive || null,
-                workDepart: localToday.workDepart || cloudToday.workDepart || null,
-                homeArrive: localToday.homeArrive || cloudToday.homeArrive || null,
-                sleep: localToday.sleep || cloudToday.sleep || null,
-                medications: mergedMedsRT
-              };
+              // 오늘 데이터: 날짜 비교 후 병합 (날짜 다르면 오래된 쪽 → history 이동)
+              const { today: mergedToday, history: updatedHistory } = mergeRhythmToday(
+                localRhythm.today, cloudRhythm.today, mergedHistory
+              );
               // settings 병합 시 medicationSlots는 로컬 우선 (마이그레이션 결과 보호)
               const mergedRhythmSettingsRT = { ...(localRhythm.settings || {}), ...(cloudRhythm.settings || {}) };
               if (localRhythm.settings?.medicationSlots) {
@@ -11183,11 +11146,27 @@
               }
               appState.lifeRhythm = {
                 ...localRhythm,
-                history: mergedHistory,
+                history: updatedHistory,
                 today: mergedToday,
                 settings: mergedRhythmSettingsRT
               };
-              // Firestore IndexedDB가 캐시 담당 → localStorage 캐싱 불필요
+            }
+            // 통근 트래커 병합 (실시간 동기화, deletedIds 필터링)
+            if (data.commuteTracker) {
+              const cloud = data.commuteTracker;
+              const local = appState.commuteTracker;
+              const deletedRoutes = appState.deletedIds.commuteRoutes || {};
+              // 루트: ID 기반 병합 (삭제된 루트 제외, 로컬 우선)
+              const routeMap = {};
+              (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
+              (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
+              appState.commuteTracker.routes = Object.values(routeMap);
+              // 통근 기록: 양쪽 병합 (로컬 우선)
+              const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+              appState.commuteTracker.trips = mergedTrips;
+              // 설정: cloud 기반 + 로컬 덮어쓰기
+              appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
+              localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
             }
             // 완료 기록 영구 로그 병합
             if (data.completionLog) {
@@ -11217,11 +11196,16 @@
             renderStatic();
             updateSyncIndicator();
 
-            // 다른 기기에서 변경사항 수신 토스트 (첫 로드 시 미표시)
+            // 다른 기기에서 변경사항 수신 토스트
+            // 조건: 첫 로드 아님 + 자기 쓰기 아님 + 30초 쿨다운
             if (isFirstRealtimeLoad) {
               isFirstRealtimeLoad = false;
-            } else {
-              showToast('📲 다른 기기에서 변경사항 수신됨', 'success');
+            } else if (data.lastUpdated && data.lastUpdated !== lastOwnWriteTimestamp) {
+              const now = Date.now();
+              if (now - lastRealtimeSyncToastTime > 3000) {
+                lastRealtimeSyncToastTime = now;
+                showToast('📲 다른 기기에서 변경사항 수신됨', 'success');
+              }
             }
 
             // 핑퐁 방지 재업로드: 다른 기기에서 온 변경이면 병합 결과를 Firebase에 재업로드
@@ -15142,25 +15126,30 @@
             if (data.settings) {
               appState.settings = { ...appState.settings, ...data.settings };
             }
-            // 라이프 리듬 병합
+            // 라이프 리듬 병합 (날짜 비교 포함)
             if (data.lifeRhythm) {
               const importRhythm = data.lifeRhythm;
               const localRhythm = appState.lifeRhythm;
+              const mergedHistory = { ...(localRhythm.history || {}), ...(importRhythm.history || {}) };
+              const { today: mergedToday, history: updatedHistory } = mergeRhythmToday(
+                localRhythm.today, importRhythm.today, mergedHistory
+              );
               appState.lifeRhythm = {
                 ...localRhythm,
-                history: { ...(localRhythm.history || {}), ...(importRhythm.history || {}) },
-                today: importRhythm.today || localRhythm.today,
+                history: updatedHistory,
+                today: mergedToday,
                 settings: { ...(localRhythm.settings || {}), ...(importRhythm.settings || {}) }
               };
               saveLifeRhythm();
             }
-          // 통근 트래커 병합
+          // 통근 트래커 병합 (deletedIds 필터링)
           if (data.commuteTracker) {
             const cloud = data.commuteTracker;
             const local = appState.commuteTracker;
+            const deletedRoutes = appState.deletedIds.commuteRoutes || {};
             const routeMap = {};
-            (local.routes || []).forEach(r => { routeMap[r.id] = r; });
-            (cloud.routes || []).forEach(r => { if (!routeMap[r.id]) routeMap[r.id] = r; });
+            (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
+            (cloud.routes || []).forEach(r => { if (!deletedRoutes[r.id] && !routeMap[r.id]) routeMap[r.id] = r; });
             appState.commuteTracker.routes = Object.values(routeMap);
             const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
             appState.commuteTracker.trips = mergedTrips;

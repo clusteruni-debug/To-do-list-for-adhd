@@ -5,9 +5,8 @@
 // ============================================
 
 function saveCommuteTracker() {
-  if (!appState.user) {
-    localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
-  }
+  // 항상 localStorage에 저장 (로그인 여부 무관 — 오프라인 폴백 보장)
+  localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
   if (appState.user) { syncToFirebase(); }
 }
 
@@ -70,6 +69,9 @@ function deleteCommuteRoute(routeId) {
   const route = appState.commuteTracker.routes.find(r => r.id === routeId);
   if (!route || !confirm('루트 "' + route.name + '"을(를) 삭제하시겠습니까?')) return;
   appState.commuteTracker.routes = appState.commuteTracker.routes.filter(r => r.id !== routeId);
+  // Soft-Delete: 다른 기기 동기화 시 부활 방지
+  if (!appState.deletedIds.commuteRoutes) appState.deletedIds.commuteRoutes = {};
+  appState.deletedIds.commuteRoutes[routeId] = new Date().toISOString();
   appState.commuteRouteModal = null;
   saveCommuteTracker(); renderStatic();
   showToast('🗑️ 루트 삭제됨', 'success');

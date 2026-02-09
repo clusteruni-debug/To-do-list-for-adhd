@@ -54,6 +54,71 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
   return merged;
 }
 
+/**
+ * 라이프 리듬 "today" 병합 (날짜 비교 포함)
+ * - 날짜가 다르면 → 새로운 날짜가 today, 오래된 데이터는 history로 보존
+ * - 날짜가 같으면 → 필드별 병합 (값이 있는 쪽 우선)
+ * - history에 이미 같은 날짜 데이터가 있으면 필드별 merge
+ * @param {Object} localToday - 로컬 오늘 데이터
+ * @param {Object} cloudToday - 클라우드 오늘 데이터
+ * @param {Object} mergedHistory - 이미 병합된 히스토리
+ * @returns {{ today: Object, history: Object }}
+ */
+function mergeRhythmToday(localToday, cloudToday, mergedHistory) {
+  const lt = localToday || {};
+  const ct = cloudToday || {};
+  const history = mergedHistory || {};
+  const rhythmFields = ['wakeUp', 'homeDepart', 'workArrive', 'workDepart', 'homeArrive', 'sleep'];
+
+  // 날짜가 다른 경우: 새로운 날짜가 today, 오래된 날짜 데이터는 history로 이동
+  if (lt.date && ct.date && lt.date !== ct.date) {
+    let newer, older, olderDate;
+    if (lt.date > ct.date) {
+      newer = lt; older = ct; olderDate = ct.date;
+    } else {
+      newer = ct; older = lt; olderDate = lt.date;
+    }
+    // 오래된 today 데이터를 history에 필드별 병합 (기존 history 보존)
+    const existingHist = history[olderDate] || {};
+    const mergedOlder = {};
+    for (const f of rhythmFields) {
+      mergedOlder[f] = older[f] || existingHist[f] || null;
+    }
+    // 복약 기록도 history에 병합
+    const olderMeds = older.medications || {};
+    const existingMeds = existingHist.medications || {};
+    const allMedSlots = new Set([...Object.keys(olderMeds), ...Object.keys(existingMeds)]);
+    if (allMedSlots.size > 0) {
+      mergedOlder.medications = {};
+      for (const slot of allMedSlots) {
+        mergedOlder.medications[slot] = olderMeds[slot] || existingMeds[slot] || null;
+      }
+    }
+    history[olderDate] = mergedOlder;
+    return { today: newer, history };
+  }
+
+  // 날짜가 같거나 한쪽만 있는 경우: 필드별 병합 (값이 있는 쪽 우선)
+  const lMeds = { ...(lt.medications || {}) };
+  const cMeds = { ...(ct.medications || {}) };
+  // med_afternoon → med_afternoon_adhd 마이그레이션
+  if (lMeds.med_afternoon !== undefined) { lMeds.med_afternoon_adhd = lMeds.med_afternoon; delete lMeds.med_afternoon; }
+  if (cMeds.med_afternoon !== undefined) { cMeds.med_afternoon_adhd = cMeds.med_afternoon; delete cMeds.med_afternoon; }
+  const allMedSlots = new Set([...Object.keys(lMeds), ...Object.keys(cMeds)]);
+  const mergedMeds = {};
+  for (const slot of allMedSlots) {
+    mergedMeds[slot] = lMeds[slot] || cMeds[slot] || null;
+  }
+
+  const today = { date: lt.date || ct.date || null };
+  for (const f of rhythmFields) {
+    today[f] = lt[f] || ct[f] || null;
+  }
+  today.medications = mergedMeds;
+
+  return { today, history };
+}
+
 // ============================================
 // 라이프 리듬 트래커 함수
 // ============================================
@@ -1456,10 +1521,8 @@ function checkRhythmDayChange() {
 }
 
 function saveLifeRhythm() {
-  if (!appState.user) {
-    localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
-  }
-  // 라이프 리듬 변경 시 Firebase에도 동기화
+  // 항상 localStorage에 저장 (로그인 여부 무관 — 오프라인 폴백 보장)
+  localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
   if (appState.user) {
     syncToFirebase();
   }
