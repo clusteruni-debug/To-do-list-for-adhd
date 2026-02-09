@@ -23,11 +23,38 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
   const cloud = cloudHistory || {};
   const allDates = new Set([...Object.keys(local), ...Object.keys(cloud)]);
   const merged = {};
+  const rhythmFields = ['wakeUp', 'homeDepart', 'workArrive', 'workDepart', 'homeArrive', 'sleep'];
 
   for (const date of allDates) {
     const l = local[date] || {};
     const c = cloud[date] || {};
-    // 필드별로 값이 있는 쪽 우선, 양쪽 다 있으면 타임스탬프 비교 불가하므로 나중에 기록된 값(cloud) 우선
+
+    // updatedAt 기반 "last writer wins" — 히스토리 편집/삭제도 정상 전파
+    const lUp = l.updatedAt || null;
+    const cUp = c.updatedAt || null;
+    let winner = null;
+    if (lUp && cUp) {
+      winner = lUp >= cUp ? l : c;
+    } else if (lUp && !cUp) {
+      winner = l;
+    } else if (!lUp && cUp) {
+      winner = c;
+    }
+
+    if (winner) {
+      // 최신 기기 데이터 그대로 사용 (null = 삭제 전파)
+      merged[date] = {};
+      for (const f of rhythmFields) {
+        merged[date][f] = winner[f] !== undefined ? winner[f] : null;
+      }
+      const wMeds = { ...(winner.medications || {}) };
+      if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
+      if (Object.keys(wMeds).length > 0) merged[date].medications = wMeds;
+      merged[date].updatedAt = winner.updatedAt;
+      continue;
+    }
+
+    // 하위호환: 양쪽 다 updatedAt 없으면 기존 || 병합
     merged[date] = {
       wakeUp: l.wakeUp || c.wakeUp || null,
       homeDepart: l.homeDepart || c.homeDepart || null,
@@ -36,10 +63,8 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
       homeArrive: l.homeArrive || c.homeArrive || null,
       sleep: l.sleep || c.sleep || null
     };
-    // 복약 기록 병합 (슬롯별로 값이 있는 쪽 우선)
     const lMeds = l.medications || {};
     const cMeds = c.medications || {};
-    // med_afternoon → med_afternoon_adhd 마이그레이션
     if (lMeds.med_afternoon !== undefined) { lMeds.med_afternoon_adhd = lMeds.med_afternoon; delete lMeds.med_afternoon; }
     if (cMeds.med_afternoon !== undefined) { cMeds.med_afternoon_adhd = cMeds.med_afternoon; delete cMeds.med_afternoon; }
     const allSlots = new Set([...Object.keys(lMeds), ...Object.keys(cMeds)]);
@@ -1400,6 +1425,8 @@ function editLifeRhythmHistory(dateStr, type) {
       appState.lifeRhythm.history[dateStr] = { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
     }
     appState.lifeRhythm.history[dateStr][type] = normalizedTime;
+    // 히스토리 항목 수정 시점 기록 — 기기 간 병합에서 최신 판별용
+    appState.lifeRhythm.history[dateStr].updatedAt = new Date().toISOString();
   }
 
   saveLifeRhythm();
@@ -1504,6 +1531,8 @@ function editMedicationHistory(dateStr, slotId) {
     }
     if (!appState.lifeRhythm.history[dateStr].medications) appState.lifeRhythm.history[dateStr].medications = {};
     appState.lifeRhythm.history[dateStr].medications[slotId] = normalizedTime;
+    // 히스토리 항목 수정 시점 기록
+    appState.lifeRhythm.history[dateStr].updatedAt = new Date().toISOString();
   }
 
   saveLifeRhythm();
