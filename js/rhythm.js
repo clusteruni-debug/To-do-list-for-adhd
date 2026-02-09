@@ -340,6 +340,18 @@ function editMedication(slotId) {
     return;
   }
 
+  // 자정 넘김 방어: 날짜가 바뀌었으면 today 갱신
+  if (appState.lifeRhythm.today.date !== today) {
+    if (appState.lifeRhythm.today.date) {
+      appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
+      delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
+    }
+    appState.lifeRhythm.today = {
+      date: today, wakeUp: null, homeDepart: null, workArrive: null,
+      workDepart: null, homeArrive: null, sleep: null, medications: {}
+    };
+  }
+
   if (!appState.lifeRhythm.today.medications) {
     appState.lifeRhythm.today.medications = {};
   }

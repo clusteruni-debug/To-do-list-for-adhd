@@ -119,7 +119,7 @@ function setCommuteCondition(condition) {
 window.setCommuteCondition = setCommuteCondition;
 
 function showCommuteTagPrompt(direction) {
-  if (!appState.commuteTracker.settings.enableAutoTag) return;
+  if (!appState.commuteTracker.settings || !appState.commuteTracker.settings.enableAutoTag) return;
   if (appState.commuteTracker.routes.length === 0) return;
   const today = getLocalDateStr();
   if (appState.commuteTracker.trips[today] && appState.commuteTracker.trips[today][direction] && appState.commuteTracker.trips[today][direction].routeId) return;
