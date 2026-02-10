@@ -11100,11 +11100,14 @@
       unsubscribeSnapshot = window.firebaseOnSnapshot(userDoc, (doc) => {
         if (doc.exists() && !isSyncing) {
           const data = doc.data();
-          const cloudUpdated = new Date(data.lastUpdated);
-          const localUpdated = appState.lastSyncTime;
 
-          // 클라우드가 더 최신이면 업데이트
-          if (!localUpdated || cloudUpdated > localUpdated) {
+          // 핑퐁 방지: 자기가 방금 쓴 데이터면 스킵 (다른 기기 데이터는 항상 수신)
+          // 기존 시간 비교(cloudUpdated > lastSyncTime)는 기기 간 시계 차이로 정당한 업데이트를 차단하는 버그가 있었음
+          if (lastOwnWriteTimestamp && data.lastUpdated === lastOwnWriteTimestamp) {
+            return; // 자기가 쓴 것 — 무시
+          }
+
+          {
             // Soft-Delete: 삭제 기록 병합 (merge 전에 수행)
             if (data.deletedIds) {
               appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
@@ -11208,7 +11211,7 @@
               appState.theme = data.theme;
             }
 
-            appState.lastSyncTime = cloudUpdated;
+            appState.lastSyncTime = new Date(data.lastUpdated);
             appState.syncStatus = 'synced';
 
             // 숫자 ID → 문자열 ID 마이그레이션 (다른 기기에서 온 데이터 포함)
