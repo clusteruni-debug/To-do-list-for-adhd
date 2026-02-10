@@ -519,19 +519,6 @@ Navigator  ──(✍️ 아티클 작성 버튼)──▶  x-article-editor /ed
 
 ---
 
-## 🔌 MCP 서버 & 도구
+## 🔌 MCP 서버 & 🔒 세션 잠금
 
-- **context7**: 라이브러리 최신 문서 자동 주입 (`resolve-library-id` → `get-library-docs`)
-- **claude-mem**: 세션 히스토리 압축 + 컨텍스트 유실 방지
-- **ccusage**: `npx ccusage@latest daily` — 토큰 비용 확인
-- **firebase MCP**: Firestore/Auth 관리 (첫 사용 시 인증 필요)
-- **github MCP**: GitHub 이슈/PR/Actions 관리
-
----
-
-## 🔒 세션 잠금
-
-이 프로젝트는 세션 잠금 시스템 적용 대상입니다.
-- 작업 시작: `/session-start` → `.claude-lock` 생성 → 다른 세션 수정 차단
-- 작업 종료: `/session-end` → `.claude-lock` 삭제
-- **다른 세션에서 이 프로젝트를 수정하려 하면 PreToolUse hook이 자동 차단합니다**
+> [워크스페이스 CLAUDE.md](../CLAUDE.md) 참고 (글로벌 설정)
