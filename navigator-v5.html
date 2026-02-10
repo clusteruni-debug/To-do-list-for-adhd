@@ -14045,7 +14045,7 @@
      * Article Editor 연동 — Task 내용으로 아티클 에디터 열기
      * URL은 설정에서 변경 가능 (기본: localhost:3000)
      */
-    const ARTICLE_EDITOR_URL = 'http://localhost:3000';
+    const ARTICLE_EDITOR_URL = 'https://article-editor-ruddy.vercel.app';
     function openArticleEditor(id) {
       const task = appState.tasks.find(t => t.id === id);
       if (!task) return;
