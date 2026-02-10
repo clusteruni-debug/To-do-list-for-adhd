@@ -58,6 +58,36 @@ e85975c fix: loadLifeRhythm에서 updatedAt 갱신 제거 — 모바일 리듬/�
 
 ---
 
+## [2026-02-10] (세션 28-2)
+> 📦 `navigator-v5.html` | 📊 사용성 검토 후 전수 수정 | 🗄️ DB: 없음
+
+### 작업 내용
+- **모바일 CSS 사용성 개선 4건**
+  - 탭 버튼 터치 타겟 44px 확보 (padding 12px + min-height: 44px)
+  - 더보기 메뉴 모바일 중앙 정렬 (right:0 → transform: translateX(-50%)) — 화면 밖 잘림 방지
+  - iOS 자동 줌 방지 (input/textarea/select font-size: 16px !important)
+  - 모바일 섹션 간격 gap:0 → gap:12px — 컬럼 간 시각적 구분 확보
+
+- **escapeAttr 전수 적용 — 91곳** ⭐
+  - task.id onclick/onchange 66곳 + project.id onclick 25곳
+  - 템플릿 리터럴: `'${task.id}'` → `'${escapeAttr(task.id)}'`
+  - 문자열 결합: `\'' + task.id + '\''` → `\'' + escapeAttr(task.id) + '\''`
+  - 이벤트 탭 toggleEventSelection, restoreFromTrash, permanentDeleteFromTrash 포함
+  - validateTask id regex([a-zA-Z0-9_-])에 더해 defense-in-depth 완성
+
+- **파일 임포트 타입 검증 강화**
+  - `text/*` 허용 제거 → `.json` 확장자 또는 `json` MIME 타입만 허용
+
+### 커밋
+```
+b970cf4 fix: 모바일 UX 4건 + escapeAttr 전수 적용 91곳 + 임포트 검증 강화
+```
+
+### 다음 작업
+- 현재 알려진 미수정 버그/개선 없음
+
+---
+
 ## [2026-02-10] (세션 27)
 > 📦 `navigator-v5.html` | 📊 +83/-32 | 🗄️ DB: 없음
 
