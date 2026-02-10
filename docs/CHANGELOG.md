@@ -20,6 +20,44 @@ hash type: 메시지
 - 항목
 -->
 
+## [2026-02-10] (세션 28)
+> 📦 `navigator-v5.html`, `js/rhythm.js` | 📊 +66/-15 | 🗄️ DB: 없음
+
+### 작업 내용
+- **모바일 리듬/복약 데이터 유실 근본 수정** ⭐
+  - 원인: `loadLifeRhythm()`이 앱 시작 시 `saveLifeRhythm()` 호출 → `updatedAt`이 갱신되어, `loadFromFirebase` 병합에서 빈 로컬 데이터가 클라우드 실제 기록을 덮어씀
+  - 수정: `saveLifeRhythm()` → `localStorage.setItem()` 직접 호출로 교체 (updatedAt 갱신 안 함)
+  - 효과: 클라우드의 실제 리듬/복약 기록이 항상 정확하게 병합됨
+
+- **모바일 탭 네비게이션 오버플로우 수정**
+  - 5개 탭 버튼이 모바일 화면 폭(~375px) 초과하여 깨지는 문제
+  - 767px 이하: 패딩·갭·폰트 축소 + SVG 아이콘 숨김
+
+- **동기화 병합 강화 3건**
+  - [M-2] weeklyPlan: 덮어쓰기 → `updatedAt` 기반 최신 우선 병합 (loadFromFirebase + onSnapshot)
+  - [M-5] commuteTracker.trips: 얕은 병합 → 날짜→방향 깊은 합집합 (같은 날짜 다른 방향 유실 방지)
+  - [L-1] onSnapshot syncBack: 병합 후 `syncToFirebase()` 호출 — 3대+ 기기 비대칭 해소 (1.5초 디바운스, 핑퐁 방지)
+
+- **escapeHtml 성능 최적화**
+  - DOM `createElement` → 문자열 `replace` 전환 (렌더당 106+회 호출, ~5x 빠름)
+
+- **renderStatic 분석 결과**
+  - 이미 탭별 조건부 렌더링(ternary) 적용 중 — 비활성 탭은 평가하지 않음
+  - 추가 최적화는 가상DOM 도입 수준이므로 현행 유지
+
+### 커밋
+```
+e85975c fix: loadLifeRhythm에서 updatedAt 갱신 제거 — 모바일 리듬/복약 데이터 유실 방지
+924d57b fix: 모바일 탭 네비게이션 오버플로우 수정 — 패딩/폰트 축소 + SVG 아이콘 숨김
+059b7e6 fix: 동기화 병합 4건 + escapeHtml 성능 최적화
+```
+
+### 다음 작업
+- 현재 알려진 미수정 버그/개선 없음
+- 모바일 UX 추가 개선 (스와이프 제스처, 터치 최적화 등) 고려 가능
+
+---
+
 ## [2026-02-10] (세션 27)
 > 📦 `navigator-v5.html` | 📊 +83/-32 | 🗄️ DB: 없음
 
@@ -53,19 +91,24 @@ hash type: 메시지
   - [M-10] importTaskDirectly/confirmImportTask에 `updatedAt` 추가 — 병합 정확도 개선
   - [M-11] toMins() NaN 방어 — 잘못된 시간 문자열에서 NaN 전파 차단
 
+- **모바일 레이아웃 개선**
+  - Next Action을 모바일 최상단 배치 (`order: -1`)
+  - 전체 목록 중복 제거 (`.task-list-full` 모바일 숨김)
+
 ### 커밋
 ```
 81d416d fix: onSnapshot 시간 게이트를 자기-쓰기 스킵으로 교체 — 기기 간 리듬/복약 동기화 누락 수정
 286ac97 fix: loadFromFirebase 레이스 컨디션 4건 수정 — onSnapshot 가드, 디바운스 취소, pendingSync 리셋, 재귀 제한
 d45336b fix: 전체 검토 보안+동기화+버그 15건 일괄 수정
+0b01831 fix: 모바일 레이아웃 개선 — Next Action 최상단 배치 + 전체 목록 중복 제거
 ```
 
-### 다음 작업 (검토에서 발견, 미수정 — LOW 우선순위)
-- weeklyPlan 클라우드→로컬 병합 없이 덮어쓰기 (M-2)
-- commuteTracker.trips 로컬 우선 덮어쓰기 (M-5)
-- onSnapshot 병합 후 syncBack 없음 → 3대+ 기기 비대칭 (L-1)
-- renderStatic 2,763줄 부분 렌더링 분리 (성능)
-- escapeHtml DOM→문자열 치환 방식 전환 (성능)
+### 다음 작업
+- ~~weeklyPlan 병합~~ → 세션 28에서 수정 완료
+- ~~commuteTracker.trips 병합~~ → 세션 28에서 수정 완료
+- ~~onSnapshot syncBack~~ → 세션 28에서 수정 완료
+- ~~escapeHtml 최적화~~ → 세션 28에서 수정 완료
+- ~~renderStatic 부분 렌더링~~ → 분석 결과 이미 조건부 렌더링 적용 중
 
 ---
 
