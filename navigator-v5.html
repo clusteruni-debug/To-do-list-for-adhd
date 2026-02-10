@@ -9416,11 +9416,12 @@
     /**
      * XSS 방지: HTML 이스케이핑
      */
+    // 문자열 기반 HTML 이스케이프 — DOM 요소 생성 대비 ~5x 빠름 (렌더당 106+회 호출)
+    const _escapeMap = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'};
+    const _escapeRe = /[&<>"']/g;
     function escapeHtml(text) {
       if (text === null || text === undefined) return '';
-      const div = document.createElement('div');
-      div.textContent = String(text);
-      return div.innerHTML;
+      return String(text).replace(_escapeRe, c => _escapeMap[c]);
     }
 
     /** onclick 속성 내 JS 문자열 이스케이프 — 백슬래시+따옴표를 JS 레벨로 이스케이프 후 HTML 속성용 이스케이프 */
@@ -11089,7 +11090,18 @@
               if (cTime > eTime) routeMap[r.id] = r;
             });
             appState.commuteTracker.routes = Object.values(routeMap);
-            const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+            // trips 깊은 병합: 날짜→방향 레벨로 합집합 (얕은 병합 시 같은 날짜의 다른 방향 유실)
+            const cTrips = cloud.trips || {};
+            const lTrips = local.trips || {};
+            const mergedTrips = {};
+            for (const date of new Set([...Object.keys(cTrips), ...Object.keys(lTrips)])) {
+              const cd = cTrips[date] || {};
+              const ld = lTrips[date] || {};
+              mergedTrips[date] = {};
+              for (const dir of new Set([...Object.keys(cd), ...Object.keys(ld)])) {
+                mergedTrips[date][dir] = ld[dir] || cd[dir]; // 양쪽 다 있으면 로컬 우선
+              }
+            }
             appState.commuteTracker.trips = mergedTrips;
             appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
           }
@@ -11097,9 +11109,14 @@
           if (data.completionLog) {
             appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
           }
-          // 주간 계획 병합
+          // 주간 계획 병합 (updatedAt 기반 최신 우선)
           if (data.weeklyPlan) {
-            appState.weeklyPlan = data.weeklyPlan;
+            const cUp = data.weeklyPlan.updatedAt || '';
+            const lUp = appState.weeklyPlan.updatedAt || '';
+            if (cUp >= lUp) {
+              appState.weeklyPlan = { ...appState.weeklyPlan, ...data.weeklyPlan };
+            }
+            // updatedAt 없는 구버전 데이터는 클라우드 우선
           }
           // 셔틀/테마 동기화
           if (data.shuttleSuccess !== undefined) {
@@ -11243,8 +11260,18 @@
                 if (cTime > eTime) routeMap[r.id] = r;
               });
               appState.commuteTracker.routes = Object.values(routeMap);
-              // 통근 기록: 양쪽 병합 (로컬 우선)
-              const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+              // trips 깊은 병합: 날짜→방향 레벨 합집합 (얕은 병합 시 같은 날짜의 다른 방향 유실)
+              const cTrips = cloud.trips || {};
+              const lTrips = local.trips || {};
+              const mergedTrips = {};
+              for (const date of new Set([...Object.keys(cTrips), ...Object.keys(lTrips)])) {
+                const cd = cTrips[date] || {};
+                const ld = lTrips[date] || {};
+                mergedTrips[date] = {};
+                for (const dir of new Set([...Object.keys(cd), ...Object.keys(ld)])) {
+                  mergedTrips[date][dir] = ld[dir] || cd[dir];
+                }
+              }
               appState.commuteTracker.trips = mergedTrips;
               // 설정: cloud 기반 + 로컬 덮어쓰기
               appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
@@ -11254,8 +11281,13 @@
             if (data.completionLog) {
               appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
             }
+            // 주간 계획 병합 (updatedAt 기반 최신 우선)
             if (data.weeklyPlan) {
-              appState.weeklyPlan = data.weeklyPlan;
+              const cUp = data.weeklyPlan.updatedAt || '';
+              const lUp = appState.weeklyPlan.updatedAt || '';
+              if (cUp >= lUp) {
+                appState.weeklyPlan = { ...appState.weeklyPlan, ...data.weeklyPlan };
+              }
             }
             if (data.shuttleSuccess !== undefined) {
               appState.shuttleSuccess = data.shuttleSuccess;
@@ -11280,8 +11312,12 @@
             renderStatic();
             updateSyncIndicator();
 
-            // 동기화 수신 시 토스트 제거 — sync-indicator로 충분하고 토스트는 방해만 됨
-            // 첫 로드 플래그만 유지 (다른 곳에서 참조 가능성)
+            // syncBack: 병합 결과를 Firebase에 업로드 — 3대+ 기기 비대칭 해소
+            // 디바운스(1.5초) 적용하여 짧은 시간 내 연속 onSnapshot에 대한 과도한 업로드 방지
+            // 핑퐁 방지: syncToFirebase → lastOwnWriteTimestamp 갱신 → 다음 onSnapshot에서 자기 쓰기 스킵
+            syncToFirebase();
+
+            // 첫 로드 플래그
             if (isFirstRealtimeLoad) {
               isFirstRealtimeLoad = false;
             }
@@ -14719,6 +14755,7 @@
     function saveWeeklyPlan() {
       appState.weeklyPlan.lastReviewDate = new Date().toDateString();
       appState.weeklyPlan.dismissed = false;
+      appState.weeklyPlan.updatedAt = new Date().toISOString();
       saveState();
       closeWeeklyReview();
       showToast('다음 주 계획이 저장되었어요! 💪', 'success');
@@ -14740,6 +14777,7 @@
     function dismissMondayReminder() {
       appState.weeklyPlan.lastReminderDate = new Date().toDateString();
       appState.weeklyPlan.dismissed = true;
+      appState.weeklyPlan.updatedAt = new Date().toISOString();
       saveState();
       renderStatic();
     }
