@@ -53,8 +53,34 @@ e85975c fix: loadLifeRhythm에서 updatedAt 갱신 제거 — 모바일 리듬/�
 ```
 
 ### 다음 작업
-- 현재 알려진 미수정 버그/개선 없음
-- 모바일 UX 추가 개선 (스와이프 제스처, 터치 최적화 등) 고려 가능
+- Article Editor 배포 URL 확정 후 `ARTICLE_EDITOR_URL` 상수 업데이트
+
+---
+
+## [2026-02-10] (세션 28-3)
+> 📦 `navigator-v5.html`, `CLAUDE.md` | 📊 버그 수정 4건 + Article Editor 연동 | 🗄️ DB: 없음
+
+### 작업 내용
+- **Navigator 전체 재검토 → 신규 버그 수정 4건**
+  - 모달 제거 race condition → `?.remove()` optional chaining
+  - 다운로드 링크 cleanup → try/finally 보장
+  - `editCompletedAt` 날짜 검증 → `isNaN(oldDate.getTime())` 가드
+  - 클립보드 복사 fallback → textarea execCommand 방식 추가 (1곳 누락)
+
+- **x-article-editor 연동 구현** ⭐
+  - `openArticleEditor(taskId)` — Task 제목/설명을 URL 파라미터로 전달
+  - 빠른 수정 모달에 "✍️ 아티클 작성" 버튼 추가
+  - `ARTICLE_EDITOR_URL` 상수로 URL 설정 가능 (기본: localhost:3000)
+  - `handleGo()` 통해 안전한 URL 열기 (프로토콜 검증)
+  - CLAUDE.md 연동 현황 업데이트 (계획중 → 완료)
+
+### 커밋
+```
+068001a feat: x-article-editor 연동 + Navigator 버그 수정 4건
+```
+
+### 다음 작업
+- Article Editor 배포 URL 확정 후 `ARTICLE_EDITOR_URL` 상수 업데이트
 
 ---
 

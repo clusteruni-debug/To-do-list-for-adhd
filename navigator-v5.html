@@ -9224,9 +9224,12 @@
         <button class="cancel" onclick="closeQuickEditModal()">취소</button>
         <button class="confirm" onclick="saveQuickEdit()">저장</button>
       </div>
-      <div style="text-align: center; margin-top: 12px;">
+      <div style="text-align: center; margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
         <button class="btn-small" onclick="openFullEdit()" style="background: var(--bg-tertiary); color: var(--text-secondary);">
-          📝 상세 편집으로 이동
+          📝 상세 편집
+        </button>
+        <button class="btn-small" onclick="openArticleEditor(appState.quickEditTaskId)" style="background: var(--bg-tertiary); color: var(--text-secondary);">
+          ✍️ 아티클 작성
         </button>
       </div>
     </div>
@@ -11803,9 +11806,10 @@
       a.href = url;
       a.download = `navigator-revenue-${getLocalDateStr()}.json`;
       document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      try { a.click(); } finally {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
       showToast('수익 데이터 파일이 다운로드되었습니다', 'success');
     }
 
@@ -12298,7 +12302,7 @@
 
       // 모달 HTML
       const modalId = 'edit-log-modal';
-      if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+      document.getElementById(modalId)?.remove();
 
       const modal = document.createElement('div');
       modal.id = modalId;
@@ -13792,6 +13796,7 @@
       if (!task || !task.completedAt) return;
 
       const oldDate = new Date(task.completedAt);
+      if (isNaN(oldDate.getTime())) { showToast('완료 날짜가 올바르지 않습니다', 'error'); return; }
       const oldDateStr = oldDate.toISOString().slice(0, 16); // datetime-local 형식
 
       // 모달 생성
@@ -14035,6 +14040,22 @@
       }, 100);
     }
     window.openFullEdit = openFullEdit;
+
+    /**
+     * Article Editor 연동 — Task 내용으로 아티클 에디터 열기
+     * URL은 설정에서 변경 가능 (기본: localhost:3000)
+     */
+    const ARTICLE_EDITOR_URL = 'http://localhost:3000';
+    function openArticleEditor(id) {
+      const task = appState.tasks.find(t => t.id === id);
+      if (!task) return;
+      const params = new URLSearchParams();
+      params.set('keyword', task.title || '');
+      if (task.description) params.set('summary', task.description);
+      const url = `${ARTICLE_EDITOR_URL}/editor?${params.toString()}`;
+      handleGo(url);
+    }
+    window.openArticleEditor = openArticleEditor;
 
     /**
      * 수정 취소
@@ -20694,9 +20715,15 @@
 
       navigator.clipboard.writeText(text).then(() => {
         showToast('클립보드에 복사됨!', 'success');
-      }).catch(err => {
-        console.error('복사 실패:', err);
-        showToast('복사 실패', 'error');
+      }).catch(() => {
+        // 클립보드 API 실패 시 textarea fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showToast('클립보드에 복사됨!', 'success'); }
+        catch(e) { showToast('복사 실패 — 브라우저 권한을 확인하세요', 'error'); }
+        finally { document.body.removeChild(ta); }
       });
     }
     window.copyWorkProjectToClipboard = copyWorkProjectToClipboard;
