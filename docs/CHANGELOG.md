@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-10] (세션 27)
-> 📦 `navigator-v5.html` | 📊 +8/-5 | 🗄️ DB: 없음
+> 📦 `navigator-v5.html` | 📊 +36/-8 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **onSnapshot 기기 간 동기화 누락 수정** ⭐
@@ -39,6 +39,7 @@ hash type: 메시지
 ### 커밋
 ```
 81d416d fix: onSnapshot 시간 게이트를 자기-쓰기 스킵으로 교체 — 기기 간 리듬/복약 동기화 누락 수정
+286ac97 fix: loadFromFirebase 레이스 컨디션 4건 수정 — onSnapshot 가드, 디바운스 취소, pendingSync 리셋, 재귀 제한
 ```
 
 ### 다음 작업
