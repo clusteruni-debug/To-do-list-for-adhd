@@ -10431,6 +10431,8 @@
     let unsubscribeSnapshot = null;
     let isSyncing = false;
     let pendingSync = false; // 동기화 중 추가 변경 발생 시 재동기화 예약
+    let syncRetryCount = 0; // finally 재귀 깊이 제한 카운터
+    const MAX_SYNC_RETRY = 3; // pendingSync 재호출 최대 횟수
     let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
     let isLoadingFromCloud = false; // 클라우드 초기 로드 중 sync 차단 (빈 데이터 업로드 방지)
@@ -10650,10 +10652,18 @@
         updateSyncIndicator();
       } finally {
         isSyncing = false;
-        // 동기화 중 추가 변경이 있었으면 재동기화
+        // 동기화 중 추가 변경이 있었으면 재동기화 (RC-4: 재귀 깊이 제한)
         if (pendingSync) {
           pendingSync = false;
-          _doSyncToFirebase();
+          if (syncRetryCount < MAX_SYNC_RETRY) {
+            syncRetryCount++;
+            _doSyncToFirebase();
+          } else {
+            console.warn(`동기화 재시도 ${MAX_SYNC_RETRY}회 초과 — 중단. 다음 변경 시 재동기화됩니다.`);
+            syncRetryCount = 0;
+          }
+        } else {
+          syncRetryCount = 0;
         }
       }
     }
@@ -10937,6 +10947,11 @@
         clearTimeout(saveStateTimeout);
         saveStateTimeout = null;
       }
+      // RC-2: 대기 중인 syncDebounceTimer도 취소 (병합 전 오래된 데이터 업로드 방지)
+      if (syncDebounceTimer) {
+        clearTimeout(syncDebounceTimer);
+        syncDebounceTimer = null;
+      }
 
       isLoadingFromCloud = true;
 
@@ -11070,11 +11085,14 @@
           deduplicateAll();
           // 병합 완료 → 로드 잠금 해제 후 클라우드에 즉시 반영
           isLoadingFromCloud = false;
+          // RC-1: syncToFirebase(true)가 최신 전체 데이터를 업로드하므로 대기 예약 불필요
+          pendingSync = false;
           updateDataCounts();
           syncToFirebase(true);
         } else {
           // 클라우드에 데이터 없으면 현재 로컬 데이터 즉시 업로드
           isLoadingFromCloud = false;
+          pendingSync = false;
           updateDataCounts();
           syncToFirebase(true);
         }
@@ -11098,7 +11116,8 @@
 
       const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
       unsubscribeSnapshot = window.firebaseOnSnapshot(userDoc, (doc) => {
-        if (doc.exists() && !isSyncing) {
+        // RC-3: loadFromFirebase 진행 중에는 onSnapshot이 appState를 동시 수정하지 않도록 차단
+        if (doc.exists() && !isSyncing && !isLoadingFromCloud) {
           const data = doc.data();
 
           // 핑퐁 방지: 자기가 방금 쓴 데이터면 스킵 (다른 기기 데이터는 항상 수신)

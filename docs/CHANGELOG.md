@@ -30,6 +30,12 @@ hash type: 메시지
   - 효과: 다른 기기 데이터는 항상 수신, 자기 쓰기만 핑퐁 방지
   - 각 병합 함수(mergeTasks, mergeRhythmToday 등)의 updatedAt 기반 충돌 해결에 위임
 
+- **loadFromFirebase 레이스 컨디션 4건 수정**
+  - RC-1: loadFromFirebase 완료 시 `pendingSync = false` — syncToFirebase(true)가 전체 업로드하므로 대기 예약 불필요
+  - RC-2: loadFromFirebase 시작 시 `syncDebounceTimer` 취소 — 병합 전 오래된 데이터 업로드 방지
+  - RC-3: onSnapshot에 `!isLoadingFromCloud` 가드 — 로드 중 appState 동시 수정 차단
+  - RC-4: finally 블록 `pendingSync` 재호출 깊이 3회 제한 — 무한 재귀 방지
+
 ### 커밋
 ```
 81d416d fix: onSnapshot 시간 게이트를 자기-쓰기 스킵으로 교체 — 기기 간 리듬/복약 동기화 누락 수정
