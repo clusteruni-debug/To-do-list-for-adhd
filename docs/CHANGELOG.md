@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-10] (세션 27)
-> 📦 `navigator-v5.html` | 📊 +89/-32 | 🗄️ DB: 없음
+> 📦 `navigator-v5.html` | 📊 +83/-32 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **onSnapshot 기기 간 동기화 누락 수정** ⭐
@@ -57,10 +57,15 @@ hash type: 메시지
 ```
 81d416d fix: onSnapshot 시간 게이트를 자기-쓰기 스킵으로 교체 — 기기 간 리듬/복약 동기화 누락 수정
 286ac97 fix: loadFromFirebase 레이스 컨디션 4건 수정 — onSnapshot 가드, 디바운스 취소, pendingSync 리셋, 재귀 제한
+d45336b fix: 전체 검토 보안+동기화+버그 15건 일괄 수정
 ```
 
-### 다음 작업
-- 없음
+### 다음 작업 (검토에서 발견, 미수정 — LOW 우선순위)
+- weeklyPlan 클라우드→로컬 병합 없이 덮어쓰기 (M-2)
+- commuteTracker.trips 로컬 우선 덮어쓰기 (M-5)
+- onSnapshot 병합 후 syncBack 없음 → 3대+ 기기 비대칭 (L-1)
+- renderStatic 2,763줄 부분 렌더링 분리 (성능)
+- escapeHtml DOM→문자열 치환 방식 전환 (성능)
 
 ---
 
