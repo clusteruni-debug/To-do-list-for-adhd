@@ -9423,11 +9423,15 @@
 
       // 필수 필드 검증
       if (typeof task.id !== 'number' && typeof task.id !== 'string') return null;
+      // id가 문자열이면 안전한 문자만 허용 (onclick 인젝션 방지)
+      if (typeof task.id === 'string' && !/^[a-zA-Z0-9_-]+$/.test(task.id)) {
+        task.id = generateId(); // 위험한 id는 새로 생성
+      }
       if (typeof task.title !== 'string' || task.title.trim().length === 0) return null;
 
       // 안전한 객체 생성 (허용된 필드만)
       const validated = {
-        id: task.id,
+        id: typeof task.id === 'number' ? String(task.id) : task.id,
         title: String(task.title).trim().substring(0, 500),
         category: ['본업', '부업', '일상', '가족', '공부', '크립토'].includes(task.category) ? task.category : '일상',
         completed: Boolean(task.completed),
@@ -11102,6 +11106,7 @@
       } catch (error) {
         console.error('데이터 로드 실패:', error);
         appState.syncStatus = 'error';
+        updateSyncIndicator();
       } finally {
         // 에러 시에도 로드 잠금 해제 보장
         isLoadingFromCloud = false;
@@ -11237,9 +11242,11 @@
             migrateNumericIds();
             deduplicateAll();
 
-            // 오늘 통계 재계산 + 오래된 완료 태스크 정리
+            // 오늘 통계 재계산
             recomputeTodayStats();
-            cleanupOldCompletedTasks();
+
+            // 병합 결과를 localStorage에 백업 (브라우저 크래시 대비)
+            _doSaveStateLocalOnly();
 
             renderStatic();
             updateSyncIndicator();
@@ -11251,6 +11258,12 @@
             }
           }
         }
+      }, (error) => {
+        // onSnapshot 에러 콜백 — 리스너 실패 감지 (권한 오류, 네트워크 단절 등)
+        console.error('실시간 동기화 리스너 오류:', error);
+        appState.syncStatus = 'error';
+        updateSyncIndicator();
+        unsubscribeSnapshot = null;
       });
     }
 
@@ -14218,6 +14231,11 @@
      */
     function handleGo(link) {
       if (link) {
+        // javascript: / data: 프로토콜 차단 (XSS 방지)
+        try {
+          const url = new URL(link, window.location.origin);
+          if (!['http:', 'https:'].includes(url.protocol)) return;
+        } catch (e) { return; }
         window.open(link, '_blank');
       }
     }
@@ -15264,11 +15282,13 @@
      * 실행취소 토스트 표시 (완료 후 3초간)
      */
     let undoToastTimeout = null;
+    let undoToastInterval = null;
     function showUndoToast(taskId, taskTitle) {
-      // 기존 토스트 제거
+      // 기존 토스트/타이머 제거
       const existingToast = document.querySelector('.toast-undo');
       if (existingToast) existingToast.remove();
       if (undoToastTimeout) clearTimeout(undoToastTimeout);
+      if (undoToastInterval) clearInterval(undoToastInterval);
 
       const toast = document.createElement('div');
       toast.className = 'toast-undo';
@@ -15282,14 +15302,15 @@
       // 카운트다운 (5초)
       let countdown = 5;
       const timerEl = toast.querySelector('.toast-undo-timer');
-      const interval = setInterval(() => {
+      undoToastInterval = setInterval(() => {
         countdown--;
         if (timerEl) timerEl.textContent = countdown;
       }, 1000);
 
       // 5초 후 자동 제거
       undoToastTimeout = setTimeout(() => {
-        clearInterval(interval);
+        clearInterval(undoToastInterval);
+        undoToastInterval = null;
         toast.remove();
       }, 5000);
     }
@@ -15298,10 +15319,11 @@
      * 실행취소 (토스트에서 호출)
      */
     function undoComplete(taskId) {
-      // 토스트 즉시 제거
+      // 토스트 및 타이머 즉시 제거
       const toast = document.querySelector('.toast-undo');
       if (toast) toast.remove();
       if (undoToastTimeout) clearTimeout(undoToastTimeout);
+      if (undoToastInterval) { clearInterval(undoToastInterval); undoToastInterval = null; }
 
       // 완료 취소 처리
       uncompleteTask(taskId);
@@ -15383,7 +15405,8 @@
      * 스트릭 업데이트
      */
     function updateStreak() {
-      const today = new Date().toDateString();
+      // YYYY-MM-DD 포맷으로 비교 (toDateString은 연도 넘어갈 때 문자열 비교 실패)
+      const today = getLocalDateStr(new Date());
       const lastActive = appState.streak.lastActiveDate;
 
       if (!lastActive) {
@@ -15395,9 +15418,9 @@
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      if (lastDate.toDateString() === yesterday.toDateString()) {
+      if (getLocalDateStr(lastDate) === getLocalDateStr(yesterday)) {
         // 어제 활동함 → 스트릭 유지
-      } else if (lastDate.toDateString() !== today) {
+      } else if (getLocalDateStr(lastDate) !== today) {
         // 어제 활동 안 함 → 스트릭 리셋
         appState.streak.current = 0;
       }
@@ -15407,7 +15430,7 @@
      * 오늘 활동 기록 (작업 완료 시 호출)
      */
     function recordActivity() {
-      const today = new Date().toDateString();
+      const today = getLocalDateStr(new Date());
 
       if (appState.streak.lastActiveDate !== today) {
         appState.streak.current++;
@@ -16093,7 +16116,11 @@
                   const yesterday = getLocalDateStr(new Date(Date.now() - 86400000));
                   const yesterdayData = appState.lifeRhythm.history[yesterday] || {};
 
-                  const toMins = (t) => t ? parseInt(t.split(':')[0]) * 60 + parseInt(t.split(':')[1]) : null;
+                  const toMins = (t) => {
+                    if (!t || !t.includes(':')) return null;
+                    const [h, m] = t.split(':').map(Number);
+                    return (isNaN(h) || isNaN(m)) ? null : h * 60 + m;
+                  };
                   const formatDur = (mins) => {
                     if (!mins || mins <= 0) return null;
                     const h = Math.floor(mins / 60);
@@ -16107,7 +16134,7 @@
                     const wakeTime = toMins(rhythm.wakeUp);
                     let duration = wakeTime - sleepTime;
                     if (duration < 0) duration += 24 * 60;
-                    if (sleepTime > 12 * 60) duration = wakeTime + (24 * 60 - sleepTime);
+                    // 오후 수면 중복 보정 제거 — 위 로직만으로 야간 수면 정확히 처리됨
                     sleepDuration = formatDur(duration);
                   }
 
@@ -16480,12 +16507,12 @@
                       <div class="tags-input-container">
                         <div class="selected-tags">
                           ${(appState.detailedTask.tags || []).map(tag => `
-                            <span class="tag selected" onclick="removeTagFromTask('${tag}')">${escapeHtml(tag)} ×</span>
+                            <span class="tag selected" onclick="removeTagFromTask('${escapeAttr(tag)}')">${escapeHtml(tag)} ×</span>
                           `).join('')}
                         </div>
                         <div class="available-tags">
                           ${appState.availableTags.filter(tag => !(appState.detailedTask.tags || []).includes(tag)).map(tag => `
-                            <span class="tag" onclick="addTagToTask('${tag}')">${escapeHtml(tag)}</span>
+                            <span class="tag" onclick="addTagToTask('${escapeAttr(tag)}')">${escapeHtml(tag)}</span>
                           `).join('')}
                         </div>
                         <div class="new-tag-input">
@@ -21426,7 +21453,8 @@
           completed: false,
           pinned: false,
           source: taskData.source || null,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
 
         appState.tasks.unshift(newTask);
@@ -21468,15 +21496,15 @@
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">마감일</div>
-                <div>${taskData.deadline || '없음'}</div>
+                <div>${escapeHtml(taskData.deadline || '없음')}</div>
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">예상 시간</div>
-                <div>${taskData.estimatedTime || 10}분</div>
+                <div>${escapeHtml(String(taskData.estimatedTime || 10))}분</div>
               </div>
               <div style="background: var(--bg-secondary); border-radius: 8px; padding: 10px;">
                 <div style="font-size: 0.75rem; color: var(--text-secondary);">보상</div>
-                <div style="color: var(--accent-green);">${taskData.expectedRevenue || '-'}</div>
+                <div style="color: var(--accent-green);">${escapeHtml(String(taskData.expectedRevenue || '-'))}</div>
               </div>
             </div>
 
@@ -21543,7 +21571,8 @@
           pinned: false,
           // telegram-event-bot 연동 정보
           source: taskData.source || null,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
 
         appState.tasks.unshift(newTask);
@@ -21573,7 +21602,7 @@
       // 1. Supabase REST API로 participated 상태 직접 업데이트 (역동기화)
       try {
         const response = await fetch(
-          `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${eventId}`,
+          `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${encodeURIComponent(eventId)}`,
           {
             method: 'PATCH',
             headers: {
@@ -21610,10 +21639,10 @@
           if (eventIndex !== -1) {
             events[eventIndex].participated = participated;
 
+            // events 필드만 업데이트 (다른 필드 덮어쓰기 방지)
             await window.firebaseSetDoc(userDoc, {
-              ...data,
               events: events
-            });
+            }, { merge: true });
           }
         }
       } catch (error) {
@@ -21858,7 +21887,7 @@
         try {
           // Supabase PATCH로 archived_date 설정 (소프트 삭제)
           const res = await fetch(
-            `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${event.id}`,
+            `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${encodeURIComponent(event.id)}`,
             {
               method: 'PATCH',
               headers: {

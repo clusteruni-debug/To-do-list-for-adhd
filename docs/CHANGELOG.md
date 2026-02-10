@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-10] (세션 27)
-> 📦 `navigator-v5.html` | 📊 +36/-8 | 🗄️ DB: 없음
+> 📦 `navigator-v5.html` | 📊 +89/-32 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **onSnapshot 기기 간 동기화 누락 수정** ⭐
@@ -35,6 +35,23 @@ hash type: 메시지
   - RC-2: loadFromFirebase 시작 시 `syncDebounceTimer` 취소 — 병합 전 오래된 데이터 업로드 방지
   - RC-3: onSnapshot에 `!isLoadingFromCloud` 가드 — 로드 중 appState 동시 수정 차단
   - RC-4: finally 블록 `pendingSync` 재호출 깊이 3회 제한 — 무한 재귀 방지
+
+- **전체 검토: 보안 + 동기화 + 버그 수정 15건** ⭐
+  - [C-1] `updateLinkedEventStatus` setDoc에 `{ merge: true }` 추가 — 전체 문서 덮어쓰기 방지
+  - [H-1] `validateTask` id 형식 검증 (`[a-zA-Z0-9_-]` 정규식) — onclick 인젝션 차단
+  - [H-2] import 모달 XSS 3곳 `escapeHtml` 적용 (deadline, estimatedTime, expectedRevenue)
+  - [H-3] tag onclick에 `escapeAttr` 적용 — 따옴표 포함 태그 XSS 차단
+  - [H-4] `handleGo` javascript:/data: 프로토콜 차단 — http/https만 허용
+  - [H-5] onSnapshot 에러 콜백 추가 — 리스너 실패 감지 + syncStatus 업데이트
+  - [H-6] 수면시간 계산 중복 보정 제거 — 오후 수면 시 25시간 표시 버그 수정
+  - [M-1] onSnapshot 병합 후 `_doSaveStateLocalOnly()` 호출 — 브라우저 크래시 대비
+  - [M-3] `loadFromFirebase` catch에 `updateSyncIndicator()` 추가
+  - [M-4] onSnapshot에서 `cleanupOldCompletedTasks()` 제거 — 원격 동기화 사이드이펙트 방지
+  - [M-6] Supabase eventId `encodeURIComponent` 적용 — URL 인젝션 방지
+  - [M-8] streak.lastActiveDate `toDateString()` → `getLocalDateStr()` — 연도 변경 시 비교 오류 수정
+  - [M-9] showUndoToast interval 모듈 레벨 변수로 정리 — 메모리 누수 방지
+  - [M-10] importTaskDirectly/confirmImportTask에 `updatedAt` 추가 — 병합 정확도 개선
+  - [M-11] toMins() NaN 방어 — 잘못된 시간 문자열에서 NaN 전파 차단
 
 ### 커밋
 ```
