@@ -545,7 +545,7 @@
       }
     }
 
-    /* 모바일 (767px 이하) - 기존 유지 */
+    /* 모바일 (767px 이하) - 컬럼 재배치: Next Action 최상단 */
     @media (max-width: 767px) {
       .app {
         max-width: 600px;
@@ -553,13 +553,29 @@
       }
 
       .pc-layout {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
       }
 
+      .pc-column-right,
       .pc-column-left,
-      .pc-column-center,
+      .pc-column-center {
+        width: 100%;
+      }
       .pc-column-right {
-        display: contents;
+        order: -1;  /* Next Action + 포모도로를 최상단으로 */
+      }
+      .pc-column-left {
+        order: 0;
+      }
+      .pc-column-center {
+        order: 1;
+      }
+
+      /* 모바일: "전체 목록"은 "다른 작업" mini 목록과 중복 → 숨김 */
+      .task-list-full {
+        display: none;
       }
     }
 
@@ -16571,7 +16587,7 @@
                       <button class="swipe-hint-close" onclick="dismissSwipeHint()">✕</button>
                     </div>
                   ` : ''}
-                  <div class="task-list-section">
+                  <div class="task-list-section task-list-full">
                     <div class="task-list-header" onclick="toggleTaskList()">
                       <div class="task-list-title">📋 전체 목록</div>
                       <div class="task-list-count">${filteredTasks.length}개 ${appState.showTaskList ? '▼' : '▶'}</div>
