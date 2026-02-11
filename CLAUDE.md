@@ -21,6 +21,7 @@
 - 확인 없이 작동하던 코드 덮어쓰기
 - 같은 에러에 같은 방법 3회 이상 반복
 - any 타입으로 도피
+- 회사명/고객명/내부 용어 등 민감 데이터를 public repo 코드에 하드코딩
 
 ---
 
@@ -92,6 +93,7 @@
 
 ### 구현 후 자기검증
 ```
+□ 원래 요청의 모든 항목을 빠짐없이 처리했는가? (요청 다시 읽고 대조)
 □ 저장 → DB 반영 확인
 □ 새로고침 → 데이터 유지
 □ 에러 상황 → 사용자 피드백
@@ -119,6 +121,8 @@
 ---
 
 ## 📋 플랜 형식
+
+> **플랜 스킵 조건**: 버그 N개 수정, 기존 플랜 실행, 단순 기능 추가 등 scope가 명확한 요청은 플랜 문서 없이 바로 구현. 플랜이 필요한 경우에도 별도 문서가 아닌 Task 체크리스트로 관리하여 구현 시간 확보.
 
 ```
 📋 요청: [이해한 내용]
@@ -296,6 +300,8 @@ docs/CHANGELOG.md에 기록:
 2. **innerHTML 사용 시**: 반드시 `escapeHtml()` 함수로 이스케이프
 3. **localStorage 로드**: `safeParseJSON()`, `validateTasks()` 사용
 4. **전역 함수 노출**: 최소화 (window.firebase* 등)
+5. **하드코딩 금지**: 회사명, 고객명, 내부 프로세스명, 실명 등 민감 데이터를 코드에 직접 작성 금지 — 반드시 placeholder/템플릿 값 사용
+6. **push 전 사전 스캔**: `git push` 실행 전 staged 파일 + 커밋 메시지에서 민감 용어 grep 실행 (사후 정리가 아닌 사전 차단)
 
 ### 민감 데이터 정리 프로토콜 (git 히스토리 포함)
 > **원칙: 행동 전 전수 스캔 → 목록 확인 → 한 번에 실행**
@@ -373,15 +379,11 @@ Navigator  ──(📤 자산관리 버튼)──▶  수익 데이터 클립보
 - **상태**: ✅ 연동 완료
 - **연동 방식**: 클립보드 JSON 데이터 교환
 
-### x-article-editor ↔ Navigator
+### x-article-editor ↔ Navigator (예정)
 ```
-Navigator  ──(✍️ 아티클 작성 버튼)──▶  x-article-editor /editor
-     │                                           │
-     └── URL 파라미터(?keyword=제목&summary=설명)──▶│
+Navigator  ──(아티클 작성 Task)──▶  x-article-editor 초안 생성
 ```
-- **상태**: ✅ 연동 완료
-- **연동 방식**: URL 파라미터 (keyword, summary) — 빠른 수정 모달에서 "아티클 작성" 클릭
-- **URL 설정**: `ARTICLE_EDITOR_URL` 상수 (기본: localhost:3000, 배포 시 변경)
+- **상태**: 🔵 계획중
 
 ---
 
@@ -519,6 +521,19 @@ Navigator  ──(✍️ 아티클 작성 버튼)──▶  x-article-editor /ed
 
 ---
 
-## 🔌 MCP 서버 & 🔒 세션 잠금
+## 🔌 MCP 서버 & 도구
 
-> [워크스페이스 CLAUDE.md](../CLAUDE.md) 참고 (글로벌 설정)
+- **context7**: 라이브러리 최신 문서 자동 주입 (`resolve-library-id` → `get-library-docs`)
+- **claude-mem**: 세션 히스토리 압축 + 컨텍스트 유실 방지
+- **ccusage**: `npx ccusage@latest daily` — 토큰 비용 확인
+- **firebase MCP**: Firestore/Auth 관리 (첫 사용 시 인증 필요)
+- **github MCP**: GitHub 이슈/PR/Actions 관리
+
+---
+
+## 🔒 세션 잠금
+
+이 프로젝트는 세션 잠금 시스템 적용 대상입니다.
+- 작업 시작: `/session-start` → `.claude-lock` 생성 → 다른 세션 수정 차단
+- 작업 종료: `/session-end` → `.claude-lock` 삭제
+- **다른 세션에서 이 프로젝트를 수정하려 하면 PreToolUse hook이 자동 차단합니다**
