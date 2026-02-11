@@ -21,7 +21,7 @@ hash type: 메시지
 -->
 
 ## [2026-02-11] (세션 29)
-> 📦 `js/rhythm.js`, `navigator-v5.html`, `docs/CHANGELOG.md` | 📊 +114/-22 | 🗄️ DB: 없음
+> 📦 `js/rhythm.js`, `navigator-v5.html`, `sw.js` | 📊 +162/-137 | 🗄️ DB: 없음
 
 ### 작업 내용
 - **라이프 리듬 데이터 초기화/유실 근본 수정 (5건)** ⭐
@@ -47,11 +47,14 @@ hash type: 메시지
   - 112줄 삭제, 41줄 추가 (71줄 순감소)
   - `_deletedFields`는 히스토리 이동 시 자동 제거
 
+- **SW v6.4 캐시 버전 범프**
+
 ### 커밋
 ```
 65692d3 fix: 라이프 리듬 데이터 초기화/유실 근본 수정 4건
 d58b936 fix: 리듬 삭제 전파 — _deletedFields 메타데이터로 의도적 삭제 보존
-d022374 refactor: day-change 중복 제거 — transitionRhythmDay 공통 함수
+f1af142 refactor: day-change 중복 제거 — transitionRhythmDay 공통 함수
+405b4b0 chore: SW v6.4 캐시 버전 범프
 ```
 
 ### 다음 작업
