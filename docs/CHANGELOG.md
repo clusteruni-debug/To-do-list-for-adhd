@@ -42,15 +42,20 @@ hash type: 메시지
     - 삭제 시 `markFieldDeleted()`, 기록/수정 시 `unmarkFieldDeleted()` 호출
     - `mergeRhythmToday` + `mergeRhythmHistory` 양쪽에서 `_deletedFields` 체크
 
+- **day-change 중복 코드 리팩토링** — `transitionRhythmDay()` 공통 함수 추출
+  - 5곳 중복 (recordMedication, editMedication, recordLifeRhythm, editLifeRhythm, checkRhythmDayChange, loadLifeRhythm) → 1곳으로 통합
+  - 112줄 삭제, 41줄 추가 (71줄 순감소)
+  - `_deletedFields`는 히스토리 이동 시 자동 제거
+
 ### 커밋
 ```
 65692d3 fix: 라이프 리듬 데이터 초기화/유실 근본 수정 4건
 d58b936 fix: 리듬 삭제 전파 — _deletedFields 메타데이터로 의도적 삭제 보존
+d022374 refactor: day-change 중복 제거 — transitionRhythmDay 공통 함수
 ```
 
 ### 다음 작업
 - 리듬 유실 재현 테스트 (새벽 시간대, 다중 기기 동기화)
-- day-change 로직 중복 리팩토링 (`checkRhythmDayChange` + `loadLifeRhythm` 통합 검토)
 
 ---
 

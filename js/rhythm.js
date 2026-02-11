@@ -29,6 +29,40 @@ function unmarkFieldDeleted(target, field) {
 }
 
 // ============================================
+// 공통: 리듬 날짜 전환 (어제 → 히스토리, 오늘 초기화)
+// ============================================
+
+/**
+ * 리듬 today의 날짜가 logicalToday와 다르면 히스토리로 이동 + 빈 today 생성
+ * @param {Object} rhythm - appState.lifeRhythm 또는 parsed 객체 (today/history 포함)
+ * @param {string} logicalToday - getLogicalDate() 결과
+ * @returns {boolean} 전환 발생 여부
+ */
+function transitionRhythmDay(rhythm, logicalToday) {
+  if (!rhythm.today || !rhythm.today.date || rhythm.today.date === logicalToday) return false;
+
+  const savedDate = rhythm.today.date;
+  const hasData = Object.values(rhythm.today).some(v =>
+    v && v !== savedDate && typeof v !== 'object'
+  ) || (rhythm.today.medications && Object.keys(rhythm.today.medications).length > 0);
+
+  if (hasData) {
+    if (!rhythm.history) rhythm.history = {};
+    const historyEntry = { ...rhythm.today };
+    delete historyEntry.date;
+    delete historyEntry._deletedFields; // 히스토리에는 삭제 메타 불필요
+    rhythm.history[savedDate] = historyEntry;
+    console.log('[rhythm] ' + savedDate + ' 데이터를 히스토리로 이동');
+  }
+
+  rhythm.today = {
+    date: logicalToday, wakeUp: null, homeDepart: null, workArrive: null,
+    workDepart: null, homeArrive: null, sleep: null, medications: {}
+  };
+  return true;
+}
+
+// ============================================
 // Firebase 동기화용 라이프 리듬 병합
 // ============================================
 
@@ -339,18 +373,7 @@ function recordMedication(slotId) {
   const today = getLogicalDate(now);
   const timeStr = now.toTimeString().slice(0, 5);
 
-  // 오늘 날짜 확인
-  if (appState.lifeRhythm.today.date !== today) {
-    // 어제 기록을 히스토리로 이동
-    if (appState.lifeRhythm.today.date) {
-      appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
-      delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
-    }
-    appState.lifeRhythm.today = {
-      date: today, wakeUp: null, homeDepart: null, workArrive: null,
-      workDepart: null, homeArrive: null, sleep: null, medications: {}
-    };
-  }
+  transitionRhythmDay(appState.lifeRhythm, today);
 
   if (!appState.lifeRhythm.today.medications) {
     appState.lifeRhythm.today.medications = {};
@@ -390,17 +413,7 @@ function editMedication(slotId) {
     return;
   }
 
-  // 자정 넘김 방어: 날짜가 바뀌었으면 today 갱신
-  if (appState.lifeRhythm.today.date !== today) {
-    if (appState.lifeRhythm.today.date) {
-      appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
-      delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
-    }
-    appState.lifeRhythm.today = {
-      date: today, wakeUp: null, homeDepart: null, workArrive: null,
-      workDepart: null, homeArrive: null, sleep: null, medications: {}
-    };
-  }
+  transitionRhythmDay(appState.lifeRhythm, today);
 
   if (!appState.lifeRhythm.today.medications) {
     appState.lifeRhythm.today.medications = {};
@@ -668,25 +681,7 @@ function recordLifeRhythm(type) {
   const today = getLogicalDate(now);
   const timeStr = now.toTimeString().slice(0, 5); // HH:MM
 
-  // 오늘 날짜 확인 및 초기화
-  if (appState.lifeRhythm.today.date !== today) {
-    // 어제 기록을 히스토리로 이동
-    if (appState.lifeRhythm.today.date) {
-      appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
-      delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
-    }
-    // 오늘 초기화
-    appState.lifeRhythm.today = {
-      date: today,
-      wakeUp: null,
-      homeDepart: null,
-      workArrive: null,
-      workDepart: null,
-      homeArrive: null,
-      sleep: null,
-      medications: {}
-    };
-  }
+  transitionRhythmDay(appState.lifeRhythm, today);
 
   // 시간 기록 — 삭제 마크 해제
   appState.lifeRhythm.today[type] = timeStr;
@@ -753,23 +748,7 @@ function editLifeRhythm(type) {
     const [h, m] = newTime.split(':');
     const normalizedTime = h.padStart(2, '0') + ':' + m;
 
-    // 오늘 날짜 확인 및 초기화
-    if (appState.lifeRhythm.today.date !== today) {
-      if (appState.lifeRhythm.today.date) {
-        appState.lifeRhythm.history[appState.lifeRhythm.today.date] = { ...appState.lifeRhythm.today };
-        delete appState.lifeRhythm.history[appState.lifeRhythm.today.date].date;
-      }
-      appState.lifeRhythm.today = {
-        date: today,
-        wakeUp: null,
-        homeDepart: null,
-        workArrive: null,
-        workDepart: null,
-        homeArrive: null,
-        sleep: null,
-        medications: {}
-      };
-    }
+    transitionRhythmDay(appState.lifeRhythm, today);
 
     appState.lifeRhythm.today[type] = normalizedTime;
     unmarkFieldDeleted(appState.lifeRhythm.today, type);
@@ -1621,28 +1600,9 @@ window.editMedicationHistory = editMedicationHistory;
  */
 function checkRhythmDayChange() {
   const localToday = getLogicalDate();
-  const savedDate = appState.lifeRhythm.today.date;
+  if (!transitionRhythmDay(appState.lifeRhythm, localToday)) return false;
 
-  if (!savedDate || savedDate === localToday) return false;
-
-  // 어제 데이터를 히스토리로 이동
-  const hasData = Object.values(appState.lifeRhythm.today).some(v =>
-    v && v !== savedDate && typeof v !== 'object'
-  ) || (appState.lifeRhythm.today.medications && Object.keys(appState.lifeRhythm.today.medications).length > 0);
-
-  if (hasData) {
-    if (!appState.lifeRhythm.history) appState.lifeRhythm.history = {};
-    const historyEntry = { ...appState.lifeRhythm.today };
-    delete historyEntry.date;
-    appState.lifeRhythm.history[savedDate] = historyEntry;
-    console.log('[rhythm] ' + savedDate + ' 데이터를 히스토리로 이동');
-  }
-
-  // 오늘 초기화 — updatedAt 없이 로컬만 저장 (빈 데이터는 병합에서 항상 패배)
-  appState.lifeRhythm.today = {
-    date: localToday, wakeUp: null, homeDepart: null, workArrive: null,
-    workDepart: null, homeArrive: null, sleep: null, medications: {}
-  };
+  // updatedAt 없이 로컬만 저장 (빈 데이터는 병합에서 항상 패배)
   localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
   if (appState.user) syncToFirebase(true); // 히스토리 이동만 전파
   console.log('[rhythm] 오늘(' + localToday + ') 리듬 초기화 (updatedAt 없음)');
@@ -1708,38 +1668,7 @@ function loadLifeRhythm() {
       }
 
       // 날짜 변경 시 오늘의 리듬 자동 리셋
-      // 저장된 today.date가 오늘 로컬 날짜와 다르면 히스토리로 이동 후 초기화
-      if (parsed.today && parsed.today.date) {
-        const localToday = getLogicalDate();
-        const savedDate = parsed.today.date;
-        if (savedDate !== localToday) {
-          const hasData = Object.values(parsed.today).some(v =>
-            v && v !== savedDate && typeof v !== 'object'
-          ) || (parsed.today.medications && Object.keys(parsed.today.medications).length > 0);
-
-          if (hasData) {
-            // 기존 데이터를 히스토리로 이동
-            if (!parsed.history) parsed.history = {};
-            const historyEntry = { ...parsed.today };
-            delete historyEntry.date; // 히스토리에는 date 키 없이 저장
-            parsed.history[savedDate] = historyEntry;
-            console.log(`[loadLifeRhythm] ${savedDate} 데이터를 히스토리로 이동`);
-          }
-
-          // 오늘 날짜로 초기화
-          parsed.today = {
-            date: localToday,
-            wakeUp: null,
-            homeDepart: null,
-            workArrive: null,
-            workDepart: null,
-            homeArrive: null,
-            sleep: null,
-            medications: {}
-          };
-          console.log(`[loadLifeRhythm] 오늘(${localToday}) 리듬 초기화`);
-        }
-      }
+      transitionRhythmDay(parsed, getLogicalDate());
 
       appState.lifeRhythm = {
         ...appState.lifeRhythm,
