@@ -11,6 +11,24 @@
  */
 
 // ============================================
+// 삭제 필드 추적 — 병합 시 의도적 삭제 vs 미기록 구분
+// ============================================
+
+/** 의도적 삭제를 _deletedFields에 기록 */
+function markFieldDeleted(target, field) {
+  if (!target._deletedFields) target._deletedFields = [];
+  if (!target._deletedFields.includes(field)) target._deletedFields.push(field);
+}
+
+/** 값 설정 시 _deletedFields에서 제거 */
+function unmarkFieldDeleted(target, field) {
+  if (target._deletedFields) {
+    target._deletedFields = target._deletedFields.filter(f => f !== field);
+    if (target._deletedFields.length === 0) delete target._deletedFields;
+  }
+}
+
+// ============================================
 // Firebase 동기화용 라이프 리듬 병합
 // ============================================
 
@@ -43,14 +61,16 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
 
     if (winner) {
       // 보완 병합: winner의 null 필드는 loser 값으로 채움
+      // 단, _deletedFields에 있는 필드는 의도적 삭제 → 보완하지 않음
       const loser = winner === l ? c : l;
+      const winDel = new Set(winner._deletedFields || []);
       merged[date] = {};
       for (const f of rhythmFields) {
         const wVal = winner[f] !== undefined ? winner[f] : null;
         const lVal = loser[f] !== undefined ? loser[f] : null;
-        merged[date][f] = wVal !== null ? wVal : lVal;
+        merged[date][f] = wVal !== null ? wVal : (winDel.has(f) ? null : lVal);
       }
-      // 복약 슬롯별 보완 병합
+      // 복약 슬롯별 보완 병합 (삭제 추적 반영)
       const wMeds = { ...(winner.medications || {}) };
       const loseMeds = { ...(loser.medications || {}) };
       if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
@@ -59,9 +79,11 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
       if (allMedSlots.size > 0) {
         merged[date].medications = {};
         for (const slot of allMedSlots) {
-          merged[date].medications[slot] = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : (loseMeds[slot] || null);
+          const wS = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : null;
+          merged[date].medications[slot] = wS !== null ? wS : (winDel.has(slot) ? null : (loseMeds[slot] || null));
         }
       }
+      if (winDel.size > 0) merged[date]._deletedFields = [...winDel];
       merged[date].updatedAt = winner.updatedAt;
       continue;
     }
@@ -154,15 +176,16 @@ function mergeRhythmToday(localToday, cloudToday, mergedHistory) {
 
   if (winner) {
     // 보완 병합: winner의 null 필드는 loser 값으로 채움
-    // (기기 A: wakeUp 기록, 기기 B: sleep 기록 → 양쪽 모두 보존)
+    // 단, _deletedFields에 있는 필드는 의도적 삭제 → 보완하지 않음
     const loser = winner === lt ? ct : lt;
+    const winDel = new Set(winner._deletedFields || []);
     const today = { date: winner.date || lt.date || ct.date || null };
     for (const f of rhythmFields) {
       const wVal = winner[f] !== undefined ? winner[f] : null;
       const lVal = loser[f] !== undefined ? loser[f] : null;
-      today[f] = wVal !== null ? wVal : lVal;
+      today[f] = wVal !== null ? wVal : (winDel.has(f) ? null : lVal);
     }
-    // 복약 데이터도 슬롯별 보완 병합
+    // 복약 데이터도 슬롯별 보완 병합 (삭제 추적 반영)
     const wMeds = { ...(winner.medications || {}) };
     const lMeds = { ...(loser.medications || {}) };
     if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
@@ -170,9 +193,11 @@ function mergeRhythmToday(localToday, cloudToday, mergedHistory) {
     const allSlots = new Set([...Object.keys(wMeds), ...Object.keys(lMeds)]);
     const mergedMeds = {};
     for (const slot of allSlots) {
-      mergedMeds[slot] = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : (lMeds[slot] || null);
+      const wS = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : null;
+      mergedMeds[slot] = wS !== null ? wS : (winDel.has(slot) ? null : (lMeds[slot] || null));
     }
     today.medications = mergedMeds;
+    if (winDel.size > 0) today._deletedFields = [...winDel];
     today.updatedAt = winner.updatedAt;
     return { today, history };
   }
@@ -282,6 +307,7 @@ function deleteLifeRhythm(type) {
   if (appState.lifeRhythm.today.date === today) {
     const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
     appState.lifeRhythm.today[type] = null;
+    markFieldDeleted(appState.lifeRhythm.today, type);
     saveLifeRhythm();
     renderStatic();
     showToast(labels[type] + ' 기록이 삭제되었습니다', 'success');
@@ -330,6 +356,7 @@ function recordMedication(slotId) {
     appState.lifeRhythm.today.medications = {};
   }
   appState.lifeRhythm.today.medications[slotId] = timeStr;
+  unmarkFieldDeleted(appState.lifeRhythm.today, slotId);
 
   saveLifeRhythm();
   renderStatic();
@@ -381,9 +408,11 @@ function editMedication(slotId) {
 
   if (!newTime) {
     appState.lifeRhythm.today.medications[slotId] = null;
+    markFieldDeleted(appState.lifeRhythm.today, slotId);
   } else {
     const [h, m] = newTime.split(':');
     appState.lifeRhythm.today.medications[slotId] = h.padStart(2, '0') + ':' + m;
+    unmarkFieldDeleted(appState.lifeRhythm.today, slotId);
   }
 
   saveLifeRhythm();
@@ -399,6 +428,7 @@ function deleteMedication(slotId) {
   const today = getLogicalDate();
   if (appState.lifeRhythm.today.date === today && appState.lifeRhythm.today.medications) {
     appState.lifeRhythm.today.medications[slotId] = null;
+    markFieldDeleted(appState.lifeRhythm.today, slotId);
     saveLifeRhythm();
     renderStatic();
 
@@ -658,8 +688,9 @@ function recordLifeRhythm(type) {
     };
   }
 
-  // 시간 기록
+  // 시간 기록 — 삭제 마크 해제
   appState.lifeRhythm.today[type] = timeStr;
+  unmarkFieldDeleted(appState.lifeRhythm.today, type);
 
   // 기상 기록 시 반복 태스크 자동 초기화 트리거
   if (type === 'wakeUp') {
@@ -715,6 +746,7 @@ function editLifeRhythm(type) {
   if (!newTime) {
     if (appState.lifeRhythm.today.date === today) {
       appState.lifeRhythm.today[type] = null;
+      markFieldDeleted(appState.lifeRhythm.today, type);
     }
   } else {
     // 시간 정규화 (7:30 → 07:30)
@@ -740,6 +772,7 @@ function editLifeRhythm(type) {
     }
 
     appState.lifeRhythm.today[type] = normalizedTime;
+    unmarkFieldDeleted(appState.lifeRhythm.today, type);
   }
 
   saveLifeRhythm();

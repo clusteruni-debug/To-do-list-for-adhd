@@ -37,9 +37,16 @@ hash type: 메시지
     - winner의 null 필드를 loser 값으로 보완 (supplementary merge)
     - 기기 A: wakeUp, 기기 B: sleep → 양쪽 모두 보존
 
+- **의도적 삭제 전파 — `_deletedFields` 메타데이터 도입**
+  - 보완 병합(supplementary merge)에서 의도적 삭제가 다른 기기 데이터로 부활하는 버그 수정
+  - `_deletedFields` 배열로 "삭제됨" vs "미기록" 구분 — 렌더링 코드 변경 0
+  - 삭제 시 `markFieldDeleted()`, 기록/수정 시 `unmarkFieldDeleted()` 호출
+  - `mergeRhythmToday` + `mergeRhythmHistory` 양쪽에서 `_deletedFields` 체크
+
 ### 커밋
 ```
-9830e58 fix: 라이프 리듬 데이터 초기화/유실 근본 수정 4건
+65692d3 fix: 라이프 리듬 데이터 초기화/유실 근본 수정 4건
+6664b3f fix: 리듬 삭제 전파 — _deletedFields 메타데이터로 의도적 삭제 보존
 ```
 
 ### 다음 작업
