@@ -4,7 +4,7 @@
  *
  * 의존성 (메인 HTML에서 제공):
  *   appState, renderStatic, syncToFirebase, showToast, escapeHtml,
- *   getLocalDateStr, generateId, checkDailyReset, recomputeTodayStats, saveState
+ *   getLocalDateStr, getLogicalDate, generateId, checkDailyReset, recomputeTodayStats, saveState
  *
  * 통근 트래커 의존 (js/commute.js):
  *   showCommuteTagPrompt (런타임 호출)
@@ -42,14 +42,26 @@ function mergeRhythmHistory(localHistory, cloudHistory) {
     }
 
     if (winner) {
-      // 최신 기기 데이터 그대로 사용 (null = 삭제 전파)
+      // 보완 병합: winner의 null 필드는 loser 값으로 채움
+      const loser = winner === l ? c : l;
       merged[date] = {};
       for (const f of rhythmFields) {
-        merged[date][f] = winner[f] !== undefined ? winner[f] : null;
+        const wVal = winner[f] !== undefined ? winner[f] : null;
+        const lVal = loser[f] !== undefined ? loser[f] : null;
+        merged[date][f] = wVal !== null ? wVal : lVal;
       }
+      // 복약 슬롯별 보완 병합
       const wMeds = { ...(winner.medications || {}) };
+      const loseMeds = { ...(loser.medications || {}) };
       if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
-      if (Object.keys(wMeds).length > 0) merged[date].medications = wMeds;
+      if (loseMeds.med_afternoon !== undefined) { loseMeds.med_afternoon_adhd = loseMeds.med_afternoon; delete loseMeds.med_afternoon; }
+      const allMedSlots = new Set([...Object.keys(wMeds), ...Object.keys(loseMeds)]);
+      if (allMedSlots.size > 0) {
+        merged[date].medications = {};
+        for (const slot of allMedSlots) {
+          merged[date].medications[slot] = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : (loseMeds[slot] || null);
+        }
+      }
       merged[date].updatedAt = winner.updatedAt;
       continue;
     }
@@ -141,15 +153,26 @@ function mergeRhythmToday(localToday, cloudToday, mergedHistory) {
   }
 
   if (winner) {
-    // 최신 기기의 데이터를 그대로 사용 (null 포함 — 삭제가 전파됨)
+    // 보완 병합: winner의 null 필드는 loser 값으로 채움
+    // (기기 A: wakeUp 기록, 기기 B: sleep 기록 → 양쪽 모두 보존)
+    const loser = winner === lt ? ct : lt;
     const today = { date: winner.date || lt.date || ct.date || null };
     for (const f of rhythmFields) {
-      today[f] = winner[f] !== undefined ? winner[f] : null;
+      const wVal = winner[f] !== undefined ? winner[f] : null;
+      const lVal = loser[f] !== undefined ? loser[f] : null;
+      today[f] = wVal !== null ? wVal : lVal;
     }
-    // 복약 데이터도 최신 기기 우선
+    // 복약 데이터도 슬롯별 보완 병합
     const wMeds = { ...(winner.medications || {}) };
+    const lMeds = { ...(loser.medications || {}) };
     if (wMeds.med_afternoon !== undefined) { wMeds.med_afternoon_adhd = wMeds.med_afternoon; delete wMeds.med_afternoon; }
-    today.medications = wMeds;
+    if (lMeds.med_afternoon !== undefined) { lMeds.med_afternoon_adhd = lMeds.med_afternoon; delete lMeds.med_afternoon; }
+    const allSlots = new Set([...Object.keys(wMeds), ...Object.keys(lMeds)]);
+    const mergedMeds = {};
+    for (const slot of allSlots) {
+      mergedMeds[slot] = wMeds[slot] !== null && wMeds[slot] !== undefined ? wMeds[slot] : (lMeds[slot] || null);
+    }
+    today.medications = mergedMeds;
     today.updatedAt = winner.updatedAt;
     return { today, history };
   }
@@ -255,7 +278,7 @@ window.hideRhythmActionMenu = hideRhythmActionMenu;
  * 리듬 기록 삭제
  */
 function deleteLifeRhythm(type) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   if (appState.lifeRhythm.today.date === today) {
     const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
     appState.lifeRhythm.today[type] = null;
@@ -287,7 +310,7 @@ function getMedicationSlots() {
  */
 function recordMedication(slotId) {
   const now = new Date();
-  const today = getLocalDateStr(now);
+  const today = getLogicalDate(now);
   const timeStr = now.toTimeString().slice(0, 5);
 
   // 오늘 날짜 확인
@@ -324,7 +347,7 @@ window.recordMedication = recordMedication;
  * 복약 시간 수정 (직접 입력)
  */
 function editMedication(slotId) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   const currentValue = (appState.lifeRhythm.today.date === today && appState.lifeRhythm.today.medications)
     ? appState.lifeRhythm.today.medications[slotId] : null;
 
@@ -373,7 +396,7 @@ window.editMedication = editMedication;
  * 복약 기록 삭제
  */
 function deleteMedication(slotId) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   if (appState.lifeRhythm.today.date === today && appState.lifeRhythm.today.medications) {
     appState.lifeRhythm.today.medications[slotId] = null;
     saveLifeRhythm();
@@ -612,7 +635,7 @@ function getTimeDiffMessage(type, timeStr) {
  */
 function recordLifeRhythm(type) {
   const now = new Date();
-  const today = getLocalDateStr(now);
+  const today = getLogicalDate(now);
   const timeStr = now.toTimeString().slice(0, 5); // HH:MM
 
   // 오늘 날짜 확인 및 초기화
@@ -674,7 +697,7 @@ window.recordLifeRhythm = recordLifeRhythm;
  * 라이프 리듬 수정 (시간 직접 입력)
  */
 function editLifeRhythm(type) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   const currentValue = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today[type] : null;
 
   const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
@@ -1400,7 +1423,7 @@ function renderRhythmStats() {
  * 과거 날짜 라이프 리듬 수정 (6개 항목)
  */
 function editLifeRhythmHistory(dateStr, type) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   let currentValue;
 
   if (dateStr === today && appState.lifeRhythm.today.date === today) {
@@ -1505,7 +1528,7 @@ window.addRhythmHistoryDate = addRhythmHistoryDate;
  * 과거 날짜 복약 기록 편집
  */
 function editMedicationHistory(dateStr, slotId) {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   const slots = getMedicationSlots();
   const slot = slots.find(s => s.id === slotId);
   const label = slot ? slot.label : slotId;
@@ -1564,7 +1587,7 @@ window.editMedicationHistory = editMedicationHistory;
  * @returns {boolean} 전환 발생 여부
  */
 function checkRhythmDayChange() {
-  const localToday = getLocalDateStr();
+  const localToday = getLogicalDate();
   const savedDate = appState.lifeRhythm.today.date;
 
   if (!savedDate || savedDate === localToday) return false;
@@ -1582,13 +1605,14 @@ function checkRhythmDayChange() {
     console.log('[rhythm] ' + savedDate + ' 데이터를 히스토리로 이동');
   }
 
-  // 오늘 초기화
+  // 오늘 초기화 — updatedAt 없이 로컬만 저장 (빈 데이터는 병합에서 항상 패배)
   appState.lifeRhythm.today = {
     date: localToday, wakeUp: null, homeDepart: null, workArrive: null,
     workDepart: null, homeArrive: null, sleep: null, medications: {}
   };
-  saveLifeRhythm();
-  console.log('[rhythm] 오늘(' + localToday + ') 리듬 초기화');
+  localStorage.setItem('navigator-life-rhythm', JSON.stringify(appState.lifeRhythm));
+  if (appState.user) syncToFirebase(true); // 히스토리 이동만 전파
+  console.log('[rhythm] 오늘(' + localToday + ') 리듬 초기화 (updatedAt 없음)');
   return true;
 }
 
@@ -1653,7 +1677,7 @@ function loadLifeRhythm() {
       // 날짜 변경 시 오늘의 리듬 자동 리셋
       // 저장된 today.date가 오늘 로컬 날짜와 다르면 히스토리로 이동 후 초기화
       if (parsed.today && parsed.today.date) {
-        const localToday = getLocalDateStr();
+        const localToday = getLogicalDate();
         const savedDate = parsed.today.date;
         if (savedDate !== localToday) {
           const hasData = Object.values(parsed.today).some(v =>
