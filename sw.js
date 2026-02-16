@@ -31,6 +31,11 @@ self.addEventListener('activate', event => {
 
 // 네트워크 우선 전략: 항상 최신 파일 가져오기
 self.addEventListener('fetch', event => {
+  // 비-GET 요청은 SW 캐시 전략 적용하지 않음
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
@@ -45,7 +50,14 @@ self.addEventListener('fetch', event => {
       .catch(() => {
         // 오프라인일 때만 캐시 사용
         return caches.match(event.request).then(cachedResponse => {
-          return cachedResponse || caches.match('./navigator-v5.html');
+          if (cachedResponse) return cachedResponse;
+
+          // 앱 셸 fallback은 navigation 요청에만 적용
+          if (event.request.mode === 'navigate') {
+            return caches.match('./navigator-v5.html');
+          }
+
+          return Response.error();
         });
       })
   );
