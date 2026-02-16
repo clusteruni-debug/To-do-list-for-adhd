@@ -9447,6 +9447,20 @@
       return String(text).replace(_escapeRe, c => _escapeMap[c]);
     }
 
+    // URL 스킴 검증: http/https만 허용
+    function sanitizeUrl(url) {
+      if (!url) return '';
+      try {
+        const parsed = new URL(String(url), window.location.origin);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          return parsed.href;
+        }
+      } catch (_) {
+        // ignore invalid url
+      }
+      return '';
+    }
+
     /** onclick 속성 내 JS 문자열 이스케이프 — 백슬래시+따옴표를 JS 레벨로 이스케이프 후 HTML 속성용 이스케이프 */
     function escapeAttr(text) {
       if (text === null || text === undefined) return '';
@@ -17253,7 +17267,7 @@
                           </div>
                           ${dateDisplay ? '<span class="event-compact-date">' + dateDisplay + '</span>' : ''}
                           ${_eventBulkSelectMode ? '' : `<div class="event-actions">
-                            ${task.link ? '<a href="' + escapeHtml(task.link) + '" target="_blank" rel="noopener" class="btn btn-small btn-link">🔗</a>' : ''}
+                            ${sanitizeUrl(task.link) ? '<a href="' + escapeHtml(sanitizeUrl(task.link)) + '" target="_blank" rel="noopener" class="btn btn-small btn-link">🔗</a>' : ''}
                             <button class="btn btn-small btn-submit" onclick="completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">✓</button>
                             <button class="btn btn-small btn-edit" onclick="editTask('${escapeAttr(task.id)}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
                             <button class="btn btn-small btn-delete" onclick="deleteTask('${escapeAttr(task.id)}')" aria-label="작업 삭제">${svgIcon('trash', 14)}</button>
@@ -21630,9 +21644,9 @@
               </div>
             ` : ''}
 
-            ${taskData.link ? `
+            ${taskData.link && sanitizeUrl(taskData.link) ? `
               <div style="margin-bottom: 15px;">
-                <a href="${escapeHtml(taskData.link)}" target="_blank" style="color: var(--accent-blue); font-size: 0.9rem;">
+                <a href="${escapeHtml(sanitizeUrl(taskData.link))}" target="_blank" rel="noopener" style="color: var(--accent-blue); font-size: 0.9rem;">
                   🔗 ${escapeHtml(taskData.link.substring(0, 50))}...
                 </a>
               </div>
@@ -21903,7 +21917,11 @@
                   <div class="tg-event-detail" style="display:none">
                     ${event.description ? '<div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px;white-space:pre-line">' + escapeHtml(event.description) + '</div>' : ''}
                     ${event.actionItems && event.actionItems.length > 0 ? '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">할 일:</div>' + event.actionItems.map(a => '<div style="font-size:12px;padding:2px 0">• ' + escapeHtml(a) + '</div>').join('') + '</div>' : ''}
-                    ${event.urls && event.urls.length > 0 ? '<div style="margin-bottom:4px">' + event.urls.map(u => '<a href="' + escapeHtml(u) + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent-blue);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🔗 ' + escapeHtml(u.substring(0, 60)) + '</a>').join('') + '</div>' : ''}
+                    ${event.urls && event.urls.length > 0 ? '<div style="margin-bottom:4px">' + event.urls.map(u => {
+                      const safe = sanitizeUrl(u);
+                      if (!safe) return '';
+                      return '<a href="' + escapeHtml(safe) + '" target="_blank" rel="noopener" style="font-size:12px;color:var(--accent-blue);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">🔗 ' + escapeHtml(String(u).substring(0, 60)) + '</a>';
+                    }).join('') + '</div>' : ''}
                     ${event.project ? '<span style="font-size:11px;color:var(--text-muted)">프로젝트: ' + escapeHtml(event.project) + '</span>' : ''}
                     ${event.organizer ? '<span style="font-size:11px;color:var(--text-muted);margin-left:8px">주최: ' + escapeHtml(event.organizer) + '</span>' : ''}
                   </div>
