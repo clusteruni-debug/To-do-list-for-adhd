@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  scan-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Forbidden pattern scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET="navigator-v5.html"
+          COMMON='sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{36,}|gho_[a-zA-Z0-9]{36,}'
+          PRIVATE_NAME='박준희|ramgtd|clusteruni|고객명|회사명'
+
+          grep -nE "$COMMON|$PRIVATE_NAME" "$TARGET" || true
+
+          if grep -nE "$COMMON|$PRIVATE_NAME" "$TARGET"; then
+            echo "Forbidden patterns found."
+            exit 1
+          fi
