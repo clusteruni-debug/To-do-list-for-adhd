@@ -10148,6 +10148,8 @@
         best: 0,
         lastActiveDate: null
       },
+      habitStreaks: {},                  // 습관별 스트릭: { "작업제목": { current, best, lastActiveDate } }
+      habitFilter: 'all',               // 습관 트래커 필터: 'all' 또는 작업 제목
       showOnboarding: false,           // 온보딩 모달 표시
       moreMenuOpen: false,             // 더보기 메뉴 열림 상태
       // 포모도로 상태
@@ -10314,6 +10316,10 @@
         if (parsedStreak) appState.streak = parsedStreak;
         updateStreak();
 
+        // 습관별 스트릭 로드
+        const parsedHabitStreaks = safeParseJSON('navigator-habitStreaks', null);
+        if (parsedHabitStreaks) appState.habitStreaks = parsedHabitStreaks;
+
         // 설정 로드
         const parsedSettings = safeParseJSON('navigator-settings', null);
         if (parsedSettings) appState.settings = { ...appState.settings, ...parsedSettings };
@@ -10424,6 +10430,7 @@
           localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
           localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
           localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+          localStorage.setItem('navigator-habitStreaks', JSON.stringify(appState.habitStreaks || {}));
           localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
           localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
           localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
@@ -10481,6 +10488,7 @@
         localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
         localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
         localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
+        localStorage.setItem('navigator-habitStreaks', JSON.stringify(appState.habitStreaks || {}));
         localStorage.setItem('navigator-templates', JSON.stringify(appState.templates));
         localStorage.setItem('navigator-weekly-plan', JSON.stringify(appState.weeklyPlan));
         localStorage.setItem('navigator-work-projects', JSON.stringify(appState.workProjects));
@@ -10687,6 +10695,7 @@
           tasks: appState.tasks,
           settings: appState.settings,
           streak: appState.streak,
+          habitStreaks: appState.habitStreaks || {},
           templates: appState.templates,
           availableTags: appState.availableTags,
           workProjects: appState.workProjects,
@@ -11072,6 +11081,25 @@
                 ? appState.streak.current : cloudStreak.current
             };
           }
+          // 습관별 스트릭 병합 (각 습관별 더 높은 값 보존)
+          if (data.habitStreaks) {
+            const local = appState.habitStreaks || {};
+            const cloud = data.habitStreaks;
+            const merged = { ...local };
+            for (const [title, cs] of Object.entries(cloud)) {
+              const ls = merged[title];
+              if (!ls) {
+                merged[title] = cs;
+              } else {
+                merged[title] = {
+                  lastActiveDate: (ls.lastActiveDate || '') > (cs.lastActiveDate || '') ? ls.lastActiveDate : cs.lastActiveDate,
+                  best: Math.max(ls.best || 0, cs.best || 0),
+                  current: (ls.lastActiveDate || '') > (cs.lastActiveDate || '') ? ls.current : cs.current,
+                };
+              }
+            }
+            appState.habitStreaks = merged;
+          }
           // 템플릿: ID 기반 병합 (deletedIds 전달)
           appState.templates = mergeById(appState.templates, data.templates, appState.deletedIds.templates);
           if (data.availableTags) {
@@ -11249,6 +11277,25 @@
                 current: appState.streak.lastActiveDate > cloudStreak.lastActiveDate
                   ? appState.streak.current : cloudStreak.current
               };
+            }
+            // 습관별 스트릭 병합 (onSnapshot)
+            if (data.habitStreaks) {
+              const local = appState.habitStreaks || {};
+              const cloud = data.habitStreaks;
+              const merged = { ...local };
+              for (const [title, cs] of Object.entries(cloud)) {
+                const ls = merged[title];
+                if (!ls) {
+                  merged[title] = cs;
+                } else {
+                  merged[title] = {
+                    lastActiveDate: (ls.lastActiveDate || '') > (cs.lastActiveDate || '') ? ls.lastActiveDate : cs.lastActiveDate,
+                    best: Math.max(ls.best || 0, cs.best || 0),
+                    current: (ls.lastActiveDate || '') > (cs.lastActiveDate || '') ? ls.current : cs.current,
+                  };
+                }
+              }
+              appState.habitStreaks = merged;
             }
             // 템플릿: ID 기반 병합 (deletedIds 전달)
             appState.templates = mergeById(appState.templates, data.templates, appState.deletedIds.templates);
@@ -12025,14 +12072,16 @@
 
     /**
      * 날짜별 완료 작업 수 맵 생성
+     * @param {string} [habitTitle] - 특정 습관만 필터 (없으면 전체)
      */
-    function getCompletionMap() {
+    function getCompletionMap(habitTitle) {
       const map = {};
       // completionLog 기반 (과거 영구 기록 포함)
       for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
         (entries || []).forEach(e => {
+          if (habitTitle && e.t !== habitTitle) return;
           if (e._summary) {
-            map[dateKey] = (map[dateKey] || 0) + (e.count || 0);
+            if (!habitTitle) map[dateKey] = (map[dateKey] || 0) + (e.count || 0);
           } else {
             map[dateKey] = (map[dateKey] || 0) + 1;
           }
@@ -12040,6 +12089,7 @@
       }
       // appState.tasks 현재 데이터로 보완 (completionLog와 중복되지 않는 항목만 추가)
       appState.tasks.forEach(t => {
+        if (habitTitle && t.title !== habitTitle) return;
         if (t.completed && t.completedAt) {
           const dateKey = getLocalDateStr(new Date(t.completedAt));
           const timeStr = new Date(t.completedAt).toTimeString().slice(0, 5);
@@ -13315,8 +13365,8 @@
       appState.todayStats.completedToday++;
       appState.todayStats.streak++;
 
-      // 스트릭 기록
-      recordActivity();
+      // 스트릭 기록 (per-habit 포함)
+      recordActivity(task.title);
 
       // 반복 작업이면 다음 주기 작업 자동 생성
       // daily/weekdays는 checkDailyReset()이 자동 초기화하므로 중복 생성하지 않음
@@ -15193,12 +15243,13 @@
     function exportData() {
       try {
         const data = {
-          version: '2.2',
+          version: '2.3',
           exportDate: new Date().toISOString(),
           tasks: appState.tasks,
           shuttleSuccess: appState.shuttleSuccess,
           availableTags: appState.availableTags,
           streak: appState.streak,
+          habitStreaks: appState.habitStreaks || {},
           theme: appState.theme,
           settings: appState.settings,
           templates: appState.templates,
@@ -15291,6 +15342,25 @@
                 current: appState.streak.lastActiveDate > data.streak.lastActiveDate
                   ? appState.streak.current : data.streak.current
               };
+            }
+            // 습관별 스트릭 병합 (파일 임포트)
+            if (data.habitStreaks) {
+              const local = appState.habitStreaks || {};
+              const imported = data.habitStreaks;
+              const merged = { ...local };
+              for (const [title, is] of Object.entries(imported)) {
+                const ls = merged[title];
+                if (!ls) {
+                  merged[title] = is;
+                } else {
+                  merged[title] = {
+                    lastActiveDate: (ls.lastActiveDate || '') > (is.lastActiveDate || '') ? ls.lastActiveDate : is.lastActiveDate,
+                    best: Math.max(ls.best || 0, is.best || 0),
+                    current: (ls.lastActiveDate || '') > (is.lastActiveDate || '') ? ls.current : is.current,
+                  };
+                }
+              }
+              appState.habitStreaks = merged;
             }
             // 본업 프로젝트/템플릿 병합
             if (data.workProjects && Array.isArray(data.workProjects)) {
@@ -15551,10 +15621,12 @@
 
     /**
      * 오늘 활동 기록 (작업 완료 시 호출)
+     * @param {string} [taskTitle] - 완료된 작업 제목 (per-habit 스트릭용)
      */
-    function recordActivity() {
+    function recordActivity(taskTitle) {
       const today = getLocalDateStr(new Date());
 
+      // 전역 스트릭
       if (appState.streak.lastActiveDate !== today) {
         appState.streak.current++;
         appState.streak.lastActiveDate = today;
@@ -15569,6 +15641,32 @@
 
         if (appState.streak.current > 1) {
           showToast(`🔥 ${appState.streak.current}일 연속 달성!`, 'success');
+        }
+      }
+
+      // per-habit 스트릭
+      if (taskTitle) {
+        if (!appState.habitStreaks) appState.habitStreaks = {};
+        const hs = appState.habitStreaks[taskTitle] || { current: 0, best: 0, lastActiveDate: null };
+
+        if (hs.lastActiveDate !== today) {
+          // 연속 확인: 어제 활동했으면 이어가기, 아니면 리셋
+          if (hs.lastActiveDate) {
+            const lastDate = new Date(hs.lastActiveDate);
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (getLocalDateStr(lastDate) !== getLocalDateStr(yesterday) && hs.lastActiveDate !== today) {
+              hs.current = 0; // 리셋
+            }
+          }
+          hs.current++;
+          hs.lastActiveDate = today;
+          if (hs.current > hs.best) hs.best = hs.current;
+          appState.habitStreaks[taskTitle] = hs;
+
+          if (!appState.user) {
+            localStorage.setItem('navigator-habitStreaks', JSON.stringify(appState.habitStreaks));
+          }
         }
       }
     }
@@ -15823,8 +15921,9 @@
 
     /**
      * 습관 트래커 데이터 생성 (최근 12주)
+     * @param {string} [habitTitle] - 특정 습관 필터 (없으면 전체)
      */
-    function getHabitTrackerData() {
+    function getHabitTrackerData(habitTitle) {
       const now = new Date();
       const weeks = 12;
       const data = [];
@@ -15832,8 +15931,11 @@
       // 오늘 날짜 문자열
       const todayStr = getLocalDateStr(now);
 
-      // 완료 맵 생성
-      const completionMap = getCompletionMap();
+      // 완료 맵 생성 (습관 필터 전달)
+      const completionMap = getCompletionMap(habitTitle);
+
+      // per-habit은 1일 1회이므로 레벨 기준 조정
+      const isPerHabit = habitTitle && habitTitle !== 'all';
 
       // 12주 전부터 시작
       for (let week = weeks - 1; week >= 0; week--) {
@@ -15844,12 +15946,16 @@
           const dateStr = getLocalDateStr(date);
           const count = completionMap[dateStr] || 0;
 
-          // 레벨 계산
+          // 레벨 계산 (per-habit: 완료=level 4, 전체: 기존 기준)
           let level = 0;
-          if (count >= 1) level = 1;
-          if (count >= 3) level = 2;
-          if (count >= 5) level = 3;
-          if (count >= 7) level = 4;
+          if (isPerHabit) {
+            if (count >= 1) level = 4;
+          } else {
+            if (count >= 1) level = 1;
+            if (count >= 3) level = 2;
+            if (count >= 5) level = 3;
+            if (count >= 7) level = 4;
+          }
 
           weekData.push({
             date: dateStr,
@@ -15862,6 +15968,37 @@
       }
 
       return data;
+    }
+
+    /**
+     * 반복 습관(daily/weekdays) 목록 추출 — 트래커 필터용
+     */
+    function getRecurringHabits() {
+      const habits = new Set();
+      // 현재 반복 작업에서 추출
+      appState.tasks.forEach(t => {
+        if (t.repeatType && t.repeatType !== 'none') {
+          habits.add(t.title);
+        }
+      });
+      // completionLog에서 자주 등장하는 제목도 추출 (최근 30일)
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - 30);
+      const cutoffStr = getLocalDateStr(cutoff);
+      const titleCounts = {};
+      for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+        if (dateKey < cutoffStr) continue;
+        (entries || []).forEach(e => {
+          if (e.t && !e._summary) {
+            titleCounts[e.t] = (titleCounts[e.t] || 0) + 1;
+          }
+        });
+      }
+      // 5회 이상 완료된 것도 습관으로 간주
+      Object.entries(titleCounts).forEach(([title, count]) => {
+        if (count >= 5) habits.add(title);
+      });
+      return [...habits].sort();
     }
 
     /**
@@ -17843,12 +17980,31 @@
             })()}
 
             ${(() => {
-              const habitData = getHabitTrackerData();
+              const filter = appState.habitFilter || 'all';
+              const habitTitle = filter === 'all' ? undefined : filter;
+              const habitData = getHabitTrackerData(habitTitle);
               const dayLabels = ['일', '월', '화', '수', '목', '금', '토'];
+              const habits = getRecurringHabits();
+              const hs = habitTitle ? (appState.habitStreaks || {})[habitTitle] : null;
 
               return `
                 <div class="dashboard-section habit-tracker">
-                  <div class="habit-tracker-title">🌱 습관 트래커 (최근 12주)</div>
+                  <div class="habit-tracker-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div class="habit-tracker-title" style="margin-bottom:0">🌱 습관 트래커 (최근 12주)</div>
+                    ${habits.length > 0 ? `
+                      <select class="habit-filter-select" onchange="appState.habitFilter=this.value;renderStatic();"
+                        style="padding:4px 8px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:12px;max-width:140px;">
+                        <option value="all" ${filter === 'all' ? 'selected' : ''}>전체</option>
+                        ${habits.map(h => `<option value="${h}" ${filter === h ? 'selected' : ''}>${h}</option>`).join('')}
+                      </select>
+                    ` : ''}
+                  </div>
+                  ${hs ? `
+                    <div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px;color:var(--text-secondary);">
+                      <span>🔥 연속 ${hs.current}일</span>
+                      <span>🏆 최고 ${hs.best}일</span>
+                    </div>
+                  ` : ''}
                   <div class="habit-grid">
                     ${dayLabels.map((day, dayIdx) => `
                       <div class="habit-day-label">${day}</div>
@@ -17860,13 +18016,17 @@
                     `).join('')}
                   </div>
                   <div class="habit-legend">
-                    <span>적음</span>
+                    <span>${habitTitle ? '미완료' : '적음'}</span>
                     <div class="habit-legend-item"><div class="habit-legend-cell" style="background: var(--bg-tertiary)"></div></div>
-                    <div class="habit-legend-item"><div class="habit-legend-cell level-1" style="background: rgba(72, 187, 120, 0.3)"></div></div>
-                    <div class="habit-legend-item"><div class="habit-legend-cell level-2" style="background: rgba(72, 187, 120, 0.5)"></div></div>
-                    <div class="habit-legend-item"><div class="habit-legend-cell level-3" style="background: rgba(72, 187, 120, 0.7)"></div></div>
-                    <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: #48bb78"></div></div>
-                    <span>많음</span>
+                    ${habitTitle ? `
+                      <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: #48bb78"></div></div>
+                    ` : `
+                      <div class="habit-legend-item"><div class="habit-legend-cell level-1" style="background: rgba(72, 187, 120, 0.3)"></div></div>
+                      <div class="habit-legend-item"><div class="habit-legend-cell level-2" style="background: rgba(72, 187, 120, 0.5)"></div></div>
+                      <div class="habit-legend-item"><div class="habit-legend-cell level-3" style="background: rgba(72, 187, 120, 0.7)"></div></div>
+                      <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: #48bb78"></div></div>
+                    `}
+                    <span>${habitTitle ? '완료' : '많음'}</span>
                   </div>
                 </div>
               `;
