@@ -10374,12 +10374,10 @@
         // 오래된 완료 태스크 정리
         cleanupOldCompletedTasks();
 
-        // 반복 태스크(daily/weekdays) 일일 초기화
-        const dailyResetDone = checkDailyReset();
-        if (dailyResetDone) {
-          recomputeTodayStats(); // 초기화 후 오늘 통계 재계산
-          saveState(); // 모바일에서 beforeunload 미발생 시 데이터 유실 방지
-        }
+        // 반복 태스크 일일 초기화는 클라우드 데이터 로드 후 실행
+        // (클라우드 로드 전 실행하면 updatedAt 갱신으로 다른 기기의 오늘 완료 기록이 merge에서 패배)
+        // → initialCloudLoadComplete 플래그로 loadFromFirebase() 완료 후 checkDailyReset() 호출
+        // → 비로그인/타임아웃 대비 fallback은 firebase-ready 리스너 하단에서 처리
 
         // 첫 방문 시 온보딩
         if (isFirstVisit) {
@@ -10516,6 +10514,7 @@
     let lastSyncToastTime = 0; // 동기화 토스트 간격 제한용 (30초)
     let isFirstRealtimeLoad = true; // 앱 첫 로드 시 토스트 미표시용
     let isLoadingFromCloud = false; // 클라우드 초기 로드 중 sync 차단 (빈 데이터 업로드 방지)
+    let initialCloudLoadComplete = false; // 최초 클라우드 로드 완료 여부 (checkDailyReset 순서 보장용)
     let syncDebounceTimer = null; // syncToFirebase 디바운스 타이머
     const SYNC_DEBOUNCE_MS = 1500; // 동기화 디바운스 간격 (1.5초)
     let lastOwnWriteTimestamp = null; // 핑퐁 방지: 자기가 마지막으로 쓴 timestamp
@@ -11201,6 +11200,14 @@
           deduplicateAll();
           // 병합 완료 → 로드 잠금 해제 후 클라우드에 즉시 반영
           isLoadingFromCloud = false;
+          // 클라우드 병합 완료 후 반복 태스크 일일 초기화 (Race Condition 방지)
+          // checkDailyReset()은 이제 클라우드 데이터가 반영된 appState 기준으로 동작
+          if (!initialCloudLoadComplete) {
+            initialCloudLoadComplete = true;
+            const resetDone = checkDailyReset();
+            if (resetDone) recomputeTodayStats();
+            console.log('[cloud-load] 최초 클라우드 로드 완료 → checkDailyReset 실행');
+          }
           // RC-1: syncToFirebase(true)가 최신 전체 데이터를 업로드하므로 대기 예약 불필요
           pendingSync = false;
           updateDataCounts();
@@ -11208,6 +11215,12 @@
         } else {
           // 클라우드에 데이터 없으면 현재 로컬 데이터 즉시 업로드
           isLoadingFromCloud = false;
+          if (!initialCloudLoadComplete) {
+            initialCloudLoadComplete = true;
+            const resetDone = checkDailyReset();
+            if (resetDone) recomputeTodayStats();
+            console.log('[cloud-load] 클라우드 데이터 없음 → checkDailyReset 실행 (로컬 기반)');
+          }
           pendingSync = false;
           updateDataCounts();
           syncToFirebase(true);
@@ -22267,6 +22280,20 @@
       // URL import 파라미터 확인 (telegram-event-bot 연동)
       checkUrlImport();
 
+      // 오프라인/타임아웃 대비: 5초 후에도 클라우드 로드가 안 됐으면 로컬 기반으로 checkDailyReset 실행
+      setTimeout(() => {
+        if (!initialCloudLoadComplete) {
+          initialCloudLoadComplete = true;
+          console.warn('[daily-reset] 클라우드 로드 타임아웃 → 로컬 데이터 기반으로 checkDailyReset 실행');
+          const resetDone = checkDailyReset();
+          if (resetDone) {
+            recomputeTodayStats();
+            saveState();
+            renderStatic();
+          }
+        }
+      }, 5000);
+
       window.firebaseOnAuthStateChanged(window.firebaseAuth, async (user) => {
         if (user) {
           appState.user = {
@@ -22277,11 +22304,22 @@
           };
 
           // 클라우드 데이터 로드 및 실시간 동기화 시작
+          // (loadFromFirebase 내부에서 initialCloudLoadComplete=true + checkDailyReset 호출)
           await loadFromFirebase();
           startRealtimeSync();
 
           renderStatic();
         } else {
+          // 비로그인: 클라우드 로드 없이 로컬 기반으로 checkDailyReset 실행
+          if (!initialCloudLoadComplete) {
+            initialCloudLoadComplete = true;
+            const resetDone = checkDailyReset();
+            if (resetDone) {
+              recomputeTodayStats();
+              saveState();
+            }
+            console.log('[daily-reset] 비로그인 → 로컬 기반 checkDailyReset 실행');
+          }
           appState.user = null;
           appState.syncStatus = 'offline';
           renderStatic();
