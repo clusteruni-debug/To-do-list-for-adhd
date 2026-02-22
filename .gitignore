@@ -136,3 +136,4 @@ all_funcs.txt
 
 # 세션 잠금
 .claude-lock
+.mcp.json
