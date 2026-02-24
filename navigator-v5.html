@@ -126,6 +126,14 @@
       /* 트랜지션 */
       --transition-fast: 0.15s ease;
       --transition-normal: 0.25s ease;
+
+      /* 타이포그래피 스케일 */
+      --font-xs: 12px;    /* 최소 가독 크기 (기존 9-11px 대체) */
+      --font-sm: 13px;    /* 보조 라벨 (기존 12px 대체) */
+      --font-base: 14px;  /* 기본 본문 */
+      --font-md: 15px;    /* 강조 본문 */
+      --font-lg: 16px;    /* 소제목 */
+      --font-xl: 18px;    /* 제목 */
     }
 
     /* 라이트 테마 */
@@ -9256,6 +9264,140 @@
     .skip-link:focus { top: 0; outline: 2px solid #fff; }
     /* 접근성: 스크린 리더 전용 */
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    /* ============================================
+       타이포그래피 정규화 — 최소 가독 크기 보장
+       9px→12px, 10px→12px, 11px→13px, 일부 12px→13px
+       원본 CSS 미변경, 이 블록으로 override
+       ============================================ */
+
+    /* --- 통계/차트 라벨 (기존 10-11px → 12-13px) --- */
+    .stat-label,
+    .insight-bar-label,
+    .revenue-bar-value,
+    .revenue-bar-label,
+    .rhythm-bar-value,
+    .pie-legend-value,
+    .commute-weekday-count {
+      font-size: var(--font-xs) !important; /* 12px */
+    }
+
+    .rhythm-bar-label,
+    .rhythm-work-label,
+    .rhythm-summary-row,
+    .rhythm-insight-item,
+    .revenue-card-label,
+    .revenue-category-percent,
+    .revenue-card-sub,
+    .commute-stat-label,
+    .commute-weekday-label,
+    .commute-recommend-confidence {
+      font-size: var(--font-sm) !important; /* 13px */
+    }
+
+    /* --- 메타 정보/보조 텍스트 (기존 11-12px → 13px) --- */
+    .user-email,
+    .sync-status,
+    .sync-indicator,
+    .task-item-meta,
+    .category,
+    .tag,
+    .tag-filter-label,
+    .header-date,
+    .offline-indicator,
+    .form-note,
+    .time-remaining-label,
+    .current-time-mode-label,
+    .start-now-btn,
+    .logout-btn,
+    .calendar-weekday {
+      font-size: var(--font-sm) !important; /* 13px */
+    }
+
+    /* --- 태그/뱃지 (기존 10px → 12px) --- */
+    .task-tag {
+      font-size: var(--font-xs) !important; /* 12px */
+    }
+
+    /* --- 본문/설명/라벨 (기존 13px → 14px) --- */
+    .meta-item,
+    .header p,
+    .shuttle-desc,
+    .insight-label,
+    .form-label,
+    .onboarding-feature p,
+    .rhythm-chart-title,
+    .revenue-chart-title,
+    .quick-timer-btn,
+    .shuttle-toggle,
+    .motivation-toast {
+      font-size: var(--font-base) !important; /* 14px */
+    }
+
+    /* --- 작업 섹션 소형 텍스트 보정 --- */
+    .work-section-toggle {
+      font-size: var(--font-xs) !important; /* 12px, 기존 10px */
+    }
+
+    .work-task-action {
+      font-size: var(--font-sm) !important; /* 13px */
+    }
+
+    /* --- 달력 셀 내 작업 (기존 10px → 12px, 모바일은 11px) --- */
+    .calendar-day-task {
+      font-size: var(--font-xs) !important; /* 12px */
+    }
+
+    .calendar-day-more {
+      font-size: 11px !important; /* 기존 9px → 11px */
+    }
+
+    /* --- 스케줄 타임라인 내 인라인 텍스트 최소 크기 --- */
+    .work-view-tab {
+      font-size: var(--font-base) !important; /* 14px, 기존 13px */
+    }
+
+    /* --- 반응형: 모바일에서도 최소 크기 유지 --- */
+    @media (max-width: 480px) {
+      .calendar-day-task {
+        font-size: 11px !important;
+      }
+      .calendar-day-more {
+        font-size: 10px !important;
+      }
+      .work-view-tab {
+        font-size: var(--font-sm) !important; /* 13px */
+      }
+    }
+
+    /* --- 데스크톱: 전체적으로 한 단계 더 --- */
+    @media (min-width: 1024px) {
+      .stat-label,
+      .rhythm-bar-value,
+      .revenue-bar-value,
+      .insight-bar-label {
+        font-size: var(--font-sm) !important; /* 13px */
+      }
+
+      .meta-item,
+      .rhythm-insight-item,
+      .rhythm-summary-row,
+      .form-label {
+        font-size: var(--font-md) !important; /* 15px */
+      }
+
+      .category,
+      .tag,
+      .sync-indicator,
+      .task-item-meta,
+      .calendar-weekday {
+        font-size: var(--font-base) !important; /* 14px */
+      }
+
+      .calendar-day-task {
+        font-size: var(--font-sm) !important; /* 13px */
+      }
+    }
   </style>
 </head>
 <body>
@@ -18868,13 +19010,13 @@
                               <span style="font-size: 18px;">${slot.icon}</span>
                               <div style="flex: 1;">
                                 <div style="font-size: 14px; font-weight: 500;">${escapeHtml(slot.label)}</div>
-                                <div style="font-size: 11px; color: var(--text-muted);">${slot.required ? '필수' : '선택'}</div>
+                                <div style="font-size: 13px; color: var(--text-muted);">${slot.required ? '필수' : '선택'}</div>
                               </div>
                             </div>
                             <div style="display: flex; gap: 4px;">
-                              <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;"
+                              <button class="btn btn-secondary" style="font-size: 13px; padding: 4px 8px;"
                                       onclick="editMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 편집">${svgIcon('edit', 14)}</button>
-                              <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; color: var(--danger);"
+                              <button class="btn btn-secondary" style="font-size: 13px; padding: 4px 8px; color: var(--danger);"
                                       onclick="deleteMedicationSlot(${idx})" aria-label="${escapeHtml(slot.label)} 삭제">${svgIcon('trash', 14)}</button>
                             </div>
                           </div>
@@ -18987,7 +19129,7 @@
                       <button class="backup-btn" onclick="restoreFromSyncBackup()" style="width: 100%; background: #f5576c22; border-color: #f5576c; color: #f5576c;" aria-label="동기화 백업에서 데이터 복원">
                         🔄 동기화 백업에서 복원
                       </button>
-                      <div class="settings-label-desc" style="text-align: center; margin-top: 6px; opacity: 0.5; font-size: 11px;">
+                      <div class="settings-label-desc" style="text-align: center; margin-top: 6px; opacity: 0.5; font-size: 13px;">
                         동기화 중 데이터가 유실된 경우 직전 상태로 복원
                       </div>
                     </div>
@@ -19402,15 +19544,15 @@
                   '<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px; cursor: pointer;" onclick="selectWorkProject(\'' + escapeAttr(t.projectId) + '\'); setWorkView(\'detail\');">' +
                     '<span style="color: #667eea; font-weight: 600;">\u2192</span>' +
                     '<span style="flex: 1; font-size: 14px;">' + escapeHtml(t.title) + '</span>' +
-                    '<span style="font-size: 11px; color: var(--text-muted); background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px;">' + escapeHtml(t.projectName) + '</span>' +
-                    (t.deadline ? '<span style="font-size: 11px; color: var(--accent-warning);">' + (new Date(t.deadline).getMonth()+1) + '/' + new Date(t.deadline).getDate() + '</span>' : '') +
+                    '<span style="font-size: 13px; color: var(--text-muted); background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px;">' + escapeHtml(t.projectName) + '</span>' +
+                    (t.deadline ? '<span style="font-size: 13px; color: var(--accent-warning);">' + (new Date(t.deadline).getMonth()+1) + '/' + new Date(t.deadline).getDate() + '</span>' : '') +
                   '</div>'
                 ).join('') +
                 generalWorkTasks.slice(0, 2).map(t =>
                   '<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px;">' +
                     '<button class="task-check-btn" onclick="event.stopPropagation(); completeTask(\'' + escapeAttr(t.id) + '\')" style="flex-shrink: 0;">○</button>' +
                     '<span style="flex: 1; font-size: 14px;">' + escapeHtml(t.title) + '</span>' +
-                    (t.deadline ? '<span style="font-size: 11px; color: var(--accent-warning);">' + formatDeadline(t.deadline) + '</span>' : '') +
+                    (t.deadline ? '<span style="font-size: 13px; color: var(--accent-warning);">' + formatDeadline(t.deadline) + '</span>' : '') +
                   '</div>'
                 ).join('') +
               '</div>';
@@ -19567,7 +19709,7 @@
               weeksHtml += '<div style="min-width: 130px; max-width: 130px; padding: 0 8px; font-weight: 600; color: var(--text-primary);">프로젝트</div>';
               weeksHtml += '<div style="flex: 1; position: relative; height: 24px; overflow: hidden;">';
               for (var wi = 0; wi < weekLabels.length; wi++) {
-                weeksHtml += '<div style="position: absolute; left: ' + weekLabels[wi].left + '%; top: 0; font-size: 10px; color: var(--text-muted); white-space: nowrap; transform: translateX(-50%);">' + weekLabels[wi].label + '</div>';
+                weeksHtml += '<div style="position: absolute; left: ' + weekLabels[wi].left + '%; top: 0; font-size: 12px; color: var(--text-muted); white-space: nowrap; transform: translateX(-50%);">' + weekLabels[wi].label + '</div>';
                 weeksHtml += '<div style="position: absolute; left: ' + weekLabels[wi].left + '%; top: 18px; width: 1px; height: 6px; background: var(--border-color);"></div>';
               }
               weeksHtml += '</div>';
@@ -19658,7 +19800,7 @@
                     rowsHtml += '<div style="position: absolute; left: 0; top: 0; bottom: 0; width: ' + progress + '%; background: ' + barColor + '; opacity: 0.35; border-radius: 5px 0 0 5px;"></div>';
                   }
                   // 바 내부 텍스트
-                  rowsHtml += '<div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 10px; font-weight: 600; color: ' + barColor + '; padding: 0 6px; white-space: nowrap; overflow: hidden;">';
+                  rowsHtml += '<div style="position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 12px; font-weight: 600; color: ' + barColor + '; padding: 0 6px; white-space: nowrap; overflow: hidden;">';
                   if (barWidth > 8) {
                     rowsHtml += progress + '%';
                     if (deadlineLabel && barWidth > 15) {
@@ -19688,16 +19830,16 @@
               var scheduleHtml = '<div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 16px;">';
               scheduleHtml += '<div style="font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">';
               scheduleHtml += '<span style="font-size: 15px;">프로젝트 스케줄</span>';
-              scheduleHtml += '<span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">' + projects.length + '개 · -2주~+8주</span>';
+              scheduleHtml += '<span style="font-size: 13px; color: var(--text-muted); font-weight: 400;">' + projects.length + '개 · -2주~+8주</span>';
               scheduleHtml += '<span style="flex: 1;"></span>';
               if (hiddenCount > 0) {
-                scheduleHtml += '<button onclick="appState.scheduleShowAll=!appState.scheduleShowAll; renderStatic();" style="background: ' + (showAll ? 'rgba(102,126,234,0.15)' : 'var(--bg-tertiary)') + '; border: 1px solid ' + (showAll ? 'rgba(102,126,234,0.3)' : 'var(--border-color)') + '; border-radius: 6px; padding: 4px 10px; font-size: 11px; color: ' + (showAll ? '#93BBFF' : 'var(--text-muted)') + '; cursor: pointer;">' + (showAll ? '활성만' : '완료/보류 +' + hiddenCount) + '</button>';
+                scheduleHtml += '<button onclick="appState.scheduleShowAll=!appState.scheduleShowAll; renderStatic();" style="background: ' + (showAll ? 'rgba(102,126,234,0.15)' : 'var(--bg-tertiary)') + '; border: 1px solid ' + (showAll ? 'rgba(102,126,234,0.3)' : 'var(--border-color)') + '; border-radius: 6px; padding: 4px 10px; font-size: 13px; color: ' + (showAll ? '#93BBFF' : 'var(--text-muted)') + '; cursor: pointer;">' + (showAll ? '활성만' : '완료/보류 +' + hiddenCount) + '</button>';
               }
               scheduleHtml += '</div>';
               scheduleHtml += weeksHtml;
               scheduleHtml += rowsHtml;
               // 범례
-              scheduleHtml += '<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; font-size: 10px; color: var(--text-muted);">';
+              scheduleHtml += '<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--text-muted);">';
               scheduleHtml += '<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 2px; height: 10px; background: #f5576c;"></span> 오늘</span>';
               scheduleHtml += '<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 16px; height: 6px; background: rgba(102,126,234,0.3); border: 1px solid #667eea; border-radius: 3px;"></span> 프로젝트 기간</span>';
               scheduleHtml += '<span style="display: inline-flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #667eea;"></span> 작업 마감일</span>';
@@ -19787,7 +19929,7 @@
                   calendarHtml += '<div style="padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">' +
                     '<span style="color: ' + (t.status === 'in-progress' ? '#667eea' : t.status === 'blocked' ? '#f5576c' : t.status === 'project' ? (t.color || '#667eea') : '#a0a0a0') + ';">&#9679;</span>' +
                     '<span style="flex:1;">' + escapeHtml(t.title) + '</span>' +
-                    (t.project ? '<span style="font-size: 11px; color: var(--text-muted);">' + escapeHtml(t.project) + '</span>' : '') +
+                    (t.project ? '<span style="font-size: 13px; color: var(--text-muted);">' + escapeHtml(t.project) + '</span>' : '') +
                   '</div>';
                 });
                 calendarHtml += '</div>';
@@ -19855,7 +19997,7 @@
                         '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? '#48bb78' : log.status === 'in-progress' ? '#667eea' : '#a0a0a0') + '; flex-shrink: 0;"></span>' +
                         '<span style="flex: 1; font-size: 13px;">' + escapeHtml(log.taskTitle) + '</span>' +
                         '<span style="font-size: 12px; color: var(--text-secondary);">' + escapeHtml(log.content) + '</span>' +
-                        '<span style="font-size: 11px; color: var(--text-muted); background: var(--bg-secondary); padding: 1px 6px; border-radius: 4px;">' + escapeHtml(log.projectName) + '</span>' +
+                        '<span style="font-size: 13px; color: var(--text-muted); background: var(--bg-secondary); padding: 1px 6px; border-radius: 4px;">' + escapeHtml(log.projectName) + '</span>' +
                       '</div>'
                     ).join('') +
                   '</div>'
@@ -20152,7 +20294,7 @@
                             <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
                             ${(subcat.startDate || subcat.endDate) ? (() => {
                               const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
-                              let html = '<span class="work-subcat-date" style="margin-left: 8px; font-size: 11px; color: var(--text-muted);">';
+                              let html = '<span class="work-subcat-date" style="margin-left: 8px; font-size: 13px; color: var(--text-muted);">';
                               if (subcat.startDate && subcat.endDate) {
                                 html += fmtDate(subcat.startDate) + '~' + fmtDate(subcat.endDate);
                               } else if (subcat.startDate) {
@@ -20720,10 +20862,10 @@
                     <div style="display: flex; align-items: stretch; gap: 4px;">
                       <button type="button" class="work-status-option template-option" data-template-id="${t.id}" style="text-align: left; padding: 12px; flex: 1;">
                         <div style="font-weight: 500;">${escapeHtml(t.name)}</div>
-                        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
                           ${escapeHtml((t.stageNames || t.stages.map((_, i) => appState.workProjectStages[i])).filter(Boolean).join(' → '))}
                         </div>
-                        <div style="font-size: 11px; color: var(--text-muted);">
+                        <div style="font-size: 13px; color: var(--text-muted);">
                           ${totalTaskCount(t)}개 항목
                         </div>
                       </button>
@@ -20744,7 +20886,7 @@
               <textarea class="work-modal-input" id="work-input-template-json" rows="10"
                 placeholder='{"name": "템플릿 이름", "stageNames": ["단계1", ...], "stages": [{"subcategories": [{"name": "분류", "tasks": [{"title": "작업"}]}]}]}'
                 style="font-family: monospace; font-size: 12px; resize: vertical; min-height: 150px;"></textarea>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">
+              <div style="font-size: 13px; color: var(--text-muted); margin-top: 8px;">
                 프로젝트에서 📤 내보내기한 JSON을 붙여넣으세요.<br>
                 가져온 템플릿은 모든 기기에서 자동 동기화됩니다.
               </div>
