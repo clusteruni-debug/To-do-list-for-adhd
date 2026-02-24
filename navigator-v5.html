@@ -10370,6 +10370,7 @@
       workView: 'dashboard',              // 뷰 모드: 'dashboard' | 'detail'
       workTemplates: [],                  // 저장된 템플릿 목록
       showArchivedProjects: false,        // 아카이브 프로젝트 표시 여부
+      scheduleShowAll: false,             // 스케줄 뷰: 완료/보류 포함 여부
       // Firebase 동기화
       user: null,                       // 로그인한 사용자
       syncStatus: 'offline',            // 동기화 상태: offline/syncing/synced/error
@@ -19524,7 +19525,15 @@
             ${(() => {
               var now = new Date();
               var todayStr = getLocalDateStr(now);
-              var projects = appState.workProjects.filter(function(p) { return !p.archived; });
+              var activeAll = appState.workProjects.filter(function(p) { return !p.archived; });
+              // 기본: 진행중 + 마감없음(활성)만 표시
+              var defaultProjects = activeAll.filter(function(p) {
+                return !p.onHold && !isProjectCompleted(p);
+              });
+              // 토글 시 완료/보류도 포함
+              var showAll = appState.scheduleShowAll || false;
+              var projects = showAll ? activeAll : defaultProjects;
+              var hiddenCount = activeAll.length - defaultProjects.length;
               var projectColors = ['#667eea', '#48bb78', '#f6ad55', '#f093fb', '#22d3ee', '#f5576c', '#a78bfa', '#fb923c'];
 
               // 시간 범위: 오늘 기준 -2주 ~ +8주 (총 10주 = 70일)
@@ -19679,7 +19688,11 @@
               var scheduleHtml = '<div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 16px;">';
               scheduleHtml += '<div style="font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">';
               scheduleHtml += '<span style="font-size: 15px;">프로젝트 스케줄</span>';
-              scheduleHtml += '<span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">오늘 기준 -2주 ~ +8주</span>';
+              scheduleHtml += '<span style="font-size: 11px; color: var(--text-muted); font-weight: 400;">' + projects.length + '개 · -2주~+8주</span>';
+              scheduleHtml += '<span style="flex: 1;"></span>';
+              if (hiddenCount > 0) {
+                scheduleHtml += '<button onclick="appState.scheduleShowAll=!appState.scheduleShowAll; renderStatic();" style="background: ' + (showAll ? 'rgba(102,126,234,0.15)' : 'var(--bg-tertiary)') + '; border: 1px solid ' + (showAll ? 'rgba(102,126,234,0.3)' : 'var(--border-color)') + '; border-radius: 6px; padding: 4px 10px; font-size: 11px; color: ' + (showAll ? '#93BBFF' : 'var(--text-muted)') + '; cursor: pointer;">' + (showAll ? '활성만' : '완료/보류 +' + hiddenCount) + '</button>';
+              }
               scheduleHtml += '</div>';
               scheduleHtml += weeksHtml;
               scheduleHtml += rowsHtml;
