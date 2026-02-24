@@ -1034,7 +1034,8 @@ window.setHistoryView = setHistoryView;
  * 라이프 리듬 히스토리 렌더링 (6개 항목)
  */
 function renderLifeRhythmHistory() {
-  const today = new Date();
+  const now = new Date();
+  const logicalToday = getLogicalDate();
   const records = [];
 
   // 시간을 분으로 변환
@@ -1048,13 +1049,13 @@ function renderLifeRhythmHistory() {
 
   // 최근 30일 기록 수집
   for (let i = 0; i < 30; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() - i);
+    const date = new Date(now);
+    date.setDate(now.getDate() - i);
     const dateStr = getLocalDateStr(date);
-    const isToday = i === 0;
+    const isToday = (dateStr === logicalToday);
 
     let dayData;
-    if (isToday && appState.lifeRhythm.today.date === dateStr) {
+    if (isToday && appState.lifeRhythm.today.date === logicalToday) {
       dayData = appState.lifeRhythm.today;
     } else {
       dayData = appState.lifeRhythm.history[dateStr];
