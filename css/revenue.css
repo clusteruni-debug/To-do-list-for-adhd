@@ -1,0 +1,398 @@
+/* revenue.css - 수익 대시보드, 라이프 리듬 통계 */
+    /* 수익 대시보드 */
+    .revenue-dashboard {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.1) 100%);
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-header .dashboard-title {
+      margin-bottom: 0;
+    }
+
+    .btn-export-asset {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+
+    .btn-export-asset:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+
+    .btn-export-asset:active {
+      transform: translateY(0);
+    }
+
+    .revenue-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .revenue-card {
+      background: var(--bg-tertiary);
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .revenue-card.total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .revenue-card.month {
+      border: 1px solid var(--border-color);
+    }
+
+    .revenue-card-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .revenue-card.total .revenue-card-label {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .revenue-card-value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .revenue-card-sub {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .revenue-chart-section {
+      margin-bottom: 20px;
+    }
+
+    .revenue-chart-title {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .revenue-bar-chart {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 120px;
+      gap: 8px;
+      padding: 10px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .revenue-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .revenue-bar-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .revenue-bar {
+      width: 100%;
+      max-width: 40px;
+      background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px 4px 0 0;
+      min-height: 5px;
+      position: relative;
+      transition: height 0.3s;
+    }
+
+    .revenue-bar-value {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .revenue-bar-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .revenue-category-section {
+      margin-top: 16px;
+    }
+
+    .revenue-category-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .revenue-category-item {
+      background: var(--bg-tertiary);
+      padding: 12px;
+      border-radius: 8px;
+    }
+
+    .revenue-category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .revenue-category-amount {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .revenue-category-bar {
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .revenue-category-bar-fill {
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    .revenue-category-bar-fill.본업 { background: var(--cat-본업); }
+    .revenue-category-bar-fill.부업 { background: var(--cat-부업); }
+    .revenue-category-bar-fill.일상 { background: var(--cat-일상); }
+    .revenue-category-bar-fill.가족 { background: var(--cat-가족); }
+
+    .revenue-category-percent {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    /* 라이프 리듬 통계 */
+    .life-rhythm-stats {
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(102, 126, 234, 0.05) 100%);
+    }
+
+    .rhythm-chart-section {
+      margin-bottom: 20px;
+    }
+
+    .rhythm-chart-title {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .rhythm-bar-chart {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 120px;
+      padding: 0 8px;
+      gap: 8px;
+    }
+
+    .rhythm-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+    }
+
+    .rhythm-bar-wrapper {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .rhythm-bar {
+      width: 100%;
+      max-width: 32px;
+      min-height: 4px;
+      border-radius: 4px 4px 0 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      transition: height 0.3s ease;
+    }
+
+    .rhythm-bar.good {
+      background: linear-gradient(180deg, #48bb78, #38a169);
+    }
+
+    .rhythm-bar.ok {
+      background: linear-gradient(180deg, #ecc94b, #d69e2e);
+    }
+
+    .rhythm-bar.bad {
+      background: linear-gradient(180deg, #f56565, #e53e3e);
+    }
+
+    .rhythm-bar-value {
+      font-size: 14px;
+      color: white;
+      font-weight: 600;
+      margin-top: 4px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .rhythm-bar-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .rhythm-bar-label.today {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .rhythm-summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .rhythm-summary-row .good {
+      color: var(--success);
+    }
+
+    .rhythm-summary-row .bad {
+      color: var(--danger);
+    }
+
+    .rhythm-work-section {
+      margin-bottom: 20px;
+    }
+
+    .rhythm-work-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .rhythm-work-stat {
+      background: var(--bg-tertiary);
+      padding: 12px 8px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .rhythm-work-label {
+      display: block;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .rhythm-work-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .rhythm-work-value.good {
+      color: var(--success);
+    }
+
+    .rhythm-insights {
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .rhythm-insights .rhythm-chart-title {
+      margin-bottom: 8px;
+    }
+
+    .rhythm-insight-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 15px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .rhythm-insight-item:last-child {
+      border-bottom: none;
+    }
+
+    .rhythm-insight-item.positive {
+      color: var(--text-primary);
+    }
+
+    .rhythm-insight-item.warning {
+      color: var(--warning);
+    }
+
+    .rhythm-insight-icon {
+      font-size: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .rhythm-work-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .urgent-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .urgent-item {
+      background: var(--bg-tertiary);
+      padding: 12px;
+      border-radius: 8px;
+      border-left: 4px solid #f5576c;
+    }
+
+    .urgent-item-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .urgent-item-time {
+      font-size: 14px;
+      color: #f5576c;
+    }
+    

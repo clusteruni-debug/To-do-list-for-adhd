@@ -1,0 +1,409 @@
+/* schedule.css - 주간 리뷰, 퀵 필터, 소요시간 입력 모달 */
+    /* 주간 리뷰 모달 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 20px;
+      max-width: 500px;
+      width: 100%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      justify-content: flex-end;
+    }
+
+    /* 주간 리뷰 요약 */
+    .review-summary {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .review-summary-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .review-summary-label {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .review-summary-compare {
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    .review-summary-compare.up {
+      color: #48bb78;
+    }
+
+    .review-summary-compare.down {
+      color: #f5576c;
+    }
+
+    /* 다음 주 계획 */
+    .weekly-plan-section {
+      margin-top: 20px;
+    }
+
+    .weekly-plan-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .weekly-plan-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .weekly-plan-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+
+    .weekly-plan-item:hover {
+      background: var(--bg-primary);
+    }
+
+    .weekly-plan-item.selected {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .weekly-plan-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .weekly-plan-item.selected .weekly-plan-check {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .weekly-plan-item-title {
+      flex: 1;
+      font-size: 16px;
+    }
+
+    .weekly-plan-item-category {
+      font-size: 14px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+    }
+
+    /* 월요일 리마인더 배너 */
+    .monday-reminder {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      color: white;
+    }
+
+    .monday-reminder-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .monday-reminder-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .monday-reminder-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .monday-reminder-tasks {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .monday-reminder-task {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .monday-reminder-task-num {
+      width: 20px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    /* 퀵 필터 섹션 */
+    .quick-filter-section {
+      margin: 16px 0;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .quick-filter-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .quick-filter-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .quick-filter-help {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+    }
+
+    /* 퀵 필터 버튼들 */
+    .quick-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .quick-filter-btn {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-filter-btn:hover {
+      background: var(--bg-secondary);
+      border-color: #667eea;
+      color: var(--text-primary);
+    }
+
+    .quick-filter-btn.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .quick-filter-btn .filter-count {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .quick-filter-btn.active .filter-count {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* 미루기 횟수 뱃지 */
+    .postpone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9500;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .postpone-badge.warning {
+      background: rgba(245, 87, 108, 0.15);
+      color: #f5576c;
+    }
+
+    /* 실제 소요시간 입력 모달 */
+    .time-input-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-secondary);
+      border-radius: 20px 20px 0 0;
+      padding: 24px;
+      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+      z-index: 10001;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .time-input-modal.show {
+      transform: translateY(0);
+    }
+
+    .time-input-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .time-input-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .time-input-options {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .time-option-btn {
+      padding: 14px 10px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .time-option-btn:hover {
+      border-color: #667eea;
+    }
+
+    .time-option-btn.selected {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .time-input-custom {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .time-input-custom input {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+

@@ -1,0 +1,157 @@
+/* pomodoro.css - 포모도로 타이머 */
+    /* 포모도로 타이머 */
+    .pomodoro-section {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 2px solid #333;
+      text-align: center;
+    }
+
+    .pomodoro-section.active {
+      border-color: #667eea;
+      animation: pomodoro-pulse 2s infinite;
+    }
+
+    .pomodoro-section.break {
+      border-color: #48bb78;
+      background: linear-gradient(135deg, #1a2e1a 0%, #162e16 100%);
+    }
+
+    @keyframes pomodoro-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+    }
+
+    .pomodoro-title {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .pomodoro-time {
+      font-size: 56px;
+      font-weight: bold;
+      font-family: monospace;
+      margin-bottom: 8px;
+    }
+
+    .pomodoro-status {
+      font-size: 16px;
+      color: #667eea;
+      margin-bottom: 15px;
+    }
+
+    .pomodoro-section.break .pomodoro-status {
+      color: #48bb78;
+    }
+
+    .pomodoro-task {
+      font-size: 16px;
+      color: #ccc;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+
+    .pomodoro-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .pomodoro-btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .pomodoro-btn:active {
+      transform: scale(0.95);
+    }
+
+    .pomodoro-btn.start {
+      background: #667eea;
+      color: white;
+    }
+
+    .pomodoro-btn.pause {
+      background: #ff9500;
+      color: white;
+    }
+
+    .pomodoro-btn.stop {
+      background: #f5576c;
+      color: white;
+    }
+
+    .pomodoro-btn.skip {
+      background: var(--bg-tertiary);
+      color: white;
+    }
+
+    .pomodoro-stats {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .pomodoro-stat {
+      text-align: center;
+    }
+
+    .pomodoro-stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .pomodoro-stat-label {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-chip:hover {
+      border-color: #667eea;
+    }
+
+    .filter-chip.active {
+      background: #667eea;
+      border-color: #667eea;
+      color: white;
+    }
+
+    .filter-chip.본업.active { background: #667eea; border-color: #667eea; }
+    .filter-chip.부업.active { background: #f093fb; border-color: #f093fb; }
+    .filter-chip.일상.active { background: #48bb78; border-color: #48bb78; }
+    .filter-chip.가족.active { background: #f6ad55; border-color: #f6ad55; }
+

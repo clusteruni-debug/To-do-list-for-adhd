@@ -1,0 +1,344 @@
+/* rhythm.css - 라이프 리듬 트래커, 복약/영양제, 히스토리 복약, 명언 */
+    /* 라이프 리듬 트래커 */
+    .life-rhythm-tracker {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      transition: border-color var(--transition-normal);
+    }
+
+    .life-rhythm-tracker:hover {
+      border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .life-rhythm-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .life-rhythm-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .life-rhythm-sleep {
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .life-rhythm-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .life-rhythm-buttons.six-items {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (min-width: 480px) {
+      .life-rhythm-buttons.six-items {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    .life-rhythm-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      padding: 10px 4px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+
+    .life-rhythm-btn:hover {
+      background: var(--bg-primary);
+      border-color: var(--primary);
+      color: var(--text-primary);
+    }
+
+    .life-rhythm-btn:active {
+      transform: scale(0.95);
+    }
+
+    .life-rhythm-btn.recorded {
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+      border-color: var(--success);
+    }
+
+    .life-rhythm-btn.recorded .life-rhythm-time {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    /* 리듬 기록 액션 메뉴 (수정/삭제) */
+    .rhythm-action-menu {
+      position: fixed;
+      z-index: 1000;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      min-width: 120px;
+    }
+
+    .rhythm-action-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .rhythm-action-menu button:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-action-menu button:active {
+      background: var(--bg-primary);
+    }
+
+    .rhythm-action-menu button.danger {
+      color: var(--danger);
+    }
+
+    .rhythm-action-menu-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 999;
+    }
+
+    .life-rhythm-icon {
+      font-size: 18px;
+    }
+
+    .life-rhythm-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .life-rhythm-time {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .life-rhythm-stats {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rhythm-stat {
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .rhythm-stat.total {
+      background: rgba(102, 126, 234, 0.15);
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    .life-rhythm-summary {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      font-size: 15px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    @media (max-width: 480px) {
+      .life-rhythm-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 복약/영양제 트래커 */
+    .medication-tracker {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .medication-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .medication-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .medication-progress {
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: rgba(102, 126, 234, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .medication-slots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .medication-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: var(--bg-tertiary);
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+
+    .medication-btn:hover {
+      background: var(--bg-primary);
+      border-color: var(--primary);
+    }
+
+    .medication-btn:active {
+      transform: scale(0.95);
+    }
+
+    .medication-btn.taken {
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.1));
+      border-color: var(--success);
+    }
+
+    .medication-btn.taken .med-time {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .medication-btn .med-icon {
+      font-size: 18px;
+    }
+
+    .medication-btn .med-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .medication-btn .med-time {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Monaco, monospace;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .medication-streak {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .medication-streak .streak-good {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .medication-btn.required {
+      border-left: 3px solid var(--primary);
+    }
+
+    .medication-btn.required.taken {
+      border-left-color: var(--success);
+    }
+
+    /* 히스토리 복약 행 */
+    .rhythm-history-meds {
+      display: flex;
+      gap: 6px;
+      padding: 4px 0;
+      flex-wrap: wrap;
+    }
+
+    .rhythm-history-med {
+      font-size: 14px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .rhythm-history-med:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-history-med.taken {
+      color: var(--success);
+    }
+
+    .rhythm-history-med.missed {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    /* 오늘의 명언 */
+    .daily-quote {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid #667eea;
+    }
+
+    .daily-quote-text {
+      font-size: 16px;
+      color: var(--text-primary);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .daily-quote-author {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+

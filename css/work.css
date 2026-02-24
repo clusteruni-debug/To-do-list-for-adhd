@@ -1,0 +1,1555 @@
+/* work.css - 본업 프로젝트, 상태 뱃지, 대시보드, 뷰 전환, 주간 리포트 */
+    /* ========================================
+       본업 프로젝트 관리
+       ======================================== */
+    .work-projects-container {
+      padding: 16px;
+    }
+
+    /* 프로젝트 탭 네비게이션 */
+    .work-project-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+    }
+
+    .work-project-selector-label {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .work-project-select {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px;
+    }
+
+    .work-project-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    }
+
+    .work-project-select optgroup {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .work-project-select option {
+      padding: 8px;
+    }
+
+    .work-project-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .work-project-tab {
+      padding: 10px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .work-project-tab:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .work-project-tab.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .work-project-tab-add {
+      padding: 10px 16px;
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-project-tab-add:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .work-projects-header {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    /* 프로젝트명 + 일정을 한 줄로 배치 */
+    .work-project-info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .work-projects-title {
+      font-size: 18px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+      flex-shrink: 1;
+    }
+
+    .work-section-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      padding-left: 12px;
+      border-left: 3px solid #667eea;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .work-section-title.clickable {
+      cursor: pointer;
+      padding: 8px 12px;
+      margin: -8px -12px 12px -12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--text-muted);
+      transition: background 0.2s;
+    }
+
+    .work-section-title.clickable:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-section-toggle {
+      font-size: 14px;
+      color: var(--text-muted);
+      width: 12px;
+    }
+
+    .work-project-add-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .work-project-add-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    /* 본업 빠른 추가 */
+    .work-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .work-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .work-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .work-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: #667eea;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-quick-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* 본업 일반 작업 */
+    .work-general-tasks {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .work-general-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+
+    .work-general-item-wrapper {
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .work-general-item-wrapper:last-child {
+      border-bottom: none;
+    }
+
+    .work-general-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+    }
+
+    .work-general-subtasks {
+      padding: 8px 0 8px 32px;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .work-general-subtask {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-general-subtask:hover {
+      background: var(--bg-secondary);
+    }
+
+    .work-general-subtask.completed {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .work-general-subtask .subtask-check {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .work-general-subtask.completed .subtask-check {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .work-general-delete-btn {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s;
+    }
+
+    .work-general-item:hover .work-general-delete-btn {
+      opacity: 1;
+    }
+
+    .work-general-delete-btn:hover {
+      background: rgba(245, 87, 108, 0.15);
+      color: var(--danger);
+    }
+
+    .work-general-item-title {
+      flex: 1;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .work-general-item-title:hover {
+      color: #667eea;
+    }
+
+    .work-general-more {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    /* 일상/가족 탭 스타일 */
+    .life-header {
+      margin-bottom: 16px;
+    }
+
+    .life-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .life-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .life-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .life-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: #48bb78;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .life-summary {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .life-summary-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-summary-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .life-summary-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .life-section {
+      margin-bottom: 20px;
+    }
+
+    .life-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-section-header .life-section-title {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .life-reset-btn {
+      font-size: 14px;
+      padding: 4px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .life-reset-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .life-all-done {
+      padding: 16px;
+      text-align: center;
+      color: var(--success);
+      font-size: 15px;
+      background: rgba(72, 187, 120, 0.1);
+      border-radius: 8px;
+    }
+
+    .life-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .life-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--task-cat-color, var(--border-color));
+    }
+
+    .life-item-content {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .life-item-title {
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .life-item-meta {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .life-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .life-item:hover .life-item-actions {
+      opacity: 1;
+    }
+
+    .life-action-btn {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .life-action-btn:hover {
+      background: var(--bg-secondary);
+      transform: scale(1.05);
+    }
+
+    .life-action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+    }
+
+    .life-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .life-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .life-empty-text {
+      font-size: 16px;
+    }
+
+    .work-project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 상태 뱃지 */
+    .work-status-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .work-status-badge.not-started {
+      background: rgba(160, 160, 160, 0.2);
+      color: #a0a0a0;
+    }
+
+    .work-status-badge.in-progress {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+    }
+
+    .work-status-badge.completed {
+      background: rgba(72, 187, 120, 0.2);
+      color: #48bb78;
+    }
+
+    .work-status-badge.blocked {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 중분류 스타일 */
+    .work-subcategory {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-subcategory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .work-subcategory-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 중분류 체크박스 */
+    .work-subcategory-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-subcategory-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-subcategory-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .work-subcategory-name {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-subcategory-name:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-subcategory-toggle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-subcategory-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* 단계 체크박스 */
+    .work-stage-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-stage-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-stage-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    /* 마감일 표시 */
+    .work-deadline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #667eea;
+      cursor: pointer;
+    }
+
+    .work-deadline.overdue {
+      background: rgba(245, 87, 108, 0.15);
+      color: #f5576c;
+    }
+
+    .work-deadline.soon {
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9500;
+    }
+
+    .work-deadline.none {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      border: 1px dashed var(--border-color);
+      flex-shrink: 0;
+    }
+
+    /* 프로젝트 대시보드 */
+    .work-dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .work-dashboard-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--transition-normal);
+    }
+
+    .work-dashboard-card:hover {
+      border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .work-dashboard-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #667eea, #764ba2);
+    }
+
+    .work-dashboard-card.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    }
+
+    .work-dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .work-dashboard-name {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .work-dashboard-status {
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+
+    .work-dashboard-stages {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .work-dashboard-stage-dot {
+      width: 24px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--bg-tertiary);
+    }
+
+    .work-dashboard-stage-dot.completed {
+      background: #48bb78;
+    }
+
+    .work-dashboard-stage-dot.current {
+      background: #667eea;
+    }
+
+    .work-dashboard-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-dashboard-schedule {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .work-date-range {
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    .work-schedule {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* 참여자 트래커 */
+    .work-participant-tracker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+
+    .work-participant-label {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-participant-count {
+      font-size: 16px;
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .work-participant-goal {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-participant-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .work-participant-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #48bb78);
+      border-radius: 3px;
+    }
+
+    /* 아카이브 뱃지 */
+    .work-archived-badge {
+      font-size: 14px;
+      padding: 2px 6px;
+      background: rgba(160, 160, 160, 0.2);
+      color: #a0a0a0;
+      border-radius: 8px;
+      margin-left: 8px;
+    }
+
+    /* 보류 뱃지 */
+    .work-onhold-badge {
+      font-size: 14px;
+      padding: 2px 6px;
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+      border-radius: 8px;
+      margin-left: 8px;
+    }
+
+    /* 뷰 전환 탭 */
+    .work-view-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .work-view-tab {
+      padding: 8px 16px;
+      background: var(--bg-tertiary);
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .work-view-tab.active {
+      background: rgba(102, 126, 234, 0.15);
+      color: #93BBFF;
+      border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .work-project-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color var(--transition-normal);
+    }
+
+    .work-project-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .work-project-card.active {
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .work-project-header {
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .work-project-info {
+      flex: 1;
+    }
+
+    .work-project-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .work-project-stage {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-project-stage-label {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-project-stage-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .work-project-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-project-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .work-project-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .work-project-progress-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .work-project-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .work-project-action-btn {
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .work-project-action-btn:hover {
+      background: var(--border-color);
+    }
+
+    .work-project-action-btn.delete:hover {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 프로젝트 상세 (단계별 체크리스트) */
+    .work-project-detail {
+      border-top: 1px solid var(--border-color);
+      padding: 16px;
+      background: var(--bg-tertiary);
+    }
+
+    .work-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .work-stage {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-stage.current {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    }
+
+    .work-stage.completed {
+      opacity: 0.7;
+    }
+
+    .work-stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .work-stage-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-stage-number {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .work-stage.current .work-stage-number {
+      background: #667eea;
+      color: white;
+    }
+
+    .work-stage.completed .work-stage-number {
+      background: #48bb78;
+      color: white;
+    }
+
+    .work-stage-add-task {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-stage-add-task:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .work-task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .work-task-item {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-task-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .work-task-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .work-task-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-task-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .work-task-title {
+      flex: 1;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-task-title:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-task-title.completed {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .work-task-deadline {
+      font-size: 14px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .work-task-deadline.soon {
+      color: #e67e22;
+      background: rgba(230, 126, 34, 0.1);
+    }
+
+    .work-task-deadline.overdue {
+      color: var(--danger);
+      background: rgba(245, 87, 108, 0.1);
+    }
+
+    .work-task-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .work-task-action {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .work-task-action:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* 진행 로그 */
+    .work-task-logs {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .work-task-log {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .work-task-log:last-child {
+      border-bottom: none;
+    }
+
+    .work-task-log-date {
+      color: #667eea;
+      font-weight: 500;
+      white-space: nowrap;
+      min-width: 70px;
+    }
+
+    .work-task-log-content {
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .work-task-log-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .work-task-log-action {
+      padding: 2px 6px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      min-height: 36px;
+      min-width: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .work-task-log-action:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-log-add {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-log-add input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 15px;
+    }
+
+    .work-log-add input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .work-log-add button {
+      padding: 8px 14px;
+      background: #667eea;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* 복사 버튼 */
+    .work-copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: transform 0.2s;
+    }
+
+    .work-copy-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .work-copy-btn.copied {
+      background: #48bb78;
+    }
+
+    /* 빈 상태 */
+    .work-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .work-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .work-empty-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .work-empty-desc {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    /* 프로젝트 추가 모달 */
+    .work-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .work-modal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .work-modal-content {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .work-modal.show .work-modal-content {
+      transform: scale(1);
+    }
+
+    .work-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .work-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .work-modal-actions button {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .work-modal-actions .cancel {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .work-modal-actions .confirm {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+    }
+
+    .work-modal-field {
+      margin-bottom: 16px;
+    }
+
+    .work-modal-field-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .work-modal-field.half {
+      flex: 1;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+
+    .work-modal-label {
+      display: block;
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .work-modal-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .work-modal-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .work-modal-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 16px;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .work-modal-textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    /* 상태 선택 버튼 그룹 */
+    .work-status-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .work-status-option {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-status-option:hover {
+      border-color: #667eea;
+    }
+
+    .work-status-option.selected {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-color: transparent;
+      color: white;
+    }
+
+    .work-status-option.selected.in-progress {
+      background: #667eea;
+    }
+
+    .work-status-option.selected.completed {
+      background: #48bb78;
+    }
+
+    .work-status-option.selected.blocked {
+      background: #f5576c;
+    }
+
+    /* 주간 리포트 */
+    .weekly-report {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(102, 126, 234, 0.2);
+    }
+
+    .weekly-report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .weekly-report-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .weekly-report-period {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .weekly-report-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .weekly-stat {
+      background: var(--bg-secondary);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .weekly-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    .weekly-stat-value.positive {
+      color: #48bb78;
+    }
+
+    .weekly-stat-value.negative {
+      color: #f5576c;
+    }
+
+    .weekly-stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .weekly-stat-change {
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .weekly-stat-change.positive {
+      color: #48bb78;
+    }
+
+    .weekly-stat-change.negative {
+      color: #f5576c;
+    }
+

@@ -1,0 +1,549 @@
+/* base.css - 리셋, 다크/라이트 테마 변수, 타이포그래피, 반응형 레이아웃 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 다크 테마 (기본) - Slate Professional (Linear 스타일 네이비 톤) */
+    :root {
+      /* 8pt 스페이싱 그리드 */
+      --space-1: 8px;
+      --space-2: 16px;
+      --space-3: 24px;
+      --space-4: 32px;
+      --space-5: 40px;
+      --space-6: 48px;
+
+      /* Slate Professional — 네이비 다크 */
+      --bg-primary: #0F172A;
+      --bg-secondary: #1E293B;
+      --bg-tertiary: #334155;
+      --bg-card: #1E293B;
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border-color: rgba(148, 163, 184, 0.12);
+      --border-light: rgba(148, 163, 184, 0.06);
+
+      /* 카테고리 색상 */
+      --cat-본업: #667eea;
+      --cat-부업: #f093fb;
+      --cat-일상: #48bb78;
+      --cat-가족: #f6ad55;
+
+      /* 액센트 색상 */
+      --accent-primary: #667eea;
+      --accent-success: #48bb78;
+      --accent-warning: #f6ad55;
+      --accent-danger: #f5576c;
+
+      /* 그림자 */
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.25);
+      --shadow-color: rgba(0, 0, 0, 0.4);
+
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+
+      /* 트랜지션 */
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+
+      /* 타이포그래피 스케일 */
+      --font-xs: 14px;    /* 최소 가독 크기 */
+      --font-sm: 15px;    /* 보조 라벨 */
+      --font-base: 16px;  /* 기본 본문 */
+      --font-md: 17px;    /* 강조 본문 */
+      --font-lg: 18px;    /* 소제목 */
+      --font-xl: 20px;    /* 제목 */
+    }
+
+    /* 라이트 테마 */
+    body[data-theme="light"] {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f3f4;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #5f6368;
+      --text-muted: #72787e;
+      --border-color: #e0e0e0;
+      --border-light: #f1f3f4;
+      --shadow-color: rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+      line-height: 1.6;
+      letter-spacing: -0.02em;
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    /* PC 레이아웃 (1024px 이상) */
+    @media (min-width: 1024px) {
+      .app {
+        padding: 30px 40px;
+      }
+
+      .header h1 {
+        font-size: 42px;
+      }
+
+      .pc-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr 380px;
+        gap: 24px;
+        align-items: start;
+      }
+
+      .pc-column-left {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .pc-column-center {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .pc-column-right {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        position: sticky;
+        top: 80px;
+      }
+
+      /* 4번째 컬럼: 기본 숨김, 4K에서만 표시 */
+      .pc-column-tasklist {
+        display: none;
+      }
+
+      .shuttle-status {
+        padding: 24px;
+      }
+
+      .next-action {
+        padding: 35px;
+      }
+
+      .task-title {
+        font-size: 32px;
+      }
+
+      .quick-add-input {
+        padding: 18px;
+        font-size: 17px;
+      }
+
+      .task-item {
+        padding: 18px;
+      }
+
+      .task-item:hover {
+        border-color: rgba(148, 163, 184, 0.15);
+        transform: translateX(4px);
+      }
+
+      .stat-card {
+        padding: 20px;
+      }
+
+      .stat-value {
+        font-size: 32px;
+      }
+
+      .tab-nav {
+        justify-content: center;
+        gap: 15px;
+      }
+
+      .tab-btn {
+        padding: 14px 28px;
+        font-size: 17px;
+      }
+    }
+
+    /* 대형 모니터 (1920px 이상) */
+    @media (min-width: 1920px) {
+      .app {
+        max-width: 1800px;
+        padding: 36px 60px;
+      }
+
+      body {
+        font-size: 17px;
+      }
+
+      .header h1 {
+        font-size: 48px;
+      }
+
+      .pc-layout {
+        grid-template-columns: 1fr 1fr 420px;
+        gap: 30px;
+      }
+
+      .next-action {
+        padding: 40px;
+      }
+
+      .task-title {
+        font-size: 36px;
+      }
+
+      .quick-add-input {
+        padding: 20px;
+        font-size: 18px;
+      }
+
+      .task-item {
+        padding: 20px;
+      }
+
+      .stat-card {
+        padding: 24px;
+      }
+
+      .stat-value {
+        font-size: 36px;
+      }
+
+      .tab-btn {
+        padding: 16px 32px;
+        font-size: 16px;
+      }
+
+      .modal-content {
+        max-width: 600px;
+      }
+
+      .form-input, .form-select {
+        padding: 16px 18px;
+        font-size: 16px;
+      }
+
+      .quick-template-btn,
+      .quick-filter-btn {
+        padding: 10px 18px;
+        font-size: 16px;
+      }
+
+      .work-project-name {
+        font-size: 18px;
+      }
+
+      .work-subcategory-title {
+        font-size: 16px;
+      }
+
+      .event-card {
+        font-size: 17px;
+      }
+
+      .revenue-card {
+        padding: 20px;
+      }
+
+      .toast {
+        font-size: 17px;
+      }
+    }
+
+    /* 초대형 모니터 / 4K (2560px 이상) */
+    @media (min-width: 2560px) {
+      .app {
+        max-width: 2400px;
+        padding: 48px 80px;
+      }
+
+      body {
+        font-size: 20px;
+        line-height: 1.7;
+      }
+
+      .header h1 {
+        font-size: 58px;
+      }
+
+      .pc-layout {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 40px;
+      }
+
+      /* 4K 3열: 오늘의 나 | 할 일 | 집중 도구 */
+      .pc-column-tasklist {
+        display: none;
+      }
+
+      .next-action {
+        padding: 48px;
+        border-radius: 20px;
+      }
+
+      .task-title {
+        font-size: 42px;
+      }
+
+      .quick-add-input {
+        padding: 24px;
+        font-size: 20px;
+        border-radius: 14px;
+      }
+
+      .quick-add-simple .quick-add-btn {
+        padding: 12px 20px;
+        font-size: 22px;
+      }
+
+      .task-item {
+        padding: 24px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+      }
+
+      .stat-card {
+        padding: 28px;
+        border-radius: 16px;
+      }
+
+      .stat-value {
+        font-size: 42px;
+      }
+
+      .stat-label {
+        font-size: 17px;
+      }
+
+      .tab-nav {
+        gap: 20px;
+      }
+
+      .tab-btn {
+        padding: 18px 40px;
+        font-size: 18px;
+        border-radius: 14px;
+      }
+
+      .modal-content {
+        max-width: 720px;
+        border-radius: 24px;
+        padding: 32px;
+      }
+
+      .form-label {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      .form-input, .form-select {
+        padding: 18px 20px;
+        font-size: 18px;
+        border-radius: 12px;
+      }
+
+      .quick-template-btn,
+      .quick-filter-btn {
+        padding: 12px 22px;
+        font-size: 16px;
+        border-radius: 24px;
+      }
+
+      .section-header,
+      .quick-filter-title {
+        font-size: 16px;
+      }
+
+      .shuttle-status {
+        padding: 28px;
+        border-radius: 16px;
+      }
+
+      .task-item-mini {
+        padding: 12px 16px;
+        font-size: 16px;
+      }
+
+      .other-tasks-header {
+        padding: 14px 16px;
+        font-size: 16px;
+      }
+
+      .search-input {
+        padding: 14px 18px;
+        font-size: 16px;
+      }
+
+      /* 본업 프로젝트 카드 */
+      .work-project-card {
+        border-radius: 16px;
+      }
+
+      .work-project-card-header {
+        padding: 20px 24px;
+      }
+
+      .work-project-name {
+        font-size: 20px;
+      }
+
+      .work-subcategory {
+        padding: 16px;
+        border-radius: 12px;
+      }
+
+      .work-subcategory-title {
+        font-size: 17px;
+      }
+
+      .work-task-item {
+        padding: 12px 16px;
+        font-size: 17px;
+      }
+
+      /* 이벤트 카드 */
+      .event-card {
+        padding: 14px 18px;
+        border-radius: 12px;
+        font-size: 16px;
+      }
+
+      /* 수익 카드 */
+      .revenue-card {
+        padding: 24px;
+        border-radius: 16px;
+      }
+
+      /* 캘린더 */
+      .calendar-day {
+        border-radius: 12px;
+        font-size: 16px;
+      }
+
+      /* 라이프 리듬 */
+      .rhythm-btn {
+        padding: 12px 20px;
+        font-size: 17px;
+        border-radius: 12px;
+      }
+
+      /* 토스트 알림 */
+      .toast {
+        padding: 16px 24px;
+        font-size: 16px;
+        border-radius: 14px;
+      }
+    }
+
+    /* 4K 네이티브 (3200px 이상, 스케일링 100~125%) */
+    @media (min-width: 3200px) {
+      html {
+        zoom: 1.4;
+      }
+    }
+
+    /* 태블릿 레이아웃 (768px - 1023px) */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .app {
+        max-width: 720px;
+        padding: 25px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .tablet-two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+    }
+
+    /* 모바일 (767px 이하) - 컬럼 재배치: Next Action 최상단 */
+    @media (max-width: 767px) {
+      .app {
+        max-width: 600px;
+        padding: 15px;
+      }
+
+      .pc-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
+
+      .pc-column-right,
+      .pc-column-left,
+      .pc-column-center {
+        width: 100%;
+      }
+      .pc-column-right {
+        order: -1;  /* Next Action + 포모도로를 최상단으로 */
+      }
+      .pc-column-left {
+        order: 0;
+      }
+      .pc-column-center {
+        order: 1;
+      }
+
+      /* 모바일: "전체 목록"은 "다른 작업" mini 목록과 중복 → 숨김 */
+      .task-list-full {
+        display: none;
+      }
+
+      /* 모바일: 탭 네비게이션 축소 (5개 버튼이 화면 폭 초과 방지) */
+      .tab-nav {
+        gap: 3px;
+        padding: 6px;
+      }
+      .tab-btn {
+        padding: 12px 10px;  /* 터치타겟 44px 확보 (12px*2 + font ~18px ≥ 44px) */
+        font-size: 14px;
+        min-height: 44px;
+      }
+      .tab-btn svg {
+        display: none;
+      }
+
+      /* 모바일: 더보기 드롭다운이 화면 밖으로 잘리지 않도록 */
+      .more-menu {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: calc(100vw - 32px);
+      }
+
+      /* 모바일: input 포커스 시 iOS 자동 줌 방지 (16px 이상 필요) */
+      input, textarea, select {
+        font-size: 16px !important;
+      }
+
+      /* 모바일: 섹션 간 여백 확보 */
+      .pc-layout {
+        gap: 12px;
+      }
+    }
+
