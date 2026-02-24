@@ -51,8 +51,28 @@ function transitionRhythmDay(rhythm, logicalToday) {
     const historyEntry = { ...rhythm.today };
     delete historyEntry.date;
     delete historyEntry._deletedFields; // 히스토리에는 삭제 메타 불필요
-    rhythm.history[savedDate] = historyEntry;
-    console.log('[rhythm] ' + savedDate + ' 데이터를 히스토리로 이동');
+    // 기존 히스토리와 필드별 병합 (기존 값 보존, 새 값으로 보완)
+    const existing = rhythm.history[savedDate] || {};
+    const rhythmFields = ['wakeUp', 'homeDepart', 'workArrive', 'workDepart', 'homeArrive', 'sleep'];
+    const merged = {};
+    for (const f of rhythmFields) {
+      merged[f] = historyEntry[f] || existing[f] || null;
+    }
+    // 복약 병합
+    const newMeds = historyEntry.medications || {};
+    const existMeds = existing.medications || {};
+    const allSlots = new Set([...Object.keys(newMeds), ...Object.keys(existMeds)]);
+    if (allSlots.size > 0) {
+      merged.medications = {};
+      for (const slot of allSlots) {
+        merged.medications[slot] = newMeds[slot] || existMeds[slot] || null;
+      }
+    }
+    if (existing.updatedAt || historyEntry.updatedAt) {
+      merged.updatedAt = historyEntry.updatedAt || existing.updatedAt;
+    }
+    rhythm.history[savedDate] = merged;
+    console.log('[rhythm] ' + savedDate + ' 데이터를 히스토리로 병합 이동');
   }
 
   rhythm.today = {
