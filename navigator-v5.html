@@ -21901,8 +21901,29 @@
       const eventId = task.source.eventId;
       if (!eventId) return;
 
-      // 1. 보안상 브라우저에서 Supabase 직접 PATCH는 차단 (서버 프록시 경유 필요)
-      console.info('Supabase 직접 역동기화는 보안상 비활성화됨. 서버 프록시를 사용하세요.');
+      // 1. Supabase REST API로 telegram_messages.participated 업데이트
+      try {
+        const res = await fetch(
+          `${TG_SUPABASE_URL}/rest/v1/telegram_messages?id=eq.${eventId}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'apikey': TG_SUPABASE_KEY,
+              'Authorization': `Bearer ${TG_SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ participated })
+          }
+        );
+        if (res.ok) {
+          console.info(`Telegram 이벤트 #${eventId} participated=${participated} 동기화 완료`);
+        } else {
+          console.warn(`Telegram 이벤트 동기화 실패: ${res.status}`);
+        }
+      } catch (error) {
+        console.error('Telegram 이벤트 Supabase 동기화 실패:', error);
+      }
 
       // 2. Firestore도 업데이트 (로그인 시에만)
       if (!appState.user) return;
