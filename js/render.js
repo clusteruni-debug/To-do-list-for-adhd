@@ -3,9 +3,80 @@
 // ============================================
 
 /**
+ * renderStatic() 전후 입력값 + 포커스 보존 유틸
+ * #root innerHTML 교체 시 모든 input/textarea/select가 파괴되므로
+ * 스냅샷 → DOM 교체 → 복원 순서로 보호한다.
+ */
+function _snapshotInputs() {
+  const root = document.getElementById('root');
+  if (!root) return null;
+
+  // 현재 포커스된 요소 정보
+  const ae = document.activeElement;
+  const isInputFocused = ae && root.contains(ae) &&
+    (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT');
+  if (!isInputFocused) return null;  // 입력 중이 아니면 스냅샷 불필요
+
+  // #root 내 모든 input/textarea/select 값 수집 (id 기준)
+  const values = {};
+  root.querySelectorAll('input, textarea, select').forEach(el => {
+    if (el.id) {
+      values[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    }
+  });
+
+  // 통근 모달 색상 버튼 (id 없으므로 별도 저장)
+  const colorBtn = root.querySelector('.commute-color-btn.selected');
+  if (colorBtn) values['__commute_color'] = colorBtn.dataset.color;
+
+  return {
+    values,
+    focusId: ae.id || null,
+    selStart: typeof ae.selectionStart === 'number' ? ae.selectionStart : null,
+    selEnd: typeof ae.selectionEnd === 'number' ? ae.selectionEnd : null
+  };
+}
+
+function _restoreInputs(snapshot) {
+  if (!snapshot) return;
+  const root = document.getElementById('root');
+  if (!root) return;
+
+  // 값 복원
+  for (const [id, val] of Object.entries(snapshot.values)) {
+    if (id === '__commute_color') {
+      const btns = root.querySelectorAll('.commute-color-btn');
+      btns.forEach(b => b.classList.toggle('selected', b.dataset.color === val));
+      continue;
+    }
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (el.type === 'checkbox') {
+      el.checked = val;
+    } else if (el.value !== val) {
+      el.value = val;
+    }
+  }
+
+  // 포커스 + 커서 위치 복원
+  if (snapshot.focusId) {
+    const focusEl = document.getElementById(snapshot.focusId);
+    if (focusEl) {
+      focusEl.focus();
+      if (typeof focusEl.setSelectionRange === 'function' && snapshot.selStart != null) {
+        try { focusEl.setSelectionRange(snapshot.selStart, snapshot.selEnd); } catch (e) { /* select 등 일부 타입에서 불가 */ }
+      }
+    }
+  }
+}
+
+/**
  * 전체 화면 렌더링 (상태 변경 시 호출)
  */
 function renderStatic() {
+  // ── 범용 입력 보호: #root innerHTML 교체 전 모든 입력값 + 포커스 스냅샷 ──
+  const _inputSnapshot = _snapshotInputs();
+
   const now = new Date();
   const hour = now.getHours();
   const filteredTasks = getFilteredTasks();
@@ -2795,6 +2866,9 @@ function renderStatic() {
 
   // 입력 이벤트 핸들러 등록
   setupInputHandlers();
+
+  // ── 범용 입력 복원 ──
+  _restoreInputs(_inputSnapshot);
 }
 
 /**
