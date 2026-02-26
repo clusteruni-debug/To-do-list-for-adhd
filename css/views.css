@@ -15,6 +15,69 @@
       color: #888;
     }
 
+    /* 할일 서브뷰 탭 */
+    .all-sub-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .all-sub-tab {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .all-sub-tab:hover {
+      color: var(--text-primary);
+      background: var(--bg-tertiary);
+    }
+
+    .all-sub-tab.active {
+      background: var(--accent-primary);
+      color: white;
+      font-weight: 600;
+    }
+
+    .all-sub-tab-count {
+      font-size: 12px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .all-sub-tab:not(.active) .all-sub-tab-count {
+      background: var(--bg-tertiary);
+    }
+
+    .all-sub-tab-count.has-items {
+      background: rgba(245, 87, 108, 0.2);
+      color: var(--accent-danger);
+    }
+
+    .all-sub-tab.active .all-sub-tab-count.has-items {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
     .all-category-section {
       background: var(--bg-secondary);
       border-radius: 12px;

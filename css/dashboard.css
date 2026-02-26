@@ -103,6 +103,36 @@
       flex-shrink: 0;
     }
 
+    /* ── 섹션별 색상 차별화 ── */
+    .dashboard-section {
+      border-left: 3px solid transparent;
+      transition: border-color 0.2s;
+    }
+
+    .dashboard-section.revenue-dashboard {
+      border-left-color: var(--cat-부업);
+      background: linear-gradient(135deg, var(--bg-secondary), rgba(240, 147, 251, 0.03));
+    }
+
+    .dashboard-section.life-rhythm-stats {
+      border-left-color: var(--accent-primary);
+      background: linear-gradient(135deg, var(--bg-secondary), rgba(102, 126, 234, 0.03));
+    }
+
+    .dashboard-section.weekly-report {
+      border-left-color: var(--accent-success);
+      background: linear-gradient(135deg, var(--bg-secondary), rgba(72, 187, 120, 0.03));
+    }
+
+    .dashboard-section.habit-tracker {
+      border-left-color: var(--accent-warning);
+      background: linear-gradient(135deg, var(--bg-secondary), rgba(246, 173, 85, 0.03));
+    }
+
+    .dashboard-section.insights-section {
+      border-left-color: #764ba2;
+    }
+
     /* 데이터 인사이트 섹션 */
     .insights-section {
       background: var(--bg-secondary);

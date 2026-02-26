@@ -29,4 +29,5 @@
 @import url('events.css');
 @import url('history.css');
 @import url('responsive.css');
+@import url('command-palette.css');
 @import url('typography-override.css');

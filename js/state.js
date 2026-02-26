@@ -431,6 +431,7 @@ const appState = {
     lastReminderDate: null,           // 마지막 월요일 리마인더 날짜
     dismissed: false                  // 이번 주 리마인더 닫음 여부
   },
+  allTasksSubView: 'all',              // 할일 서브뷰: all/today/upcoming/inbox
   quickFilter: null,                  // 퀵 필터: null, '2min', '5min', 'urgent'
   pendingTimeInput: null,             // 실제 소요시간 입력 대기 중인 작업
   // 본업 프로젝트 관리
