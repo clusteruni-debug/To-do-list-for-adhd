@@ -24,16 +24,40 @@
     /* 빈 상태 개선 */
     .empty-state-enhanced {
       text-align: center;
-      padding: 50px 30px;
-      background: linear-gradient(135deg, rgba(72, 187, 120, 0.1), rgba(56, 161, 105, 0.05));
-      border-radius: 20px;
-      border: 2px dashed rgba(72, 187, 120, 0.3);
+      padding: 60px 30px;
+      background: linear-gradient(135deg, rgba(72, 187, 120, 0.08), rgba(102, 126, 234, 0.05));
+      border-radius: 24px;
+      border: 2px dashed rgba(72, 187, 120, 0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .empty-state-enhanced::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(72, 187, 120, 0.06) 0%, transparent 70%);
+      animation: empty-glow 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes empty-glow {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
     }
 
     .empty-state-icon-large {
       font-size: 80px;
       margin-bottom: 20px;
-      animation: float 3s ease-in-out infinite;
+      animation: float 3s ease-in-out infinite, empty-icon-entrance 0.6s var(--ease-out-expo, ease-out);
+    }
+
+    @keyframes empty-icon-entrance {
+      0% { transform: translateY(20px) scale(0.5); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
     }
 
     @keyframes float {
@@ -85,6 +109,41 @@
       background: linear-gradient(135deg, #48bb78, #38a169);
       border: none;
       color: white;
+    }
+
+    /* TodoistZero 축하 스타일 */
+    .todoist-zero .empty-state-title {
+      font-size: 28px;
+      background: linear-gradient(135deg, #48bb78, #667eea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .zero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin: 20px 0;
+    }
+
+    .zero-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .zero-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .zero-stat-label {
+      font-size: 14px;
+      color: var(--text-muted);
     }
 
     .empty-state {
@@ -266,20 +325,81 @@
       background: rgba(102, 126, 234, 0.1);
     }
 
-    /* 완료 시 슬라이드 아웃 */
-    @keyframes slide-out-complete {
+    /* 완료 시 3단계 마이크로인터랙션 */
+    /* Stage 1: 체크 원 채우기 (200ms) */
+    @keyframes check-circle-fill {
       0% {
-        opacity: 1;
-        transform: translateX(0);
+        background: transparent;
+        border-color: var(--text-muted);
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
       }
       100% {
-        opacity: 0;
-        transform: translateX(100%);
+        background: var(--accent-success);
+        border-color: var(--accent-success);
+        transform: scale(1);
+        color: white;
       }
     }
 
+    /* Stage 2: 텍스트 취소선 + 투명도 (150ms) */
+    @keyframes text-strikethrough {
+      0% {
+        text-decoration-color: transparent;
+        opacity: 1;
+      }
+      100% {
+        text-decoration: line-through;
+        text-decoration-color: var(--text-muted);
+        opacity: 0.5;
+        color: var(--text-muted);
+      }
+    }
+
+    /* Stage 3: 높이 축소 + 슬라이드 아웃 (300ms) */
+    @keyframes task-collapse {
+      0% {
+        opacity: 0.5;
+        max-height: 200px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+        margin-bottom: var(--task-gap);
+        transform: translateX(0);
+      }
+      60% {
+        opacity: 0.2;
+        transform: translateX(30px);
+      }
+      100% {
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        transform: translateX(60px);
+        overflow: hidden;
+      }
+    }
+
+    /* 완료 애니메이션 트리거 클래스 */
     .task-item.completing {
-      animation: slide-out-complete 0.4s ease-out forwards;
+      pointer-events: none;
+    }
+
+    .task-item.completing .btn-small.complete,
+    .task-item.completing .task-check-btn {
+      animation: check-circle-fill 0.2s var(--ease-out-expo, ease-out) forwards;
+    }
+
+    .task-item.completing .task-item-title,
+    .task-item.completing .task-item-header {
+      animation: text-strikethrough 0.15s ease-out 0.2s forwards;
+    }
+
+    .task-item.completing {
+      animation: task-collapse 0.3s var(--ease-out-expo, ease-out) 0.35s forwards;
     }
 
     /* 성취 뱃지 팝업 */

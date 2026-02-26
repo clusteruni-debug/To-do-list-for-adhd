@@ -1,0 +1,237 @@
+/* work-tasks.css - 본업 작업 아이템, 로그, 액션, 복사 버튼 (work.css에서 분리) */
+    .work-task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .work-task-item {
+      background: var(--bg-primary);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-task-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .work-task-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .work-task-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-task-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .work-task-title {
+      flex: 1;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-task-title:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-task-title.completed {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .work-task-deadline {
+      font-size: 14px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 2px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .work-task-deadline.soon {
+      color: #e67e22;
+      background: rgba(230, 126, 34, 0.1);
+    }
+
+    .work-task-deadline.overdue {
+      color: var(--danger);
+      background: rgba(245, 87, 108, 0.1);
+    }
+
+    .work-task-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .work-task-action {
+      padding: 6px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .work-task-action:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* 진행 로그 */
+    .work-task-logs {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .work-task-log {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .work-task-log:last-child {
+      border-bottom: none;
+    }
+
+    .work-task-log-date {
+      color: #667eea;
+      font-weight: 500;
+      white-space: nowrap;
+      min-width: 70px;
+    }
+
+    .work-task-log-content {
+      flex: 1;
+      color: var(--text-primary);
+    }
+
+    .work-task-log-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .work-task-log-action {
+      padding: 2px 6px;
+      background: transparent;
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      min-height: 36px;
+      min-width: 36px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .work-task-log-action:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-log-add {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-log-add input {
+      flex: 1;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-size: 15px;
+    }
+
+    .work-log-add input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .work-log-add button {
+      padding: 8px 14px;
+      background: #667eea;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    /* 복사 버튼 */
+    .work-copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: transform 0.2s;
+    }
+
+    .work-copy-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .work-copy-btn.copied {
+      background: #48bb78;
+    }
+
+    /* 빈 상태 */
+    .work-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .work-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .work-empty-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .work-empty-desc {
+      font-size: 16px;
+      margin-bottom: 20px;
+    }

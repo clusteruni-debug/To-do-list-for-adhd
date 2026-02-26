@@ -1,0 +1,367 @@
+/* work-project.css - 프로젝트 카드, 상세, 단계, 상태 뱃지 (work.css에서 분리) */
+    .work-project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 상태 뱃지 */
+    .work-status-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .work-status-badge.not-started {
+      background: rgba(160, 160, 160, 0.2);
+      color: #a0a0a0;
+    }
+
+    .work-status-badge.in-progress {
+      background: rgba(102, 126, 234, 0.2);
+      color: #667eea;
+    }
+
+    .work-status-badge.completed {
+      background: rgba(72, 187, 120, 0.2);
+      color: #48bb78;
+    }
+
+    .work-status-badge.blocked {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 중분류 스타일 */
+    .work-subcategory {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-subcategory-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .work-subcategory-title {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 중분류 체크박스 */
+    .work-subcategory-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border-color);
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-subcategory-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-subcategory-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    .work-subcategory-name {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .work-subcategory-name:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .work-subcategory-toggle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-subcategory-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* 단계 체크박스 */
+    .work-stage-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .work-stage-checkbox:hover {
+      border-color: #667eea;
+    }
+
+    .work-stage-checkbox.checked {
+      background: #48bb78;
+      border-color: #48bb78;
+      color: white;
+    }
+
+    /* 마감일 표시 */
+    .work-deadline {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 10px;
+      background: rgba(102, 126, 234, 0.15);
+      color: #667eea;
+      cursor: pointer;
+    }
+
+    .work-deadline.overdue {
+      background: rgba(245, 87, 108, 0.15);
+      color: #f5576c;
+    }
+
+    .work-deadline.soon {
+      background: rgba(255, 149, 0, 0.15);
+      color: #ff9500;
+    }
+
+    .work-deadline.none {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      border: 1px dashed var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .work-date-range {
+      font-size: 15px;
+      color: var(--text-secondary);
+    }
+
+    .work-schedule {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .work-project-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      overflow: hidden;
+      transition: box-shadow 0.2s, border-color var(--transition-normal);
+    }
+
+    .work-project-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-color: rgba(148, 163, 184, 0.15);
+    }
+
+    .work-project-card.active {
+      border-color: #667eea;
+      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .work-project-header {
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .work-project-info {
+      flex: 1;
+    }
+
+    .work-project-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .work-project-stage {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-project-stage-label {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .work-project-stage-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .work-project-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .work-project-progress-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .work-project-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+
+    .work-project-progress-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .work-project-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .work-project-action-btn {
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .work-project-action-btn:hover {
+      background: var(--border-color);
+    }
+
+    .work-project-action-btn.delete:hover {
+      background: rgba(245, 87, 108, 0.2);
+      color: #f5576c;
+    }
+
+    /* 프로젝트 상세 (단계별 체크리스트) */
+    .work-project-detail {
+      border-top: 1px solid var(--border-color);
+      padding: 16px;
+      background: var(--bg-tertiary);
+    }
+
+    .work-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .work-stage {
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .work-stage.current {
+      border-color: #667eea;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    }
+
+    .work-stage.completed {
+      opacity: 0.7;
+    }
+
+    .work-stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .work-stage-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .work-stage-number {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-tertiary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .work-stage.current .work-stage-number {
+      background: #667eea;
+      color: white;
+    }
+
+    .work-stage.completed .work-stage-number {
+      background: #48bb78;
+      color: white;
+    }
+
+    .work-stage-add-task {
+      padding: 4px 10px;
+      background: transparent;
+      border: 1px dashed var(--border-color);
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .work-stage-add-task:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }

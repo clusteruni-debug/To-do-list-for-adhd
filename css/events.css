@@ -1,0 +1,636 @@
+/* events.css - 이벤트 뷰, 텔레그램 연동, 일괄 선택, 버튼 변형 (views.css에서 분리) */
+    /* 부업 이벤트 탭 스타일 */
+    .events-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-light);
+      flex-wrap: wrap;
+    }
+
+    .events-header .btn {
+      width: auto !important;
+      margin-bottom: 0 !important;
+      padding: 12px 20px !important;
+      font-size: 16px !important;
+    }
+
+    .events-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    /* 텔레그램 연동 상태 */
+    .telegram-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      min-height: 44px;
+    }
+
+    .telegram-status:hover {
+      background: var(--bg-secondary);
+      border-color: var(--text-tertiary);
+    }
+
+    .telegram-status:active {
+      transform: scale(0.97);
+    }
+
+    .telegram-status.connected {
+      background: rgba(72, 187, 120, 0.15);
+      border-color: #48bb78;
+      color: #48bb78;
+    }
+
+    .telegram-status.connected:hover {
+      background: rgba(72, 187, 120, 0.25);
+    }
+
+    .telegram-icon {
+      font-size: 16px;
+    }
+
+    /* 텔레그램 이벤트 목록 모달 */
+    .tg-events-list {
+      max-height: 400px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tg-event-item {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      transition: border-color 0.2s;
+    }
+
+    .tg-event-item:has(input:checked) {
+      border-color: var(--accent-blue);
+      background: rgba(74, 158, 255, 0.08);
+    }
+
+    .tg-event-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .tg-event-check {
+      flex-shrink: 0;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    .tg-event-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tg-event-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-break: break-word;
+      font-size: 16px;
+    }
+
+    .tg-event-meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+    }
+
+    .tg-event-expand {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+    .tg-event-expand:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .tg-event-detail {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .tg-event-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .tg-event-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .tg-select-all {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .tg-select-all:hover {
+      background: var(--bg-tertiary);
+    }
+
+    /* 이벤트 빠른 추가 */
+    .events-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .events-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .events-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .events-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-pink);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .events-quick-btn:hover {
+      transform: scale(1.05);
+    }
+
+    .events-detail-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .events-detail-btn:hover {
+      background: var(--bg-secondary);
+    }
+
+    .events-section {
+      margin-bottom: 28px;
+    }
+
+    .events-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      padding: 8px 0;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .events-section.submitted .events-section-title {
+      color: #48bb78;
+    }
+
+    .events-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .events-list.collapsed {
+      display: none;
+    }
+
+    .event-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      transition: all var(--transition-normal);
+      box-shadow: 0 1px 4px var(--shadow-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .event-card:hover {
+      border-color: rgba(102, 126, 234, 0.5);
+      box-shadow: 0 2px 8px var(--shadow-color);
+    }
+
+    .event-card.urgent {
+      border-left: 4px solid #f5576c;
+      background: linear-gradient(90deg, rgba(245,87,108,0.08) 0%, transparent 30%);
+    }
+
+    .event-card.warning {
+      border-left: 4px solid #ff9500;
+      background: linear-gradient(90deg, rgba(255,149,0,0.08) 0%, transparent 30%);
+    }
+
+    .event-card.completed {
+      opacity: 0.6;
+      background: #151515;
+    }
+
+    .event-card-header {
+      display: none;
+    }
+
+    .event-title {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .event-compact-date {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .event-completed-date {
+      font-size: 14px;
+      color: var(--success);
+      white-space: nowrap;
+      flex-shrink: 0;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .event-completed-date:hover {
+      background: rgba(72, 187, 120, 0.15);
+    }
+
+    .event-card-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .event-meta-info {
+      font-size: 14px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .event-description {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.3;
+    }
+
+    .events-group {
+      margin-bottom: 16px;
+    }
+
+    .events-group-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .events-group-header:hover {
+      color: var(--text-primary);
+    }
+    .events-group-header .toggle-icon {
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    .event-tg-badge {
+      margin-right: 4px;
+      font-size: 14px;
+    }
+
+    .event-tg-synced {
+      font-size: 14px;
+      color: #48bb78;
+      background: rgba(72, 187, 120, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* 이벤트 일괄 선택 */
+    .event-bulk-select-btn {
+      padding: 6px 14px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .event-bulk-select-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .event-bulk-select-btn.active {
+      background: var(--accent-primary);
+      color: white;
+      border-color: var(--accent-primary);
+    }
+    .event-bulk-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .event-bulk-actions button {
+      padding: 6px 14px;
+      font-size: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      min-height: 44px;
+      min-width: 44px;
+    }
+    .event-bulk-actions .bulk-delete-btn {
+      background: #f5576c;
+      color: white;
+      border-color: #f5576c;
+    }
+    .event-bulk-actions .bulk-delete-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .event-bulk-actions .bulk-cancel-btn:hover {
+      background: var(--bg-secondary);
+    }
+    .event-bulk-count {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+    .event-check-col {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .event-check-col input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      accent-color: var(--accent-primary);
+    }
+
+    .event-dday {
+      font-size: 14px;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--bg-tertiary);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .event-card.urgent .event-dday {
+      background: #f5576c;
+      color: white;
+    }
+
+    .event-card.warning .event-dday {
+      background: #ff9500;
+      color: white;
+    }
+
+    .event-meta {
+      display: none;
+    }
+
+    .event-meta-divider {
+      color: #444;
+    }
+
+    .event-tag {
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--bg-tertiary);
+    }
+
+    .event-tag.organizer {
+      background: #667eea22;
+      color: #99aaff;
+      border: 1px solid #667eea44;
+    }
+
+    .event-tag.type {
+      background: #f093fb22;
+      color: #f5b8ff;
+      border: 1px solid #f093fb44;
+    }
+
+    .event-date {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      padding-top: 0;
+    }
+
+    /* 버튼 변형 - CSS 변수 사용 (통일) */
+    .btn-link {
+      background: transparent;
+      color: var(--accent-primary);
+      text-decoration: none;
+      border: 1px solid rgba(102, 126, 234, 0.27);
+    }
+
+    .btn-link:hover {
+      background: rgba(102, 126, 234, 0.13);
+    }
+
+    .btn-submit {
+      background: var(--accent-success);
+      color: white;
+    }
+
+    .btn-submit:hover {
+      filter: brightness(0.9);
+      transform: scale(1.02);
+    }
+
+    .btn-edit {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 8px 10px;
+    }
+
+    .btn-edit:hover {
+      color: var(--text-primary);
+    }
+
+    .btn-undo {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-undo:hover {
+      border-color: var(--accent-warning);
+      color: var(--accent-warning);
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-delete:hover {
+      color: var(--accent-danger);
+    }
+
+    .events-empty {
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(180deg, #1a1a1a 0%, #151515 100%);
+      border-radius: 16px;
+      border: 1px solid #2a2a2a;
+    }
+
+    .events-empty-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
+
+    .events-empty-text {
+      color: var(--text-muted);
+      font-size: 17px;
+    }
+
+    .events-summary {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+    }
+
+    .events-summary-item {
+      text-align: center;
+    }
+
+    .events-summary-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .events-summary-label {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* PC에서 이벤트 카드 그리드 */
+    @media (min-width: 1024px) {
+      .events-list {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+
+      .events-header {
+        margin-bottom: 28px;
+      }
+
+      .events-title {
+        font-size: 26px;
+      }
+    }

@@ -1,0 +1,94 @@
+/* habits.css - 습관 트래커, 일일 목표 스타일 (tasks.css에서 분리) */
+    /* 습관 트래커 (잔디 그리드) */
+    .habit-tracker {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .habit-tracker-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .habit-grid {
+      display: grid;
+      grid-template-columns: 24px repeat(12, 1fr);
+      gap: 3px;
+      font-size: 14px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .habit-day-label {
+      color: var(--text-muted);
+      font-size: 14px;
+      text-align: right;
+      padding-right: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      white-space: nowrap;
+    }
+
+    .habit-cell {
+      aspect-ratio: 1;
+      min-width: 14px;
+      max-width: 28px;
+      background: var(--bg-tertiary);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .habit-cell:hover {
+      transform: scale(1.2);
+    }
+
+    .habit-cell.level-1 {
+      background: rgba(72, 187, 120, 0.3);
+    }
+
+    .habit-cell.level-2 {
+      background: rgba(72, 187, 120, 0.5);
+    }
+
+    .habit-cell.level-3 {
+      background: rgba(72, 187, 120, 0.7);
+    }
+
+    .habit-cell.level-4 {
+      background: #48bb78;
+    }
+
+    .habit-cell.today {
+      outline: 2px solid #667eea;
+      outline-offset: 1px;
+    }
+
+    .habit-legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .habit-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .habit-legend-cell {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }

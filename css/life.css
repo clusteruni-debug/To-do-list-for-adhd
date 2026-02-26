@@ -1,0 +1,210 @@
+/* life.css - 일상/가족 탭 스타일 (work.css에서 분리) */
+    /* 일상/가족 탭 스타일 */
+    .life-header {
+      margin-bottom: 16px;
+    }
+
+    .life-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .life-quick-add {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-quick-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+
+    .life-quick-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .life-quick-btn {
+      width: 40px;
+      height: 40px;
+      background: #48bb78;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .life-summary {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .life-summary-item {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .life-summary-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+
+    .life-summary-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .life-section {
+      margin-bottom: 20px;
+    }
+
+    .life-section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .life-section-header .life-section-title {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .life-reset-btn {
+      font-size: 14px;
+      padding: 4px 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .life-reset-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .life-all-done {
+      padding: 16px;
+      text-align: center;
+      color: var(--success);
+      font-size: 15px;
+      background: rgba(72, 187, 120, 0.1);
+      border-radius: 8px;
+    }
+
+    .life-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .life-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--task-cat-color, var(--border-color));
+    }
+
+    .life-item-content {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .life-item-title {
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+
+    .life-item-meta {
+      font-size: 14px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    .life-item-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0.5;
+      transition: opacity 0.2s;
+    }
+
+    .life-item:hover .life-item-actions {
+      opacity: 1;
+    }
+
+    .life-action-btn {
+      width: 32px;
+      height: 32px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .life-action-btn:hover {
+      background: var(--bg-secondary);
+      transform: scale(1.05);
+    }
+
+    .life-action-btn.delete:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+    }
+
+    .life-empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    .life-empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .life-empty-text {
+      font-size: 16px;
+    }

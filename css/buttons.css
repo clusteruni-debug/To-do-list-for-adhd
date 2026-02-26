@@ -1,0 +1,131 @@
+/* buttons.css - 버튼 시스템 (tasks.css에서 분리) */
+    /* 버튼 시스템 - 통일된 스타일 */
+    .btn {
+      padding: var(--space-2) var(--space-3);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: var(--space-2);
+      transition: transform var(--transition-fast), opacity var(--transition-fast), box-shadow var(--transition-fast);
+      user-select: none;
+      letter-spacing: -0.01em;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, #764ba2 100%);
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--accent-success);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-success:hover {
+      filter: brightness(0.9);
+    }
+
+    .btn-warning {
+      background: var(--accent-warning);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-warning:hover {
+      filter: brightness(0.9);
+    }
+
+    .btn-danger {
+      background: var(--accent-danger);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-danger:hover {
+      filter: brightness(0.9);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-color);
+    }
+
+    .btn-small {
+      padding: var(--space-1) 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      cursor: pointer;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      transition: transform var(--transition-fast), filter var(--transition-fast);
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-small:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-small:active {
+      transform: scale(0.95);
+    }
+
+    .btn-small.delete {
+      background: var(--accent-danger);
+      color: white;
+    }
+
+    .btn-small.go {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .btn-small.complete {
+      background: var(--accent-success);
+      color: white;
+    }
+
+    .btn-small.uncomplete {
+      background: var(--accent-warning);
+      color: white;
+    }
+
+    .btn-small.edit {
+      background: var(--accent-primary);
+      color: white;
+    }
+
+    .btn-small.copy {
+      background: var(--cat-부업);
+      color: white;
+    }
+
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 18px;
+    }
