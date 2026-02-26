@@ -386,7 +386,7 @@ function renderWorkProjects() {
             proj.stages.forEach(function(stage) {
               (stage.subcategories || []).forEach(function(sub) {
                 sub.tasks.forEach(function(task) {
-                  if (task.deadline && task.status !== 'done') {
+                  if (task.deadline && task.status !== 'completed') {
                     var tDate = new Date(task.deadline);
                     var tDays = Math.round((tDate - rangeStart) / (1000 * 60 * 60 * 24));
                     var tPct = (tDays / totalDays) * 100;
@@ -481,15 +481,29 @@ function renderWorkProjects() {
 
           var deadlineMap = {};
           appState.workProjects.filter(function(p) { return !p.archived; }).forEach(function(p, pIdx) {
+            var pColor = projectColors[pIdx % projectColors.length];
             if (p.deadline) {
               var pdStr = p.deadline.substring(0, 10);
               if (!deadlineMap[pdStr]) deadlineMap[pdStr] = [];
-              deadlineMap[pdStr].push({ title: p.name + ' (마감)', project: p.name, status: 'project', color: projectColors[pIdx % projectColors.length] });
+              deadlineMap[pdStr].push({ title: p.name + ' (마감)', project: p.name, status: 'project', color: pColor });
             }
-            p.stages.forEach(function(stage) {
+            p.stages.forEach(function(stage, si) {
+              // 단계 마감일
+              if (stage.deadline && !stage.completed) {
+                var sdStr = stage.deadline.substring(0, 10);
+                if (!deadlineMap[sdStr]) deadlineMap[sdStr] = [];
+                var sName = (p.stageNames && p.stageNames[si]) || stage.name || ((si+1) + '단계');
+                deadlineMap[sdStr].push({ title: sName + ' (단계)', project: p.name, status: 'stage', color: pColor });
+              }
               (stage.subcategories || []).forEach(function(sub) {
+                // 중분류 마감일
+                if (sub.endDate) {
+                  var scStr = sub.endDate.substring(0, 10);
+                  if (!deadlineMap[scStr]) deadlineMap[scStr] = [];
+                  deadlineMap[scStr].push({ title: sub.name + ' (중분류)', project: p.name, status: 'subcategory', color: pColor });
+                }
                 sub.tasks.forEach(function(task) {
-                  if (task.deadline && task.status !== 'done') {
+                  if (task.deadline && task.status !== 'completed') {
                     var dateStr = task.deadline.substring(0, 10);
                     if (!deadlineMap[dateStr]) deadlineMap[dateStr] = [];
                     deadlineMap[dateStr].push({ title: task.title, project: p.name, status: task.status });
@@ -565,67 +579,155 @@ function renderWorkProjects() {
         })()}
       ` : ''}
       ${appState.workView === 'timeline' ? `
-        <!-- 이력 뷰 -->
+        <!-- 이력 뷰 (프로젝트 이력 / 활동 이력) -->
         ${(() => {
-          // 모든 프로젝트의 최근 로그 수집
-          const allLogs = [];
-          appState.workProjects.filter(p => !p.archived).forEach(p => {
-            p.stages.forEach((stage, si) => {
-              (stage.subcategories || []).forEach((sub, sci) => {
-                sub.tasks.forEach((task, ti) => {
-                  (task.logs || []).forEach(log => {
-                    allLogs.push({
-                      date: log.date,
-                      content: log.content,
-                      taskTitle: task.title,
-                      projectName: p.name,
-                      projectId: p.id,
-                      status: task.status
+          const timelineTab = appState.workTimelineTab || 'project';
+
+          // === 프로젝트 단위 이력 ===
+          let projectHistoryHtml = '';
+          if (timelineTab === 'project') {
+            const projects = appState.workProjects.filter(p => !p.archived);
+            if (projects.length === 0) {
+              projectHistoryHtml = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">프로젝트가 없습니다</div>';
+            } else {
+              projectHistoryHtml = projects.map(p => {
+                const totalTasks = p.stages.reduce((sum, s) => sum + (s.subcategories || []).reduce((ss, sub) => ss + sub.tasks.length, 0), 0);
+                const completedTasks = p.stages.reduce((sum, s) => sum + (s.subcategories || []).reduce((ss, sub) => ss + sub.tasks.filter(t => t.status === 'completed').length, 0), 0);
+                const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                const completedStages = p.stages.filter(s => s.completed).length;
+
+                // 날짜 포맷
+                const fmtDate = (d) => d ? (new Date(d).getMonth()+1) + '/' + new Date(d).getDate() : '';
+                const created = p.createdAt ? fmtDate(p.createdAt) : '-';
+                const deadline = p.deadline ? fmtDate(p.deadline) : '-';
+                const isComplete = p.stages.length > 0 && p.stages.every(s => s.completed);
+
+                return '<div style="background: var(--bg-secondary); border-radius: 12px; padding: 16px; margin-bottom: 12px; cursor: pointer;" onclick="selectWorkProject(\'' + escapeAttr(p.id) + '\'); setWorkView(\'detail\');">' +
+                  '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">' +
+                    '<span style="font-size: 16px; font-weight: 700; flex: 1;">' + (isComplete ? '✅ ' : '📁 ') + escapeHtml(p.name) + '</span>' +
+                    '<span style="font-size: 14px; color: var(--text-muted);">' + created + ' ~ ' + deadline + '</span>' +
+                  '</div>' +
+                  (p.description ? '<div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; white-space: pre-wrap;">' + escapeHtml(p.description) + '</div>' : '') +
+                  '<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">' +
+                    '<div style="flex: 1; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">' +
+                      '<div style="height: 100%; width: ' + progress + '%; background: ' + (isComplete ? '#48bb78' : '#667eea') + '; border-radius: 3px;"></div>' +
+                    '</div>' +
+                    '<span style="font-size: 13px; font-weight: 600; color: var(--text-muted);">' + progress + '%</span>' +
+                  '</div>' +
+                  '<div style="font-size: 13px; color: var(--text-muted); display: flex; gap: 12px;">' +
+                    '<span>📋 ' + completedTasks + '/' + totalTasks + ' 항목</span>' +
+                    '<span>✓ ' + completedStages + '/' + p.stages.length + ' 단계</span>' +
+                    (p.onHold ? '<span style="color: #f5576c;">⏸ 보류</span>' : '') +
+                  '</div>' +
+                '</div>';
+              }).join('');
+
+              // 아카이브 프로젝트
+              const archived = appState.workProjects.filter(p => p.archived);
+              if (archived.length > 0) {
+                projectHistoryHtml += '<div style="margin-top: 16px;">' +
+                  '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; cursor: pointer;" onclick="appState.showArchivedTimeline=!appState.showArchivedTimeline; renderStatic();">' +
+                    (appState.showArchivedTimeline ? '▼' : '▶') + ' 📦 아카이브 (' + archived.length + ')' +
+                  '</div>';
+                if (appState.showArchivedTimeline) {
+                  projectHistoryHtml += archived.map(p => {
+                    const fmtDate = (d) => d ? (new Date(d).getMonth()+1) + '/' + new Date(d).getDate() : '';
+                    return '<div style="background: var(--bg-tertiary); border-radius: 8px; padding: 12px; margin-bottom: 8px; opacity: 0.7;">' +
+                      '<span style="font-weight: 600;">📦 ' + escapeHtml(p.name) + '</span>' +
+                      '<span style="font-size: 13px; color: var(--text-muted); margin-left: 8px;">' + fmtDate(p.createdAt) + ' ~ ' + (p.deadline ? fmtDate(p.deadline) : '-') + '</span>' +
+                    '</div>';
+                  }).join('');
+                }
+                projectHistoryHtml += '</div>';
+              }
+            }
+          }
+
+          // === 활동 단위 이력 ===
+          let activityHistoryHtml = '';
+          if (timelineTab === 'activity') {
+            const allLogs = [];
+            appState.workProjects.filter(p => !p.archived).forEach(p => {
+              p.stages.forEach((stage, si) => {
+                (stage.subcategories || []).forEach((sub, sci) => {
+                  sub.tasks.forEach((task, ti) => {
+                    (task.logs || []).forEach(log => {
+                      allLogs.push({
+                        date: log.date,
+                        content: log.content,
+                        taskTitle: task.title,
+                        projectName: p.name,
+                        projectId: p.id,
+                        status: task.status
+                      });
                     });
                   });
                 });
               });
             });
-          });
 
-          // 완료된 일반 본업 작업
-          const completedWork = appState.tasks.filter(t => t.category === '본업' && t.completed && t.completedAt).map(t => ({
-            date: t.completedAt.substring(0, 10),
-            content: '✓ 완료',
-            taskTitle: t.title,
-            projectName: '일반',
-            projectId: null,
-            status: 'completed'
-          }));
+            // 완료된 일반 본업 작업
+            const completedWork = appState.tasks.filter(t => t.category === '본업' && t.completed && t.completedAt).map(t => ({
+              date: t.completedAt.substring(0, 10),
+              content: '✓ 완료',
+              taskTitle: t.title,
+              projectName: '일반',
+              projectId: null,
+              status: 'completed'
+            }));
 
-          allLogs.push(...completedWork);
-          allLogs.sort((a, b) => b.date.localeCompare(a.date));
+            allLogs.push(...completedWork);
+            allLogs.sort((a, b) => b.date.localeCompare(a.date));
 
-          // 날짜별 그룹핑
-          const byDate = {};
-          allLogs.forEach(log => {
-            if (!byDate[log.date]) byDate[log.date] = [];
-            byDate[log.date].push(log);
-          });
-          const dates = Object.keys(byDate).sort().reverse().slice(0, 30);
+            // 날짜별 그룹핑
+            const byDate = {};
+            allLogs.forEach(log => {
+              if (!byDate[log.date]) byDate[log.date] = [];
+              byDate[log.date].push(log);
+            });
+            const dates = Object.keys(byDate).sort().reverse();
 
-          if (dates.length === 0) return '<div style="text-align: center; padding: 40px; color: var(--text-muted);">아직 기록이 없습니다</div>';
+            // 페이지네이션
+            const page = appState.workTimelinePage || 0;
+            const perPage = 7;
+            const pagedDates = dates.slice(page * perPage, (page + 1) * perPage);
+            const totalPages = Math.ceil(dates.length / perPage);
+
+            if (dates.length === 0) {
+              activityHistoryHtml = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">아직 기록이 없습니다</div>';
+            } else {
+              activityHistoryHtml = pagedDates.map(date =>
+                '<div style="margin-bottom: 16px;">' +
+                  '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">' + date + ' (' + byDate[date].length + '건)</div>' +
+                  byDate[date].map(log =>
+                    '<div style="padding: 6px 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">' +
+                      '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? '#48bb78' : log.status === 'in-progress' ? '#667eea' : '#a0a0a0') + '; flex-shrink: 0;"></span>' +
+                      '<span style="flex: 1; font-size: 15px;">' + escapeHtml(log.taskTitle) + '</span>' +
+                      '<span style="font-size: 14px; color: var(--text-secondary);">' + escapeHtml(log.content) + '</span>' +
+                      '<span style="font-size: 13px; color: var(--text-muted); background: var(--bg-secondary); padding: 1px 6px; border-radius: 4px;">' + escapeHtml(log.projectName) + '</span>' +
+                    '</div>'
+                  ).join('') +
+                '</div>'
+              ).join('');
+
+              // 페이지네이션 컨트롤
+              if (totalPages > 1) {
+                activityHistoryHtml += '<div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px;">' +
+                  (page > 0 ? '<button class="work-project-action-btn" onclick="appState.workTimelinePage=' + (page-1) + '; renderStatic();">◀ 이전</button>' : '') +
+                  '<span style="font-size: 14px; color: var(--text-muted); padding: 8px;">' + (page+1) + ' / ' + totalPages + '</span>' +
+                  (page < totalPages - 1 ? '<button class="work-project-action-btn" onclick="appState.workTimelinePage=' + (page+1) + '; renderStatic();">다음 ▶</button>' : '') +
+                '</div>';
+              }
+            }
+          }
 
           return '<div style="padding: 0 4px;">' +
-            '<div style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">📜 최근 활동 이력</div>' +
-            dates.map(date =>
-              '<div style="margin-bottom: 16px;">' +
-                '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">' + date + ' (' + byDate[date].length + '건)</div>' +
-                byDate[date].map(log =>
-                  '<div style="padding: 6px 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">' +
-                    '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? '#48bb78' : log.status === 'in-progress' ? '#667eea' : '#a0a0a0') + '; flex-shrink: 0;"></span>' +
-                    '<span style="flex: 1; font-size: 15px;">' + escapeHtml(log.taskTitle) + '</span>' +
-                    '<span style="font-size: 14px; color: var(--text-secondary);">' + escapeHtml(log.content) + '</span>' +
-                    '<span style="font-size: 15px; color: var(--text-muted); background: var(--bg-secondary); padding: 1px 6px; border-radius: 4px;">' + escapeHtml(log.projectName) + '</span>' +
-                  '</div>'
-                ).join('') +
-              '</div>'
-            ).join('') +
+            // 탭 전환
+            '<div style="display: flex; gap: 4px; margin-bottom: 16px; background: var(--bg-tertiary); border-radius: 8px; padding: 4px;">' +
+              '<button class="work-view-tab ' + (timelineTab === 'project' ? 'active' : '') + '" onclick="appState.workTimelineTab=\'project\'; renderStatic();" style="flex: 1;">📁 프로젝트 이력</button>' +
+              '<button class="work-view-tab ' + (timelineTab === 'activity' ? 'active' : '') + '" onclick="appState.workTimelineTab=\'activity\'; appState.workTimelinePage=0; renderStatic();" style="flex: 1;">📝 활동 이력</button>' +
+            '</div>' +
+            (timelineTab === 'project' ? projectHistoryHtml : activityHistoryHtml) +
           '</div>';
         })()}
       ` : ''}
@@ -820,10 +922,17 @@ function renderWorkProjectDetail(project) {
     <div class="work-project-detail">
       <!-- 프로젝트 헤더 -->
       <div class="work-projects-header">
-        <!-- 1줄: 프로젝트명 + 일정 + D-day -->
+        <!-- 1줄: 프로젝트명 + 수정 + 일정 + D-day -->
         <div class="work-project-info-row">
-          <div class="work-projects-title">${escapeHtml(project.name)}</div>
+          <div class="work-projects-title" onclick="renameWorkProject('${escapeAttr(project.id)}')" style="cursor: pointer;" title="클릭하여 프로젝트명 수정">${escapeHtml(project.name)} <span style="font-size: 14px; opacity: 0.5;">✏️</span></div>
           ${scheduleHtml}
+        </div>
+        <!-- 프로젝트 개요 -->
+        <div class="work-project-description" style="margin: 8px 0;">
+          ${project.description
+            ? '<div style="font-size: 14px; color: var(--text-secondary); padding: 8px 12px; background: var(--bg-tertiary); border-radius: 8px; cursor: pointer; white-space: pre-wrap;" onclick="editProjectDescription(\'${escapeAttr(project.id)}\')" title="클릭하여 개요 수정">' + escapeHtml(project.description) + '</div>'.replace("'${escapeAttr(project.id)}'", "'" + escapeAttr(project.id) + "'")
+            : '<button class="work-stage-add-task" style="font-size: 13px; opacity: 0.7;" onclick="editProjectDescription(\'' + escapeAttr(project.id) + '\')">+ 프로젝트 개요 추가</button>'
+          }
         </div>
         <!-- 진행률 바 -->
         <div class="work-project-progress">
@@ -832,14 +941,16 @@ function renderWorkProjectDetail(project) {
           </div>
           <span class="work-project-progress-text">${completedTasks}/${totalTasks} 항목 · ${completedStages}/${project.stages.length} 단계</span>
         </div>
-        <!-- 2줄: 액션 버튼 -->
+        <!-- 주요 액션 (1줄) -->
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="work-project-action-btn" onclick="copyProjectToSlack('${escapeAttr(project.id)}')" aria-label="슬랙에 복사">💬 슬랙복사</button>
           <button class="work-project-action-btn" onclick="duplicateWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 복제">📋 복제</button>
           <button class="work-project-action-btn" onclick="holdWorkProject('${escapeAttr(project.id)}')" aria-label="${project.onHold ? '프로젝트 재개' : '프로젝트 보류'}">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
-          <button class="work-project-action-btn" onclick="archiveWorkProject('${escapeAttr(project.id)}')" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
           <button class="work-project-action-btn" onclick="saveAsTemplate('${escapeAttr(project.id)}')" aria-label="템플릿으로 저장">💾 템플릿</button>
-          <button class="work-project-action-btn delete" onclick="deleteWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 삭제">${svgIcon('trash', 14)} 삭제</button>
+        </div>
+        <!-- 보조 액션 (2줄) -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+          <button class="work-project-action-btn" style="opacity: 0.7; font-size: 13px;" onclick="archiveWorkProject('${escapeAttr(project.id)}')" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
+          <button class="work-project-action-btn delete" style="opacity: 0.7; font-size: 13px;" onclick="deleteWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 삭제">${svgIcon('trash', 14)} 삭제</button>
         </div>
       </div>
 
@@ -898,6 +1009,7 @@ function renderWorkProjectDetail(project) {
                   })() : ''}
                 </div>
                 <div style="display: flex; gap: 6px;">
+                  <button class="work-stage-add-task" onclick="copyStageToSlack('${escapeAttr(project.id)}', ${stageIdx})" title="슬랙용 복사" aria-label="슬랙용 복사">💬</button>
                   <button class="work-stage-add-task" onclick="promptRenameStage('${escapeAttr(project.id)}', ${stageIdx}, '${escapeAttr(stageName)}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
                   <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', '${escapeAttr(project.id)}', ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
                   <button class="work-stage-add-task" onclick="deleteProjectStage('${escapeAttr(project.id)}', ${stageIdx})" title="단계 삭제" aria-label="단계 삭제" style="color: var(--danger);">${svgIcon('trash', 14)}</button>
@@ -910,9 +1022,9 @@ function renderWorkProjectDetail(project) {
                   <div class="work-subcategory">
                     <div class="work-subcategory-header">
                       <div class="work-subcategory-title">
-                        <div class="work-subcategory-checkbox ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? 'checked' : ''}"
+                        <div class="work-subcategory-checkbox ${(subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed')) || (subcat.tasks.length === 0 && subcat._completed) ? 'checked' : ''}"
                              onclick="toggleSubcategoryComplete('${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})">
-                          ${subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed') ? '✓' : ''}
+                          ${(subcat.tasks.length > 0 && subcat.tasks.every(t => t.status === 'completed')) || (subcat.tasks.length === 0 && subcat._completed) ? '✓' : ''}
                         </div>
                         <span class="work-subcategory-name" onclick="promptRenameSubcategory('${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx}, '${escapeAttr(subcat.name)}')" title="클릭하여 이름 변경">${escapeHtml(subcat.name)}</span>
                         <span class="work-subcategory-toggle">(${subcat.tasks.filter(t => t.status === 'completed').length}/${subcat.tasks.length})</span>
@@ -1155,6 +1267,42 @@ function copyStageToSlack(projectId, stageIdx) {
   });
 }
 window.copyStageToSlack = copyStageToSlack;
+
+/**
+ * 프로젝트 이름 변경
+ */
+function renameWorkProject(projectId) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+
+  const newName = prompt('프로젝트 이름:', project.name);
+  if (newName === null || !newName.trim()) return;
+
+  project.name = newName.trim();
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+  showToast('프로젝트 이름이 변경되었습니다', 'success');
+}
+window.renameWorkProject = renameWorkProject;
+
+/**
+ * 프로젝트 개요(설명) 편집
+ */
+function editProjectDescription(projectId) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+
+  const desc = prompt('프로젝트 개요:', project.description || '');
+  if (desc === null) return;
+
+  project.description = desc.trim() || '';
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+  showToast(desc.trim() ? '프로젝트 개요가 저장되었습니다' : '프로젝트 개요가 삭제되었습니다', 'success');
+}
+window.editProjectDescription = editProjectDescription;
 
 /**
  * 본업 프로젝트 개별 작업 슬랙 복사
@@ -2139,7 +2287,7 @@ function cycleWorkTaskStatus(projectId, stageIdx, subcatIdx, taskIdx) {
 
   // 완료로 변경 시 자동 로그
   if (task.status === 'completed') {
-    const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+    const today = getLocalDateStr();
     task.logs.push({ date: today, content: '✓ 완료' });
   }
 
@@ -2162,7 +2310,7 @@ function toggleWorkTaskComplete(projectId, stageIdx, subcatIdx, taskIdx) {
 
   // 완료로 변경 시 자동 로그
   if (!wasCompleted) {
-    const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+    const today = getLocalDateStr();
     task.logs.push({ date: today, content: '✓ 완료' });
   }
 
@@ -2181,14 +2329,22 @@ function toggleSubcategoryComplete(projectId, stageIdx, subcatIdx) {
   if (!project) return;
 
   const subcat = project.stages[stageIdx].subcategories[subcatIdx];
-  if (!subcat || subcat.tasks.length === 0) {
-    showToast('항목이 없습니다', 'warning');
+  if (!subcat) return;
+
+  // 빈 중분류도 완료 토글 가능
+  if (subcat.tasks.length === 0) {
+    // 빈 중분류 — 완료 상태 직접 토글
+    subcat._completed = !subcat._completed;
+    project.updatedAt = new Date().toISOString();
+    saveWorkProjects();
+    renderStatic();
+    showToast(subcat._completed ? '중분류 완료!' : '중분류 미완료로 변경', 'success');
     return;
   }
 
   // 모두 완료이면 → 전부 미시작, 아니면 → 전부 완료
   const allCompleted = subcat.tasks.every(t => t.status === 'completed');
-  const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+  const today = getLocalDateStr();
 
   subcat.tasks.forEach(task => {
     if (allCompleted) {
@@ -2232,7 +2388,7 @@ function addWorkLog(projectId, stageIdx, subcatIdx, taskIdx, content) {
   if (!project) return;
 
   const task = project.stages[stageIdx].subcategories[subcatIdx].tasks[taskIdx];
-  const today = new Date().toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
+  const today = getLocalDateStr();
 
   task.logs.push({
     date: today,

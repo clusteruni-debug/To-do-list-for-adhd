@@ -369,7 +369,7 @@ function renderCommuteDayView(direction, todayTrips, rhythm, routes) {
     html += '<div class="commute-route-info"><div class="commute-route-name">' + escapeHtml(r.name) + '</div>';
     if (r.description) html += '<div class="commute-route-desc">' + escapeHtml(r.description) + '</div>';
     html += '</div><span class="commute-route-time">' + r.expectedDuration + '분</span>';
-    html += '<div class="commute-route-actions"><button class="commute-route-action-btn" onclick="event.stopPropagation();openCommuteRouteModal(\'' + escapeAttr(r.id) + '\')" title="수정" aria-label="루트 수정">✏️</button></div></div>';
+    html += '<div class="commute-route-actions"><button class="commute-route-action-btn" onclick="event.stopPropagation();duplicateCommuteRoute(\'' + escapeAttr(r.id) + '\')" title="복사" aria-label="루트 복사">📋</button><button class="commute-route-action-btn" onclick="event.stopPropagation();openCommuteRouteModal(\'' + escapeAttr(r.id) + '\')" title="수정" aria-label="루트 수정">✏️</button></div></div>';
   });
   html += '</div>';
 
@@ -433,6 +433,8 @@ function renderCommuteHistoryView() {
       html += '<span class="commute-history-route" style="color:' + escapeHtml(route?.color || '#999') + '">' + escapeHtml(route?.name || '-') + '</span>';
       html += '<span class="commute-history-times">' + depart + ' → ' + arrive + '</span>';
       html += '<span class="commute-history-dur">' + morning.duration + '분' + (condIcon ? ' ' + condIcon : '') + '</span>';
+      html += '<button class="commute-history-edit-btn" onclick="event.stopPropagation(); editCommuteTrip(\'' + escapeAttr(dateStr) + '\', \'morning\')" title="수정">✏️</button>';
+      html += '<button class="commute-history-edit-btn" onclick="event.stopPropagation(); deleteCommuteTrip(\'' + escapeAttr(dateStr) + '\', \'morning\')" title="삭제" style="color:var(--danger, #f5576c);">🗑️</button>';
       html += '</div>';
     }
 
@@ -446,6 +448,8 @@ function renderCommuteHistoryView() {
       html += '<span class="commute-history-route" style="color:' + escapeHtml(route?.color || '#999') + '">' + escapeHtml(route?.name || '-') + '</span>';
       html += '<span class="commute-history-times">' + depart + ' → ' + arrive + '</span>';
       html += '<span class="commute-history-dur">' + evening.duration + '분' + (condIcon ? ' ' + condIcon : '') + '</span>';
+      html += '<button class="commute-history-edit-btn" onclick="event.stopPropagation(); editCommuteTrip(\'' + escapeAttr(dateStr) + '\', \'evening\')" title="수정">✏️</button>';
+      html += '<button class="commute-history-edit-btn" onclick="event.stopPropagation(); deleteCommuteTrip(\'' + escapeAttr(dateStr) + '\', \'evening\')" title="삭제" style="color:var(--danger, #f5576c);">🗑️</button>';
       html += '</div>';
     }
 
@@ -526,3 +530,70 @@ function showCommuteOnboarding() {
   showToast('🚌 기본 루트 3개가 추가되었습니다', 'success');
 }
 window.showCommuteOnboarding = showCommuteOnboarding;
+
+// ============================================
+// 히스토리 수정/삭제 + 루트 복사
+// ============================================
+
+/**
+ * 통근 기록 삭제
+ */
+function deleteCommuteTrip(dateStr, direction) {
+  const dirLabel = direction === 'morning' ? '출근' : '퇴근';
+  if (!confirm(dateStr + ' ' + dirLabel + ' 기록을 삭제하시겠습니까?')) return;
+  if (appState.commuteTracker.trips[dateStr]) {
+    delete appState.commuteTracker.trips[dateStr][direction];
+    // 해당 날짜에 남은 기록이 없으면 날짜 자체 삭제
+    const remaining = appState.commuteTracker.trips[dateStr];
+    if (!remaining.morning && !remaining.evening) {
+      delete appState.commuteTracker.trips[dateStr];
+    }
+    saveCommuteTracker(); renderStatic();
+    showToast('🗑️ ' + dirLabel + ' 기록이 삭제되었습니다', 'success');
+  }
+}
+window.deleteCommuteTrip = deleteCommuteTrip;
+
+/**
+ * 통근 기록 수정 (루트 변경)
+ */
+function editCommuteTrip(dateStr, direction) {
+  const trip = appState.commuteTracker.trips[dateStr] && appState.commuteTracker.trips[dateStr][direction];
+  if (!trip) return;
+
+  const routes = appState.commuteTracker.routes.filter(r => r.isActive && (r.type === direction || r.type === 'both'));
+  if (routes.length === 0) { showToast('사용 가능한 루트가 없습니다', 'error'); return; }
+
+  const routeNames = routes.map((r, i) => (i + 1) + '. ' + r.name).join('\n');
+  const current = routes.findIndex(r => r.id === trip.routeId);
+  const choice = prompt('루트를 선택하세요:\n' + routeNames + '\n\n현재: ' + (current >= 0 ? routes[current].name : '없음'), current >= 0 ? current + 1 : 1);
+  if (choice === null) return;
+
+  const idx = parseInt(choice) - 1;
+  if (idx < 0 || idx >= routes.length) { showToast('잘못된 선택입니다', 'error'); return; }
+
+  trip.routeId = routes[idx].id;
+  saveCommuteTracker(); renderStatic();
+  showToast('✏️ 루트가 변경되었습니다: ' + routes[idx].name, 'success');
+}
+window.editCommuteTrip = editCommuteTrip;
+
+/**
+ * 통근 루트 복사 (동일 설정으로 새 루트 생성)
+ */
+function duplicateCommuteRoute(routeId) {
+  const route = appState.commuteTracker.routes.find(r => r.id === routeId);
+  if (!route) return;
+
+  const newRoute = {
+    ...route,
+    id: 'route-' + generateId(),
+    name: route.name + ' (복사)',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  appState.commuteTracker.routes.push(newRoute);
+  saveCommuteTracker(); renderStatic();
+  showToast('📋 루트가 복사되었습니다: ' + newRoute.name, 'success');
+}
+window.duplicateCommuteRoute = duplicateCommuteRoute;

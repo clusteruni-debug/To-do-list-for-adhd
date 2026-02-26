@@ -708,6 +708,8 @@
     .commute-history-route { font-weight: 600; width: 80px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .commute-history-times { flex: 1; font-family: 'SF Mono', Monaco, monospace; color: var(--text-secondary); }
     .commute-history-dur { font-weight: 600; color: var(--primary); white-space: nowrap; }
+    .commute-history-edit-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; opacity: 0.6; transition: opacity 0.15s; flex-shrink: 0; }
+    .commute-history-edit-btn:hover { opacity: 1; }
     .commute-stats-card { background: var(--bg-card); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
     .commute-stats-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
     .commute-stats-route-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }

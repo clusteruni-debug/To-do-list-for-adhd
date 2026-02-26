@@ -304,10 +304,13 @@ function renderStatic() {
         </div>
       </div>
 
-      <!-- 탭 네비게이션 (5개 + 더보기) -->
+      <!-- 탭 네비게이션 (6개 + 더보기) -->
       <div class="tab-nav" role="navigation" aria-label="탭 네비게이션">
         <button class="tab-btn ${appState.currentTab === 'action' ? 'active' : ''}" onclick="switchTab('action')" aria-label="오늘 탭">
           ${svgIcon('target')} 오늘
+        </button>
+        <button class="tab-btn ${appState.currentTab === 'all' ? 'active' : ''}" onclick="switchTab('all')" aria-label="할일 탭">
+          ${svgIcon('list')} 할일
         </button>
         <button class="tab-btn ${appState.currentTab === 'work' ? 'active' : ''}" onclick="switchTab('work')" aria-label="본업 탭">
           ${svgIcon('briefcase')} 본업
@@ -319,18 +322,15 @@ function renderStatic() {
           ${svgIcon('home')} 일상
         </button>
         <div class="tab-more-dropdown">
-          <button class="tab-btn ${['commute', 'dashboard', 'all', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
+          <button class="tab-btn ${['commute', 'dashboard', 'history'].includes(appState.currentTab) ? 'active' : ''}" onclick="toggleMoreMenu(event)" aria-label="더보기 메뉴" aria-expanded="${appState.moreMenuOpen}" aria-haspopup="true">
             ${svgIcon('menu')} 더보기 ▾
           </button>
           <div id="more-menu" class="more-menu ${appState.moreMenuOpen ? 'show' : ''}" role="menu">
-          <button class="more-menu-item ${appState.currentTab === 'commute' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('commute');" role="menuitem" aria-label="통근 탭">
-            ${svgIcon('bus')} 통근
-          </button>
+            <button class="more-menu-item ${appState.currentTab === 'commute' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('commute');" role="menuitem" aria-label="통근 탭">
+              ${svgIcon('bus')} 통근
+            </button>
             <button class="more-menu-item ${appState.currentTab === 'dashboard' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('dashboard');" role="menuitem" aria-label="통계 탭">
               ${svgIcon('bar-chart')} 통계
-            </button>
-            <button class="more-menu-item ${appState.currentTab === 'all' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('all');" role="menuitem" aria-label="전체 탭">
-              ${svgIcon('list')} 전체
             </button>
             <button class="more-menu-item ${appState.currentTab === 'history' ? 'active' : ''}" onclick="appState.moreMenuOpen = false; switchTab('history');" role="menuitem" aria-label="히스토리 탭">
               ${svgIcon('calendar')} 히스토리
@@ -458,14 +458,14 @@ function renderStatic() {
                             onclick="handleLifeRhythmClick('workArrive', ${rhythm.workArrive ? 'true' : 'false'}, event)"
                             title="${rhythm.workArrive ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                       <span class="life-rhythm-icon">🏢</span>
-                      <span class="life-rhythm-label">회사도착</span>
+                      <span class="life-rhythm-label">근무시작</span>
                       <span class="life-rhythm-time">${rhythm.workArrive || '--:--'}</span>
                     </button>
                     <button class="life-rhythm-btn ${rhythm.workDepart ? 'recorded' : ''}"
                             onclick="handleLifeRhythmClick('workDepart', ${rhythm.workDepart ? 'true' : 'false'}, event)"
                             title="${rhythm.workDepart ? '클릭: 수정/삭제' : '클릭: 현재시간 기록'}">
                       <span class="life-rhythm-icon">🚀</span>
-                      <span class="life-rhythm-label">회사출발</span>
+                      <span class="life-rhythm-label">근무종료</span>
                       <span class="life-rhythm-time">${rhythm.workDepart || '--:--'}</span>
                     </button>
                     <button class="life-rhythm-btn ${rhythm.homeArrive ? 'recorded' : ''}"
@@ -631,16 +631,10 @@ function renderStatic() {
               <button class="quick-add-btn" onclick="quickAdd()" aria-label="빠른 작업 추가">+</button>
             </div>
 
-            <!-- 빠른 추가 버튼 -->
+            <!-- 빠른 추가 버튼 (상세만 유지) -->
             <div class="quick-templates">
-              <button class="quick-template-btn" onclick="addFromTemplate('writing')" title="아티클/트윗 작성용 템플릿으로 빠르게 추가" aria-label="글쓰기 템플릿으로 추가">
-                ✍️ 글쓰기
-              </button>
               <button class="quick-template-btn secondary" onclick="toggleDetailedAdd()" title="카테고리, 마감일, 예상수익 등 상세 정보 입력" aria-label="상세 작업 추가">
                 📝 상세 추가
-              </button>
-              <button class="quick-template-btn secondary" onclick="showBrainDumpModal()" title="한 줄에 하나씩, 여러 작업을 한 번에 추가" aria-label="브레인 덤프">
-                🧠 덤프
               </button>
             </div>
 
@@ -1034,25 +1028,12 @@ function renderStatic() {
               })()}
             `}
 
-            ${hiddenCount > 0 ? `
-              <div class="hidden-tasks">
-                오늘 못 할 것 ${hiddenCount}개 숨김<br>
-                <span style="font-size: 14px">내일 하면 됩니다</span>
-              </div>
-            ` : ''}
-
-            <!-- 🍅 포모도로 타이머 -->
+            <!-- 🍅 포모도로 타이머 (진행 중일 때만 표시) -->
             ${(() => {
               const pomo = appState.pomodoro;
               const currentTask = pomo.currentTaskId ? appState.tasks.find(t => t.id === pomo.currentTaskId) : null;
               if (!pomo.isRunning && !pomo.isBreak && pomo.completedPomodoros === 0) {
-                return `
-                  <div class="pomodoro-section" style="margin-bottom: 12px;">
-                    <button class="btn btn-secondary" onclick="startPomodoro()" style="width: 100%; padding: 10px;" aria-label="포모도로 시작">
-                      🍅 포모도로 25분 집중 시작
-                    </button>
-                  </div>
-                `;
+                return ''; // 비활성 상태에서는 숨김
               }
               return `
                 <div class="pomodoro-section ${pomo.isRunning ? 'active' : ''} ${pomo.isBreak ? 'break' : ''}" style="margin-bottom: 12px;">

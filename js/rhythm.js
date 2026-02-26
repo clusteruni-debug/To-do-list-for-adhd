@@ -301,7 +301,7 @@ function showRhythmActionMenu(type, event) {
   // 기존 메뉴 제거
   hideRhythmActionMenu();
 
-  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '근무시작', workDepart: '근무종료', homeArrive: '집도착', sleep: '취침' };
 
   // 오버레이 (메뉴 바깥 클릭 시 닫기)
   const overlay = document.createElement('div');
@@ -359,7 +359,7 @@ window.hideRhythmActionMenu = hideRhythmActionMenu;
 function deleteLifeRhythm(type) {
   const today = getLogicalDate();
   if (appState.lifeRhythm.today.date === today) {
-    const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+    const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '근무시작', workDepart: '근무종료', homeArrive: '집도착', sleep: '취침' };
     appState.lifeRhythm.today[type] = null;
     markFieldDeleted(appState.lifeRhythm.today, type);
     saveLifeRhythm();
@@ -721,7 +721,7 @@ function recordLifeRhythm(type) {
   renderStatic();
 
   // 피드백 (기상/취침은 목표 대비 차이 포함)
-  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '근무시작', workDepart: '근무종료', homeArrive: '집도착', sleep: '취침' };
   const diffMsg = getTimeDiffMessage(type, timeStr);
   showToast(diffMsg || labels[type] + ' 시간 기록: ' + timeStr, 'success');
 
@@ -746,7 +746,7 @@ function editLifeRhythm(type) {
   const today = getLogicalDate();
   const currentValue = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today[type] : null;
 
-  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '근무시작', workDepart: '근무종료', homeArrive: '집도착', sleep: '취침' };
   const newTime = prompt(labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
 
   if (newTime === null) return; // 취소
@@ -1176,8 +1176,8 @@ function renderLifeRhythmHistory() {
       '<div class="rhythm-history-timeline six-items">' +
         '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
         '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workArrive\')" title="회사도착">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workDepart\')" title="회사출발">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workArrive\')" title="근무시작">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workDepart\')" title="근무종료">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
         '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
         '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
       '</div>' +
@@ -1465,7 +1465,7 @@ function editLifeRhythmHistory(dateStr, type) {
     currentValue = appState.lifeRhythm.history[dateStr]?.[type];
   }
 
-  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '회사도착', workDepart: '회사출발', homeArrive: '집도착', sleep: '취침' };
+  const labels = { wakeUp: '기상', homeDepart: '집출발', workArrive: '근무시작', workDepart: '근무종료', homeArrive: '집도착', sleep: '취침' };
   const newTime = prompt(dateStr + ' ' + labels[type] + ' 시간을 입력하세요 (HH:MM):', currentValue || '');
 
   if (newTime === null) return;

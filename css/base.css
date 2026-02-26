@@ -102,6 +102,7 @@
     @media (min-width: 1024px) {
       .app {
         padding: 30px 40px;
+        max-width: 1600px;
       }
 
       .header h1 {
@@ -514,15 +515,21 @@
         display: none;
       }
 
-      /* 모바일: 탭 네비게이션 축소 (5개 버튼이 화면 폭 초과 방지) */
+      /* 모바일: 탭 네비게이션 축소 (6개 버튼 + 더보기 대응) */
       .tab-nav {
-        gap: 3px;
-        padding: 6px;
+        gap: 2px;
+        padding: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
       }
+      .tab-nav::-webkit-scrollbar { display: none; }
       .tab-btn {
-        padding: 12px 10px;  /* 터치타겟 44px 확보 (12px*2 + font ~18px ≥ 44px) */
-        font-size: 14px;
-        min-height: 44px;
+        padding: 10px 8px;
+        font-size: 13px;
+        min-height: 42px;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
       .tab-btn svg {
         display: none;

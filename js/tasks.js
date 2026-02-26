@@ -743,6 +743,12 @@ function toggleHistoryDate(dateStr) {
   renderStatic();
 }
 
+function navigateHistoryPage(page) {
+  appState.historyState.page = page;
+  renderStatic();
+}
+window.navigateHistoryPage = navigateHistoryPage;
+
 /**
  * 캘린더 렌더링 HTML 생성
  */
@@ -1148,13 +1154,16 @@ function renderRecentHistory() {
     `;
   }
 
-  // 최근 날짜순 정렬 — 30일
+  // 최근 날짜순 정렬 + 페이지네이션
   const sortedDates = allDates.sort((a, b) => new Date(b) - new Date(a));
-  const recentDates = sortedDates.slice(0, 30);
+  const page = appState.historyState.page || 0;
+  const perPage = 7;
+  const totalPages = Math.ceil(sortedDates.length / perPage);
+  const pagedDates = sortedDates.slice(page * perPage, (page + 1) * perPage);
 
   return `
     <div class="history-list">
-      ${recentDates.map(dateStr => {
+      ${pagedDates.map(dateStr => {
         const tasks = grouped[dateStr].sort((a, b) =>
           new Date(a.completedAt) - new Date(b.completedAt)
         );
@@ -1196,6 +1205,13 @@ function renderRecentHistory() {
           </div>
         `;
       }).join('')}
+      ${totalPages > 1 ? `
+        <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 0;">
+          ${page > 0 ? `<button class="btn btn-secondary" onclick="navigateHistoryPage(${page - 1})" style="padding: 8px 16px;">◀ 이전</button>` : '<div style="width: 80px;"></div>'}
+          <span style="font-size: 14px; color: var(--text-muted);">${page + 1} / ${totalPages}</span>
+          ${page < totalPages - 1 ? `<button class="btn btn-secondary" onclick="navigateHistoryPage(${page + 1})" style="padding: 8px 16px;">다음 ▶</button>` : '<div style="width: 80px;"></div>'}
+        </div>
+      ` : ''}
     </div>
   `;
 }
