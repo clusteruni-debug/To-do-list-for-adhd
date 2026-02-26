@@ -336,10 +336,13 @@ function cycleWorkTaskStatus(projectId, stageIdx, subcatIdx, taskIdx) {
   const currentIdx = statuses.indexOf(task.status);
   task.status = statuses[(currentIdx + 1) % statuses.length];
 
-  // 완료로 변경 시 자동 로그
+  // 완료로 변경 시 자동 로그 (중복 방지)
   if (task.status === 'completed') {
     const today = getLocalDateStr();
-    task.logs.push({ date: today, content: '✓ 완료' });
+    const alreadyLogged = task.logs.some(l => l.date === today && l.content === '✓ 완료');
+    if (!alreadyLogged) {
+      task.logs.push({ date: today, content: '✓ 완료' });
+    }
   }
 
   project.updatedAt = new Date().toISOString();
@@ -359,10 +362,13 @@ function toggleWorkTaskComplete(projectId, stageIdx, subcatIdx, taskIdx) {
   const wasCompleted = task.status === 'completed';
   task.status = wasCompleted ? 'not-started' : 'completed';
 
-  // 완료로 변경 시 자동 로그
+  // 완료로 변경 시 자동 로그 (중복 방지)
   if (!wasCompleted) {
     const today = getLocalDateStr();
-    task.logs.push({ date: today, content: '✓ 완료' });
+    const alreadyLogged = task.logs.some(l => l.date === today && l.content === '✓ 완료');
+    if (!alreadyLogged) {
+      task.logs.push({ date: today, content: '✓ 완료' });
+    }
   }
 
   project.updatedAt = new Date().toISOString();

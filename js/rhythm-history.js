@@ -25,12 +25,11 @@ function setHistoryView(view) {
 window.setHistoryView = setHistoryView;
 
 /**
- * 라이프 리듬 히스토리 렌더링 (6개 항목)
+ * 라이프 리듬 히스토리 렌더링 — 캘린더 + 단일 상세 뷰
  */
 function renderLifeRhythmHistory() {
   var now = new Date();
   var logicalToday = getLogicalDate();
-  var records = [];
 
   // 시간을 분으로 변환
   var toMins = function(t) { if (!t || typeof t !== 'string') return null; var p = t.split(':'); if (p.length !== 2) return null; var h = parseInt(p[0], 10), m = parseInt(p[1], 10); return isNaN(h) || isNaN(m) ? null : h * 60 + m; };
@@ -41,7 +40,8 @@ function renderLifeRhythmHistory() {
     return h + 'h ' + m + 'm';
   };
 
-  // 최근 30일 기록 수집
+  // 30일 기록 맵 구축
+  var recordMap = {};
   for (var i = 0; i < 30; i++) {
     var date = new Date(now);
     date.setDate(now.getDate() - i);
@@ -55,100 +55,28 @@ function renderLifeRhythmHistory() {
       dayData = appState.lifeRhythm.history[dateStr];
     }
 
-    // 기존 데이터 마이그레이션
     if (dayData) {
       if (dayData.workStart && !dayData.workArrive) dayData.workArrive = dayData.workStart;
       if (dayData.workEnd && !dayData.workDepart) dayData.workDepart = dayData.workEnd;
     }
 
-    // 데이터가 있거나, 히스토리에 명시적으로 추가된 날짜면 표시
     var hasMedData = dayData && dayData.medications && Object.values(dayData.medications).some(function(v) { return v; });
     var hasAnyData = dayData && (dayData.wakeUp || dayData.homeDepart || dayData.workArrive || dayData.workDepart || dayData.homeArrive || dayData.sleep || hasMedData);
     var isExplicitlyAdded = !isToday && appState.lifeRhythm.history.hasOwnProperty(dateStr);
     if (hasAnyData || isExplicitlyAdded) {
-      // 수면 시간 계산
-      var sleepDuration = null;
-      if (i < 29) {
-        var prevDate = new Date(date);
-        prevDate.setDate(prevDate.getDate() - 1);
-        var prevDateStr = getLocalDateStr(prevDate);
-        var prevData = appState.lifeRhythm.history[prevDateStr] || {};
-        if (prevData.sleep && dayData.wakeUp) {
-          var sleepTime = toMins(prevData.sleep);
-          var wakeTime = toMins(dayData.wakeUp);
-          var duration = wakeTime + (24 * 60 - sleepTime);
-          if (sleepTime < 12 * 60) duration = wakeTime - sleepTime;
-          if (duration > 0 && duration < 16 * 60) {
-            sleepDuration = formatDur(duration);
-          }
-        }
-      }
-
-      // 근무 시간 계산
-      var workDuration = null;
-      var workArr = dayData.workArrive;
-      var workDep = dayData.workDepart;
-      if (workArr && workDep) {
-        var dur = toMins(workDep) - toMins(workArr);
-        if (dur > 0) workDuration = formatDur(dur);
-      }
-
-      // 출근 통근시간
-      var commuteToWork = null;
-      if (dayData.homeDepart && dayData.workArrive) {
-        var dur2 = toMins(dayData.workArrive) - toMins(dayData.homeDepart);
-        if (dur2 > 0 && dur2 < 180) commuteToWork = dur2 + '분';
-      }
-
-      // 퇴근 통근시간
-      var commuteToHome = null;
-      if (dayData.workDepart && dayData.homeArrive) {
-        var dur3 = toMins(dayData.homeArrive) - toMins(dayData.workDepart);
-        if (dur3 > 0 && dur3 < 180) commuteToHome = dur3 + '분';
-      }
-
-      // 총 외출시간
-      var totalOut = null;
-      if (dayData.homeDepart && dayData.homeArrive) {
-        var dur4 = toMins(dayData.homeArrive) - toMins(dayData.homeDepart);
-        if (dur4 > 0) totalOut = formatDur(dur4);
-      }
-
-      // 완료한 작업 수 (completionLog 기반)
-      var completedTasks = ((appState.completionLog || {})[dateStr] || []).length;
-
-      records.push({
-        date: dateStr,
-        dayLabel: ['일', '월', '화', '수', '목', '금', '토'][date.getDay()],
-        dateLabel: (date.getMonth() + 1) + '/' + date.getDate(),
-        isToday: isToday,
-        wakeUp: dayData.wakeUp,
-        homeDepart: dayData.homeDepart,
-        workArrive: dayData.workArrive,
-        workDepart: dayData.workDepart,
-        homeArrive: dayData.homeArrive,
-        sleep: dayData.sleep,
-        medications: dayData.medications || {},
-        sleepDuration: sleepDuration,
-        workDuration: workDuration,
-        commuteToWork: commuteToWork,
-        commuteToHome: commuteToHome,
-        totalOut: totalOut,
-        completedTasks: completedTasks
-      });
+      recordMap[dateStr] = dayData;
     }
   }
 
-  // 날짜 추가 버튼
-  var addDateBtn = '<div class="rhythm-history-add-date" style="text-align: center; padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">' +
-    '<button onclick="addRhythmHistoryDate()" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;" aria-label="과거 날짜 기록 추가">' +
-      '📅 과거 날짜 추가' +
-    '</button>' +
-  '</div>';
+  // 선택된 날짜 (기본: 오늘)
+  var selectedDate = appState.rhythmHistoryDate || logicalToday;
+  // 선택된 날짜가 유효한지 확인
+  var selectedData = recordMap[selectedDate] || null;
 
-  // 통계 버튼
-  var statsBtn = '<div style="text-align: center; padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">' +
-    '<button onclick="toggleRhythmStats()" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;" aria-label="30일 통계 보기">' +
+  // 날짜 추가 / 통계 버튼
+  var toolbarHtml = '<div class="rhythm-history-toolbar">' +
+    '<button onclick="addRhythmHistoryDate()" class="btn btn-secondary btn-sm" aria-label="과거 날짜 기록 추가">📅 날짜 추가</button>' +
+    '<button onclick="toggleRhythmStats()" class="btn btn-secondary btn-sm" aria-label="30일 통계 보기">' +
       (_rhythmStatsVisible ? '📊 통계 숨기기' : '📊 30일 통계') +
     '</button>' +
   '</div>';
@@ -156,37 +84,134 @@ function renderLifeRhythmHistory() {
   // 통계 섹션
   var statsSection = renderRhythmStats();
 
-  if (records.length === 0) {
-    return addDateBtn + statsBtn + statsSection + '<div class="rhythm-history-empty"><div class="rhythm-history-empty-icon">😴</div><div>기록이 없습니다</div><div style="font-size: 13px; margin-top: 8px;">오늘 탭에서 리듬을 기록해보세요</div></div>';
+  // --- 최근 7일 요약 미니 차트 ---
+  var recentHtml = '<div class="rhythm-recent-strip">';
+  recentHtml += '<div class="rhythm-recent-title">최근 7일</div>';
+  recentHtml += '<div class="rhythm-recent-days">';
+  for (var d = 6; d >= 0; d--) {
+    var rDate = new Date(now);
+    rDate.setDate(now.getDate() - d);
+    var rStr = getLocalDateStr(rDate);
+    var rData = recordMap[rStr];
+    var dayLabel = ['일','월','화','수','목','금','토'][rDate.getDay()];
+    var wakeVal = rData ? (rData.wakeUp || '--:--') : '--:--';
+    var sleepVal = rData ? (rData.sleep || '--:--') : '--:--';
+    var hasData = rData && (rData.wakeUp || rData.sleep);
+    var isSelected = rStr === selectedDate;
+    recentHtml += '<div class="rhythm-recent-day' + (isSelected ? ' selected' : '') + (d === 0 ? ' today' : '') + '" onclick="selectRhythmDate(\'' + rStr + '\')">' +
+      '<span class="rhythm-recent-day-label">' + dayLabel + '</span>' +
+      '<span class="rhythm-recent-wake' + (hasData ? '' : ' empty') + '">☀️' + wakeVal + '</span>' +
+      '<span class="rhythm-recent-sleep' + (hasData ? '' : ' empty') + '">🌙' + sleepVal + '</span>' +
+    '</div>';
   }
+  recentHtml += '</div></div>';
 
-  return addDateBtn + statsBtn + statsSection + '<div class="rhythm-history-list">' + records.map(function(r) {
-    return '<div class="rhythm-history-item ' + (r.isToday ? 'today' : '') + '">' +
+  // --- 미니 캘린더 (30일) ---
+  var calViewYear = appState.rhythmCalYear !== undefined ? appState.rhythmCalYear : now.getFullYear();
+  var calViewMonth = appState.rhythmCalMonth !== undefined ? appState.rhythmCalMonth : now.getMonth();
+  var calFirst = new Date(calViewYear, calViewMonth, 1);
+  var calLast = new Date(calViewYear, calViewMonth + 1, 0);
+  var calDaysInMonth = calLast.getDate();
+  var calStartDow = calFirst.getDay();
+  var monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+  var calendarHtml = '<div class="calendar-container rhythm-calendar">' +
+    '<div class="calendar-header">' +
+      '<span class="calendar-title">' + calViewYear + '년 ' + monthNames[calViewMonth] + '</span>' +
+      '<div class="calendar-nav">' +
+        '<button class="calendar-nav-btn" onclick="navigateRhythmCal(-1)" aria-label="이전 달">&lt;</button>' +
+        '<button class="calendar-nav-btn" onclick="navigateRhythmCal(1)" aria-label="다음 달">&gt;</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="calendar-weekdays">' +
+      ['일','월','화','수','목','금','토'].map(function(d) { return '<span class="calendar-weekday">' + d + '</span>'; }).join('') +
+    '</div>' +
+    '<div class="calendar-days">';
+
+  for (var e = 0; e < calStartDow; e++) calendarHtml += '<div class="calendar-day empty"></div>';
+  for (var cd = 1; cd <= calDaysInMonth; cd++) {
+    var cdStr = calViewYear + '-' + String(calViewMonth + 1).padStart(2,'0') + '-' + String(cd).padStart(2,'0');
+    var cdIsToday = cdStr === logicalToday;
+    var cdIsSelected = cdStr === selectedDate;
+    var cdHasData = !!recordMap[cdStr];
+    var cdClasses = 'calendar-day' + (cdIsToday ? ' today' : '') + (cdIsSelected ? ' selected' : '') + (cdHasData ? ' has-activity' : '');
+    calendarHtml += '<div class="' + cdClasses + '" onclick="selectRhythmDate(\'' + cdStr + '\')">' +
+      '<span class="calendar-day-number">' + cd + '</span>' +
+      (cdHasData ? '<span class="calendar-day-dot"></span>' : '') +
+    '</div>';
+  }
+  calendarHtml += '</div></div>';
+
+  // --- 선택된 날짜 상세 ---
+  var detailHtml = '';
+  if (selectedData) {
+    var selDate = new Date(selectedDate + 'T12:00:00');
+    var selDayLabel = ['일','월','화','수','목','금','토'][selDate.getDay()];
+    var selDateLabel = (selDate.getMonth() + 1) + '/' + selDate.getDate();
+    var selIsToday = selectedDate === logicalToday;
+
+    // 수면 시간 계산
+    var selSleepDuration = null;
+    var prevD = new Date(selDate);
+    prevD.setDate(prevD.getDate() - 1);
+    var prevDStr = getLocalDateStr(prevD);
+    var prevDData = appState.lifeRhythm.history[prevDStr] || {};
+    if (prevDData.sleep && selectedData.wakeUp) {
+      var st = toMins(prevDData.sleep);
+      var wt = toMins(selectedData.wakeUp);
+      var dur = wt + (24 * 60 - st);
+      if (st < 12 * 60) dur = wt - st;
+      if (dur > 0 && dur < 16 * 60) selSleepDuration = formatDur(dur);
+    }
+
+    // 근무/통근 계산
+    var selWorkDuration = null;
+    if (selectedData.workArrive && selectedData.workDepart) {
+      var wd = toMins(selectedData.workDepart) - toMins(selectedData.workArrive);
+      if (wd > 0) selWorkDuration = formatDur(wd);
+    }
+    var selCommuteToWork = null;
+    if (selectedData.homeDepart && selectedData.workArrive) {
+      var ct = toMins(selectedData.workArrive) - toMins(selectedData.homeDepart);
+      if (ct > 0 && ct < 180) selCommuteToWork = ct + '분';
+    }
+    var selCommuteToHome = null;
+    if (selectedData.workDepart && selectedData.homeArrive) {
+      var ch = toMins(selectedData.homeArrive) - toMins(selectedData.workDepart);
+      if (ch > 0 && ch < 180) selCommuteToHome = ch + '분';
+    }
+    var selTotalOut = null;
+    if (selectedData.homeDepart && selectedData.homeArrive) {
+      var to = toMins(selectedData.homeArrive) - toMins(selectedData.homeDepart);
+      if (to > 0) selTotalOut = formatDur(to);
+    }
+    var selCompletedTasks = ((appState.completionLog || {})[selectedDate] || []).length;
+
+    detailHtml = '<div class="rhythm-history-item ' + (selIsToday ? 'today' : '') + '">' +
       '<div class="rhythm-history-date">' +
-        '<span class="rhythm-history-day">' + r.dayLabel + '</span>' +
-        '<span class="rhythm-history-date-num">' + r.dateLabel + '</span>' +
-        (r.isToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') +
+        '<span class="rhythm-history-day">' + selDayLabel + '</span>' +
+        '<span class="rhythm-history-date-num">' + selDateLabel + '</span>' +
+        (selIsToday ? '<span class="rhythm-history-today-badge">오늘</span>' : '') +
       '</div>' +
       '<div class="rhythm-history-timeline six-items">' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'wakeUp\')" title="기상">' + (r.wakeUp ? '☀️' + r.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeDepart\')" title="집출발">' + (r.homeDepart ? '🚶' + r.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workArrive\')" title="근무시작">' + (r.workArrive ? '🏢' + r.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'workDepart\')" title="근무종료">' + (r.workDepart ? '🚀' + r.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'homeArrive\')" title="집도착">' + (r.homeArrive ? '🏠' + r.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
-        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(r.date) + '\', \'sleep\')" title="취침">' + (r.sleep ? '🌙' + r.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'wakeUp\')" title="기상">' + (selectedData.wakeUp ? '☀️' + selectedData.wakeUp : '<span class="empty">☀️--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'homeDepart\')" title="집출발">' + (selectedData.homeDepart ? '🚶' + selectedData.homeDepart : '<span class="empty">🚶--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'workArrive\')" title="근무시작">' + (selectedData.workArrive ? '🏢' + selectedData.workArrive : '<span class="empty">🏢--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'workDepart\')" title="근무종료">' + (selectedData.workDepart ? '🚀' + selectedData.workDepart : '<span class="empty">🚀--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'homeArrive\')" title="집도착">' + (selectedData.homeArrive ? '🏠' + selectedData.homeArrive : '<span class="empty">🏠--:--</span>') + '</span>' +
+        '<span class="rhythm-history-time" onclick="editLifeRhythmHistory(\'' + escapeAttr(selectedDate) + '\', \'sleep\')" title="취침">' + (selectedData.sleep ? '🌙' + selectedData.sleep : '<span class="empty">🌙--:--</span>') + '</span>' +
       '</div>' +
-      // 복약 히스토리 행
       (function() {
         var medSlots = getMedicationSlots();
         if (!medSlots || medSlots.length === 0) return '';
-        var meds = r.medications || {};
+        var meds = selectedData.medications || {};
         var hasMedData = medSlots.some(function(s) { return meds[s.id]; });
-        if (!hasMedData && !r.isToday) return '';
+        if (!hasMedData && !selIsToday) return '';
         return '<div class="rhythm-history-meds">' +
           medSlots.map(function(s) {
             var taken = !!meds[s.id];
             return '<span class="rhythm-history-med ' + (taken ? 'taken' : 'missed') + '" ' +
-              'onclick="editMedicationHistory(\'' + escapeAttr(r.date) + '\', \'' + escapeAttr(s.id) + '\')" ' +
+              'onclick="editMedicationHistory(\'' + escapeAttr(selectedDate) + '\', \'' + escapeAttr(s.id) + '\')" ' +
               'title="' + escapeHtml(s.label) + (taken ? ' ' + meds[s.id] : '') + '">' +
               s.icon + (taken ? '✓' : '-') +
             '</span>';
@@ -194,16 +219,51 @@ function renderLifeRhythmHistory() {
         '</div>';
       })() +
       '<div class="rhythm-history-summary">' +
-        (r.sleepDuration ? '<span>💤' + r.sleepDuration + '</span>' : '') +
-        (r.commuteToWork ? '<span>🚌' + r.commuteToWork + '</span>' : '') +
-        (r.workDuration ? '<span>💼' + r.workDuration + '</span>' : '') +
-        (r.commuteToHome ? '<span>🏠' + r.commuteToHome + '</span>' : '') +
-        (r.totalOut ? '<span class="total">📍' + r.totalOut + '</span>' : '') +
-        (r.completedTasks > 0 ? '<span>✅' + r.completedTasks + '개</span>' : '') +
+        (selSleepDuration ? '<span>💤' + selSleepDuration + '</span>' : '') +
+        (selCommuteToWork ? '<span>🚌' + selCommuteToWork + '</span>' : '') +
+        (selWorkDuration ? '<span>💼' + selWorkDuration + '</span>' : '') +
+        (selCommuteToHome ? '<span>🏠' + selCommuteToHome + '</span>' : '') +
+        (selTotalOut ? '<span class="total">📍' + selTotalOut + '</span>' : '') +
+        (selCompletedTasks > 0 ? '<span>✅' + selCompletedTasks + '개</span>' : '') +
       '</div>' +
     '</div>';
-  }).join('') + '</div>';
+  } else {
+    detailHtml = '<div class="rhythm-history-item">' +
+      '<div style="text-align: center; padding: 20px; color: var(--text-muted);">' +
+        '<div style="font-size: 24px; margin-bottom: 8px;">📋</div>' +
+        '<div>' + selectedDate + ' 기록 없음</div>' +
+        '<div style="font-size: 13px; margin-top: 4px;">캘린더에서 기록이 있는 날짜를 선택하세요</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  return toolbarHtml + statsSection + recentHtml + calendarHtml + detailHtml;
 }
+
+/**
+ * 리듬 히스토리 날짜 선택
+ */
+function selectRhythmDate(dateStr) {
+  appState.rhythmHistoryDate = dateStr;
+  renderStatic();
+}
+window.selectRhythmDate = selectRhythmDate;
+
+/**
+ * 리듬 캘린더 월 이동
+ */
+function navigateRhythmCal(delta) {
+  var now = new Date();
+  var year = appState.rhythmCalYear !== undefined ? appState.rhythmCalYear : now.getFullYear();
+  var month = appState.rhythmCalMonth !== undefined ? appState.rhythmCalMonth : now.getMonth();
+  month += delta;
+  if (month < 0) { month = 11; year--; }
+  if (month > 11) { month = 0; year++; }
+  appState.rhythmCalYear = year;
+  appState.rhythmCalMonth = month;
+  renderStatic();
+}
+window.navigateRhythmCal = navigateRhythmCal;
 
 /**
  * 과거 날짜 라이프 리듬 수정 (6개 항목)

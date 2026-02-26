@@ -405,45 +405,60 @@ function toggleRhythmStats() {
 window.toggleRhythmStats = toggleRhythmStats;
 
 /**
- * 라이프 리듬 통계 섹션 렌더링
+ * 라이프 리듬 통계 섹션 렌더링 — 카드형 그리드
  */
 function renderRhythmStats() {
   if (!_rhythmStatsVisible) return '';
 
   var stats = calculateRhythmStats(30);
 
-  var medRows = '';
+  // 카드 생성 헬퍼
+  var makeCard = function(icon, label, value, sub1, sub2) {
+    var subHtml = '';
+    if (sub1 || sub2) {
+      subHtml = '<div class="rhythm-stat-sub">';
+      if (sub1) subHtml += '<span class="rhythm-stat-sub-item">주중 ' + sub1 + '</span>';
+      if (sub2) subHtml += '<span class="rhythm-stat-sub-item">주말 ' + sub2 + '</span>';
+      subHtml += '</div>';
+    }
+    return '<div class="rhythm-stat-card">' +
+      '<div class="rhythm-stat-icon">' + icon + '</div>' +
+      '<div class="rhythm-stat-label">' + label + '</div>' +
+      '<div class="rhythm-stat-value">' + value + '</div>' +
+      subHtml +
+    '</div>';
+  };
+
+  // 핵심 3개 카드 (기상/취침/수면)
+  var topCards = makeCard('☀️', '기상', stats.avgWakeUp, stats.weekdayWakeUp, stats.weekendWakeUp) +
+    makeCard('🌙', '취침', stats.avgSleep, stats.weekdaySleep, stats.weekendSleep) +
+    makeCard('💤', '수면', stats.avgSleepDuration, null, null);
+
+  // 하단 3개 카드 (근무/출근통근/퇴근통근)
+  var bottomCards = makeCard('💼', '근무', stats.avgWorkDuration, null, null) +
+    makeCard('🚌', '출근', stats.avgCommuteToWork, stats.weekdayCommuteToWork, null) +
+    makeCard('🏠', '퇴근', stats.avgCommuteToHome, null, null);
+
+  // 복약 준수율 카드
+  var medCard = '';
   var medEntries = Object.values(stats.medStats);
   if (medEntries.length > 0) {
-    medRows = medEntries.map(function(s) {
+    var medItems = medEntries.map(function(s) {
       var rate = s.total > 0 ? Math.round((s.taken / s.total) * 100) : 0;
       var color = rate >= 80 ? 'var(--accent-success)' : rate >= 50 ? 'var(--accent-warning)' : 'var(--accent-danger)';
-      return '<tr>' +
-        '<td>' + s.icon + ' ' + escapeHtml(s.label) + (s.required ? ' <span style="color: var(--accent-danger); font-size: 10px;">필수</span>' : '') + '</td>' +
-        '<td style="color: ' + color + '; font-weight: 600;">' + rate + '% <span style="font-size: 11px; color: var(--text-muted);">(' + s.taken + '/' + s.total + ')</span></td>' +
-      '</tr>';
-    }).join('');
+      return '<span class="rhythm-med-stat-item" style="color: ' + color + ';">' + s.icon + ' ' + escapeHtml(s.label) + ': ' + rate + '%</span>';
+    }).join(' · ');
+    medCard = '<div class="rhythm-stat-card rhythm-stat-card-wide">' +
+      '<div class="rhythm-stat-icon">💊</div>' +
+      '<div class="rhythm-stat-label">복약 준수율</div>' +
+      '<div class="rhythm-stat-med-items">' + medItems + '</div>' +
+    '</div>';
   }
 
-  return '<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">' +
-    '<div style="font-size: 16px; font-weight: 600; margin-bottom: 14px;">📊 30일 통계 <span style="font-size: 12px; color: var(--text-muted);">(' + stats.dataPoints + '일 데이터)</span></div>' +
-    '<table style="width: 100%; font-size: 13px; border-collapse: collapse;">' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">☀️ 평균 기상</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgWakeUp + '</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">🌙 평균 취침</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgSleep + '</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">💤 평균 수면</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgSleepDuration + '</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">🚶 평균 출발</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgHomeDepart + '</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">🚌 출근 통근</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgCommuteToWork + ' <span style="font-size: 11px; color: var(--text-muted);">(' + stats.commuteToWorkCount + '회)</span></td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">🏠 퇴근 통근</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgCommuteToHome + ' <span style="font-size: 11px; color: var(--text-muted);">(' + stats.commuteToHomeCount + '회)</span></td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 8px 4px; color: var(--text-secondary);">💼 평균 근무</td><td style="padding: 8px 4px; font-weight: 600;">' + stats.avgWorkDuration + '</td></tr>' +
-    '</table>' +
-    '<div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">📅 주중 vs 주말</div>' +
-    '<table style="width: 100%; font-size: 13px; border-collapse: collapse;">' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 6px 4px; color: var(--text-secondary);"></td><td style="padding: 6px 4px; font-weight: 600; color: var(--accent-primary);">주중</td><td style="padding: 6px 4px; font-weight: 600; color: var(--accent-warning);">주말</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 6px 4px; color: var(--text-secondary);">☀️ 기상</td><td style="padding: 6px 4px;">' + stats.weekdayWakeUp + '</td><td style="padding: 6px 4px;">' + stats.weekendWakeUp + '</td></tr>' +
-      '<tr style="border-bottom: 1px solid var(--border-light);"><td style="padding: 6px 4px; color: var(--text-secondary);">🌙 취침</td><td style="padding: 6px 4px;">' + stats.weekdaySleep + '</td><td style="padding: 6px 4px;">' + stats.weekendSleep + '</td></tr>' +
-      '<tr><td style="padding: 6px 4px; color: var(--text-secondary);">🚌 통근</td><td style="padding: 6px 4px;">' + stats.weekdayCommuteToWork + '</td><td style="padding: 6px 4px;">-</td></tr>' +
-    '</table>' +
-    (medRows ? '<div style="font-size: 14px; font-weight: 600; margin: 16px 0 10px;">💊 복약 준수율</div>' +
-      '<table style="width: 100%; font-size: 13px; border-collapse: collapse;">' + medRows + '</table>' : '') +
+  return '<div class="rhythm-stats-container">' +
+    '<div class="rhythm-stats-header">📊 30일 통계 <span class="rhythm-stats-meta">(' + stats.dataPoints + '일 데이터)</span></div>' +
+    '<div class="rhythm-stat-grid">' + topCards + '</div>' +
+    '<div class="rhythm-stat-grid">' + bottomCards + '</div>' +
+    (medCard ? '<div class="rhythm-stat-grid-wide">' + medCard + '</div>' : '') +
   '</div>';
 }

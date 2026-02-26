@@ -96,6 +96,174 @@
       font-weight: 600;
     }
 
+    /* 리듬 통계 카드 그리드 */
+    .rhythm-stats-container {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md, 12px);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .rhythm-stats-header {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .rhythm-stats-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .rhythm-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    @media (min-width: 480px) {
+      .rhythm-stat-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .rhythm-stat-grid-wide {
+      margin-bottom: 8px;
+    }
+
+    .rhythm-stat-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .rhythm-stat-card-wide {
+      width: 100%;
+    }
+
+    .rhythm-stat-icon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .rhythm-stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .rhythm-stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'SF Mono', Monaco, monospace;
+      color: var(--text-primary);
+    }
+
+    .rhythm-stat-sub {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .rhythm-stat-sub-item {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+
+    .rhythm-stat-med-items {
+      font-size: 13px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* 리듬 히스토리 툴바 */
+    .rhythm-history-toolbar {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* 최근 7일 미니 스트립 */
+    .rhythm-recent-strip {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .rhythm-recent-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .rhythm-recent-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .rhythm-recent-day {
+      text-align: center;
+      padding: 6px 2px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .rhythm-recent-day:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .rhythm-recent-day.selected {
+      border-color: var(--primary, #667eea);
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .rhythm-recent-day.today {
+      font-weight: 700;
+    }
+
+    .rhythm-recent-day-label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .rhythm-recent-wake,
+    .rhythm-recent-sleep {
+      display: block;
+      font-size: 11px;
+      font-family: 'SF Mono', Monaco, monospace;
+      line-height: 1.4;
+    }
+
+    .rhythm-recent-wake.empty,
+    .rhythm-recent-sleep.empty {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    /* 리듬 캘린더 */
+    .rhythm-calendar {
+      margin-bottom: 12px;
+    }
+
+    .rhythm-calendar .calendar-day {
+      min-height: 36px;
+    }
+
     /* 라이프 리듬 히스토리 */
     .rhythm-history-empty {
       text-align: center;
@@ -411,7 +579,7 @@
 
     .work-calendar .calendar-day {
       aspect-ratio: unset;
-      min-height: 72px;
+      min-height: 48px;
       align-items: stretch;
       justify-content: flex-start;
       padding: 4px;
@@ -702,7 +870,7 @@
       }
 
       .work-calendar .calendar-day {
-        min-height: 56px;
+        min-height: 40px;
       }
 
       .calendar-day-task {

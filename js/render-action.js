@@ -37,6 +37,15 @@ function renderActionTab(ctx) {
           </div>
         </div>
 
+        <!-- 오늘의 리듬 + 복약 (기본 펼침) -->
+        <details class="today-rhythm-details" open>
+          <summary class="today-rhythm-summary">📊 오늘의 리듬 · 복약</summary>
+          <div class="today-rhythm-content">
+            ${_renderRhythmCompact()}
+            ${_renderMedicationCompact()}
+          </div>
+        </details>
+
         <!-- ▶ 지금 할 것 (메인 히어로) -->
         ${nextAction ? `
           <div class="next-action ${urgencyClass}">
@@ -70,15 +79,6 @@ function renderActionTab(ctx) {
         ` : `
           ${_renderTodayEmptyState(completedToday)}
         `}
-
-        ${urgentTasks.length > 0 && nextAction && urgentTasks[0].id !== nextAction.id ? `
-          <div class="today-urgent-bar">
-            <span>🚨 마감 임박 ${urgentTasks.length}개:</span>
-            ${urgentTasks.slice(0, 3).map(t => `
-              <span class="today-urgent-chip" onclick="editTask('${escapeAttr(t.id)}')">${escapeHtml(t.title.length > 20 ? t.title.substring(0, 20) + '...' : t.title)}</span>
-            `).join('')}
-          </div>
-        ` : ''}
 
         <!-- 빠른 추가 -->
         <div class="quick-add-simple">
@@ -138,15 +138,6 @@ function renderActionTab(ctx) {
             ` : ''}
           </div>
         ` : ''}
-
-        <!-- 오늘의 리듬 + 복약 (접을 수 있음) -->
-        <details class="today-rhythm-details">
-          <summary class="today-rhythm-summary">📊 오늘의 리듬 · 복약</summary>
-          <div class="today-rhythm-content">
-            ${_renderRhythmCompact()}
-            ${_renderMedicationCompact()}
-          </div>
-        </details>
 
         <!-- 포모도로 (활성 시에만) -->
         ${_renderPomodoroIfActive()}

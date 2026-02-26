@@ -473,8 +473,8 @@ function renderWorkProjects() {
             }
             p.stages.forEach(function(stage, si) {
               // 단계 마감일
-              if (stage.deadline && !stage.completed) {
-                var sdStr = stage.deadline.substring(0, 10);
+              if (stage.endDate && !stage.completed) {
+                var sdStr = stage.endDate.substring(0, 10);
                 if (!deadlineMap[sdStr]) deadlineMap[sdStr] = [];
                 var sName = (p.stageNames && p.stageNames[si]) || stage.name || ((si+1) + '단계');
                 deadlineMap[sdStr].push({ title: sName + ' (단계)', project: p.name, status: 'stage', color: pColor });
@@ -972,19 +972,19 @@ function renderWorkProjectDetail(project) {
                   </div>
                   <span class="work-stage-number">${stageIdx + 1}</span>
                   <span class="work-stage-name" onclick="promptRenameStage('${escapeAttr(project.id)}', ${stageIdx}, '${escapeAttr(stageName)}')" style="cursor: pointer;" title="클릭하여 이름 변경">${escapeHtml(stageName)}</span>
-                  ${(stage.startDate || stage.deadline) ? (() => {
+                  ${(stage.startDate || stage.endDate) ? (() => {
                     const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
                     let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 14px; color: var(--text-muted);">';
-                    if (stage.startDate && stage.deadline) {
-                      html += fmtDate(stage.startDate) + '~' + fmtDate(stage.deadline);
+                    if (stage.startDate && stage.endDate) {
+                      html += fmtDate(stage.startDate) + '~' + fmtDate(stage.endDate);
                     } else if (stage.startDate) {
                       html += fmtDate(stage.startDate) + '~';
                     } else {
-                      html += '~' + fmtDate(stage.deadline);
+                      html += '~' + fmtDate(stage.endDate);
                     }
                     html += '</span>';
-                    if (stage.deadline) {
-                      const daysLeft = Math.ceil((new Date(stage.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (stage.endDate) {
+                      const daysLeft = Math.ceil((new Date(stage.endDate) - new Date()) / (1000 * 60 * 60 * 24));
                       const cls = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
                       const txt = daysLeft < 0 ? 'D+' + Math.abs(daysLeft) : daysLeft === 0 ? 'D-Day' : 'D-' + daysLeft;
                       html += '<span class="work-deadline ' + cls + '" style="margin-left: 6px;">' + txt + '</span>';
