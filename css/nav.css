@@ -343,3 +343,117 @@
       white-space: nowrap;
     }
 
+    /* ── PC 사이드바 (1024px+) ── */
+    @media (min-width: 1024px) {
+      .tab-nav {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        flex-direction: column;
+        gap: 2px;
+        padding: 20px 12px;
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        border-right: 1px solid var(--border-color);
+        overflow-y: auto;
+        overflow-x: hidden;
+        z-index: 200;
+        box-shadow: none;
+        background: var(--bg-secondary);
+        align-items: stretch;
+      }
+
+      .tab-nav::before {
+        content: '\26A1  Navigator';
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        padding: 8px 12px 20px;
+        color: var(--text-primary);
+        letter-spacing: -0.03em;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 12px;
+      }
+
+      .tab-btn {
+        text-align: left;
+        justify-content: flex-start;
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 15px;
+        border-radius: var(--radius-sm);
+        gap: 10px;
+        display: flex;
+        align-items: center;
+      }
+
+      .tab-btn svg {
+        display: inline-block !important;
+        flex-shrink: 0;
+      }
+
+      .tab-btn.active {
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+        box-shadow: none;
+      }
+
+      /* 더보기 드롭다운 → 사이드바에서는 항상 펼침 */
+      .tab-more-dropdown {
+        display: contents;
+      }
+
+      .tab-more-dropdown > .tab-btn {
+        display: none;
+      }
+
+      .more-menu {
+        display: flex !important;
+        flex-direction: column;
+        position: static;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        min-width: auto;
+        gap: 2px;
+      }
+
+      .more-menu-item {
+        padding: 10px 14px;
+        font-size: 15px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .more-menu-item.active {
+        background: rgba(102, 126, 234, 0.15);
+        color: #667eea;
+      }
+
+      /* 사이드바 하단 구분선 (더보기 항목 전) */
+      .tab-more-dropdown::before {
+        content: '';
+        display: block;
+        height: 1px;
+        background: var(--border-color);
+        margin: 8px 12px;
+      }
+
+      /* 사이드바 있을 때 헤더의 "Navigator" 타이틀 숨김 */
+      .header h1 {
+        font-size: 0;
+        line-height: 0;
+        overflow: hidden;
+        height: 0;
+      }
+
+      .header-left {
+        flex: 1;
+      }
+    }
+
