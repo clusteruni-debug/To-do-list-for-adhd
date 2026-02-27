@@ -335,6 +335,23 @@ function renderSettingsModal() {
               </div>
 
               <div class="settings-section">
+                <div class="settings-section-title">💰 부업 주최자 목록</div>
+                <div class="settings-label-desc" style="margin-bottom: 10px;">자동완성에 사용되는 주최자 목록입니다. 입력 후 추가, 클릭하면 삭제됩니다.</div>
+                <div id="organizer-list-display" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                  ${(appState.organizerList || []).map((o, i) => `
+                    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+                      ${escapeHtml(o)} ✕
+                    </span>
+                  `).join('')}
+                </div>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" id="new-organizer-input" class="work-modal-input" placeholder="새 주최자 이름" style="flex:1;font-size:15px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:inherit;"
+                    onkeypress="if(event.key==='Enter') addOrganizerToList()">
+                  <button onclick="addOrganizerToList()" style="padding:8px 14px;border-radius:8px;background:var(--accent-primary,#667eea);border:none;color:#fff;font-size:15px;cursor:pointer;">추가</button>
+                </div>
+              </div>
+
+              <div class="settings-section">
                 <div class="settings-section-title">💾 데이터 백업</div>
                 <div class="settings-row" style="justify-content: center; gap: 12px;">
                   <button class="backup-btn export" onclick="exportData()" style="flex: 1;">

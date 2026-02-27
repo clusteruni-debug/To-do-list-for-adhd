@@ -77,14 +77,13 @@ function getCategoryFields() {
     '부업': `
       <div class="form-group">
         <label class="form-label">주최자</label>
-        <select class="form-select" id="detailed-organizer">
-          <option value="" ${!appState.detailedTask.organizer ? 'selected' : ''}>선택하세요</option>
-          <option value="불개미" ${appState.detailedTask.organizer === '불개미' ? 'selected' : ''}>불개미</option>
-          <option value="코같투" ${appState.detailedTask.organizer === '코같투' ? 'selected' : ''}>코같투</option>
-          <option value="맨틀" ${appState.detailedTask.organizer === '맨틀' ? 'selected' : ''}>맨틀</option>
-          <option value="xmaquina" ${appState.detailedTask.organizer === 'xmaquina' ? 'selected' : ''}>xmaquina</option>
-          <option value="기타" ${appState.detailedTask.organizer === '기타' ? 'selected' : ''}>기타</option>
-        </select>
+        <datalist id="detailed-organizer-datalist">
+          ${(appState.organizerList || []).map(o => `<option value="${escapeHtml(o)}">`).join('')}
+        </datalist>
+        <input type="text" class="form-input" id="detailed-organizer"
+          list="detailed-organizer-datalist"
+          placeholder="주최자 입력 또는 선택"
+          value="${escapeHtml(appState.detailedTask.organizer || '')}">
       </div>
       <div class="form-group">
         <label class="form-label">이벤트 종류</label>

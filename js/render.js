@@ -377,7 +377,7 @@ function setupInputHandlers() {
     if (inputs.time) inputs.time.oninput = (e) => appState.detailedTask.estimatedTime = parseInt(e.target.value) || 0;
     if (inputs.revenue) inputs.revenue.oninput = (e) => appState.detailedTask.expectedRevenue = e.target.value;
     if (inputs.link) inputs.link.oninput = (e) => appState.detailedTask.link = e.target.value;
-    if (inputs.organizer) inputs.organizer.onchange = (e) => appState.detailedTask.organizer = e.target.value;
+    if (inputs.organizer) inputs.organizer.oninput = (e) => appState.detailedTask.organizer = e.target.value;
     if (inputs.eventType) inputs.eventType.onchange = (e) => appState.detailedTask.eventType = e.target.value;
 
     // 새 태그 입력 핸들러

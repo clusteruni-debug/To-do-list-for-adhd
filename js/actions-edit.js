@@ -120,6 +120,68 @@ function editTask(id) {
 }
 
 /**
+ * 카테고리별 추가 입력 필드 HTML 반환
+ */
+function getQuickEditCategoryFields(category, task) {
+  switch (category) {
+    case '부업': {
+      const organizerOptions = (appState.organizerList || [])
+        .map(o => `<option value="${escapeHtml(o)}">`)
+        .join('');
+      return `
+        <datalist id="organizer-datalist">${organizerOptions}</datalist>
+        <div class="work-modal-field">
+          <label class="work-modal-label">주최자</label>
+          <input type="text" class="work-modal-input" id="quick-edit-organizer"
+            list="organizer-datalist"
+            placeholder="주최자 입력 또는 선택"
+            value="${escapeHtml(task.organizer || '')}">
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">이벤트 종류</label>
+          <select class="work-modal-input" id="quick-edit-eventType">
+            <option value="">선택 안 함</option>
+            <option value="의견작성" ${(task.eventType||'') === '의견작성' ? 'selected' : ''}>의견작성</option>
+            <option value="리캡작성" ${(task.eventType||'') === '리캡작성' ? 'selected' : ''}>리캡작성</option>
+            <option value="AMA참여" ${(task.eventType||'') === 'AMA참여' ? 'selected' : ''}>AMA참여</option>
+            <option value="아티클작성" ${(task.eventType||'') === '아티클작성' ? 'selected' : ''}>아티클작성</option>
+            <option value="영상제작" ${(task.eventType||'') === '영상제작' ? 'selected' : ''}>영상제작</option>
+            <option value="커뮤니티" ${(task.eventType||'') === '커뮤니티' ? 'selected' : ''}>커뮤니티</option>
+            <option value="기타" ${(task.eventType||'') === '기타' ? 'selected' : ''}>기타</option>
+          </select>
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">예상 수익 (원)</label>
+          <input type="number" class="work-modal-input" id="quick-edit-revenue" value="${task.expectedRevenue || ''}">
+        </div>
+      `;
+    }
+    case '본업':
+      return ''; // 본업은 본업 탭에서 직접 추가
+    case '일상':
+    case '가족':
+      return `
+        <div class="work-modal-field">
+          <label class="work-modal-label">예상 시간 (분)</label>
+          <input type="number" class="work-modal-input" id="quick-edit-time" value="${task.estimatedTime || ''}" min="1">
+        </div>
+      `;
+    default:
+      return '';
+  }
+}
+
+/**
+ * 카테고리 변경 시 추가 필드 업데이트
+ */
+function updateQuickEditCategoryFields(category) {
+  const container = document.getElementById('quick-edit-category-fields');
+  if (!container) return;
+  container.innerHTML = getQuickEditCategoryFields(category, {});
+}
+window.updateQuickEditCategoryFields = updateQuickEditCategoryFields;
+
+/**
  * 빠른 수정 모달 표시
  */
 function showQuickEditModal(task) {
@@ -137,7 +199,7 @@ function showQuickEditModal(task) {
     </div>
     <div class="work-modal-field">
       <label class="work-modal-label">카테고리</label>
-      <select class="work-modal-input" id="quick-edit-category">
+      <select class="work-modal-input" id="quick-edit-category" onchange="updateQuickEditCategoryFields(this.value)">
         <option value="본업" ${task.category === '본업' ? 'selected' : ''}>💼 본업</option>
         <option value="부업" ${task.category === '부업' ? 'selected' : ''}>💰 부업</option>
         <option value="일상" ${task.category === '일상' ? 'selected' : ''}>🌅 일상</option>
@@ -154,16 +216,9 @@ function showQuickEditModal(task) {
         <input type="datetime-local" class="work-modal-input" id="quick-edit-deadline" value="${task.deadline || ''}">
       </div>
     </div>
-    <div class="work-modal-field">
-      <label class="work-modal-label">예상 시간 (분)</label>
-      <input type="number" class="work-modal-input" id="quick-edit-time" value="${task.estimatedTime || ''}" min="1">
+    <div id="quick-edit-category-fields">
+      ${getQuickEditCategoryFields(task.category, task)}
     </div>
-    ${task.category === '부업' ? `
-      <div class="work-modal-field">
-        <label class="work-modal-label">예상 수익 (원)</label>
-        <input type="number" class="work-modal-input" id="quick-edit-revenue" value="${task.expectedRevenue || ''}">
-      </div>
-    ` : ''}
   `;
 
   modal.classList.add('show');
@@ -201,23 +256,38 @@ function saveQuickEdit() {
   const category = document.getElementById('quick-edit-category').value;
   const startDate = document.getElementById('quick-edit-startDate').value;
   const deadline = document.getElementById('quick-edit-deadline').value;
-  const estimatedTime = parseInt(document.getElementById('quick-edit-time').value) || null;
+
+  // 카테고리별 추가 필드
+  const timeEl = document.getElementById('quick-edit-time');
   const revenueEl = document.getElementById('quick-edit-revenue');
-  const expectedRevenue = revenueEl ? parseInt(revenueEl.value) || null : null;
+  const organizerEl = document.getElementById('quick-edit-organizer');
+  const eventTypeEl = document.getElementById('quick-edit-eventType');
+  const linkEl = document.getElementById('quick-edit-link');
+
+  // 주최자 목록 자동 추가 — map() 밖에서 처리
+  if (organizerEl) {
+    const org = organizerEl.value.trim();
+    if (org && !(appState.organizerList || []).includes(org)) {
+      appState.organizerList = [...(appState.organizerList || []), org];
+    }
+  }
 
   appState.tasks = appState.tasks.map(t => {
     if (t.id === id) {
-      return {
-        ...t,
+      const updates = {
         title,
         description,
         category,
         startDate,
         deadline,
-        estimatedTime,
-        expectedRevenue: expectedRevenue !== null ? expectedRevenue : t.expectedRevenue,
         updatedAt: new Date().toISOString()
       };
+      if (timeEl) updates.estimatedTime = parseInt(timeEl.value) || null;
+      if (revenueEl) updates.expectedRevenue = parseInt(revenueEl.value) || null;
+      if (organizerEl) updates.organizer = organizerEl.value.trim();
+      if (eventTypeEl) updates.eventType = eventTypeEl.value;
+      if (linkEl) updates.link = linkEl.value;
+      return { ...t, ...updates };
     }
     return t;
   });

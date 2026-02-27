@@ -315,6 +315,7 @@ const appState = {
     workSubcatIdx: null           // 본업 중분류 인덱스
   },
   availableTags: ['긴급', '회의', '전화', '외출', '대기중', '검토필요'],  // 사용 가능한 태그
+  organizerList: ['불개미', '코같투', '맨틀', 'xmaquina'],              // 부업 주최자 목록 (편집 가능)
   editingTaskId: null,            // 수정 중인 작업 ID (null이면 새로 추가)
   quickEditTaskId: null,          // 빠른 수정 모달용 작업 ID
   touchStart: null,               // 스와이프 시작 지점
@@ -498,6 +499,10 @@ function loadState() {
     const parsedTags = safeParseJSON('navigator-tags', null);
     if (parsedTags) appState.availableTags = parsedTags;
 
+    // 주최자 목록 로드
+    const parsedOrganizers = safeParseJSON('navigator-organizer-list', null);
+    if (parsedOrganizers) appState.organizerList = parsedOrganizers;
+
     // 스트릭 로드
     const parsedStreak = safeParseJSON('navigator-streak', null);
     if (parsedStreak) appState.streak = parsedStreak;
@@ -613,6 +618,7 @@ function _doSaveState(immediate = false) {
       localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
       localStorage.setItem('navigator-theme', appState.theme);
       localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+      localStorage.setItem('navigator-organizer-list', JSON.stringify(appState.organizerList || []));
       localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
       localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
       localStorage.setItem('navigator-habitStreaks', JSON.stringify(appState.habitStreaks || {}));
@@ -671,6 +677,7 @@ function _doSaveStateLocalOnly() {
     localStorage.setItem('navigator-shuttle', JSON.stringify(appState.shuttleSuccess));
     localStorage.setItem('navigator-theme', appState.theme);
     localStorage.setItem('navigator-tags', JSON.stringify(appState.availableTags));
+    localStorage.setItem('navigator-organizer-list', JSON.stringify(appState.organizerList || []));
     localStorage.setItem('navigator-settings', JSON.stringify(appState.settings));
     localStorage.setItem('navigator-streak', JSON.stringify(appState.streak));
     localStorage.setItem('navigator-habitStreaks', JSON.stringify(appState.habitStreaks || {}));

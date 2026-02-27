@@ -636,6 +636,14 @@ function detailedAdd() {
     return;
   }
 
+  // 부업: 새 주최자면 목록에 자동 추가
+  if (task.category === '부업' && task.organizer) {
+    const org = task.organizer.trim();
+    if (org && !(appState.organizerList || []).includes(org)) {
+      appState.organizerList = [...(appState.organizerList || []), org];
+    }
+  }
+
   if (appState.editingTaskId) {
     // 수정 모드
     appState.tasks = appState.tasks.map(t =>
@@ -688,3 +696,47 @@ function detailedAdd() {
     navigator.vibrate(50);
   }
 }
+
+/**
+ * 설정 모달: 주최자 목록에 추가
+ */
+function addOrganizerToList() {
+  const input = document.getElementById('new-organizer-input');
+  if (!input) return;
+  const name = input.value.trim();
+  if (!name) return;
+  if ((appState.organizerList || []).includes(name)) {
+    showToast('이미 있는 주최자입니다', 'error');
+    return;
+  }
+  appState.organizerList = [...(appState.organizerList || []), name];
+  saveState();
+  input.value = '';
+  // 목록 UI만 새로고침 (모달 닫지 않음)
+  const display = document.getElementById('organizer-list-display');
+  if (display) {
+    display.innerHTML = appState.organizerList.map((o, i) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+        ${escapeHtml(o)} ✕
+      </span>
+    `).join('');
+  }
+}
+window.addOrganizerToList = addOrganizerToList;
+
+/**
+ * 설정 모달: 주최자 목록에서 삭제
+ */
+function removeOrganizerFromList(idx) {
+  appState.organizerList = (appState.organizerList || []).filter((_, i) => i !== idx);
+  saveState();
+  const display = document.getElementById('organizer-list-display');
+  if (display) {
+    display.innerHTML = appState.organizerList.map((o, i) => `
+      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+        ${escapeHtml(o)} ✕
+      </span>
+    `).join('');
+  }
+}
+window.removeOrganizerFromList = removeOrganizerFromList;
