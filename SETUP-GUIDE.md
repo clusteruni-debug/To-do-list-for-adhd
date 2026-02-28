@@ -1,307 +1,307 @@
-# 🚀 Navigator - 첫 설정 가이드
+# Navigator - Initial Setup Guide
 
-> 회사 컴퓨터에서 GitHub에 올리기
-
----
-
-## 📋 준비물
-
-- ✅ 다운로드한 파일들 (outputs 폴더)
-- ✅ GitHub 계정
-- ✅ 레포지토리: `clusteruni-debug/To-do-list-for-adhd`
+> Pushing to GitHub from your work computer
 
 ---
 
-## 🎯 Step 1: 폴더 준비
+## Prerequisites
 
-### 1-1. 파일 정리
+- Downloaded files (outputs folder)
+- GitHub account
+- Repository: `clusteruni-debug/To-do-list-for-adhd`
+
+---
+
+## Step 1: Prepare Folder
+
+### 1-1. Organize Files
 
 ```bash
-# 1. 원하는 위치에 폴더 만들기
+# 1. Create folder at desired location
 mkdir ~/Documents/navigator-app
 cd ~/Documents/navigator-app
 
-# 2. 다운로드한 파일들 모두 복사
-# (Finder/탐색기에서 드래그&드롭)
+# 2. Copy all downloaded files
+# (Drag & drop from Finder/Explorer)
 
-# 3. 확인
+# 3. Verify
 ls
 ```
 
-**있어야 할 파일들**:
+**Required files**:
 ```
-✅ navigator-v5.html     # 메인 앱
-✅ manifest.json         # PWA 설정 (v5.1 추가)
-✅ sw.js                 # Service Worker (v5.1 추가)
-✅ README.md
-✅ CONTEXT.md
-✅ ROADMAP.md
-✅ ARCHITECTURE.md
-✅ DECISIONS.md
-✅ WORKFLOW.md
-✅ SETUP-GUIDE.md
-✅ TROUBLESHOOTING.md
-✅ .gitignore
+navigator-v5.html     # Main app
+manifest.json         # PWA configuration (added in v5.1)
+sw.js                 # Service Worker (added in v5.1)
+README.md
+CONTEXT.md
+ROADMAP.md
+ARCHITECTURE.md
+DECISIONS.md
+WORKFLOW.md
+SETUP-GUIDE.md
+TROUBLESHOOTING.md
+.gitignore
 ```
 
 ---
 
-## 🔧 Step 2: Git 초기화
+## Step 2: Initialize Git
 
-### 2-1. Git 설정 (처음 한번만)
+### 2-1. Git Configuration (one-time only)
 
 ```bash
-# Git 사용자 정보 설정
+# Set Git user info
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 
-# 확인
+# Verify
 git config --list
 ```
 
-### 2-2. 저장소 초기화
+### 2-2. Initialize Repository
 
 ```bash
-# 폴더로 이동 (이미 있다면 skip)
+# Navigate to folder (skip if already there)
 cd ~/Documents/navigator-app
 
-# Git 초기화
+# Initialize Git
 git init
 
-# 상태 확인
+# Check status
 git status
 ```
 
 ---
 
-## 📤 Step 3: GitHub에 올리기
+## Step 3: Push to GitHub
 
-### 3-1. 파일 추가
+### 3-1. Add Files
 
 ```bash
-# 모든 파일 스테이징
+# Stage all files
 git add .
 
-# 확인
+# Verify
 git status
 
-# 첫 커밋
-git commit -m "v5 프로토타입 완성 + 문서 추가"
+# First commit
+git commit -m "v5 prototype complete + documentation added"
 ```
 
-### 3-2. GitHub 연결
+### 3-2. Connect to GitHub
 
 ```bash
-# 원격 저장소 추가
+# Add remote repository
 git remote add origin https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# 확인
+# Verify
 git remote -v
 ```
 
 ### 3-3. Push!
 
 ```bash
-# 브랜치 이름 설정
+# Set branch name
 git branch -M main
 
-# GitHub에 업로드
+# Upload to GitHub
 git push -u origin main
 ```
 
-**결과**:
+**Result**:
 ```
-✅ Enumerating objects: ...
-✅ Counting objects: ...
-✅ Writing objects: ...
-✅ Total ... pushed
+Enumerating objects: ...
+Counting objects: ...
+Writing objects: ...
+Total ... pushed
 ```
 
 ---
 
-## 🎉 Step 4: 확인
+## Step 4: Verify
 
-### 4-1. GitHub 웹에서 확인
+### 4-1. Check on GitHub Web
 
 ```
 https://github.com/clusteruni-debug/To-do-list-for-adhd
 ```
 
-**보여야 할 것**:
-- ✅ navigator-v5.html
-- ✅ README.md
-- ✅ 모든 .md 파일들
-- ✅ 커밋 히스토리
+**You should see**:
+- navigator-v5.html
+- README.md
+- All .md files
+- Commit history
 
-### 4-2. 앱 실행 테스트
+### 4-2. Test App Execution
 
 ```bash
-# 브라우저로 열기
+# Open in browser
 open navigator-v5.html  # Mac
 start navigator-v5.html # Windows
 ```
 
 ---
 
-## 🏠 Step 5: 집 컴퓨터 설정
+## Step 5: Home Computer Setup
 
 ### 5-1. Clone
 
 ```bash
-# 원하는 위치로 이동
+# Navigate to desired location
 cd ~/Documents
 
-# GitHub에서 복사
+# Copy from GitHub
 git clone https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# 폴더 들어가기
+# Enter folder
 cd To-do-list-for-adhd
 
-# 확인
+# Verify
 ls
 ```
 
 ---
 
-## 🔄 Step 6: 매일 사용하기
+## Step 6: Daily Usage
 
-### 아침 (작업 시작 전)
+### Morning (before starting work)
 
 ```bash
-cd ~/Documents/navigator-app  # 또는 To-do-list-for-adhd
+cd ~/Documents/navigator-app  # or To-do-list-for-adhd
 git pull
 ```
 
-### 저녁 (작업 끝난 후)
+### Evening (after finishing work)
 
 ```bash
 git add .
-git commit -m "오늘 한 작업"
+git commit -m "Today's work"
 git push
 ```
 
-**이게 전부입니다!**
+**That's all there is to it!**
 
 ---
 
-## 🆘 문제 생기면
+## If Problems Occur
 
-### Push 거부됨
+### Push Rejected
 
 ```bash
 git pull
-# 충돌 해결
+# Resolve conflicts
 git push
 ```
 
-### 뭔가 꼬였어요
+### Something Went Wrong
 
 ```bash
-# WORKFLOW.md 참고
-# 또는
-# TROUBLESHOOTING.md 참고
+# See WORKFLOW.md
+# or
+# See TROUBLESHOOTING.md
 ```
 
 ---
 
-## 📱 모바일에서 보기
+## Viewing on Mobile
 
-### 임시 방법 (Phase 1)
+### Temporary Method (Phase 1)
 
 ```bash
-# 1. GitHub에서 파일 보기
+# 1. View file on GitHub
 https://github.com/clusteruni-debug/To-do-list-for-adhd/blob/main/navigator-v5.html
 
-# 2. Raw 버튼 클릭
+# 2. Click Raw button
 
-# 3. 주소 복사
+# 3. Copy URL
 
-# 4. htmlpreview 사용
-https://htmlpreview.github.io/?[복사한주소]
+# 4. Use htmlpreview
+https://htmlpreview.github.io/?[copied-url]
 
-# ⚠️ 제대로 안 될 수 있음
+# Warning: May not work properly
 ```
 
-### 정식 방법 (Phase 2)
+### Official Method (Phase 2)
 
 ```bash
-# Vercel 배포 후
+# After Vercel deployment
 https://navigator.vercel.app
-→ 모바일/PC 둘 다 접속
+# Access from both mobile and PC
 ```
 
 ---
 
-## ✅ 체크리스트
+## Checklist
 
-설정 완료 확인:
+Confirm setup completion:
 
-- [ ] Git 초기화 완료
-- [ ] GitHub에 push 완료
-- [ ] GitHub 웹에서 파일 확인
-- [ ] navigator-v5.html 실행 확인
-- [ ] 작업 추가/완료 테스트
-- [ ] 집 컴퓨터에서 clone 완료 (있다면)
+- [ ] Git initialization complete
+- [ ] Pushed to GitHub
+- [ ] Files verified on GitHub web
+- [ ] navigator-v5.html execution confirmed
+- [ ] Task add/complete tested
+- [ ] Cloned on home computer (if applicable)
 
 ---
 
-## 🎓 다음 단계
+## Next Steps
 
-### Phase 2 준비
+### Phase 2 Preparation
 
 ```bash
-# ROADMAP.md 읽기
-# Phase 2: Next.js 전환 계획 확인
+# Read ROADMAP.md
+# Check Phase 2: Next.js migration plan
 
-# Claude Code로 시작
-# 별도 대화에서 진행
+# Start with Claude Code
+# Proceed in a separate conversation
 ```
 
 ---
 
-## 💡 팁
+## Tips
 
-### Tip 1: 자주 커밋
+### Tip 1: Commit Frequently
 
 ```bash
-# 좋은 습관
-오전 작업 → 커밋
-점심 후 → 커밋
-저녁 → 커밋
+# Good habit
+Morning work -> commit
+After lunch -> commit
+Evening -> commit
 ```
 
-### Tip 2: 의미있는 메시지
+### Tip 2: Meaningful Messages
 
 ```bash
-# 좋은 예
-git commit -m "대시보드 통계 추가"
+# Good example
+git commit -m "Add dashboard statistics"
 
-# 나쁜 예
-git commit -m "수정"
+# Bad example
+git commit -m "fix"
 ```
 
-### Tip 3: 매일 백업
+### Tip 3: Daily Backup
 
 ```bash
-# 앱에서
-📥 내보내기 → JSON 저장
+# In the app
+Export -> Save JSON
 
-# Git으로
-git push → GitHub 자동 백업
+# With Git
+git push -> Auto backup to GitHub
 ```
 
 ---
 
-## 🎉 완료!
+## Done!
 
-**축하합니다! Git 설정 완료!**
+**Congratulations! Git setup complete!**
 
-이제:
-- ✅ 회사/집 어디서든 작업 가능
-- ✅ 히스토리 추적 가능
-- ✅ 안전한 백업
-- ✅ Claude Code로 이어서 개발 가능
+Now:
+- Work from anywhere (office/home)
+- Track history
+- Safe backups
+- Continue development with Claude Code
 
 ---
 
-**다음**: WORKFLOW.md로 일상 작업 시작!
+**Next**: Start daily workflow with WORKFLOW.md!

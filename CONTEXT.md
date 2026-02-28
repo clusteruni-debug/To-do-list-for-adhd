@@ -1,278 +1,278 @@
-# 📋 Navigator - 프로젝트 맥락
+# Project Context — Navigator
 
-> **이 문서는 Claude Code와 Claude Web이 프로젝트를 이해하는 데 필요한 모든 맥락을 담고 있습니다.**
-
----
-
-## 👤 사용자 상황 (극도로 중요)
-
-### 개인 배경
-- **코딩 경험**: 바이브코딩 4일차 (비전공자)
-- **직업**: UX 리서치 매니저 (게임 회사)
-- **건강**: ADHD (약 복용 중) + 과다수면 (수면클리닉 필요)
-
-### 생활 제약
-- **육아**: 21개월 아이 1명
-- **임신**: 와이프 4-5주차 (둘째)
-- **육아 분담**: 평일 0시간, 주말 2-3시간 (와이프가 전담)
-- **통근**: 셔틀 (07:10) vs 일반 (09:30 도착)
-  - 셔틀 성공: 19:00 귀가 → 5시간 확보
-  - 셔틀 실패: 22:00 귀가 → 2시간만 확보
-
-### 수입 구조 (변화)
-#### 과거 (2024 H1)
-```
-kAITO 프로젝트:
-- X 활동 측정 → 토큰 할당
-- 20+ 프로젝트 엑셀 관리
-- 월 ₩6-7M 수익
-```
-
-#### 현재 (2026.01)
-```
-주 수입원:
-1. X 수익화 (첫 지급 ₩900K/2주)
-   - 15.9 포스팅 + 117.4 댓글 (2주)
-   - 지속 가능성 불확실
-
-2. 크립토 이벤트 (텔레그램)
-   - 11개 이벤트 (매일 변동)
-   - 5-10분 간단 / 30분-1시간 리서치
-   - 마감 직전 급하게 처리
-   - 수익 미미/불안정
-
-3. Vibe Coding (새 기회 모색)
-   - 현재 이 프로젝트
-```
-
-#### 제약사항
-- **회사 압박**: X 사용 금지 (업무 중 과도한 사용으로 경고받음)
-- **시간 압박**: 3개월 후 와이프 입덧 시작 → 육아 부담 증가
-- **6개월 후**: 와이프 배 나옴 → 육아 완전 전담 필요
-- **12개월 후**: 둘째 출산 → 생존 모드
-
-### 일정
-```
-평일:
-06:00-09:30  수면 (목표: 07:00 기상, 실제: 09:30)
-09:30-11:00  출근 (1.5h) - X, YouTube
-11:00-20:00  본업 (9h)
-20:00-22:00  퇴근 (2h) - X, YouTube
-22:00-24:00  자유시간 (2h) - 웹서핑, Vibe Coding
-??:??        취침 (불규칙)
-
-셔틀 성공 시:
-08:00 도착 → 17:00 퇴근 → 19:00 귀가 → 5시간 확보
-```
+> **This document contains all the context needed for Claude Code and Claude Web to understand the project.**
 
 ---
 
-## 🎯 해결하려는 문제
+## User Situation (Critically Important)
 
-### 핵심 문제
+### Personal Background
+- **Coding experience**: Day 4 of vibe coding (non-CS background)
+- **Occupation**: UX Research Manager (gaming company)
+- **Health**: ADHD (on medication) + hypersomnia (needs sleep clinic)
+
+### Life Constraints
+- **Childcare**: 1 child, 21 months old
+- **Pregnancy**: Wife at 4-5 weeks (second child)
+- **Childcare share**: 0 hours on weekdays, 2-3 hours on weekends (wife handles everything)
+- **Commute**: Shuttle (07:10) vs regular (arrives 09:30)
+  - Shuttle success: Home by 19:00 -> 5 hours secured
+  - Shuttle failure: Home by 22:00 -> only 2 hours secured
+
+### Income Structure (Changing)
+#### Past (2024 H1)
 ```
-"할일 목록 → 실제 행동" 간극
-
-있는 것:
-- 시간
-- 능력
-- 의지
-
-없는 것:
-- 실행
-```
-
-### 구체적 증상
-1. **우선순위 혼란**
-   - 아침의 나: "오늘은 운동하자"
-   - 저녁의 나: "피곤해... 내일 하지"
-   - 감정/피로도에 따라 중요도가 임의로 바뀜
-
-2. **마감만 보는 패턴**
-   - "중요하지만 급하지 않음" = 안 함
-   - "급하지만 덜 중요함" = 함
-   - 데드라인 있어야 실행됨
-
-3. **기록의 역설**
-   - Notion 정리가 일이 됨
-   - 정리하느라 실행 안 함
-   - 오버헤드가 실행 장벽
-
-4. **ADHD 특성**
-   - 멀티태스킹 안 됨
-   - 우선순위 판단 어려움
-   - 작업 전환 비용 높음
-   - 실행 기능 장애 (Executive Dysfunction)
-
----
-
-## 💡 설계 철학
-
-### 1. "생각 안 하고 실행하게"
-```
-판단 = 에너지 소비
-판단 ↓ = 실행 ↑
-
-구현:
-- Next-Action: 지금 할 것 하나만
-- 자동 우선순위: 생각 안 하게
-- 스와이프: 결정 없이 액션
+kAITO Project:
+- X activity measurement -> token allocation
+- 20+ projects managed via Excel
+- Monthly revenue ~$4-5K USD
 ```
 
-### 2. "작동하는 쓰레기 → 좋은 코드" (Track C)
+#### Current (2026.01)
 ```
-Phase 1: HTML 프로토타입 ✅ 완료 + 확장
-→ 빠른 검증, 즉시 사용
-→ 기술부채 OK
-→ PWA, 반복작업, 일정뷰, UX개선 추가
+Main income sources:
+1. X Monetization (first payment ~$600/2 weeks)
+   - 15.9 posts + 117.4 comments (2 weeks)
+   - Sustainability uncertain
 
-Phase 2: Next.js 전환 (대기)
-→ 제대로 구축
-→ 확장 가능하게
+2. Crypto Events (Telegram)
+   - 11 events (fluctuates daily)
+   - 5-10 min simple / 30 min-1 hour research
+   - Last-minute rush before deadlines
+   - Revenue negligible/unstable
 
-Phase 3: Production (대기)
-→ 실시간 동기화
-→ 크로스 플랫폼
-```
-
-### 3. ADHD 친화적 UX
-```
-시각적:
-- 마감 3시간: 🔴 빨강 + 깜빡임
-- 마감 24시간: 🟠 주황
-- Next-Action: 크게 표시
-
-촉각적:
-- 완료 시: 진동 (50ms, 100ms, 50ms)
-- 추가 시: 진동 (50ms)
-
-청각적:
-- (미구현) 알림음
+3. Vibe Coding (exploring new opportunities)
+   - This project
 ```
 
-### 4. "못 해도 괜찮아" 수용
+#### Constraints
+- **Company pressure**: X usage banned (warned for excessive use during work)
+- **Time pressure**: Wife's morning sickness starts in 3 months -> childcare burden increases
+- **6 months later**: Wife's belly showing -> need to fully take over childcare
+- **12 months later**: Second child born -> survival mode
+
+### Schedule
 ```
-완료율 0% → "괜찮습니다. 내일 하면 됩니다"
-포기한 것 8개 → 명시적으로 보여줌
-5분이라도 → 성취로 인정
+Weekdays:
+06:00-09:30  Sleep (target: wake at 07:00, actual: 09:30)
+09:30-11:00  Commute (1.5h) - X, YouTube
+11:00-20:00  Main job (9h)
+20:00-22:00  Return commute (2h) - X, YouTube
+22:00-24:00  Free time (2h) - Web surfing, Vibe Coding
+??:??        Sleep (irregular)
+
+When shuttle is caught:
+08:00 arrival -> 17:00 leave -> 19:00 home -> 5 hours secured
 ```
 
 ---
 
-## 🏗️ 핵심 개념
+## Problem to Solve
 
-### 1. 모드 시스템
+### Core Problem
+```
+Gap between "to-do list -> actual action"
+
+What exists:
+- Time
+- Ability
+- Will
+
+What's missing:
+- Execution
+```
+
+### Specific Symptoms
+1. **Priority confusion**
+   - Morning me: "Let's exercise today"
+   - Evening me: "Too tired... tomorrow"
+   - Importance shifts arbitrarily based on mood/fatigue
+
+2. **Deadline-only pattern**
+   - "Important but not urgent" = not done
+   - "Urgent but less important" = done
+   - Only executes when there's a deadline
+
+3. **The recording paradox**
+   - Organizing Notion becomes work itself
+   - Organizing instead of executing
+   - Overhead becomes execution barrier
+
+4. **ADHD characteristics**
+   - Cannot multitask
+   - Priority judgment is difficult
+   - High task-switching cost
+   - Executive Dysfunction
+
+---
+
+## Design Philosophy
+
+### 1. "Execute without thinking"
+```
+Judgment = energy consumption
+Judgment down = execution up
+
+Implementation:
+- Next-Action: just one thing to do now
+- Auto-priority: don't need to think
+- Swipe: action without decision
+```
+
+### 2. "Working garbage -> good code" (Track C)
+```
+Phase 1: HTML prototype -- Done + expanded
+-> Quick validation, immediate use
+-> Technical debt OK
+-> PWA, recurring tasks, schedule view, UX improvements added
+
+Phase 2: Next.js migration (waiting)
+-> Build properly
+-> Make it scalable
+
+Phase 3: Production (waiting)
+-> Real-time sync
+-> Cross-platform
+```
+
+### 3. ADHD-Friendly UX
+```
+Visual:
+- 3-hour deadline: Red + blinking
+- 24-hour deadline: Orange
+- Next-Action: displayed large
+
+Tactile:
+- On completion: vibration (50ms, 100ms, 50ms)
+- On addition: vibration (50ms)
+
+Audio:
+- (Not implemented) notification sound
+```
+
+### 4. "It's okay if you can't" Acceptance
+```
+0% completion rate -> "It's okay. Do it tomorrow"
+8 abandoned items -> explicitly shown
+Even 5 minutes -> recognized as achievement
+```
+
+---
+
+## Core Concepts
+
+### 1. Mode System
 ```javascript
-시간대별 자동 전환:
+Auto-switching by time of day:
 
-회사 (11-20시):
-- 본업만 표시
-- X 관련 숨김 (회사 압박)
+Work (11:00-20:00):
+- Show main job only
+- Hide X-related items (company pressure)
 
-생존 (22-24시, 셔틀 실패):
-- 15분 이하만
-- 긴급한 것만
-- "오늘은 포기" 수용
+Survival (22:00-24:00, shuttle missed):
+- 15 minutes or less only
+- Urgent items only
+- "Give up today" accepted
 
-여유 (19-24시, 셔틀 성공):
-- 전체 표시
-- 5시간 활용 전략
+Leisure (19:00-24:00, shuttle caught):
+- Show everything
+- 5-hour utilization strategy
 ```
 
-### 2. 우선순위 계산
+### 2. Priority Calculation
 ```javascript
-점수 = f(
-  마감시간,      // 가장 중요
-  카테고리,      // 본업 > 부업 > 일상
-  ROI,           // 수익/시간 (부업만)
-  소요시간       // 짧은 것 우대
+score = f(
+  deadline,        // Most important
+  category,        // Main Job > Side Job > Daily
+  ROI,             // Revenue/time (side jobs only)
+  estimatedTime    // Short tasks favored
 )
 
-마감시간 점수:
-- 지남: -100 (패널티)
-- 3시간 내: +100 (최우선)
-- 24시간 내: +70
-- 3일 내: +40
+Deadline score:
+- Overdue: -100 (penalty)
+- Within 3 hours: +100 (top priority)
+- Within 24 hours: +70
+- Within 3 days: +40
 
-카테고리 점수:
-- 본업: +40 (월급)
-- 부업: +35 (현금흐름)
-- 일상: +25 (생존 최소)
+Category score:
+- Main Job: +40 (salary)
+- Side Job: +35 (cash flow)
+- Daily: +25 (survival minimum)
 
-ROI 보너스 (부업):
-- ROI = 수익 / 시간
-- 최대 +30점
+ROI bonus (side jobs):
+- ROI = revenue / time
+- Max +30 points
 
-소요시간 보너스:
-- 10분 이하: +10
+Estimated time bonus:
+- 10 min or less: +10
 ```
 
-### 3. 카테고리별 차이
+### 3. Category Differences
 ```
-본업:
-- 예상수익 없음
-- 마감/소요시간/링크
+Main Job:
+- No expected revenue
+- Deadline/estimated time/link
 
-부업:
-- 예상수익 선택사항 (모를 수 있음)
-- 마감/소요시간/수익/링크
-- ROI 계산에 사용
+Side Job:
+- Expected revenue is optional (may not know)
+- Deadline/estimated time/revenue/link
+- Used for ROI calculation
 
-일상:
-- 소요시간만
-- 수익 무관
-- 생존 최소치
+Daily:
+- Estimated time only
+- Revenue irrelevant
+- Survival minimum
 ```
 
-### 4. 셔틀 모드
+### 4. Shuttle Mode
 ```
-성공 (19:00 귀가):
-→ "🎉 5시간 확보!"
-→ 여유 모드 활성화
-→ 모든 카테고리 표시
+Success (home by 19:00):
+-> "5 hours secured!"
+-> Leisure mode activated
+-> All categories displayed
 
-실패 (22:00 귀가):
-→ "⚠️ 긴급 모드"
-→ 생존 모드 활성화
-→ 짧고 급한 것만
+Failure (home by 22:00):
+-> "Emergency mode"
+-> Survival mode activated
+-> Short and urgent only
 ```
 
 ---
 
-## 📊 데이터 구조
+## Data Structure
 
-### Task 객체
+### Task Object
 ```typescript
 interface Task {
-  // 식별
-  id: number;              // timestamp (임시, UUID로 변경 예정)
+  // Identity
+  id: number;              // timestamp (temporary, will change to UUID)
 
-  // 기본 정보
-  title: string;           // 작업 제목
-  category: '본업' | '부업' | '일상';
+  // Basic info
+  title: string;           // Task title
+  category: 'Main Job' | 'Side Job' | 'Daily';
 
-  // 시간 정보
-  deadline: string;        // ISO datetime (선택)
-  estimatedTime: number;   // 분 단위
+  // Time info
+  deadline: string;        // ISO datetime (optional)
+  estimatedTime: number;   // in minutes
   createdAt: string;       // ISO datetime
 
-  // 메타
-  link: string;            // URL (텔레그램, 웹)
-  expectedRevenue: string; // 부업만, 선택사항
+  // Meta
+  link: string;            // URL (Telegram, web)
+  expectedRevenue: string; // Side jobs only, optional
 
-  // 반복 (v5.1 추가)
+  // Recurring (added in v5.1)
   repeatType?: 'none' | 'daily' | 'weekday' | 'weekly' | 'monthly';
 
-  // 상태
+  // Status
   completed: boolean;
 
-  // 계산값 (런타임)
-  priority?: number;       // 자동 계산
+  // Computed (runtime)
+  priority?: number;       // Auto-calculated
   urgency?: 'urgent' | 'warning' | 'normal' | 'expired';
 }
 ```
 
-### 상태 관리 (현재)
+### State Management (Current)
 ```javascript
 appState = {
   currentTab: string,
@@ -291,327 +291,327 @@ appState = {
 
 ---
 
-## 🔄 과거 시행착오 (배운 것)
+## Past Trial and Error (Lessons Learned)
 
-### v1 (실패)
+### v1 (Failed)
 ```
-문제: React 라이브러리 로딩 실패
-원인: CDN 링크 잘못됨
-해결: Vanilla JS로 전환
-```
-
-### v2 (실패)
-```
-문제: 검은 화면, 아무것도 안 뜸
-원인: React 구현 방식 잘못됨
-해결: Vanilla JS로 재작성
+Problem: React library failed to load
+Cause: Wrong CDN link
+Solution: Switched to Vanilla JS
 ```
 
-### v3 (부분 실패)
+### v2 (Failed)
 ```
-문제: 텍스트 입력 시 포커스 날아감
-원인: 1초마다 전체 리렌더링
-해결: 입력 핸들러 이벤트로 분리
-
-문제: PC에서 전체 리스트 안 보임
-원인: 토글 로직 버그
-해결: showTaskList 상태로 제어
+Problem: Black screen, nothing displayed
+Cause: Wrong React implementation
+Solution: Rewrote in Vanilla JS
 ```
 
-### v4 (부분 실패)
+### v3 (Partial Failure)
 ```
-문제: 대시보드에서 삭제 안 됨
-원인: confirm이 두 번 호출됨
-해결: 호출 지점에서만 confirm
+Problem: Input focus lost while typing
+Cause: Full re-render every 1 second
+Solution: Separated input handlers into events
 
-문제: 완료한 작업 수정 불가
-원인: 완료 후 숨김
-해결: 완료 취소 기능 추가
-```
-
-### v5 (기본)
-```
-✅ 모든 버그 수정
-✅ 기능 완성
-✅ 에러 처리 추가
-✅ 주석 완비
+Problem: Full list not visible on PC
+Cause: Toggle logic bug
+Solution: Control via showTaskList state
 ```
 
-### v5.1 (확장) ← 현재
+### v4 (Partial Failure)
 ```
-✅ PWA 지원 (manifest.json, sw.js)
-✅ 푸시 알림 (마감 3시간/1시간 전)
-✅ 반복 작업 (매일/평일/매주/매월)
-✅ PC/모바일 반응형 (3컬럼/1컬럼)
-✅ 일정 탭 (평일/주말 필터)
-✅ 완료 애니메이션 + 진행률
-✅ 현재 시간 & 모드별 남은 시간
-✅ 검색 & 카테고리 필터
-```
+Problem: Cannot delete from dashboard
+Cause: confirm() called twice
+Solution: confirm only at call site
 
----
-
-## 💡 중요한 설계 결정들
-
-### Q1: 왜 카테고리별 입력 필드가 다른가?
-```
-A: 맥락에 맞게
-
-본업:
-- 예상수익 무의미 (월급)
-- 마감/시간만 중요
-
-부업:
-- 수익 모를 수 있음
-- 강제하면 입력 장벽
-- 선택사항으로
-
-일상:
-- 수익 무관
-- 소요시간만 필요
+Problem: Cannot edit completed tasks
+Cause: Hidden after completion
+Solution: Added undo completion feature
 ```
 
-### Q2: 왜 자동 우선순위?
+### v5 (Base)
 ```
-A: ADHD 친화적
-
-수동 우선순위:
-- 매번 판단 필요
-- 에너지 소비
-- 판단 피로 → 실행 안 함
-
-자동 우선순위:
-- 생각 없이 실행
-- 알고리즘이 결정
-- 판단 비용 제로
+All bugs fixed
+Feature complete
+Error handling added
+Comments complete
 ```
 
-### Q3: 왜 Next-Action 하나만?
+### v5.1 (Extended) <- Current
 ```
-A: 선택 회피
-
-10개 보여주면:
-- "뭐부터 하지?" 고민
-- 고민 → 회피 → 안 함
-
-1개만 보여주면:
-- 고민 불가능
-- 하거나 / 안 하거나
-- 실행률 증가
-```
-
-### Q4: 왜 스와이프 제스처?
-```
-A: 마찰 최소화
-
-버튼:
-- 찾아야 함
-- 클릭 정확도 필요
-- 2단계 (찾기 + 클릭)
-
-스와이프:
-- 직관적
-- 빠름
-- 1단계 (밀기)
-```
-
-### Q5: 왜 "못 해도 괜찮아"?
-```
-A: 완벽주의 해체
-
-ADHD + 완벽주의:
-- 100% 못 하면 0%
-- 실패 두려움 → 시작 안 함
-- 악순환
-
-수용 철학:
-- 70%도 성공
-- 5분도 성취
-- 내일 하면 됨
-- 선순환
-```
-
-### Q6: 왜 JSON 백업?
-```
-A: 로컬스토리지 한계
-
-로컬스토리지:
-- 브라우저 삭제 시 날아감
-- 기기 간 이동 불가
-- 최대 5-10MB
-
-JSON 백업:
-- 수동이지만 안전
-- 기기 간 이동 가능
-- Phase 3에서 자동화 예정
+PWA support (manifest.json, sw.js)
+Push notifications (3 hours/1 hour before deadline)
+Recurring tasks (daily/weekday/weekly/monthly)
+PC/mobile responsive (3-column/1-column)
+Schedule tab (weekday/weekend filter)
+Completion animation + progress
+Current time & time remaining per mode
+Search & category filter
 ```
 
 ---
 
-## 🎓 배운 것들 (비전공자 관점)
+## Important Design Decisions
 
-### 1. 상태 관리의 중요성
+### Q1: Why are input fields different per category?
 ```
-처음: 변수 여기저기
-→ 버그 추적 불가
-→ 디버깅 지옥
+A: Context-appropriate
 
-지금: appState 하나로
-→ 모든 것 한 곳에
-→ 이해 가능
+Main Job:
+- Expected revenue is meaningless (salary)
+- Only deadline/time matter
 
-다음: Zustand (React 상태 관리)
-```
+Side Job:
+- May not know revenue
+- Forcing it creates input barrier
+- Made optional
 
-### 2. 렌더링 vs 이벤트
-```
-처음: 1초마다 전체 다시 그림
-→ 입력 포커스 날아감
-→ 성능 안 좋음
-
-지금: 이벤트 핸들러
-→ 필요한 것만 업데이트
-→ 포커스 유지
-
-다음: React (자동 최적화)
+Daily:
+- Revenue irrelevant
+- Only estimated time needed
 ```
 
-### 3. 에러 처리의 중요성
+### Q2: Why auto-priority?
 ```
-처음: 에러 무시
-→ 앱 크래시
-→ 데이터 날아감
+A: ADHD-friendly
 
-지금: try-catch
-→ 토스트 알림
-→ 우아한 실패
+Manual priority:
+- Requires judgment each time
+- Energy consumption
+- Decision fatigue -> no execution
 
-다음: Sentry (에러 트래킹)
-```
-
-### 4. 주석의 가치
-```
-처음: 주석 없음
-→ 내일 읽으면 이해 안 됨
-→ 다시 배워야 함
-
-지금: 모든 함수 주석
-→ 1주일 후에도 이해
-→ Claude도 이해
-
-다음: JSDoc (타입 + 주석)
+Auto-priority:
+- Execute without thinking
+- Algorithm decides
+- Zero decision cost
 ```
 
----
-
-## 🚧 알려진 한계 (기술부채)
-
-### 1. ID 충돌 가능성
+### Q3: Why show only one Next-Action?
 ```
-현재: timestamp 사용
-문제: 밀리초 단위 동시 생성 시 충돌
-해결: UUID로 변경 (Phase 2)
-```
+A: Choice avoidance
 
-### 2. 데이터 타입 없음
-```
-현재: JavaScript (타입 없음)
-문제: 런타임 에러 가능
-해결: TypeScript 전환 (Phase 2)
+Showing 10 items:
+- "Which one first?" deliberation
+- Deliberation -> avoidance -> not done
+
+Showing just 1:
+- Deliberation impossible
+- Either do it / or don't
+- Execution rate increases
 ```
 
-### 3. 전역 상태
+### Q4: Why swipe gestures?
 ```
-현재: appState 전역 변수
-문제: 복잡해지면 관리 어려움
-해결: Zustand로 전환 (Phase 2)
+A: Minimize friction
+
+Buttons:
+- Must find them
+- Click accuracy needed
+- 2 steps (find + click)
+
+Swipe:
+- Intuitive
+- Fast
+- 1 step (swipe)
 ```
 
-### 4. 전체 리렌더링
+### Q5: Why "It's okay if you can't"?
 ```
-현재: renderStatic() 전체 그림
-문제: 성능 안 좋음 (느림)
-해결: React (부분 업데이트)
+A: Dismantling perfectionism
+
+ADHD + Perfectionism:
+- If not 100%, then 0%
+- Fear of failure -> don't start
+- Vicious cycle
+
+Acceptance philosophy:
+- 70% is also success
+- 5 minutes is achievement
+- Do it tomorrow
+- Virtuous cycle
 ```
 
-### 5. 로컬스토리지 한계
+### Q6: Why JSON backup?
 ```
-현재: 단일 기기만
-문제: 동기화 안 됨
-해결: Supabase (Phase 3)
-```
+A: LocalStorage limitations
 
-### 6. 반응형 미흡
-```
-현재: 모바일 우선
-문제: PC 대화면에서 어색
-해결: Tailwind 반응형 (Phase 2)
+LocalStorage:
+- Lost when browser data is cleared
+- Cannot transfer between devices
+- Max 5-10MB
+
+JSON backup:
+- Manual but safe
+- Can transfer between devices
+- Will be automated in Phase 3
 ```
 
 ---
 
-## 🎯 다음 개발자를 위한 팁
+## Lessons Learned (Non-CS Perspective)
 
-### Claude Code로 이어받을 때
+### 1. Importance of State Management
+```
+Before: Variables scattered everywhere
+-> Cannot track bugs
+-> Debugging hell
+
+Now: Single appState
+-> Everything in one place
+-> Understandable
+
+Next: Zustand (React state management)
+```
+
+### 2. Rendering vs Events
+```
+Before: Redraw everything every 1 second
+-> Input focus lost
+-> Poor performance
+
+Now: Event handlers
+-> Update only what's needed
+-> Focus preserved
+
+Next: React (auto-optimization)
+```
+
+### 3. Importance of Error Handling
+```
+Before: Ignore errors
+-> App crash
+-> Data lost
+
+Now: try-catch
+-> Toast notifications
+-> Graceful failure
+
+Next: Sentry (error tracking)
+```
+
+### 4. Value of Comments
+```
+Before: No comments
+-> Can't understand next day
+-> Must relearn
+
+Now: Comments on every function
+-> Understandable after 1 week
+-> Claude understands too
+
+Next: JSDoc (types + comments)
+```
+
+---
+
+## Known Limitations (Technical Debt)
+
+### 1. ID Collision Possible
+```
+Current: Using timestamp
+Problem: Collision on millisecond-level simultaneous creation
+Solution: Change to UUID (Phase 2)
+```
+
+### 2. No Data Types
+```
+Current: JavaScript (no types)
+Problem: Runtime errors possible
+Solution: TypeScript migration (Phase 2)
+```
+
+### 3. Global State
+```
+Current: appState global variable
+Problem: Hard to manage as complexity grows
+Solution: Migrate to Zustand (Phase 2)
+```
+
+### 4. Full Re-render
+```
+Current: renderStatic() draws everything
+Problem: Poor performance (slow)
+Solution: React (partial updates)
+```
+
+### 5. LocalStorage Limitations
+```
+Current: Single device only
+Problem: No sync
+Solution: Supabase (Phase 3)
+```
+
+### 6. Inadequate Responsive Design
+```
+Current: Mobile-first
+Problem: Awkward on large PC screens
+Solution: Tailwind responsive (Phase 2)
+```
+
+---
+
+## Tips for the Next Developer
+
+### When Taking Over with Claude Code
 ```markdown
-1. 이 파일 (CONTEXT.md) 먼저 읽기
-2. ROADMAP.md로 현재 위치 파악
-3. ARCHITECTURE.md로 구조 이해
-4. navigator-v5.html 코드 읽기
-   - 주석 따라가면 이해됨
-5. 작업 시작
+1. Read this file (CONTEXT.md) first
+2. Check current position via ROADMAP.md
+3. Understand structure via ARCHITECTURE.md
+4. Read navigator-v5.html code
+   - Follow comments to understand
+5. Start working
 ```
 
-### Claude Web에서 물어볼 때
+### When Asking on Claude Web
 ```markdown
-"CONTEXT.md 읽고 요약해줘"
-→ 전체 맥락 파악
+"Read CONTEXT.md and summarize"
+-> Grasp full context
 
-"ROADMAP.md 보고 다음 할 일 알려줘"
-→ Phase 2 작업 시작
+"Look at ROADMAP.md and tell me what to do next"
+-> Start Phase 2 work
 
-"이 부분이 왜 이렇게 설계됐어?"
-→ DECISIONS.md 참고
+"Why was this part designed this way?"
+-> Reference DECISIONS.md
 ```
 
-### 새 기능 추가 시
+### When Adding New Features
 ```markdown
-1. DECISIONS.md에 기록
-   - 왜 이렇게 했는가
-   - 다른 방법은 고려했는가
-   - 트레이드오프는 무엇인가
+1. Record in DECISIONS.md
+   - Why did you do it this way
+   - What alternatives were considered
+   - What are the tradeoffs
 
-2. ARCHITECTURE.md 업데이트
-   - 구조 변경 사항
+2. Update ARCHITECTURE.md
+   - Structural changes
 
-3. 주석 작성
-   - 미래의 나를 위해
+3. Write comments
+   - For your future self
 ```
 
 ---
 
-## 💬 개발 중 참고할 것
+## Reference During Development
 
-### 사용자의 말투/태도
-- "일단 작동하게" (완벽주의 회피)
-- "맨땅에 헤딩" (비전공자 자각)
-- "뽕 뽑자" (효율성 추구)
-- "병행하면서" (배움 + 실행)
+### User's Communication Style
+- "Just make it work" (avoiding perfectionism)
+- "Learning by doing" (non-CS self-awareness)
+- "Get the most out of it" (efficiency-driven)
+- "Do both simultaneously" (learning + execution)
 
-### 우선순위
-1. 작동 > 완벽
-2. 빠른 검증 > 오래 설계
-3. 실행 > 이해
-4. 결과 > 과정
+### Priorities
+1. Working > Perfect
+2. Quick validation > Long design
+3. Execution > Understanding
+4. Results > Process
 
-### 소통 방식
-- 기술 용어 설명 필요
-- 왜 그런지 설명 (궁금해함)
-- 선택지 제시 (결정권 존중)
-- 격려 (불안감 있음)
+### Communication Approach
+- Technical terms need explanation
+- Explain why (user is curious)
+- Present options (respect decision authority)
+- Encouragement (user has anxiety)
 
 ---
 
-**이 문서는 살아있습니다. 프로젝트가 진행되며 계속 업데이트됩니다.**
+**This document is alive. It continues to be updated as the project progresses.**
 
-**마지막 업데이트: 2026-01-28 (v5.1 확장 완료)**
+**Last updated: 2026-01-28 (v5.1 expansion complete)**

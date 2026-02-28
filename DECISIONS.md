@@ -1,801 +1,801 @@
-# 📝 Navigator - 설계 결정 기록
+# Navigator - Design Decision Records
 
 > Architecture Decision Records (ADR)
 
-**왜 이렇게 설계했는가? 다른 방법은 없었는가?**
+**Why was it designed this way? Were there no alternatives?**
 
 ---
 
-## Decision 1: 자동 우선순위 vs 수동 우선순위
+## Decision 1: Auto Priority vs Manual Priority
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-사용자가 작업의 우선순위를 판단하기 어려워함. 감정/피로도에 따라 중요도가 임의로 바뀜.
+### Context
+User has difficulty judging task priorities. Importance shifts arbitrarily based on mood/fatigue.
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 수동 우선순위
+#### Option A: Manual Priority
 ```
-장점:
-- 사용자가 직접 제어
-- 유연함
-- 구현 간단
+Pros:
+- User has direct control
+- Flexible
+- Simple to implement
 
-단점:
-- 매번 판단 필요 (판단 피로)
-- ADHD에 불리
-- 시간 소비
-```
-
-#### 옵션 B: 자동 우선순위
-```
-장점:
-- 판단 제거
-- 즉시 실행 가능
-- ADHD 친화적
-
-단점:
-- 알고리즘 복잡
-- 완벽하지 않을 수 있음
-- 투명성 부족
+Cons:
+- Requires judgment every time (decision fatigue)
+- Disadvantageous for ADHD
+- Time-consuming
 ```
 
-### 결정
-**옵션 B: 자동 우선순위**
+#### Option B: Auto Priority
+```
+Pros:
+- Eliminates judgment
+- Enables immediate execution
+- ADHD-friendly
 
-### 이유
-1. ADHD 사용자는 실행 기능 장애가 있음
-2. 판단 = 에너지 소비 = 실행 안 함
-3. "생각 안 하고 실행하게"가 핵심 철학
-4. 불완벽해도 판단 안 하는 게 더 나음
+Cons:
+- Complex algorithm
+- May not be perfect
+- Lacks transparency
+```
 
-### 트레이드오프
-- 사용자가 의도와 다를 수 있음
-- 하지만: 수동 조정 (수정 기능) 제공
-- 알고리즘은 계속 개선 가능
+### Decision
+**Option B: Auto Priority**
 
-### 결과
-✅ 성공. 사용자가 고민 없이 바로 실행.
+### Rationale
+1. ADHD users have executive function impairment
+2. Judgment = energy consumption = no execution
+3. "Execute without thinking" is the core philosophy
+4. Not judging at all is better, even if imperfect
+
+### Tradeoffs
+- May not match user's intent
+- However: manual adjustment (edit feature) is available
+- Algorithm can be continuously improved
+
+### Result
+Success. User executes immediately without deliberation.
 
 ---
 
-## Decision 2: Next-Action 단일 표시 vs 전체 리스트
+## Decision 2: Next-Action Single Display vs Full List
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-작업이 10개 이상일 때, 어떻게 보여줄 것인가?
+### Context
+When there are 10+ tasks, how should they be displayed?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 전체 리스트
+#### Option A: Full List
 ```
-장점:
-- 전체 파악 가능
-- 일반적인 Todo 앱 방식
+Pros:
+- Full overview possible
+- Standard todo app approach
 
-단점:
-- 선택 장벽 ("뭐부터?")
-- 압도감 (10개 보면 포기)
-- 우선순위 혼란
-```
-
-#### 옵션 B: Next-Action 하나만
-```
-장점:
-- 선택 불가능 (생각 제거)
-- 압도감 제거
-- 즉시 실행
-
-단점:
-- 전체 파악 어려움
-- 불안감 (나머지는?)
+Cons:
+- Choice barrier ("Which one first?")
+- Overwhelming (seeing 10 items leads to giving up)
+- Priority confusion
 ```
 
-#### 옵션 C: 하이브리드
+#### Option B: Show Only One Next-Action
 ```
-장점:
-- Next-Action 크게 + 리스트 접기
-- 필요시 펼쳐보기
+Pros:
+- Choice impossible (eliminates thinking)
+- No overwhelm
+- Immediate execution
 
-단점:
-- 복잡도 증가
+Cons:
+- Hard to see full picture
+- Anxiety ("What about the rest?")
 ```
 
-### 결정
-**옵션 C: 하이브리드**
+#### Option C: Hybrid
+```
+Pros:
+- Next-Action displayed large + collapsible list
+- Expandable when needed
 
-Next-Action 크게 표시 + "전체 목록 보기" 접기/펼치기
+Cons:
+- Increased complexity
+```
 
-### 이유
-1. 기본은 단순하게 (Next-Action)
-2. 불안한 사람은 펼쳐보기 가능
-3. 선택의 자유 유지
-4. 점진적 공개 (Progressive Disclosure)
+### Decision
+**Option C: Hybrid**
 
-### 트레이드오프
-- UI 복잡도 약간 증가
-- 하지만: 사용자 제어권 증가
+Next-Action displayed prominently + "View All Tasks" collapse/expand
 
-### 결과
-✅ 성공. 대부분 Next-Action만 보고, 가끔 리스트 확인.
+### Rationale
+1. Default is simple (Next-Action)
+2. Anxious users can expand to view all
+3. Freedom of choice preserved
+4. Progressive Disclosure
+
+### Tradeoffs
+- Slightly increased UI complexity
+- However: increased user control
+
+### Result
+Success. Most users only look at Next-Action, occasionally checking the list.
 
 ---
 
-## Decision 3: 카테고리별 입력 필드 차이
+## Decision 3: Different Input Fields Per Category
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-본업/부업/일상 모두 같은 입력 필드를 요구하면, 불필요한 정보도 입력해야 함.
+### Context
+If Main Job/Side Job/Daily all require the same input fields, users must enter unnecessary information.
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 동일한 입력 필드
+#### Option A: Identical Input Fields
 ```
-장점:
-- 구현 간단
-- 일관성
+Pros:
+- Simple to implement
+- Consistency
 
-단점:
-- 불필요한 필드 (본업에 예상수익?)
-- 입력 장벽 증가
-```
-
-#### 옵션 B: 카테고리별 맞춤
-```
-장점:
-- 맥락에 맞음
-- 입력 부담 감소
-
-단점:
-- 구현 복잡
-- 일관성 감소
+Cons:
+- Unnecessary fields (expected revenue for Main Job?)
+- Increased input barrier
 ```
 
-### 결정
-**옵션 B: 카테고리별 맞춤**
+#### Option B: Category-Specific Fields
+```
+Pros:
+- Context-appropriate
+- Reduced input burden
 
-- 본업: 마감/시간/링크
-- 부업: 마감/시간/수익(선택)/링크
-- 일상: 시간만
+Cons:
+- More complex implementation
+- Reduced consistency
+```
 
-### 이유
-1. 본업은 예상수익 무의미 (월급)
-2. 부업은 수익 모를 수 있음 (선택사항)
-3. 일상은 수익 무관
-4. 맥락에 맞게 = 사용성 증가
+### Decision
+**Option B: Category-Specific Fields**
 
-### 트레이드오프
-- 코드 복잡도 증가
-- 하지만: 사용자 경험 크게 개선
+- Main Job: deadline/time/link
+- Side Job: deadline/time/revenue(optional)/link
+- Daily: time only
 
-### 결과
-✅ 성공. 불필요한 입력 제거 → 빠른 추가.
+### Rationale
+1. Main Job: expected revenue is meaningless (salary)
+2. Side Job: revenue may be unknown (made optional)
+3. Daily: revenue is irrelevant
+4. Context-appropriate = better usability
+
+### Tradeoffs
+- Increased code complexity
+- However: significantly improved user experience
+
+### Result
+Success. Eliminated unnecessary inputs -> faster task addition.
 
 ---
 
-## Decision 4: 스와이프 제스처 vs 버튼만
+## Decision 4: Swipe Gestures vs Buttons Only
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-모바일에서 작업을 완료/삭제하는 방법.
+### Context
+How to complete/delete tasks on mobile.
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 버튼만
+#### Option A: Buttons Only
 ```
-장점:
-- 명확함
-- 실수 방지
+Pros:
+- Clear
+- Prevents mistakes
 
-단점:
-- 클릭 정확도 필요
-- 느림 (찾기 → 클릭)
-```
-
-#### 옵션 B: 스와이프만
-```
-장점:
-- 빠름
-- 직관적
-
-단점:
-- 실수 가능
-- 발견성 낮음 (처음 모름)
+Cons:
+- Requires click accuracy
+- Slow (find -> click)
 ```
 
-#### 옵션 C: 스와이프 + 버튼
+#### Option B: Swipe Only
 ```
-장점:
-- 파워 유저: 스와이프
-- 초보: 버튼
+Pros:
+- Fast
+- Intuitive
 
-단점:
-- 복잡도 증가
+Cons:
+- Mistakes possible
+- Low discoverability (unknown at first)
 ```
 
-### 결정
-**옵션 C: 스와이프 + 버튼**
+#### Option C: Swipe + Buttons
+```
+Pros:
+- Power users: swipe
+- Beginners: buttons
 
-- ← 왼쪽 스와이프: 완료
-- → 오른쪽 스와이프: 삭제
-- 버튼: 항상 표시
+Cons:
+- Increased complexity
+```
 
-### 이유
-1. 모바일 UX 표준 (iOS/Android)
-2. 빠른 액션 (파워 유저)
-3. 명확한 대안 (초보자)
-4. 점진적 학습
+### Decision
+**Option C: Swipe + Buttons**
 
-### 트레이드오프
-- 구현 복잡도 증가
-- 하지만: 사용성 크게 향상
+- Swipe left: complete
+- Swipe right: delete
+- Buttons: always visible
 
-### 결과
-✅ 성공. 익숙해지면 스와이프만 사용.
+### Rationale
+1. Mobile UX standard (iOS/Android)
+2. Fast actions (power users)
+3. Clear alternative (beginners)
+4. Progressive learning
+
+### Tradeoffs
+- Increased implementation complexity
+- However: significantly improved usability
+
+### Result
+Success. Once familiar, users only use swipe.
 
 ---
 
-## Decision 5: LocalStorage vs 서버
+## Decision 5: LocalStorage vs Server
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-Phase 1에서 데이터를 어디에 저장할 것인가?
+### Context
+Where to store data in Phase 1?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 서버 (Supabase)
+#### Option A: Server (Supabase)
 ```
-장점:
-- 크로스 플랫폼 동기화
-- 백업 자동
-- 확장 가능
+Pros:
+- Cross-platform sync
+- Automatic backup
+- Scalable
 
-단점:
-- 시간 오래 걸림
-- 초기 설정 복잡
-- 인증 필요
-- 빠른 검증 불가
-```
-
-#### 옵션 B: LocalStorage
-```
-장점:
-- 즉시 작동
-- 간단함
-- 인증 불필요
-- 빠른 검증
-
-단점:
-- 단일 기기만
-- 백업 수동
-- 크기 제한 (5MB)
+Cons:
+- Takes too long
+- Complex initial setup
+- Authentication required
+- Cannot validate quickly
 ```
 
-### 결정
-**Phase 1: LocalStorage → Phase 3: Supabase**
+#### Option B: LocalStorage
+```
+Pros:
+- Works immediately
+- Simple
+- No authentication needed
+- Quick validation
 
-### 이유
-1. "작동하는 쓰레기 → 좋은 코드" 전략
-2. 빠른 검증이 우선
-3. 사용자 피드백 먼저 수집
-4. 나중에 마이그레이션
+Cons:
+- Single device only
+- Manual backup
+- Size limit (5MB)
+```
 
-### 트레이드오프
-- 초기에는 동기화 안 됨
-- 하지만: JSON 백업으로 수동 이관 가능
-- Phase 3에서 자동화
+### Decision
+**Phase 1: LocalStorage -> Phase 3: Supabase**
 
-### 결과
-✅ 성공. 빠르게 검증 완료. Phase 3 준비 중.
+### Rationale
+1. "Working garbage -> good code" strategy
+2. Quick validation is the priority
+3. Collect user feedback first
+4. Migrate later
+
+### Tradeoffs
+- No sync initially
+- However: manual transfer possible via JSON backup
+- Automated in Phase 3
+
+### Result
+Success. Quick validation complete. Preparing for Phase 3.
 
 ---
 
 ## Decision 6: Vanilla JS vs React (Phase 1)
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-Phase 1 프로토타입을 무엇으로 만들 것인가?
+### Context
+What to build the Phase 1 prototype with?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: React
+#### Option A: React
 ```
-장점:
-- 컴포넌트 재사용
-- 상태 관리 쉬움
-- 성능 좋음
+Pros:
+- Component reuse
+- Easy state management
+- Good performance
 
-단점:
-- 빌드 설정 필요
-- 배포 복잡
-- 학습 곡선 (비전공자)
-```
-
-#### 옵션 B: Vanilla JS
-```
-장점:
-- 즉시 작동 (HTML 열면 끝)
-- 배포 불필요
-- 학습 부담 적음
-
-단점:
-- 상태 관리 어려움
-- 성능 안 좋음
-- 확장 어려움
+Cons:
+- Build setup required
+- Complex deployment
+- Learning curve (non-CS background)
 ```
 
-### 결정
-**Phase 1: Vanilla JS → Phase 2: React (Next.js)**
+#### Option B: Vanilla JS
+```
+Pros:
+- Works immediately (just open HTML)
+- No deployment needed
+- Low learning burden
 
-### 이유
-1. 비전공자 4일차
-2. 빠른 검증 우선
-3. 빌드/배포 시간 절약
-4. 바로 쓸 수 있어야 함
+Cons:
+- Difficult state management
+- Poor performance
+- Hard to scale
+```
 
-### 트레이드오프
-- 기술부채 쌓임
-- 하지만: Phase 2에서 정리
-- 학습하며 전환
+### Decision
+**Phase 1: Vanilla JS -> Phase 2: React (Next.js)**
 
-### 결과
-✅ 성공. 빠르게 프로토타입 완성. Phase 2 전환 준비 중.
+### Rationale
+1. Non-CS background, day 4
+2. Quick validation first
+3. Save build/deploy time
+4. Must be immediately usable
+
+### Tradeoffs
+- Technical debt accumulates
+- However: cleaned up in Phase 2
+- Learn while transitioning
+
+### Result
+Success. Prototype completed quickly. Preparing for Phase 2 transition.
 
 ---
 
-## Decision 7: 완료 후 숨김 vs 보여주기
+## Decision 7: Hide vs Show After Completion
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-완료한 작업을 어떻게 표시할 것인가?
+### Context
+How to display completed tasks?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 즉시 숨김
+#### Option A: Hide Immediately
 ```
-장점:
-- 깔끔함
-- 집중
+Pros:
+- Clean
+- Focused
 
-단점:
-- 성취감 적음
-- 실수 시 되돌리기 어려움
-```
-
-#### 옵션 B: 항상 표시
-```
-장점:
-- 성취감
-- 투명성
-
-단점:
-- 목록 길어짐
-- 산만함
+Cons:
+- Less sense of achievement
+- Hard to undo mistakes
 ```
 
-#### 옵션 C: 토글 (접기/펼치기)
+#### Option B: Always Show
 ```
-장점:
-- 선택의 자유
-- 필요시 확인
+Pros:
+- Sense of achievement
+- Transparency
 
-단점:
-- 복잡도 증가
+Cons:
+- List gets long
+- Distracting
 ```
 
-### 결정
-**옵션 C: 토글**
+#### Option C: Toggle (Collapse/Expand)
+```
+Pros:
+- Freedom of choice
+- Check when needed
 
-기본은 숨김 + "완료한 작업 보기" 버튼
+Cons:
+- Increased complexity
+```
 
-### 이유
-1. 기본은 깔끔하게
-2. 성취감 원하면 펼치기
-3. 완료 취소 가능
-4. 사용자 제어권
+### Decision
+**Option C: Toggle**
 
-### 트레이드오프
-- UI 복잡도 약간 증가
-- 하지만: 유연성 증가
+Hidden by default + "View Completed Tasks" button
 
-### 결과
-✅ 성공. 원하는 사람만 펼쳐봄.
+### Rationale
+1. Default is clean
+2. Expand for sense of achievement if desired
+3. Undo completion possible
+4. User control
+
+### Tradeoffs
+- Slightly increased UI complexity
+- However: increased flexibility
+
+### Result
+Success. Only those who want to see completed tasks expand the section.
 
 ---
 
-## Decision 8: 모드 자동 전환 vs 수동 선택
+## Decision 8: Auto Mode Switching vs Manual Selection
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-회사/생존/여유 모드를 어떻게 전환할 것인가?
+### Context
+How to switch between Work/Survival/Leisure modes?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 수동 선택
+#### Option A: Manual Selection
 ```
-장점:
-- 사용자 제어
-- 명확함
+Pros:
+- User control
+- Clear
 
-단점:
-- 매번 선택 필요
-- 깜빡함
-```
-
-#### 옵션 B: 자동 전환
-```
-장점:
-- 생각 불필요
-- 정확함
-
-단점:
-- 투명성 부족
-- 유연성 감소
+Cons:
+- Must select every time
+- Easy to forget
 ```
 
-### 결정
-**옵션 B: 자동 전환**
+#### Option B: Auto Switching
+```
+Pros:
+- No thinking required
+- Accurate
 
-시간대 + 셔틀 상태로 자동 판단
+Cons:
+- Lacks transparency
+- Reduced flexibility
+```
 
-### 이유
-1. "생각 안 하고 실행하게"
-2. 시간은 변하지 않음 (신뢰 가능)
-3. 셔틀만 수동 (하루 1번)
-4. 깜빡임 방지
+### Decision
+**Option B: Auto Switching**
 
-### 트레이드오프
-- 예외 상황 대응 어려움
-- 하지만: 대부분 케이스 커버
-- 나중에 수동 오버라이드 추가 가능
+Auto-determined by time of day + shuttle status
 
-### 결과
-✅ 성공. 자동으로 딱 맞게 전환됨.
+### Rationale
+1. "Execute without thinking"
+2. Time doesn't change (reliable)
+3. Only shuttle is manual (once per day)
+4. Prevents forgetting
+
+### Tradeoffs
+- Hard to handle exceptions
+- However: covers most cases
+- Manual override can be added later
+
+### Result
+Success. Switches automatically and accurately.
 
 ---
 
-## Decision 9: JSON 백업 수동 vs 자동
+## Decision 9: Manual vs Auto JSON Backup
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-Phase 1에서 데이터 백업을 어떻게 할 것인가?
+### Context
+How to back up data in Phase 1?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 자동 백업
+#### Option A: Auto Backup
 ```
-장점:
-- 안전함
-- 사용자 신경 안 씀
+Pros:
+- Safe
+- User doesn't need to worry
 
-단점:
-- 구현 복잡
-- 어디에 저장? (서버 없음)
-```
-
-#### 옵션 B: 수동 백업
-```
-장점:
-- 간단함
-- 사용자 제어
-
-단점:
-- 깜빡임
-- 귀찮음
+Cons:
+- Complex to implement
+- Where to store? (no server)
 ```
 
-### 결정
-**Phase 1: 수동 (JSON) → Phase 3: 자동 (Supabase)**
+#### Option B: Manual Backup
+```
+Pros:
+- Simple
+- User control
 
-### 이유
-1. Phase 1은 LocalStorage만
-2. 자동 백업 = 서버 필요
-3. 수동이라도 있는 게 없는 것보다 나음
-4. Phase 3에서 자동화
+Cons:
+- Easy to forget
+- Tedious
+```
 
-### 트레이드오프
-- 초기에는 수동
-- 하지만: 백업 기능 자체는 제공
-- 점진적 개선
+### Decision
+**Phase 1: Manual (JSON) -> Phase 3: Auto (Supabase)**
 
-### 결과
-✅ 수용. Phase 3 대기 중.
+### Rationale
+1. Phase 1 is LocalStorage only
+2. Auto backup = requires server
+3. Having manual backup is better than nothing
+4. Automated in Phase 3
+
+### Tradeoffs
+- Manual initially
+- However: backup feature is provided
+- Progressive improvement
+
+### Result
+Acceptable. Waiting for Phase 3.
 
 ---
 
 ## Decision 10: TypeScript vs JavaScript (Phase 1)
 
-**날짜**: 2026-01-27
+**Date**: 2026-01-27
 
-### 상황
-Phase 1 프로토타입 언어 선택.
+### Context
+Language choice for Phase 1 prototype.
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: TypeScript
+#### Option A: TypeScript
 ```
-장점:
-- 타입 안전성
-- 에러 조기 발견
-- 자동완성
+Pros:
+- Type safety
+- Early error detection
+- Autocomplete
 
-단점:
-- 빌드 필요
-- 학습 곡선
-- 시간 오래 걸림
-```
-
-#### 옵션 B: JavaScript
-```
-장점:
-- 즉시 실행
-- 간단함
-- 빠른 검증
-
-단점:
-- 런타임 에러
-- 자동완성 없음
-- 리팩토링 어려움
+Cons:
+- Build required
+- Learning curve
+- Takes too long
 ```
 
-### 결정
-**Phase 1: JavaScript → Phase 2: TypeScript**
+#### Option B: JavaScript
+```
+Pros:
+- Immediate execution
+- Simple
+- Quick validation
 
-### 이유
-1. 빠른 검증 우선
-2. 비전공자 4일차
-3. 타입은 나중에 추가 가능
-4. 학습하며 전환
+Cons:
+- Runtime errors
+- No autocomplete
+- Hard to refactor
+```
 
-### 트레이드오프
-- 런타임 에러 가능
-- 하지만: 주석으로 타입 명시
-- Phase 2에서 정식 전환
+### Decision
+**Phase 1: JavaScript -> Phase 2: TypeScript**
 
-### 결과
-✅ 성공. 빠르게 검증 완료. TypeScript 학습 중.
+### Rationale
+1. Quick validation first
+2. Non-CS background, day 4
+3. Types can be added later
+4. Learn while transitioning
+
+### Tradeoffs
+- Runtime errors possible
+- However: types specified via comments
+- Formal transition in Phase 2
+
+### Result
+Success. Quick validation complete. Learning TypeScript.
 
 ---
 
-## Decision 11: 반복 작업 구현 방식
+## Decision 11: Recurring Task Implementation
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-반복 작업을 어떻게 구현할 것인가?
+### Context
+How to implement recurring tasks?
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 템플릿 + 자동 생성
+#### Option A: Template + Auto Generation
 ```
-장점:
-- 원본 유지
-- 히스토리 추적
+Pros:
+- Original preserved
+- History tracking
 
-단점:
-- 복잡한 로직
-- 별도 저장소 필요
-```
-
-#### 옵션 B: 완료 시 다음 작업 생성
-```
-장점:
-- 간단한 구현
-- 기존 구조 활용
-
-단점:
-- 템플릿 관리 안 됨
+Cons:
+- Complex logic
+- Separate storage needed
 ```
 
-### 결정
-**옵션 B: 완료 시 다음 작업 생성**
+#### Option B: Generate Next Task on Completion
+```
+Pros:
+- Simple implementation
+- Uses existing structure
 
-### 이유
-1. Phase 1은 빠른 구현 우선
-2. 기존 Task 구조에 repeatType만 추가
-3. 복잡한 템플릿 시스템은 Phase 2+
+Cons:
+- No template management
+```
 
-### 결과
-✅ 성공. 간단하게 반복 작업 구현.
+### Decision
+**Option B: Generate Next Task on Completion**
+
+### Rationale
+1. Phase 1 prioritizes fast implementation
+2. Just add repeatType to existing Task structure
+3. Complex template system is for Phase 2+
+
+### Result
+Success. Simple recurring task implementation.
 
 ---
 
-## Decision 12: 완료 피드백 (도파민)
+## Decision 12: Completion Feedback (Dopamine)
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-노션처럼 완료 시 만족감을 주는 피드백이 필요.
+### Context
+Need satisfying feedback on completion, like Notion.
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 체크 애니메이션만
+#### Option A: Check Animation Only
 ```
-장점:
-- 간단
-- 빠름
+Pros:
+- Simple
+- Fast
 
-단점:
-- 지속적 피드백 없음
-```
-
-#### 옵션 B: 애니메이션 + 진행률 + 스트릭
-```
-장점:
-- 도파민 강화
-- 지속적 동기부여
-
-단점:
-- 구현 복잡
+Cons:
+- No sustained feedback
 ```
 
-### 결정
-**옵션 B: 애니메이션 + 진행률 + 스트릭**
+#### Option B: Animation + Progress + Streak
+```
+Pros:
+- Enhanced dopamine
+- Sustained motivation
 
-### 이유
-1. ADHD에게는 즉각적 피드백 중요
-2. 연속 달성일이 습관 형성에 도움
-3. 진행률 바가 동기부여
+Cons:
+- Complex to implement
+```
 
-### 결과
-✅ 성공. 완료할 때마다 만족감 증가.
+### Decision
+**Option B: Animation + Progress + Streak**
+
+### Rationale
+1. Immediate feedback is important for ADHD
+2. Consecutive achievement days help habit formation
+3. Progress bar provides motivation
+
+### Result
+Success. Increased satisfaction with each completion.
 
 ---
 
-## Decision 13: PC/모바일 레이아웃
+## Decision 13: PC/Mobile Layout
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-PC에서 화면이 너무 좁음 (600px 고정)
+### Context
+Screen too narrow on PC (600px fixed)
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: 단순 확대
+#### Option A: Simple Enlargement
 ```
-장점:
-- 간단
+Pros:
+- Simple
 
-단점:
-- 공간 활용 안 됨
-```
-
-#### 옵션 B: 3컬럼 그리드
-```
-장점:
-- 정보 한눈에
-- 효율적 공간 활용
-
-단점:
-- 구현 복잡
-- 모바일과 분기 필요
+Cons:
+- Space not utilized
 ```
 
-### 결정
-**옵션 B: 3컬럼 그리드**
+#### Option B: 3-Column Grid
+```
+Pros:
+- Information at a glance
+- Efficient space utilization
 
-- 좌측: 시간/상태/통계
-- 중앙: 입력/작업 목록
-- 우측: 진행률/긴급 목록
+Cons:
+- Complex to implement
+- Requires mobile branching
+```
 
-### 이유
-1. PC에서 여러 정보를 한눈에
-2. 모바일은 1컬럼 유지
-3. CSS Grid로 간단 구현
+### Decision
+**Option B: 3-Column Grid**
 
-### 결과
-✅ 성공. PC 사용성 크게 개선.
+- Left: time/status/statistics
+- Center: input/task list
+- Right: progress/urgent list
+
+### Rationale
+1. Multiple information at a glance on PC
+2. 1-column maintained on mobile
+3. Simple implementation with CSS Grid
+
+### Result
+Success. Significantly improved PC usability.
 
 ---
 
-## Decision 14: 일정 탭 추가
+## Decision 14: Schedule Tab Addition
 
-**날짜**: 2026-01-28
+**Date**: 2026-01-28
 
-### 상황
-평일/주말 일정을 따로 보고 싶음
+### Context
+Want to view weekday/weekend schedules separately
 
-### 결정
-새 "일정" 탭 추가 with 필터 (전체/오늘/평일/주말)
+### Decision
+Add new "Schedule" tab with filters (All/Today/Weekday/Weekend)
 
-### 이유
-1. 평일은 회사 일정, 주말은 개인 일정
-2. 날짜별 그룹화로 전체 파악
-3. 기존 탭 구조 활용
+### Rationale
+1. Weekdays are work schedule, weekends are personal
+2. Date grouping for full overview
+3. Uses existing tab structure
 
-### 결과
-✅ 성공. 전체 일정 파악 용이.
-
----
-
-## Decision 15: 현재 시간 & 모드별 남은 시간
-
-**날짜**: 2026-01-28
-
-### 상황
-현재 몇 시인지, 현재 모드가 언제 끝나는지 알고 싶음
-
-### 결정
-현재 시간 + 모드별 남은 시간 표시 추가
-
-### 이유
-1. 시간 인식이 ADHD에게 어려움
-2. "퇴근까지 3시간 남음" 같은 정보가 동기부여
-3. 모드 전환 시점 예측 가능
-
-### 결과
-✅ 성공. 시간 관리 인식 향상.
+### Result
+Success. Easy to grasp full schedule.
 
 ---
 
-## 앞으로의 결정들
+## Decision 15: Current Time & Remaining Time Per Mode
 
-### Decision 16: 상태 관리 라이브러리 (Phase 2)
+**Date**: 2026-01-28
+
+### Context
+Want to know what time it is and when the current mode ends
+
+### Decision
+Add current time + remaining time per mode display
+
+### Rationale
+1. Time awareness is difficult for ADHD
+2. Info like "3 hours until leaving work" is motivating
+3. Mode transition timing becomes predictable
+
+### Result
+Success. Improved time management awareness.
+
+---
+
+## Future Decisions
+
+### Decision 16: State Management Library (Phase 2)
 - Redux vs Zustand vs Context API
-- → ROADMAP.md 참고
+- See ROADMAP.md
 
-### Decision 17: 스타일링 (Phase 2)
+### Decision 17: Styling (Phase 2)
 - CSS Modules vs Styled-Components vs Tailwind
-- → ROADMAP.md 참고
+- See ROADMAP.md
 
-### Decision 18: 배포 플랫폼 (Phase 2)
+### Decision 18: Deployment Platform (Phase 2)
 - Vercel vs Netlify vs Cloudflare Pages
-- → ROADMAP.md 참고
+- See ROADMAP.md
 
 ---
 
-## 결정 템플릿
+## Decision Template
 
-새로운 결정이 필요할 때 이 템플릿 사용:
+Use this template when a new decision is needed:
 
 ```markdown
-## Decision X: [제목]
+## Decision X: [Title]
 
-**날짜**: YYYY-MM-DD
+**Date**: YYYY-MM-DD
 
-### 상황
-[문제 설명]
+### Context
+[Problem description]
 
-### 고려한 옵션
+### Options Considered
 
-#### 옵션 A: [이름]
-장점:
-- 
-단점:
-- 
+#### Option A: [Name]
+Pros:
+-
+Cons:
+-
 
-#### 옵션 B: [이름]
-장점:
-- 
-단점:
-- 
+#### Option B: [Name]
+Pros:
+-
+Cons:
+-
 
-### 결정
-**[선택한 옵션]**
+### Decision
+**[Chosen option]**
 
-### 이유
-1. 
-2. 
+### Rationale
+1.
+2.
 
-### 트레이드오프
-- 
-- 
+### Tradeoffs
+-
+-
 
-### 결과
-✅/❌/⏳
+### Result
+Success/Failure/Pending
 ```
 
 ---
 
-**이 문서는 살아있습니다. 결정이 있을 때마다 추가됩니다.**
+**This document is alive. It is updated whenever decisions are made.**
 
-**마지막 업데이트: 2026-01-28 (v5.1 확장 결정 추가)**
+**Last updated: 2026-01-28 (v5.1 extension decisions added)**

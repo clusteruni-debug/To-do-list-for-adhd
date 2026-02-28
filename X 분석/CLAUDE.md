@@ -1,161 +1,161 @@
-# X 분석 - 트위터/X 게시물 분석 도구
+# X Analysis - Twitter/X Post Analysis Tool
 
-## 📋 프로젝트
-- **이름**: X 분석
-- **스택**: Python 3 (스크립트 기반)
-- **한 줄 설명**: X(트위터) 게시물 데이터 분석 + 인사이트 추출
-
----
-
-## 🚨 절대 규칙 (위반 시 작업 중단)
-
-**무조건 멈추고 확인:**
-1. 파일/함수 삭제
-2. 3개 이상 파일 동시 수정
-3. 기존 분석 결과 파일 덮어쓰기
-4. 의존성 추가/제거
-
-**절대 금지:**
-- 확인 없이 작동하던 코드 덮어쓰기
-- 같은 에러에 같은 방법 3회 이상 반복
-- 원본 데이터 파일 수정
+## Project
+- **Name**: X Analysis
+- **Stack**: Python 3 (script-based)
+- **One-liner**: X (Twitter) post data analysis + insight extraction
 
 ---
 
-## 🧠 능동적 작업 원칙 (시키는 것 이상으로)
+## Absolute Rules (Stop work on violation)
 
-> **핵심: 명령 받은 것만 고치는 게 아니라, 같은 문제가 있는 곳을 찾아서 함께 고치고, 예상되는 문제를 미리 막는다.**
+**Always stop and confirm:**
+1. File/function deletion
+2. Modifying 3+ files simultaneously
+3. Overwriting existing analysis result files
+4. Adding/removing dependencies
 
-### 1. 유사 패턴 전수 수정
-- 한 곳을 고치면, **동일한 패턴이 존재하는 다른 곳을 전체 검색**하여 함께 수정
-- 수정 전 발견된 전체 목록을 먼저 보여주고 진행
-- 형식:
+**Strictly forbidden:**
+- Overwriting working code without confirmation
+- Repeating the same approach 3+ times for the same error
+- Modifying original data files
+
+---
+
+## Proactive Work Principles (Go beyond what's asked)
+
+> **Core: Don't just fix what's requested — find other places with the same problem and fix them together, and proactively prevent anticipated issues.**
+
+### 1. Comprehensive Pattern Fix
+- When fixing one place, **search for identical patterns everywhere else** and fix them together
+- Show the full list of discovered instances before proceeding
+- Format:
   ```
-  🔎 동일 패턴 발견: [N]곳
-  1. [파일:라인] — [코드 요약]
+  Identical pattern found: [N] locations
+  1. [file:line] — [code summary]
   2. ...
-  함께 수정할까요?
+  Fix all together?
   ```
 
-### 2. 사이드이펙트 예측 & 선제 제안
-- 코드 수정 시 **깨질 수 있는 것, 영향받는 기능을 먼저 분석하고 제안**
-- 단순히 "영향 있음"이 아니라 **구체적 시나리오 + 해결 방안**을 함께 제시
-- 형식:
+### 2. Side-Effect Prediction & Proactive Suggestions
+- When modifying code, **analyze what could break and affected features first, then suggest**
+- Not just "there's an impact" but **specific scenarios + solutions** together
+- Format:
   ```
-  ⚠️ 예상 사이드이펙트:
-  1. [시나리오] → [해결 방안] (지금 같이 처리 추천)
-  2. [시나리오] → [해결 방안] (나중에 해도 됨)
+  Expected side-effects:
+  1. [Scenario] -> [Solution] (recommend fixing now)
+  2. [Scenario] -> [Solution] (can be done later)
 
-  바로 반영할까요?
-  ```
-
-### 3. 난이도 판단 → Ralph Loop 제안
-아래 조건에 해당하면 `/ralph-loop` 사용을 **먼저 제안**:
-- 수정 대상이 **10곳 이상** 흩어져 있는 배치 작업
-- **반복적 패턴 수정** (전수 치환, 일괄 리팩토링)
-- 한 번에 끝내기 어려운 **다단계 구현**
-- 형식:
-  ```
-  🔄 난이도 높은 작업 감지
-  - 예상 수정: [N]곳 / [N]단계
-  - 추천: `/ralph-loop "[작업 설명]" --max 10`
-  - 이유: [왜 반복 루프가 적합한지]
-
-  Ralph로 진행할까요, 수동으로 할까요?
+  Apply now?
   ```
 
-### 4. 선제적 품질 개선
-작업 중 발견한 아래 문제는 **물어보지 않고 바로 보고** (수정은 확인 후):
-- 보안 취약점 (하드코딩된 키, 민감 데이터 노출)
-- 명백한 버그 (null 참조, 오타, 로직 오류)
-- 성능 문제 (불필요한 반복, 메모리 누수)
+### 3. Difficulty Assessment -> Ralph Loop Suggestion
+Suggest `/ralph-loop` usage **first** when these conditions apply:
+- Batch work with **10+ scattered** modification targets
+- **Repetitive pattern fixes** (bulk replacement, batch refactoring)
+- **Multi-step implementation** difficult to complete at once
+- Format:
+  ```
+  High-difficulty task detected
+  - Expected modifications: [N] locations / [N] steps
+  - Recommend: `/ralph-loop "[task description]" --max 10`
+  - Reason: [why iterative loop is appropriate]
+
+  Proceed with Ralph or manually?
+  ```
+
+### 4. Proactive Quality Improvements
+The following issues found during work are **reported immediately without asking** (fixes applied after confirmation):
+- Security vulnerabilities (hardcoded keys, sensitive data exposure)
+- Obvious bugs (null references, typos, logic errors)
+- Performance issues (unnecessary loops, memory leaks)
 
 ---
 
-## 📋 플랜 형식
+## Plan Format
 
 ```
-📋 요청: [이해한 내용]
+Request: [understood content]
 
-🔍 영향: [수정 파일] → [영향받는 기능]
+Impact: [files to modify] -> [affected features]
 
-🔨 계획:
-1. [단계]
+Plan:
+1. [step]
 2. ...
 
-🔎 동일 패턴: [전수 검색 결과 — N곳 발견, 함께 수정 제안]
+Identical patterns: [full search results — N locations found, suggest fixing together]
 
-⚠️ 사이드이펙트: [예측되는 문제 + 해결 방안]
+Side-effects: [predicted issues + solutions]
 
-🔄 난이도: [높으면 Ralph Loop 제안]
+Difficulty: [suggest Ralph Loop if high]
 
-진행?
+Proceed?
 ```
 
 ---
 
-## 🔧 작업 규칙
+## Work Rules
 
-**코드:**
-- 주석/커밋: 한국어
-- 한 번에 하나 기능
-- 복잡한 로직은 주석으로 "왜" 설명
+**Code:**
+- Comments/commits: Korean
+- One feature at a time
+- Complex logic: explain "why" with comments
 
-**에러 대응:**
-- 1-2회: 직접 수정
-- 3회: 다른 접근법 제안
-- 5회: 중단, 현재 상태 커밋, 선택지 제시
+**Error handling:**
+- 1-2 times: fix directly
+- 3 times: suggest different approach
+- 5 times: stop, commit current state, present options
 
-**커밋:**
-- 작동하는 상태에서만
-- 형식: `feat:`, `fix:`, `refactor:`
-- 코드 변경 완료 후 즉시 커밋 (여러 기능을 배치로 묶지 않기)
-
----
-
-## 🔄 세션 프로토콜
-
-**시작:**
-1. 이 파일 읽기
-2. "지난번 [X]까지, 오늘 [Y] 할까요?" 제안
-3. 로컬 repo 상태 확인 (`git status`)
-
-**진행 중:**
-- 대규모 작업(3단계 이상)은 **페이즈별 체크포인트** 설정
-- 각 페이즈 완료 시 즉시 커밋
-
-**종료 (필수):**
-- 완료/진행중/다음 기록
-- 미완료 작업의 재개 지점 명확히 기록
+**Commits:**
+- Only from a working state
+- Format: `feat:`, `fix:`, `refactor:`
+- Commit immediately after code changes (don't batch multiple features)
 
 ---
 
-## 🔐 보안 규칙
+## Session Protocol
 
-1. 개인 트위터 데이터 (archive) — **절대 git에 올리지 않기**
-2. 분석 결과에 개인 식별 정보 포함 여부 확인
-3. API 키 → 환경 변수 사용
+**Start:**
+1. Read this file
+2. Suggest "Last time [X], today shall we do [Y]?"
+3. Check local repo status (`git status`)
+
+**In progress:**
+- For large tasks (3+ steps), set **phase-by-phase checkpoints**
+- Commit immediately after each phase completion
+
+**End (required):**
+- Record completed/in-progress/next
+- Clearly record resume point for incomplete work
 
 ---
 
-## 📁 파일 구조
+## Security Rules
+
+1. Personal Twitter data (archive) — **never push to git**
+2. Check whether analysis results contain personally identifiable information
+3. API keys -> use environment variables
+
+---
+
+## File Structure
 
 ```
-X 분석/
-└── CLAUDE.md           # 프로젝트 컨텍스트 (분석 스크립트/데이터는 아직 미생성)
+X Analysis/
+└── CLAUDE.md           # Project context (analysis scripts/data not yet created)
 ```
 
-> **참고**: scripts/, data/, assets/ 등은 향후 분석 작업 시 생성 예정
+> **Note**: scripts/, data/, assets/ etc. will be created when analysis work begins
 
 ---
 
-## 📌 빠른 명령
+## Quick Commands
 
-| 상황 | 말할 것 |
-|------|---------|
-| 구현 전 | "영향도 먼저 분석해" |
-| 패턴 확인 | "다른 곳도 필요한지 확인해" |
-| 검증 | "검증하고 테스트 시나리오 알려줘" |
-| 대규모 작업 | "페이즈로 나누고 각 단계마다 커밋해" |
-| 보안 정리 | "전수 스캔 먼저 하고 목록 보여줘" |
-| 세션 관리 | "이번 세션에 어디까지 가능한지 알려줘" |
+| Situation | What to say |
+|-----------|-------------|
+| Before implementation | "Analyze impact first" |
+| Pattern check | "Check if other places need this too" |
+| Verification | "Verify and show test scenarios" |
+| Large-scale work | "Split into phases and commit at each step" |
+| Security cleanup | "Full scan first, show the list" |
+| Session management | "Tell me how far we can get this session" |

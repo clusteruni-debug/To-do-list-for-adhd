@@ -1,6 +1,6 @@
-# ⚡ Navigator - 생존형 할일 관리
+# Navigator - Survival-Mode Task Management
 
-> ADHD 친화적 할일 관리 앱: "생각 안 하고 실행하게"
+> ADHD-friendly task management app: "Execute without thinking"
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 [![Version](https://img.shields.io/badge/version-5.1-blue.svg)]()
@@ -9,89 +9,89 @@
 
 ---
 
-## 🎯 무엇을 해결하는가?
+## What Problem Does It Solve?
 
-### 문제
-- **"할일 목록 → 실제 행동" 간극**: 목록은 있는데 하지 않음
-- **우선순위 판단 피로**: 중요도가 감정/피로도에 따라 임의로 바뀜
-- **기록이 일이 되는 문제**: Notion 관리 자체가 부담
-- **ADHD 특성**: 실행 기능 장애, 멀티태스킹 어려움
+### Problem
+- **"Todo list -> actual action" gap**: Lists exist but nothing gets done
+- **Priority judgment fatigue**: Importance shifts arbitrarily based on mood/fatigue
+- **Recording becomes work itself**: Managing Notion itself becomes a burden
+- **ADHD characteristics**: Executive function impairment, difficulty multitasking
 
-### 해결
-- ✅ **자동 우선순위 계산**: 마감시간, 카테고리, ROI 기반 자동 정렬
-- ✅ **Next-Action 단일 표시**: 지금 할 것 하나만 크게
-- ✅ **시간대별 자동 모드**: 회사/생존/여유 모드 자동 전환
-- ✅ **판단 최소화**: 스와이프로 완료/삭제, 햅틱 피드백
-- ✅ **완료 피드백**: 노션 스타일 체크 애니메이션, 진행률 표시
-
----
-
-## 🚀 현재 상태 (v5.1)
-
-### ✅ 완료된 기능 (기본)
-- [x] 빠른 추가 (제목만 입력)
-- [x] 상세 추가 (카테고리별 입력 필드)
-- [x] 작업 수정/삭제
-- [x] 완료/완료 취소
-- [x] 스와이프 제스처 (완료/삭제)
-- [x] 자동 우선순위 계산
-- [x] 시간대별 모드 (회사/생존/여유)
-- [x] 셔틀 모드 전환
-- [x] 수면 카운트다운 (22시 이후)
-- [x] 마감 임박 시각 강조 (🔴 3시간, 🟠 24시간)
-- [x] 대시보드 (통계, 카테고리별 현황)
-- [x] 완료 작업 보기
-- [x] JSON 백업/복원
-- [x] 에러 처리 및 토스트 알림
-
-### ✅ 완료된 기능 (확장)
-- [x] **반복 작업** (매일/평일/매주/매월)
-- [x] **PWA 지원** (홈화면 설치, 오프라인 캐싱)
-- [x] **푸시 알림** (마감 3시간/1시간 전)
-- [x] **PC/모바일 반응형** (PC 3컬럼, 모바일 1컬럼)
-- [x] **일정 탭** (평일/주말 필터, 날짜별 그룹)
-- [x] **완료 애니메이션** (노션 스타일 체크 오버레이)
-- [x] **진행률 표시** (오늘의 진행률, 연속 달성일)
-- [x] **현재 시간 표시** (실시간 시계, 모드별 남은 시간)
-- [x] **검색 & 필터** (제목 검색, 카테고리 필터)
-
-### 🔄 다음 단계
-- [ ] Next.js로 전환 (Phase 2)
-- [ ] Vercel 배포
-- [ ] Supabase 연동 (로그인, 실시간 동기화)
-
-### 📅 나중에
-- [ ] 텔레그램 연동
-- [ ] X 활동 트래커
-- [ ] 고급 통계/인사이트
+### Solution
+- **Auto priority calculation**: Auto-sorting based on deadline, category, ROI
+- **Next-Action single display**: Only one thing to do now, displayed large
+- **Auto mode by time of day**: Auto-switching between Work/Survival/Leisure modes
+- **Minimize judgment**: Swipe to complete/delete, haptic feedback
+- **Completion feedback**: Notion-style check animation, progress display
 
 ---
 
-## 💻 기술 스택
+## Current Status (v5.1)
 
-### 현재 (v5.1 - HTML 프로토타입 + PWA)
+### Completed Features (Core)
+- [x] Quick add (title only input)
+- [x] Detailed add (category-specific input fields)
+- [x] Task edit/delete
+- [x] Complete/undo completion
+- [x] Swipe gestures (complete/delete)
+- [x] Auto priority calculation
+- [x] Time-based modes (Work/Survival/Leisure)
+- [x] Shuttle mode toggle
+- [x] Sleep countdown (after 22:00)
+- [x] Deadline visual emphasis (red at 3h, orange at 24h)
+- [x] Dashboard (statistics, category status)
+- [x] View completed tasks
+- [x] JSON backup/restore
+- [x] Error handling and toast notifications
+
+### Completed Features (Extended)
+- [x] **Recurring tasks** (daily/weekday/weekly/monthly)
+- [x] **PWA support** (home screen install, offline caching)
+- [x] **Push notifications** (3h/1h before deadline)
+- [x] **PC/mobile responsive** (PC 3-column, mobile 1-column)
+- [x] **Schedule tab** (weekday/weekend filter, date grouping)
+- [x] **Completion animation** (Notion-style check overlay)
+- [x] **Progress display** (today's progress, consecutive achievement days)
+- [x] **Current time display** (real-time clock, remaining time per mode)
+- [x] **Search & filter** (title search, category filter)
+
+### Next Steps
+- [ ] Migrate to Next.js (Phase 2)
+- [ ] Vercel deployment
+- [ ] Supabase integration (login, real-time sync)
+
+### Later
+- [ ] Telegram integration
+- [ ] X activity tracker
+- [ ] Advanced statistics/insights
+
+---
+
+## Tech Stack
+
+### Current (v5.1 - HTML Prototype + PWA)
 - **Frontend**: Vanilla JavaScript
 - **Storage**: LocalStorage
 - **PWA**: manifest.json + Service Worker
-- **Deployment**: 로컬 HTML 파일
+- **Deployment**: Local HTML file
 
-### 파일 구조
+### File Structure
 ```
 navigator-app/
-├── navigator-v5.html     # 메인 앱
-├── manifest.json         # PWA 설정
+├── navigator-v5.html     # Main app
+├── manifest.json         # PWA configuration
 ├── sw.js                 # Service Worker
-├── README.md             # 프로젝트 소개
-├── CONTEXT.md            # 전체 맥락
-├── ROADMAP.md            # 개발 로드맵
-├── ARCHITECTURE.md       # 기술 설계
-├── DECISIONS.md          # 설계 결정 기록
-├── WORKFLOW.md           # Git 가이드
-├── SETUP-GUIDE.md        # 초기 설정
-└── TROUBLESHOOTING.md    # 문제 해결
+├── README.md             # Project introduction
+├── CONTEXT.md            # Full context
+├── ROADMAP.md            # Development roadmap
+├── ARCHITECTURE.md       # Technical design
+├── DECISIONS.md          # Design decision records
+├── WORKFLOW.md           # Git guide
+├── SETUP-GUIDE.md        # Initial setup
+└── TROUBLESHOOTING.md    # Troubleshooting
 ```
 
-### 예정 (v6+ - Production)
+### Planned (v6+ - Production)
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
@@ -102,142 +102,142 @@ navigator-app/
 
 ---
 
-## 🎨 주요 기능
+## Key Features
 
-### 1. Next-Action 화면
+### 1. Next-Action Screen
 ```
-지금 할 것 하나만 크게 표시
-→ 판단 제거
-→ 실행만 하면 됨
+Display only one thing to do now, large
+-> Eliminates judgment
+-> Just execute
 ```
 
-### 2. 자동 우선순위 계산
+### 2. Auto Priority Calculation
 ```javascript
-우선순위 = f(
-  마감시간,      // 3시간 내: +100점
-  카테고리,      // 본업: +40, 부업: +35, 일상: +25
-  ROI,           // 수익/시간 (부업만)
-  소요시간       // 10분 이하: +10
+priority = f(
+  deadline,        // Within 3 hours: +100 points
+  category,        // Main Job: +40, Side Job: +35, Daily: +25
+  ROI,             // Revenue/time (side jobs only)
+  estimatedTime    // 10 min or less: +10
 )
 ```
 
-### 3. 시간대별 모드
-- **회사 (11-20시)**: 본업만 표시
-- **생존 (22-24시, 셔틀 실패)**: 15분 이하 + 긴급만
-- **여유 (19-24시, 셔틀 성공)**: 전체 표시
-- **출근 (7-11시)**: 이동 중
-- **휴식 (그 외)**: 자유 시간
+### 3. Time-Based Modes
+- **Work (11:00-20:00)**: Show main job only
+- **Survival (22:00-24:00, shuttle missed)**: 15 min or less + urgent only
+- **Leisure (19:00-24:00, shuttle caught)**: Show everything
+- **Commute (7:00-11:00)**: In transit
+- **Rest (other)**: Free time
 
-### 4. 스와이프 제스처
-- ← 왼쪽: 완료
-- → 오른쪽: 삭제
-- 햅틱 피드백
+### 4. Swipe Gestures
+- Swipe left: complete
+- Swipe right: delete
+- Haptic feedback
 
-### 5. 완료 피드백 (NEW)
-- 노션 스타일 체크 애니메이션
-- 오늘의 진행률 바
-- 연속 달성일 (streak) 추적
-- 현재 시간 & 모드별 남은 시간
+### 5. Completion Feedback (NEW)
+- Notion-style check animation
+- Today's progress bar
+- Consecutive achievement days (streak) tracking
+- Current time & remaining time per mode
 
-### 6. 반복 작업 (NEW)
-- 매일/평일/매주/매월 반복
-- 완료 시 다음 작업 자동 생성
+### 6. Recurring Tasks (NEW)
+- Daily/weekday/weekly/monthly recurring
+- Auto-generate next task on completion
 
 ---
 
-## 📱 사용법
+## Usage
 
-### 설치
+### Installation
 ```bash
-# 1. 저장소 클론
+# 1. Clone repository
 git clone https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 cd To-do-list-for-adhd
 
-# 2. 브라우저로 열기
+# 2. Open in browser
 open navigator-v5.html  # Mac
 start navigator-v5.html # Windows
 ```
 
-### 기본 사용
-1. **빠른 추가**: 제목 입력 → Enter
-2. **상세 추가**: "상세 옵션 펼치기" → 모든 정보 입력
-3. **완료**: ✓ 버튼 or 왼쪽 스와이프
-4. **수정**: ✏️ 버튼
-5. **삭제**: × 버튼 or 오른쪽 스와이프
+### Basic Usage
+1. **Quick add**: Enter title -> Enter
+2. **Detailed add**: "Expand detailed options" -> Enter all information
+3. **Complete**: Check button or swipe left
+4. **Edit**: Edit button
+5. **Delete**: X button or swipe right
 
-### 데이터 관리
-- **백업**: 📥 내보내기 → JSON 다운로드
-- **복원**: 📤 가져오기 → JSON 업로드
-
----
-
-## 📖 문서
-
-프로젝트 이해를 위한 필수 문서:
-
-1. **[CONTEXT.md](./CONTEXT.md)** ⭐ - 전체 맥락 및 배경
-2. **[ROADMAP.md](./ROADMAP.md)** ⭐ - 개발 로드맵
-3. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - 기술 설계
-4. **[DECISIONS.md](./DECISIONS.md)** - 설계 결정 기록
-5. **[WORKFLOW.md](./WORKFLOW.md)** - Git 작업 가이드
-6. **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - 문제 해결
+### Data Management
+- **Backup**: Export -> JSON download
+- **Restore**: Import -> JSON upload
 
 ---
 
-## 👤 사용자 프로필
+## Documentation
 
-이 앱은 다음과 같은 사용자를 위해 설계되었습니다:
+Essential documents for understanding the project:
 
-- **ADHD**: 실행 기능 장애, 우선순위 판단 어려움
-- **시간 제약**: 육아 + 본업 + 부업으로 시간 압박
-- **높은 인지 부하**: 판단 피로 최소화 필요
-- **즉각적 피드백 선호**: 시각적/촉각적 피드백
-
-자세한 내용: [CONTEXT.md](./CONTEXT.md)
+1. **[CONTEXT.md](./CONTEXT.md)** - Full context and background
+2. **[ROADMAP.md](./ROADMAP.md)** - Development roadmap
+3. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical design
+4. **[DECISIONS.md](./DECISIONS.md)** - Design decision records
+5. **[WORKFLOW.md](./WORKFLOW.md)** - Git workflow guide
+6. **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Troubleshooting
 
 ---
 
-## 🤝 기여
+## User Profile
 
-이 프로젝트는 현재 개인 프로젝트입니다.
+This app is designed for users who:
 
-### 개발 환경 설정
+- **Have ADHD**: Executive function impairment, difficulty judging priorities
+- **Are time-constrained**: Childcare + main job + side jobs = time pressure
+- **Have high cognitive load**: Need to minimize decision fatigue
+- **Prefer immediate feedback**: Visual/tactile feedback
+
+Details: [CONTEXT.md](./CONTEXT.md)
+
+---
+
+## Contributing
+
+This project is currently a personal project.
+
+### Development Environment Setup
 ```bash
-# 1. 저장소 포크 및 클론
+# 1. Fork and clone repository
 git clone https://github.com/YOUR_USERNAME/To-do-list-for-adhd.git
 
-# 2. 브랜치 생성
+# 2. Create branch
 git checkout -b feature/your-feature
 
-# 3. 변경사항 커밋
+# 3. Commit changes
 git commit -am "Add feature"
 
-# 4. 푸시
+# 4. Push
 git push origin feature/your-feature
 
-# 5. Pull Request 생성
+# 5. Create Pull Request
 ```
 
 ---
 
-## 📝 라이센스
+## License
 
-MIT License - 자유롭게 사용, 수정, 배포 가능
+MIT License - Free to use, modify, and distribute
 
 ---
 
-## 📞 연락
+## Contact
 
 - **GitHub**: [@clusteruni-debug](https://github.com/clusteruni-debug)
 - **Issues**: [GitHub Issues](https://github.com/clusteruni-debug/To-do-list-for-adhd/issues)
 
 ---
 
-## 🙏 감사
+## Acknowledgements
 
-- **Claude (Anthropic)**: 전체 개발 지원
-- **바이브코딩**: 4일차 비전공자의 도전
+- **Claude (Anthropic)**: Full development support
+- **Vibe Coding**: A non-CS background person's challenge, day 4
 
 ---
 
-**Built with ❤️ for people with ADHD, by someone with ADHD**
+**Built with care for people with ADHD, by someone with ADHD**

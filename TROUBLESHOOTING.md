@@ -1,147 +1,147 @@
-# 🔧 Navigator - 문제 해결 가이드
+# Navigator - Troubleshooting Guide
 
-> 자주 겪는 문제와 해결 방법
+> Common problems and solutions
 
 ---
 
-## 🚨 긴급 상황
+## Emergency Situations
 
-### 🔥 앱이 안 열려요 (검은 화면)
+### App Won't Open (Black Screen)
 
-**증상**: navigator-v5.html 열면 검은 화면만
+**Symptom**: Opening navigator-v5.html shows only a black screen
 
-**원인**:
-1. JavaScript 에러
-2. 브라우저 호환성
-3. 파일 손상
+**Causes**:
+1. JavaScript error
+2. Browser compatibility
+3. File corruption
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 브라우저 콘솔 확인
-F12 (개발자 도구) → Console 탭 → 에러 확인
+# 1. Check browser console
+F12 (Developer Tools) -> Console tab -> Check errors
 
-# 2. 다른 브라우저로 열어보기
-Chrome, Safari, Firefox 시도
+# 2. Try a different browser
+Try Chrome, Safari, Firefox
 
-# 3. 파일 다시 다운로드
-GitHub에서 최신 버전 받기
+# 3. Re-download files
+Get the latest version from GitHub
 ```
 
 ---
 
-### 🔥 데이터가 날아갔어요
+### Data Is Gone
 
-**증상**: 작업 목록이 전부 사라짐
+**Symptom**: Entire task list has disappeared
 
-**원인**:
-1. LocalStorage 삭제됨
-2. 브라우저 캐시 삭제
-3. 다른 브라우저/시크릿 모드
+**Causes**:
+1. LocalStorage was cleared
+2. Browser cache cleared
+3. Different browser/incognito mode
 
-**해결**:
+**Solution**:
 ```bash
-# 1. JSON 백업 있으면
-📤 가져오기 버튼 → 백업 파일 선택 → 복구
+# 1. If you have a JSON backup
+Import button -> Select backup file -> Restore
 
-# 2. 백업 없으면
-😢 복구 불가능
-→ 앞으로 자주 백업하기
+# 2. If no backup exists
+Recovery is not possible
+-> Back up frequently going forward
 
-# 3. 예방
-매일 저녁 📥 내보내기 클릭
+# 3. Prevention
+Click Export every evening
 ```
 
 ---
 
-### 🔥 작업 추가가 안 돼요
+### Cannot Add Tasks
 
-**증상**: + 버튼 눌러도 안 됨
+**Symptom**: Nothing happens when pressing the + button
 
-**원인**:
-1. 제목 입력 안 함
-2. JavaScript 에러
-3. LocalStorage 꽉 참
+**Causes**:
+1. Title not entered
+2. JavaScript error
+3. LocalStorage is full
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 제목 입력했는지 확인
-빈 칸 → 토스트 알림 "제목을 입력하세요"
+# 1. Check if title was entered
+Empty field -> Toast notification "Please enter a title"
 
-# 2. 콘솔 에러 확인
-F12 → Console → 에러 메시지
+# 2. Check console errors
+F12 -> Console -> Error message
 
-# 3. LocalStorage 용량 확인
-F12 → Application → Local Storage
-→ 5MB 넘으면 오래된 작업 삭제
+# 3. Check LocalStorage capacity
+F12 -> Application -> Local Storage
+-> Delete old tasks if over 5MB
 ```
 
 ---
 
-## 💻 Git 문제
+## Git Issues
 
-### Git Push 거부됨
+### Git Push Rejected
 
-**증상**:
+**Symptom**:
 ```
 ! [rejected] main -> main (non-fast-forward)
 error: failed to push some refs
 ```
 
-**원인**: 다른 곳에서 먼저 push함
+**Cause**: Someone else pushed first
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 최신 코드 가져오기
+# 1. Pull latest code
 git pull
 
-# 2. 충돌 없으면 자동 해결됨
+# 2. If no conflicts, resolved automatically
 git push
 
-# 3. 충돌 있으면 (아래 참고)
+# 3. If conflicts exist (see below)
 ```
 
 ---
 
-### Git 충돌 (Conflict)
+### Git Conflict
 
-**증상**:
+**Symptom**:
 ```
 CONFLICT (content): Merge conflict in navigator-v5.html
 Automatic merge failed; fix conflicts and then commit.
 ```
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 충돌 파일 열기
+# 1. Open conflicting file
 code navigator-v5.html
 
-# 2. <<<<<<< ======= >>>>>>> 찾기
+# 2. Find <<<<<<< ======= >>>>>>>
 <<<<<<< HEAD
-내 코드
+My code
 =======
-GitHub 코드
+GitHub code
 >>>>>>> origin/main
 
-# 3. 선택하기
-# 옵션 A: 내 코드만
-내 코드
+# 3. Choose
+# Option A: Keep my code only
+My code
 
-# 옵션 B: GitHub 코드만
-GitHub 코드
+# Option B: Keep GitHub code only
+GitHub code
 
-# 옵션 C: 둘 다
-내 코드
-GitHub 코드
+# Option C: Keep both
+My code
+GitHub code
 
-# 4. 표시 삭제 후 저장
+# 4. Delete markers and save
 
-# 5. 완료
+# 5. Complete
 git add .
-git commit -m "충돌 해결"
+git commit -m "Resolve conflict"
 git push
 ```
 
-**팁**: VSCode 사용하면 버튼으로 해결 가능
+**Tip**: VSCode lets you resolve with buttons
 ```
 Accept Current Change
 Accept Incoming Change
@@ -150,462 +150,462 @@ Accept Both Changes
 
 ---
 
-### Git Clone 실패
+### Git Clone Failed
 
-**증상**:
+**Symptom**:
 ```
 fatal: could not read Username
 ```
 
-**원인**: GitHub 인증 문제
+**Cause**: GitHub authentication issue
 
-**해결**:
+**Solution**:
 ```bash
-# 옵션 A: Personal Access Token
-GitHub → Settings → Developer settings
-→ Personal access tokens → Generate new token
-→ repo 체크 → 생성
-→ 토큰 복사
+# Option A: Personal Access Token
+GitHub -> Settings -> Developer settings
+-> Personal access tokens -> Generate new token
+-> Check repo -> Generate
+-> Copy token
 
 git clone https://TOKEN@github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# 옵션 B: SSH (추천)
+# Option B: SSH (recommended)
 ssh-keygen -t ed25519 -C "your_email@example.com"
 cat ~/.ssh/id_ed25519.pub
-# GitHub → Settings → SSH Keys → Add
+# GitHub -> Settings -> SSH Keys -> Add
 git clone git@github.com:clusteruni-debug/To-do-list-for-adhd.git
 ```
 
 ---
 
-## 📱 PWA & 알림 문제 (v5.1 추가)
+## PWA & Notification Issues (added in v5.1)
 
-### 알림이 안 와요
+### Notifications Not Coming
 
-**증상**: 마감 알림이 오지 않음
+**Symptom**: Deadline notifications are not received
 
-**원인**:
-1. 알림 권한 거부
-2. 브라우저 백그라운드 종료
-3. 5분 간격 체크 사이에 확인
+**Causes**:
+1. Notification permission denied
+2. Browser terminated in background
+3. Checked between 5-minute interval checks
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 알림 권한 확인
-브라우저 설정 → 사이트 설정 → 알림 → 허용
+# 1. Check notification permission
+Browser settings -> Site settings -> Notifications -> Allow
 
-# 2. 앱이 열려있어야 함
-현재 버전은 서버 푸시가 아님
-→ Phase 3에서 개선 예정
+# 2. App must be open
+Current version does not use server push
+-> Will be improved in Phase 3
 
-# 3. 페이지 새로고침
-F5 또는 Cmd+R
+# 3. Refresh the page
+F5 or Cmd+R
 ```
 
 ---
 
-### 홈 화면에 설치가 안 돼요
+### Cannot Install to Home Screen
 
-**증상**: "홈 화면에 추가" 옵션이 없음
+**Symptom**: "Add to Home Screen" option is not available
 
-**원인**:
-1. HTTPS 아님 (로컬 파일)
-2. manifest.json 문제
-3. 아이콘 없음
+**Causes**:
+1. Not HTTPS (local file)
+2. manifest.json issue
+3. No icons
 
-**해결**:
+**Solution**:
 ```bash
-# Phase 2 (Vercel 배포) 후 가능
-현재는 로컬 파일이라 설치 불가
-→ Phase 2에서 해결 예정
+# Available after Phase 2 (Vercel deployment)
+Currently a local file, so installation is not possible
+-> Will be resolved in Phase 2
 
-# 임시 방법 (PC)
-Chrome → 더보기 → 바로가기 만들기
+# Temporary method (PC)
+Chrome -> More -> Create shortcut
 ```
 
 ---
 
-### Service Worker 에러
+### Service Worker Error
 
-**증상**: 콘솔에 SW 에러
+**Symptom**: SW error in console
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 캐시 삭제
-F12 → Application → Clear Storage → Clear site data
+# 1. Clear cache
+F12 -> Application -> Clear Storage -> Clear site data
 
-# 2. SW 재등록
-브라우저 재시작
+# 2. Re-register SW
+Restart browser
 
-# 3. 파일 확인
-sw.js가 navigator-v5.html과 같은 폴더에 있어야 함
+# 3. Check files
+sw.js must be in the same folder as navigator-v5.html
 ```
 
 ---
 
-## 📱 모바일 문제
+## Mobile Issues
 
-### 스와이프가 안 돼요
+### Swipe Not Working
 
-**증상**: 좌우로 밀어도 반응 없음
+**Symptom**: No response when swiping left/right
 
-**원인**:
-1. 터치 이벤트 미지원
-2. 밀기 부족 (100px 이상 필요)
-3. 브라우저 제스처 충돌
+**Causes**:
+1. Touch events not supported
+2. Insufficient swipe distance (100px+ required)
+3. Browser gesture conflict
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 충분히 밀기
-100px 이상 (화면 1/3 정도)
+# 1. Swipe far enough
+100px or more (about 1/3 of screen)
 
-# 2. 버튼 사용
-✓ 완료 버튼
-× 삭제 버튼
+# 2. Use buttons
+Check button for complete
+X button for delete
 
-# 3. 다른 브라우저
-Safari → Chrome 시도
+# 3. Try different browser
+Safari -> Try Chrome
 ```
 
 ---
 
-### 진동이 안 돼요
+### Vibration Not Working
 
-**증상**: 완료해도 진동 없음
+**Symptom**: No vibration on completion
 
-**원인**:
-1. 브라우저 권한 없음
-2. 무음 모드
-3. 진동 미지원
+**Causes**:
+1. No browser permission
+2. Silent mode on
+3. Vibration not supported
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 브라우저 권한 확인
-설정 → Safari/Chrome → 진동 허용
+# 1. Check browser permissions
+Settings -> Safari/Chrome -> Allow vibration
 
-# 2. 무음 모드 해제
-물리 버튼 확인
+# 2. Turn off silent mode
+Check physical button
 
-# 3. 진동 미지원
-일부 브라우저/기기는 미지원
-→ 정상임
+# 3. Vibration not supported
+Some browsers/devices don't support it
+-> This is normal
 ```
 
 ---
 
-### 화면이 작아요
+### Screen Too Small
 
-**증상**: 모바일에서 글씨 너무 작음
+**Symptom**: Text too small on mobile
 
-**원인**: 브라우저 배율 설정
+**Cause**: Browser zoom setting
 
-**해결**:
+**Solution**:
 ```bash
 # iOS
-설정 → 디스플레이 및 밝기 → 텍스트 크기
+Settings -> Display & Brightness -> Text Size
 
 # Android
-설정 → 디스플레이 → 글꼴 크기
+Settings -> Display -> Font Size
 
-# 브라우저
-확대/축소 (핀치)
+# Browser
+Pinch to zoom
 ```
 
 ---
 
-## 🐛 버그 & 오류
+## Bugs & Errors
 
-### "못 해도 괜찮아" 안 뜨는데요?
+### "It's Okay If You Can't" Not Showing?
 
-**증상**: 0개 완료해도 격려 메시지 없음
+**Symptom**: No encouragement message even with 0 completions
 
-**원인**: 작업이 아예 없음
+**Cause**: No tasks exist at all
 
-**해결**:
+**Solution**:
 ```bash
-# 작업 추가 후 0개 완료하면 뜸
-작업 1개 추가 → 안 하고 기다리기
-→ "못 해도 괜찮아" 메시지
+# It shows when you have tasks but complete 0
+Add 1 task -> Don't complete it -> Wait
+-> "It's okay if you can't" message appears
 ```
 
 ---
 
-### 시간이 안 흘러가요
+### Time Not Progressing
 
-**증상**: 수면 카운트다운이 멈춤
+**Symptom**: Sleep countdown is frozen
 
-**원인**: setInterval 중단됨
+**Cause**: setInterval was interrupted
 
-**해결**:
+**Solution**:
 ```bash
-# 새로고침
-F5 또는 Cmd+R
+# Refresh
+F5 or Cmd+R
 
-# 브라우저 재시작
-완전 종료 후 재실행
+# Restart browser
+Fully close and relaunch
 ```
 
 ---
 
-### 우선순위가 이상해요
+### Priority Seems Wrong
 
-**증상**: 중요한 게 밑으로 감
+**Symptom**: Important tasks are at the bottom
 
-**원인**:
-1. 마감시간 없음
-2. 카테고리가 낮음
-3. 알고리즘 특성
+**Causes**:
+1. No deadline set
+2. Category is low
+3. Algorithm characteristics
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 마감시간 추가
-수정 버튼 → 마감시간 설정
-→ 우선순위 올라감
+# 1. Add a deadline
+Edit button -> Set deadline
+-> Priority goes up
 
-# 2. 카테고리 변경
-부업 → 본업
-→ 점수 +5
+# 2. Change category
+Side Job -> Main Job
+-> Score +5
 
-# 3. 수동 조정 (나중에)
-현재는 수동 불가
-Phase 2에서 추가 예정
+# 3. Manual adjustment (later)
+Currently not possible manually
+Will be added in Phase 2
 ```
 
 ---
 
-## 🖥️ PC 문제
+## PC Issues
 
-### 전체 리스트가 안 보여요
+### Full List Not Showing
 
-**증상**: 클릭해도 펼쳐지지 않음
+**Symptom**: Clicking doesn't expand the list
 
-**원인**: v4 이전 버전
+**Cause**: Version earlier than v4
 
-**해결**:
+**Solution**:
 ```bash
-# v5 사용 확인
-navigator-v5.html 열어야 함
+# Confirm using v5
+Must open navigator-v5.html
 
-# 최신 버전 다운로드
-GitHub에서 다시 받기
+# Download latest version
+Re-download from GitHub
 ```
 
 ---
 
-### 창이 너무 좁아요 (PC)
+### Window Too Narrow (PC)
 
-**증상**: PC 대화면에서 600px로 고정
+**Symptom**: Fixed at 600px on large PC screen
 
-**원인**: 모바일 우선 설계
+**Cause**: Mobile-first design
 
-**해결**:
+**Solution**:
 ```bash
-# Phase 2에서 해결 예정
-현재는 600px 고정
+# Will be resolved in Phase 2
+Currently fixed at 600px
 
-# 임시 해결: 브라우저 창 줄이기
-창 크기 조절
+# Temporary fix: Resize browser window
+Adjust window size
 ```
 
 ---
 
-## ⚙️ 설정 문제
+## Settings Issues
 
-### 셔틀 모드가 자동으로 바뀌어요
+### Shuttle Mode Changes Automatically
 
-**증상**: 설정해도 다시 바뀜
+**Symptom**: Resets even after setting
 
-**원인**: LocalStorage 미저장 (버그)
+**Cause**: Not saved to LocalStorage (bug)
 
-**해결**:
+**Solution**:
 ```bash
-# v5에서 수정됨
-최신 버전 사용 확인
+# Fixed in v5
+Confirm using latest version
 
-# 여전히 문제면
-F12 → Console → 에러 확인
-→ GitHub Issue 등록
+# If still an issue
+F12 -> Console -> Check errors
+-> File a GitHub Issue
 ```
 
 ---
 
-## 🔐 보안 문제
+## Security
 
-### 다른 사람이 내 작업을 볼 수 있나요?
+### Can Others See My Tasks?
 
-**답변**: 아니요, 불가능합니다.
+**Answer**: No, impossible.
 
-**이유**:
+**Reason**:
 ```
-v5 (현재):
-- LocalStorage (로컬만)
-- 인터넷 안 감
-- 완전히 로컬
+v5 (current):
+- LocalStorage (local only)
+- Nothing goes over the internet
+- Completely local
 
-v6+ (미래):
-- Supabase (서버)
-- 로그인 필요
+v6+ (future):
+- Supabase (server)
+- Login required
 - RLS (Row Level Security)
-→ 본인 데이터만 접근
+-> Only your own data accessible
 ```
 
 ---
 
-## 📊 성능 문제
+## Performance Issues
 
-### 작업이 100개인데 느려요
+### Slow With 100 Tasks
 
-**증상**: 렌더링 느림, 버벅임
+**Symptom**: Slow rendering, stuttering
 
-**원인**: 전체 리렌더링
+**Cause**: Full re-rendering
 
-**해결**:
+**Solution**:
 ```bash
-# 단기:
-오래된 작업 삭제
-완료한 작업 삭제
+# Short-term:
+Delete old tasks
+Delete completed tasks
 
-# 장기:
-Phase 2에서 React로 전환
-→ 성능 크게 개선
+# Long-term:
+Migrate to React in Phase 2
+-> Significant performance improvement
 ```
 
 ---
 
-### 브라우저가 느려져요
+### Browser Getting Slow
 
-**증상**: 앱 열면 전체가 느림
+**Symptom**: Everything slows down when app is open
 
-**원인**:
-1. LocalStorage 용량 초과
-2. 메모리 누수
-3. 백그라운드 탭 많음
+**Causes**:
+1. LocalStorage capacity exceeded
+2. Memory leak
+3. Too many background tabs
 
-**해결**:
+**Solution**:
 ```bash
-# 1. LocalStorage 정리
-불필요한 작업 삭제
+# 1. Clean up LocalStorage
+Delete unnecessary tasks
 
-# 2. 브라우저 재시작
-완전 종료 후 재실행
+# 2. Restart browser
+Fully close and relaunch
 
-# 3. 백그라운드 탭 닫기
-사용 안 하는 탭 정리
+# 3. Close background tabs
+Clean up unused tabs
 ```
 
 ---
 
-## 🆘 복구 안 되는 문제
+## Unrecoverable Issues
 
-### 정말 모든 데이터가 날아갔어요
+### All Data Is Truly Gone
 
-**증상**: 백업도 없고, 복구 불가
+**Symptom**: No backup, cannot recover
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 받아들이기
-😢 복구 불가능
-LocalStorage는 백업 없음
+# 1. Accept it
+Recovery is not possible
+LocalStorage has no backup
 
-# 2. 다시 시작
-새로운 마음으로
+# 2. Start over
+With a fresh mindset
 
-# 3. 예방
-매일 백업하기!
-Phase 3부터 자동 백업
+# 3. Prevention
+Back up daily!
+Auto backup from Phase 3 onward
 ```
 
 ---
 
-### Git이 완전히 망가졌어요
+### Git Is Completely Broken
 
-**증상**: 뭘 해도 안 됨
+**Symptom**: Nothing works
 
-**해결**:
+**Solution**:
 ```bash
-# 핵옵션: Git 리셋
+# Nuclear option: Git reset
 rm -rf .git
 git init
 git add .
-git commit -m "재시작"
+git commit -m "Fresh start"
 git remote add origin https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 git push -f origin main
 
-# ⚠️ 주의: 히스토리 날아감
+# Warning: History will be lost
 ```
 
 ---
 
-## 📞 도움 요청
+## Asking for Help
 
-### 여기 없는 문제예요
+### Problem Not Listed Here
 
-**방법 1: GitHub Issue**
+**Method 1: GitHub Issue**
 ```
 https://github.com/clusteruni-debug/To-do-list-for-adhd/issues
-→ New Issue
-→ 문제 상세히 설명
+-> New Issue
+-> Describe the problem in detail
 ```
 
-**방법 2: Claude에게 물어보기**
+**Method 2: Ask Claude**
 ```
-Claude Web 또는 Claude Code
-→ CONTEXT.md 첨부
-→ 문제 설명
+Claude Web or Claude Code
+-> Attach CONTEXT.md
+-> Describe the problem
 ```
 
-**포함할 정보**:
-1. 증상 (무엇이 안 되는가?)
-2. 재현 방법 (어떻게 하면 발생?)
-3. 에러 메시지 (F12 → Console)
-4. 브라우저/OS (Chrome/Safari, Mac/Windows)
-5. 버전 (v5인지 확인)
+**Information to include**:
+1. Symptom (what isn't working?)
+2. Reproduction steps (how to trigger it?)
+3. Error message (F12 -> Console)
+4. Browser/OS (Chrome/Safari, Mac/Windows)
+5. Version (confirm it's v5)
 
 ---
 
-## 🛠️ 예방이 최선
+## Prevention Is Best
 
-### 매일 백업하기
+### Back Up Daily
 ```bash
-# 저녁 루틴
-1. 📥 내보내기 클릭
-2. 파일 저장 (날짜 포함)
-3. Google Drive/iCloud 업로드
+# Evening routine
+1. Click Export
+2. Save file (include date in name)
+3. Upload to Google Drive/iCloud
 ```
 
-### 자주 커밋하기
+### Commit Frequently
 ```bash
-# Git 사용 시
+# When using Git
 git add .
-git commit -m "오늘 작업"
+git commit -m "Today's work"
 git push
 
-# GitHub에 있으면 안전
+# Safe when it's on GitHub
 ```
 
-### 여러 브라우저 테스트
+### Test Multiple Browsers
 ```bash
-# 가끔씩
-Chrome에서 열어보기
-Safari에서 열어보기
-→ 둘 다 작동하는지 확인
+# Occasionally
+Open in Chrome
+Open in Safari
+-> Confirm both work
 ```
 
 ---
 
-## 📚 추가 자료
+## Additional Resources
 
-### 공식 문서
-- README.md: 프로젝트 개요
-- CONTEXT.md: 전체 맥락
-- WORKFLOW.md: Git 사용법
+### Official Documentation
+- README.md: Project overview
+- CONTEXT.md: Full context
+- WORKFLOW.md: Git usage
 
-### 커뮤니티
-- GitHub Discussions (나중에)
-- Discord (나중에)
+### Community
+- GitHub Discussions (later)
+- Discord (later)
 
 ---
 
-**문제 해결 안 되면 Issue 등록하세요!**
+**If the problem isn't resolved, file an Issue!**
 
 **GitHub Issues**: https://github.com/clusteruni-debug/To-do-list-for-adhd/issues
