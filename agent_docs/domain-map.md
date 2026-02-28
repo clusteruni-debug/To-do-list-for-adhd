@@ -1,10 +1,10 @@
-# Navigator — CC/CX 파일 담당
+# Navigator — CC/CX File Ownership
 
-| 영역 | 파일/디렉토리 | 담당 | 근거 |
-|------|-------------|:----:|------|
-| 메인 앱 | navigator-v5.html (787KB) | CC | 단일 파일에 전체 앱, 변경 영향도 넓음 |
-| 리듬 엔진 | js/rhythm.js (68KB) | CC | 복잡한 비즈니스 로직 |
-| 출퇴근 엔진 | js/commute.js | CX | 독립 모듈 |
-| 서비스워커 | sw.js | CX | 보일러플레이트 |
+| Domain | File/Directory | Owner | Rationale |
+|--------|---------------|:-----:|-----------|
+| Main App | navigator-v5.html (787KB) | CC | Entire app in single file, wide change impact |
+| Rhythm Engine | js/rhythm.js (68KB) | CC | Complex business logic |
+| Commute Engine | js/commute.js | CX | Independent module |
+| Service Worker | sw.js | CX | Boilerplate |
 
-> 단일 HTML 아키텍처 특성상, UI 변경도 CC가 담당하는 경우가 많음.
+> Due to the single HTML architecture, UI changes are often handled by CC as well.

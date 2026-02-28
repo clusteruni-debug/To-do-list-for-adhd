@@ -1,117 +1,117 @@
-# 🔄 Navigator - Git 작업 가이드
+# Navigator - Git Workflow Guide
 
-> 매일 사용하는 명령어 모음
+> A collection of everyday commands
 
 ---
 
-## 🎯 핵심 3줄 (외워두세요)
+## Core 3 Lines (Memorize These)
 
 ```bash
-git pull    # 아침: 집/회사에서 한 작업 가져오기
-git add .   # 작업 후: 변경사항 스테이징
-git push    # 저녁: 변경사항 GitHub에 올리기
+git pull    # Morning: pull work done at home/office
+git add .   # After work: stage changes
+git push    # Evening: push changes to GitHub
 ```
 
-**이것만 알아도 90% 해결됩니다.**
+**This covers 90% of what you need.**
 
 ---
 
-## 📅 일상 워크플로우
+## Daily Workflow
 
-### 아침 (작업 시작 전)
+### Morning (Before Starting Work)
 
 ```bash
-# 1. 폴더로 이동
+# 1. Navigate to folder
 cd ~/Documents/navigator-app
-# 또는
+# or
 cd To-do-list-for-adhd
 
-# 2. 최신 코드 가져오기
+# 2. Pull latest code
 git pull
 
-# ✅ 이제 작업 시작!
+# Ready to start working!
 ```
 
-**의미**:
-- `git pull`: 집/회사 다른 컴퓨터에서 한 작업 가져오기
-- 항상 최신 상태로 시작
+**What it means**:
+- `git pull`: Pull work done on another computer at home/office
+- Always start with the latest state
 
 ---
 
-### 저녁 (작업 끝난 후)
+### Evening (After Finishing Work)
 
 ```bash
-# 1. 변경사항 확인
+# 1. Check changes
 git status
 
-# 2. 모든 변경사항 추가
+# 2. Add all changes
 git add .
 
-# 3. 커밋 (저장)
+# 3. Commit (save)
 git commit -m "오늘 한 작업 설명"
 
-# 4. GitHub에 올리기
+# 4. Push to GitHub
 git push
 
-# ✅ 끝! 집/회사에서 이어서 가능
+# Done! Continue from home/office
 ```
 
-**의미**:
-- `git add .`: 변경된 파일 모두 선택
-- `git commit`: 로컬에 저장 (아직 GitHub 안 감)
-- `git push`: GitHub에 업로드
+**What it means**:
+- `git add .`: Select all changed files
+- `git commit`: Save locally (not on GitHub yet)
+- `git push`: Upload to GitHub
 
 ---
 
-## 🏠 처음 시작 (한 번만)
+## Initial Setup (One Time Only)
 
-### 회사 컴퓨터에서 (이미 폴더 있음)
+### On Office Computer (Folder Already Exists)
 
 ```bash
-# 1. 폴더로 이동
+# 1. Navigate to folder
 cd ~/Documents/navigator-project
 
-# 2. Git 초기화
+# 2. Initialize Git
 git init
 
-# 3. 파일 추가
+# 3. Add files
 git add .
 
-# 4. 첫 커밋
+# 4. First commit
 git commit -m "v5 프로토타입 완성"
 
-# 5. GitHub 연결
+# 5. Connect to GitHub
 git remote add origin https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# 6. 업로드
+# 6. Upload
 git branch -M main
 git push -u origin main
 
-# ✅ 완료! 이제 일상 워크플로우만 사용
+# Done! Now just use the daily workflow
 ```
 
 ---
 
-### 집 컴퓨터에서 (처음)
+### On Home Computer (First Time)
 
 ```bash
-# 1. 원하는 위치로 이동
+# 1. Navigate to desired location
 cd ~/Documents
 
-# 2. GitHub에서 복사 (Clone)
+# 2. Clone from GitHub
 git clone https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# 3. 폴더 들어가기
+# 3. Enter folder
 cd To-do-list-for-adhd
 
-# ✅ 완료! 이제 일상 워크플로우 사용
+# Done! Now use the daily workflow
 ```
 
 ---
 
-## 📝 커밋 메시지 가이드
+## Commit Message Guide
 
-### 좋은 예
+### Good Examples
 ```bash
 git commit -m "Next-Action 화면 완성"
 git commit -m "우선순위 계산 버그 수정"
@@ -119,79 +119,79 @@ git commit -m "대시보드 통계 추가"
 git commit -m "스와이프 제스처 구현"
 ```
 
-### 나쁜 예
+### Bad Examples
 ```bash
-git commit -m "수정"        # ❌ 뭘 수정?
-git commit -m "ㅁㄴㅇㄹ"     # ❌ 알 수 없음
-git commit -m "asdf"        # ❌ 의미 없음
+git commit -m "수정"        # What was fixed?
+git commit -m "ㅁㄴㅇㄹ"     # Incomprehensible
+git commit -m "asdf"        # Meaningless
 ```
 
-### 패턴
+### Pattern
 ```
-[동사] [대상]
+[verb] [subject]
 
-추가: "작업 수정 기능 추가"
-수정: "우선순위 계산 로직 개선"
-삭제: "불필요한 주석 제거"
-버그: "입력 포커스 버그 수정"
+Add: "작업 수정 기능 추가"
+Fix: "우선순위 계산 로직 개선"
+Remove: "불필요한 주석 제거"
+Bug: "입력 포커스 버그 수정"
 ```
 
 ---
 
-## 🔍 자주 쓰는 명령어
+## Frequently Used Commands
 
-### 상태 확인
+### Check Status
 ```bash
-# 현재 상태 보기
+# View current status
 git status
 
-# 변경 내역 보기
+# View change history
 git log --oneline
 
-# 최근 5개 커밋
+# Last 5 commits
 git log -5
 ```
 
-### 변경사항 확인
+### View Changes
 ```bash
-# 뭐가 바뀌었는지 보기
+# See what changed
 git diff
 
-# 특정 파일만
+# Specific file only
 git diff navigator-v5.html
 ```
 
-### 브랜치 (나중에)
+### Branches (For Later)
 ```bash
-# 현재 브랜치 확인
+# Check current branch
 git branch
 
-# 새 브랜치 만들기
+# Create new branch
 git branch feature-name
 
-# 브랜치 전환
+# Switch branch
 git checkout feature-name
 ```
 
 ---
 
-## 🚨 자주 하는 실수 & 해결
+## Common Mistakes & Solutions
 
-### 실수 1: 커밋 안 하고 pull
+### Mistake 1: Pull Without Committing
 
-**증상**:
+**Symptom**:
 ```
 error: Your local changes would be overwritten by merge.
 ```
 
-**해결**:
+**Solution**:
 ```bash
-# 옵션 A: 지금 커밋
+# Option A: Commit now
 git add .
 git commit -m "작업 중"
 git pull
 
-# 옵션 B: 임시 저장
+# Option B: Stash temporarily
 git stash
 git pull
 git stash pop
@@ -199,47 +199,47 @@ git stash pop
 
 ---
 
-### 실수 2: 커밋 메시지 오타
+### Mistake 2: Typo in Commit Message
 
-**증상**:
+**Symptom**:
 ```
-git commit -m "작얽 추가"  # 오타!
+git commit -m "작얽 추가"  # Typo!
 ```
 
-**해결**:
+**Solution**:
 ```bash
-# 마지막 커밋 메시지 수정
+# Fix last commit message
 git commit --amend -m "작업 추가"
 
-# 아직 push 안 했으면 OK
-# push 했으면 그냥 두기 (큰 문제 아님)
+# OK if not pushed yet
+# If already pushed, just leave it (not a big deal)
 ```
 
 ---
 
-### 실수 3: 충돌 (Conflict)
+### Mistake 3: Conflict
 
-**증상**:
+**Symptom**:
 ```
 CONFLICT (content): Merge conflict in navigator-v5.html
 ```
 
-**해결**:
+**Solution**:
 ```bash
-# 1. 파일 열어서 확인
+# 1. Open the file
 code navigator-v5.html
 
-# 2. <<<<<<< ======= >>>>>>> 표시 찾기
-# 3. 원하는 버전 선택하고 표시 삭제
-# 4. 저장
+# 2. Find <<<<<<< ======= >>>>>>> markers
+# 3. Choose desired version and remove markers
+# 4. Save
 
-# 5. 해결 완료 표시
+# 5. Mark as resolved
 git add navigator-v5.html
 git commit -m "충돌 해결"
 git push
 ```
 
-**예시**:
+**Example**:
 ```html
 <<<<<<< HEAD
 <div>회사에서 작업</div>
@@ -248,87 +248,87 @@ git push
 >>>>>>> origin/main
 ```
 
-**수정 후**:
+**After fixing**:
 ```html
 <div>회사에서 작업</div>
-<!-- 또는 -->
+<!-- or -->
 <div>집에서 작업</div>
-<!-- 또는 둘 다 유지 -->
+<!-- or keep both -->
 ```
 
 ---
 
-### 실수 4: push 거부됨
+### Mistake 4: Push Rejected
 
-**증상**:
+**Symptom**:
 ```
 ! [rejected] main -> main (non-fast-forward)
 ```
 
-**해결**:
+**Solution**:
 ```bash
-# 누군가 먼저 push 했음 (또는 다른 컴퓨터에서)
-# 그것 먼저 가져오기
+# Someone pushed first (or from another computer)
+# Pull their changes first
 git pull
 
-# 충돌 없으면 자동 해결
-# 충돌 있으면 위 "실수 3" 참고
+# If no conflicts, auto-resolved
+# If conflicts, see "Mistake 3" above
 
-# 다시 push
+# Push again
 git push
 ```
 
 ---
 
-## 🎨 GitHub 웹에서 확인
+## Viewing on GitHub Web
 
-### 코드 보기
+### View Code
 ```
 https://github.com/clusteruni-debug/To-do-list-for-adhd
 ```
 
-### 커밋 히스토리
+### Commit History
 ```
 https://github.com/clusteruni-debug/To-do-list-for-adhd/commits/main
 ```
 
-### 파일 다운로드
+### Download Files
 ```
-Code 버튼 → Download ZIP
+Code button → Download ZIP
 ```
 
 ---
 
-## 💡 팁 & 트릭
+## Tips & Tricks
 
-### Tip 1: 자주 커밋하기
+### Tip 1: Commit Often
 ```bash
-# 나쁜 예
-오전 작업 → 저녁 한 번에 커밋 (❌ 히스토리 추적 어려움)
+# Bad
+Morning work → one big commit in the evening (hard to track history)
 
-# 좋은 예
-기능 하나 완성 → 커밋
-버그 수정 → 커밋
-작은 변경 → 커밋
+# Good
+Complete a feature → commit
+Fix a bug → commit
+Small change → commit
 ```
 
-### Tip 2: .gitignore 활용
+### Tip 2: Use .gitignore
 ```bash
-# .gitignore 파일에 추가
+# Add to .gitignore file
 node_modules/
 .DS_Store
 .env
 *.log
 ```
 
-### Tip 3: 브랜치 전략 (나중에)
+### Tip 3: Branch Strategy (For Later)
 ```bash
-# main: 안정 버전
-# develop: 개발 중
-# feature/xxx: 새 기능
+# main: stable version
+# develop: in development
+# feature/xxx: new features
 
 git checkout -b feature/dashboard
-# 작업
+# work
 git commit -m "대시보드 추가"
 git checkout main
 git merge feature/dashboard
@@ -336,90 +336,90 @@ git merge feature/dashboard
 
 ---
 
-## 🆘 응급 상황
+## Emergency Situations
 
-### 전부 날아갔어요!
+### Everything Is Gone!
 ```bash
-# GitHub에 있으면 괜찮음
+# If it's on GitHub, you're fine
 rm -rf To-do-list-for-adhd
 git clone https://github.com/clusteruni-debug/To-do-list-for-adhd.git
 
-# ✅ 복구 완료
+# Recovery complete
 ```
 
-### Git 완전히 망가졌어요
+### Git Is Completely Broken
 ```bash
-# 폴더만 남기고 Git 제거
+# Remove Git but keep folder
 rm -rf .git
 
-# 다시 초기화
+# Re-initialize
 git init
 git add .
 git commit -m "재시작"
 git remote add origin https://github.com/clusteruni-debug/To-do-list-for-adhd.git
-git push -f origin main  # ⚠️ 강제 push (주의)
+git push -f origin main  # Warning: force push
 ```
 
-### 실수로 삭제했어요
+### Accidentally Deleted Something
 ```bash
-# 커밋 전이면 복구 가능
+# If before commit, recoverable
 git checkout -- navigator-v5.html
 
-# 커밋 후면 히스토리에서 복구
-git log  # 커밋 찾기
+# If after commit, recover from history
+git log  # Find the commit
 git checkout <commit-hash> -- navigator-v5.html
 ```
 
 ---
 
-## 📚 더 배우고 싶다면
+## Learn More
 
-### 추천 자료
-1. GitHub 공식 가이드: https://docs.github.com
-2. Git 간단 가이드: https://rogerdudler.github.io/git-guide/
+### Recommended Resources
+1. GitHub Official Guide: https://docs.github.com
+2. Git Simple Guide: https://rogerdudler.github.io/git-guide/
 3. Visual Git: https://learngitbranching.js.org/
 
-### 명령어 치트시트
+### Command Cheat Sheet
 ```bash
-# 자주 쓰는 것
-git status      # 상태 확인
-git add .       # 모두 추가
-git commit      # 커밋
-git push        # 업로드
-git pull        # 다운로드
+# Frequently used
+git status      # Check status
+git add .       # Add all
+git commit      # Commit
+git push        # Upload
+git pull        # Download
 
-# 가끔 쓰는 것
-git log         # 히스토리
-git diff        # 변경사항
-git branch      # 브랜치
-git checkout    # 전환
+# Occasionally used
+git log         # History
+git diff        # Changes
+git branch      # Branches
+git checkout    # Switch
 
-# 거의 안 쓰는 것
-git reset       # 되돌리기
-git revert      # 취소
-git stash       # 임시 저장
-git merge       # 병합
+# Rarely used
+git reset       # Undo
+git revert      # Revert
+git stash       # Temporary save
+git merge       # Merge
 ```
 
 ---
 
-## 🎯 요약: 매일 하는 3단계
+## Summary: 3 Daily Steps
 
 ```bash
-# 아침
+# Morning
 cd ~/Documents/To-do-list-for-adhd
 git pull
 
-# [작업]
+# [Work]
 
-# 저녁
+# Evening
 git add .
 git commit -m "오늘 한 일"
 git push
 ```
 
-**이것만 외우세요!**
+**Just memorize this!**
 
 ---
 
-**문제 생기면 TROUBLESHOOTING.md 참고**
+**If problems arise, refer to TROUBLESHOOTING.md**

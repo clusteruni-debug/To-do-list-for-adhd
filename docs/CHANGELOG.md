@@ -1,55 +1,55 @@
 # CHANGELOG
 
 <!--
-## 세션 엔트리 템플릿
-각 세션은 아래 형식을 따릅니다.
+## Session Entry Template
+Each session follows the format below.
 
-## [YYYY-MM-DD] (세션 N)
-> 📦 파일: `file1`, `file2` | 📊 +insertions/-deletions | 🗄️ DB: 없음
+## [YYYY-MM-DD] (Session N)
+> Files: `file1`, `file2` | +insertions/-deletions | DB: none
 
-### 작업 내용
-- **기능/수정 제목**
-  - 상세 내용
+### Changes
+- **Feature/Fix title**
+  - Details
 
-### 커밋
+### Commits
 ```
-hash type: 메시지
+hash type: message
 ```
 
-### 다음 작업
-- 항목
+### Next Tasks
+- Item
 -->
 
-## [2026-02-11] (세션 29)
-> 📦 `js/rhythm.js`, `navigator-v5.html`, `sw.js` | 📊 +162/-137 | 🗄️ DB: 없음
+## [2026-02-11] (Session 29)
+> `js/rhythm.js`, `navigator-v5.html`, `sw.js` | +162/-137 | DB: none
 
-### 작업 내용
-- **라이프 리듬 데이터 초기화/유실 근본 수정 (5건)** ⭐
-  - Phase 1: 날짜 기준 통일 — `getLocalDateStr()` → `getLogicalDate()` 10곳 변경
-    - 리듬 초기화가 `dayStartHour`(기본 5시) 기준으로 태스크 시스템과 동일하게 동작
-    - 새벽 3시 기록 → 어제 카드에 정상 기록
-  - Phase 2: `checkRhythmDayChange` 빈 today 동기화 수정
-    - `saveLifeRhythm()` → `localStorage.setItem()` 직접 (updatedAt 없이)
-    - 빈 today가 다른 기기의 실제 데이터를 덮어쓰는 문제 해결
-  - Phase 3: `_doSaveState()`에 `navigator-life-rhythm` 저장 추가
-    - `_doSaveStateLocalOnly()`에만 있던 리듬 저장이 `_doSaveState()`에도 포함
-  - Phase 4: 필드별 보완 병합 (`mergeRhythmToday` + `mergeRhythmHistory`)
-    - winner의 null 필드를 loser 값으로 보완 (supplementary merge)
-    - 기기 A: wakeUp, 기기 B: sleep → 양쪽 모두 보존
-  - Phase 5: 의도적 삭제 전파 — `_deletedFields` 메타데이터 도입
-    - 보완 병합에서 의도적 삭제가 다른 기기 데이터로 부활하는 버그 수정
-    - `_deletedFields` 배열로 "삭제됨" vs "미기록" 구분 — 렌더링 코드 변경 0
-    - 삭제 시 `markFieldDeleted()`, 기록/수정 시 `unmarkFieldDeleted()` 호출
-    - `mergeRhythmToday` + `mergeRhythmHistory` 양쪽에서 `_deletedFields` 체크
+### Changes
+- **Life rhythm data reset/loss root cause fix (5 items)** ⭐
+  - Phase 1: Date reference unification — `getLocalDateStr()` → `getLogicalDate()` at 10 locations
+    - Rhythm reset now operates on `dayStartHour` (default 5 AM) basis, consistent with task system
+    - 3 AM entries → correctly recorded on yesterday's card
+  - Phase 2: `checkRhythmDayChange` empty today sync fix
+    - `saveLifeRhythm()` → direct `localStorage.setItem()` (without updatedAt)
+    - Fixed empty today overwriting actual data from other devices
+  - Phase 3: Added `navigator-life-rhythm` save to `_doSaveState()`
+    - Rhythm save that only existed in `_doSaveStateLocalOnly()` now also included in `_doSaveState()`
+  - Phase 4: Field-level supplementary merge (`mergeRhythmToday` + `mergeRhythmHistory`)
+    - Supplements winner's null fields with loser's values (supplementary merge)
+    - Device A: wakeUp, Device B: sleep → both preserved
+  - Phase 5: Intentional deletion propagation — `_deletedFields` metadata introduced
+    - Fixed bug where intentional deletion was resurrected by supplementary merge with other device data
+    - `_deletedFields` array distinguishes "deleted" vs "not recorded" — zero rendering code changes
+    - `markFieldDeleted()` on delete, `unmarkFieldDeleted()` on record/edit
+    - `_deletedFields` checked in both `mergeRhythmToday` + `mergeRhythmHistory`
 
-- **day-change 중복 코드 리팩토링** — `transitionRhythmDay()` 공통 함수 추출
-  - 5곳 중복 (recordMedication, editMedication, recordLifeRhythm, editLifeRhythm, checkRhythmDayChange, loadLifeRhythm) → 1곳으로 통합
-  - 112줄 삭제, 41줄 추가 (71줄 순감소)
-  - `_deletedFields`는 히스토리 이동 시 자동 제거
+- **day-change duplicate code refactoring** — extracted `transitionRhythmDay()` common function
+  - 5 duplicates (recordMedication, editMedication, recordLifeRhythm, editLifeRhythm, checkRhythmDayChange, loadLifeRhythm) → unified into 1
+  - 112 lines deleted, 41 lines added (71 net lines reduced)
+  - `_deletedFields` automatically removed on history migration
 
-- **SW v6.4 캐시 버전 범프**
+- **SW v6.4 cache version bump**
 
-### 커밋
+### Commits
 ```
 65692d3 fix: 라이프 리듬 데이터 초기화/유실 근본 수정 4건
 d58b936 fix: 리듬 삭제 전파 — _deletedFields 메타데이터로 의도적 삭제 보존
@@ -57,143 +57,143 @@ f1af142 refactor: day-change 중복 제거 — transitionRhythmDay 공통 함수
 405b4b0 chore: SW v6.4 캐시 버전 범프
 ```
 
-### 다음 작업
-- 리듬 유실 재현 테스트 (새벽 시간대, 다중 기기 동기화)
+### Next Tasks
+- Rhythm loss reproduction test (early morning hours, multi-device sync)
 
 ---
 
-## [2026-02-10] (세션 28)
-> 📦 `navigator-v5.html`, `js/rhythm.js` | 📊 +66/-15 | 🗄️ DB: 없음
+## [2026-02-10] (Session 28)
+> `navigator-v5.html`, `js/rhythm.js` | +66/-15 | DB: none
 
-### 작업 내용
-- **모바일 리듬/복약 데이터 유실 근본 수정** ⭐
-  - 원인: `loadLifeRhythm()`이 앱 시작 시 `saveLifeRhythm()` 호출 → `updatedAt`이 갱신되어, `loadFromFirebase` 병합에서 빈 로컬 데이터가 클라우드 실제 기록을 덮어씀
-  - 수정: `saveLifeRhythm()` → `localStorage.setItem()` 직접 호출로 교체 (updatedAt 갱신 안 함)
-  - 효과: 클라우드의 실제 리듬/복약 기록이 항상 정확하게 병합됨
+### Changes
+- **Mobile rhythm/medication data loss root cause fix** ⭐
+  - Cause: `loadLifeRhythm()` called `saveLifeRhythm()` at app start → `updatedAt` was refreshed, causing empty local data to overwrite actual cloud records during `loadFromFirebase` merge
+  - Fix: Replaced `saveLifeRhythm()` with direct `localStorage.setItem()` (no updatedAt refresh)
+  - Effect: Cloud rhythm/medication records always merge correctly
 
-- **모바일 탭 네비게이션 오버플로우 수정**
-  - 5개 탭 버튼이 모바일 화면 폭(~375px) 초과하여 깨지는 문제
-  - 767px 이하: 패딩·갭·폰트 축소 + SVG 아이콘 숨김
+- **Mobile tab navigation overflow fix**
+  - 5 tab buttons exceeded mobile screen width (~375px) causing layout break
+  - Below 767px: reduced padding/gap/font + hidden SVG icons
 
-- **동기화 병합 강화 3건**
-  - [M-2] weeklyPlan: 덮어쓰기 → `updatedAt` 기반 최신 우선 병합 (loadFromFirebase + onSnapshot)
-  - [M-5] commuteTracker.trips: 얕은 병합 → 날짜→방향 깊은 합집합 (같은 날짜 다른 방향 유실 방지)
-  - [L-1] onSnapshot syncBack: 병합 후 `syncToFirebase()` 호출 — 3대+ 기기 비대칭 해소 (1.5초 디바운스, 핑퐁 방지)
+- **Sync merge enhancement (3 items)**
+  - [M-2] weeklyPlan: overwrite → `updatedAt`-based latest-wins merge (loadFromFirebase + onSnapshot)
+  - [M-5] commuteTracker.trips: shallow merge → date→direction deep union (prevents loss of different directions on same date)
+  - [L-1] onSnapshot syncBack: call `syncToFirebase()` after merge — resolves 3+ device asymmetry (1.5s debounce, ping-pong prevention)
 
-- **escapeHtml 성능 최적화**
-  - DOM `createElement` → 문자열 `replace` 전환 (렌더당 106+회 호출, ~5x 빠름)
+- **escapeHtml performance optimization**
+  - DOM `createElement` → string `replace` (106+ calls per render, ~5x faster)
 
-- **renderStatic 분석 결과**
-  - 이미 탭별 조건부 렌더링(ternary) 적용 중 — 비활성 탭은 평가하지 않음
-  - 추가 최적화는 가상DOM 도입 수준이므로 현행 유지
+- **renderStatic analysis results**
+  - Already uses per-tab conditional rendering (ternary) — inactive tabs are not evaluated
+  - Further optimization would require virtual DOM level, so kept as-is
 
-### 커밋
+### Commits
 ```
 e85975c fix: loadLifeRhythm에서 updatedAt 갱신 제거 — 모바일 리듬/복약 데이터 유실 방지
 924d57b fix: 모바일 탭 네비게이션 오버플로우 수정 — 패딩/폰트 축소 + SVG 아이콘 숨김
 059b7e6 fix: 동기화 병합 4건 + escapeHtml 성능 최적화
 ```
 
-### 다음 작업
-- Article Editor 배포 URL 확정 후 `ARTICLE_EDITOR_URL` 상수 업데이트
+### Next Tasks
+- Update `ARTICLE_EDITOR_URL` constant after Article Editor deploy URL is finalized
 
 ---
 
-## [2026-02-10] (세션 28-3)
-> 📦 `navigator-v5.html`, `CLAUDE.md` | 📊 버그 수정 4건 + Article Editor 연동 | 🗄️ DB: 없음
+## [2026-02-10] (Session 28-3)
+> `navigator-v5.html`, `CLAUDE.md` | Bug fixes 4 items + Article Editor integration | DB: none
 
-### 작업 내용
-- **Navigator 전체 재검토 → 신규 버그 수정 4건**
-  - 모달 제거 race condition → `?.remove()` optional chaining
-  - 다운로드 링크 cleanup → try/finally 보장
-  - `editCompletedAt` 날짜 검증 → `isNaN(oldDate.getTime())` 가드
-  - 클립보드 복사 fallback → textarea execCommand 방식 추가 (1곳 누락)
+### Changes
+- **Navigator full review → 4 new bug fixes**
+  - Modal removal race condition → `?.remove()` optional chaining
+  - Download link cleanup → try/finally guarantee
+  - `editCompletedAt` date validation → `isNaN(oldDate.getTime())` guard
+  - Clipboard copy fallback → textarea execCommand method added (1 missing location)
 
-- **x-article-editor 연동 구현** ⭐
-  - `openArticleEditor(taskId)` — Task 제목/설명을 URL 파라미터로 전달
-  - 빠른 수정 모달에 "✍️ 아티클 작성" 버튼 추가
-  - `ARTICLE_EDITOR_URL` 상수로 URL 설정 가능 (기본: localhost:3000)
-  - `handleGo()` 통해 안전한 URL 열기 (프로토콜 검증)
-  - CLAUDE.md 연동 현황 업데이트 (계획중 → 완료)
+- **x-article-editor integration** ⭐
+  - `openArticleEditor(taskId)` — passes task title/description as URL parameters
+  - Added "Article Write" button to quick edit modal
+  - `ARTICLE_EDITOR_URL` constant for configurable URL (default: localhost:3000)
+  - Safe URL opening via `handleGo()` (protocol validation)
+  - CLAUDE.md integration status updated (planned → completed)
 
-### 커밋
+### Commits
 ```
 068001a feat: x-article-editor 연동 + Navigator 버그 수정 4건
 ```
 
-### 다음 작업
-- Article Editor 배포 URL 확정 후 `ARTICLE_EDITOR_URL` 상수 업데이트
+### Next Tasks
+- Update `ARTICLE_EDITOR_URL` constant after Article Editor deploy URL is finalized
 
 ---
 
-## [2026-02-10] (세션 28-2)
-> 📦 `navigator-v5.html` | 📊 사용성 검토 후 전수 수정 | 🗄️ DB: 없음
+## [2026-02-10] (Session 28-2)
+> `navigator-v5.html` | Full usability review and fixes | DB: none
 
-### 작업 내용
-- **모바일 CSS 사용성 개선 4건**
-  - 탭 버튼 터치 타겟 44px 확보 (padding 12px + min-height: 44px)
-  - 더보기 메뉴 모바일 중앙 정렬 (right:0 → transform: translateX(-50%)) — 화면 밖 잘림 방지
-  - iOS 자동 줌 방지 (input/textarea/select font-size: 16px !important)
-  - 모바일 섹션 간격 gap:0 → gap:12px — 컬럼 간 시각적 구분 확보
+### Changes
+- **Mobile CSS usability improvements (4 items)**
+  - Tab button touch target 44px ensured (padding 12px + min-height: 44px)
+  - More menu mobile center alignment (right:0 → transform: translateX(-50%)) — prevents off-screen clipping
+  - iOS auto-zoom prevention (input/textarea/select font-size: 16px !important)
+  - Mobile section spacing gap:0 → gap:12px — visual separation between columns
 
-- **escapeAttr 전수 적용 — 91곳** ⭐
-  - task.id onclick/onchange 66곳 + project.id onclick 25곳
-  - 템플릿 리터럴: `'${task.id}'` → `'${escapeAttr(task.id)}'`
-  - 문자열 결합: `\'' + task.id + '\''` → `\'' + escapeAttr(task.id) + '\''`
-  - 이벤트 탭 toggleEventSelection, restoreFromTrash, permanentDeleteFromTrash 포함
-  - validateTask id regex([a-zA-Z0-9_-])에 더해 defense-in-depth 완성
+- **escapeAttr comprehensive application — 91 locations** ⭐
+  - task.id onclick/onchange 66 locations + project.id onclick 25 locations
+  - Template literals: `'${task.id}'` → `'${escapeAttr(task.id)}'`
+  - String concatenation: `\'' + task.id + '\''` → `\'' + escapeAttr(task.id) + '\''`
+  - Includes events tab toggleEventSelection, restoreFromTrash, permanentDeleteFromTrash
+  - Defense-in-depth completed on top of validateTask id regex([a-zA-Z0-9_-])
 
-- **파일 임포트 타입 검증 강화**
-  - `text/*` 허용 제거 → `.json` 확장자 또는 `json` MIME 타입만 허용
+- **File import type validation hardening**
+  - Removed `text/*` allowance → only `.json` extension or `json` MIME type allowed
 
-### 커밋
+### Commits
 ```
 b970cf4 fix: 모바일 UX 4건 + escapeAttr 전수 적용 91곳 + 임포트 검증 강화
 ```
 
-### 다음 작업
-- 현재 알려진 미수정 버그/개선 없음
+### Next Tasks
+- No known unresolved bugs/improvements
 
 ---
 
-## [2026-02-10] (세션 27)
-> 📦 `navigator-v5.html` | 📊 +83/-32 | 🗄️ DB: 없음
+## [2026-02-10] (Session 27)
+> `navigator-v5.html` | +83/-32 | DB: none
 
-### 작업 내용
-- **onSnapshot 기기 간 동기화 누락 수정** ⭐
-  - 기존: `cloudUpdated > lastSyncTime` 시간 비교 → 기기 간 시계 차이로 다른 기기의 정당한 업데이트를 차단하는 버그
-  - 수정: `lastOwnWriteTimestamp === data.lastUpdated` 자기-쓰기 스킵으로 교체
-  - 효과: 다른 기기 데이터는 항상 수신, 자기 쓰기만 핑퐁 방지
-  - 각 병합 함수(mergeTasks, mergeRhythmToday 등)의 updatedAt 기반 충돌 해결에 위임
+### Changes
+- **onSnapshot cross-device sync miss fix** ⭐
+  - Before: `cloudUpdated > lastSyncTime` time comparison → bug blocking legitimate updates from other devices due to clock skew
+  - Fix: Replaced with `lastOwnWriteTimestamp === data.lastUpdated` self-write skip
+  - Effect: Other device data always received, only self-writes prevented from ping-pong
+  - Delegates to per-merge function (mergeTasks, mergeRhythmToday, etc.) updatedAt-based conflict resolution
 
-- **loadFromFirebase 레이스 컨디션 4건 수정**
-  - RC-1: loadFromFirebase 완료 시 `pendingSync = false` — syncToFirebase(true)가 전체 업로드하므로 대기 예약 불필요
-  - RC-2: loadFromFirebase 시작 시 `syncDebounceTimer` 취소 — 병합 전 오래된 데이터 업로드 방지
-  - RC-3: onSnapshot에 `!isLoadingFromCloud` 가드 — 로드 중 appState 동시 수정 차단
-  - RC-4: finally 블록 `pendingSync` 재호출 깊이 3회 제한 — 무한 재귀 방지
+- **loadFromFirebase race condition fixes (4 items)**
+  - RC-1: `pendingSync = false` on loadFromFirebase completion — syncToFirebase(true) does full upload so queued sync unnecessary
+  - RC-2: Cancel `syncDebounceTimer` on loadFromFirebase start — prevents stale data upload before merge
+  - RC-3: `!isLoadingFromCloud` guard on onSnapshot — blocks concurrent appState modification during load
+  - RC-4: `pendingSync` re-invoke depth limited to 3 in finally block — prevents infinite recursion
 
-- **전체 검토: 보안 + 동기화 + 버그 수정 15건** ⭐
-  - [C-1] `updateLinkedEventStatus` setDoc에 `{ merge: true }` 추가 — 전체 문서 덮어쓰기 방지
-  - [H-1] `validateTask` id 형식 검증 (`[a-zA-Z0-9_-]` 정규식) — onclick 인젝션 차단
-  - [H-2] import 모달 XSS 3곳 `escapeHtml` 적용 (deadline, estimatedTime, expectedRevenue)
-  - [H-3] tag onclick에 `escapeAttr` 적용 — 따옴표 포함 태그 XSS 차단
-  - [H-4] `handleGo` javascript:/data: 프로토콜 차단 — http/https만 허용
-  - [H-5] onSnapshot 에러 콜백 추가 — 리스너 실패 감지 + syncStatus 업데이트
-  - [H-6] 수면시간 계산 중복 보정 제거 — 오후 수면 시 25시간 표시 버그 수정
-  - [M-1] onSnapshot 병합 후 `_doSaveStateLocalOnly()` 호출 — 브라우저 크래시 대비
-  - [M-3] `loadFromFirebase` catch에 `updateSyncIndicator()` 추가
-  - [M-4] onSnapshot에서 `cleanupOldCompletedTasks()` 제거 — 원격 동기화 사이드이펙트 방지
-  - [M-6] Supabase eventId `encodeURIComponent` 적용 — URL 인젝션 방지
-  - [M-8] streak.lastActiveDate `toDateString()` → `getLocalDateStr()` — 연도 변경 시 비교 오류 수정
-  - [M-9] showUndoToast interval 모듈 레벨 변수로 정리 — 메모리 누수 방지
-  - [M-10] importTaskDirectly/confirmImportTask에 `updatedAt` 추가 — 병합 정확도 개선
-  - [M-11] toMins() NaN 방어 — 잘못된 시간 문자열에서 NaN 전파 차단
+- **Full review: security + sync + bug fixes (15 items)** ⭐
+  - [C-1] Added `{ merge: true }` to `updateLinkedEventStatus` setDoc — prevents full document overwrite
+  - [H-1] `validateTask` id format validation (`[a-zA-Z0-9_-]` regex) — blocks onclick injection
+  - [H-2] Import modal XSS — `escapeHtml` applied to 3 locations (deadline, estimatedTime, expectedRevenue)
+  - [H-3] `escapeAttr` applied to tag onclick — blocks XSS via quote-containing tags
+  - [H-4] `handleGo` blocks javascript:/data: protocols — only http/https allowed
+  - [H-5] Added onSnapshot error callback — detects listener failures + updates syncStatus
+  - [H-6] Removed sleep time calculation double correction — fixed 25-hour display bug for afternoon sleep
+  - [M-1] `_doSaveStateLocalOnly()` called after onSnapshot merge — browser crash resilience
+  - [M-3] Added `updateSyncIndicator()` to `loadFromFirebase` catch
+  - [M-4] Removed `cleanupOldCompletedTasks()` from onSnapshot — prevents remote sync side effects
+  - [M-6] Applied `encodeURIComponent` to Supabase eventId — prevents URL injection
+  - [M-8] streak.lastActiveDate `toDateString()` → `getLocalDateStr()` — fixes year-change comparison error
+  - [M-9] showUndoToast interval moved to module-level variable — prevents memory leak
+  - [M-10] Added `updatedAt` to importTaskDirectly/confirmImportTask — improves merge accuracy
+  - [M-11] toMins() NaN defense — blocks NaN propagation from malformed time strings
 
-- **모바일 레이아웃 개선**
-  - Next Action을 모바일 최상단 배치 (`order: -1`)
-  - 전체 목록 중복 제거 (`.task-list-full` 모바일 숨김)
+- **Mobile layout improvements**
+  - Next Action placed at mobile top (`order: -1`)
+  - Full list deduplication (`.task-list-full` hidden on mobile)
 
-### 커밋
+### Commits
 ```
 81d416d fix: onSnapshot 시간 게이트를 자기-쓰기 스킵으로 교체 — 기기 간 리듬/복약 동기화 누락 수정
 286ac97 fix: loadFromFirebase 레이스 컨디션 4건 수정 — onSnapshot 가드, 디바운스 취소, pendingSync 리셋, 재귀 제한
@@ -201,64 +201,64 @@ d45336b fix: 전체 검토 보안+동기화+버그 15건 일괄 수정
 0b01831 fix: 모바일 레이아웃 개선 — Next Action 최상단 배치 + 전체 목록 중복 제거
 ```
 
-### 다음 작업
-- ~~weeklyPlan 병합~~ → 세션 28에서 수정 완료
-- ~~commuteTracker.trips 병합~~ → 세션 28에서 수정 완료
-- ~~onSnapshot syncBack~~ → 세션 28에서 수정 완료
-- ~~escapeHtml 최적화~~ → 세션 28에서 수정 완료
-- ~~renderStatic 부분 렌더링~~ → 분석 결과 이미 조건부 렌더링 적용 중
+### Next Tasks
+- ~~weeklyPlan merge~~ → fixed in Session 28
+- ~~commuteTracker.trips merge~~ → fixed in Session 28
+- ~~onSnapshot syncBack~~ → fixed in Session 28
+- ~~escapeHtml optimization~~ → fixed in Session 28
+- ~~renderStatic partial rendering~~ → analysis shows conditional rendering already applied
 
 ---
 
-## [2026-02-09] (세션 26)
-> 📦 `js/rhythm.js`, `navigator-v5.html` | 📊 +6/-2 | 🗄️ DB: 없음
+## [2026-02-09] (Session 26)
+> `js/rhythm.js`, `navigator-v5.html` | +6/-2 | DB: none
 
-### 작업 내용
-- **라이프 리듬 기기 간 동기화 강화** ⭐
-  - `saveLifeRhythm()`: `syncToFirebase(true)` 즉시 동기화로 변경 (디바운스 1.5초 제거 — 브라우저 닫기 전 유실 방지)
-  - `_doSaveStateLocalOnly()`: `navigator-life-rhythm` localStorage 저장 추가 (beforeunload 시 리듬 백업 누락 수정)
-  - `visibilitychange`(탭 숨김): 리듬 데이터 localStorage 즉시 저장 추가 (탭 전환/닫기 시 보존)
+### Changes
+- **Life rhythm cross-device sync enhancement** ⭐
+  - `saveLifeRhythm()`: Changed to `syncToFirebase(true)` immediate sync (removed 1.5s debounce — prevents loss before browser close)
+  - `_doSaveStateLocalOnly()`: Added `navigator-life-rhythm` localStorage save (fixed missing rhythm backup on beforeunload)
+  - `visibilitychange` (tab hidden): Added immediate rhythm data localStorage save (preserved on tab switch/close)
 
-### 커밋
+### Commits
 ```
 c585ad7 fix: 라이프 리듬 기기 간 동기화 강화 — 즉시 업로드 + beforeunload 백업
 ```
 
-### 다음 작업
-- 없음
+### Next Tasks
+- None
 
 ---
 
-## [2026-02-09] (세션 25)
-> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 🗄️ DB: 없음
+## [2026-02-09] (Session 25)
+> `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | DB: none
 
-### 작업 내용
-- **XSS onclick 전수 방어** ⭐
-  - `escapeAttr()` 함수 추가: 백슬래시+따옴표 JS 이스케이프 후 HTML 이스케이프
-  - commute.js 5곳, rhythm.js 9곳, navigator-v5.html 5곳 적용
-  - 기존 `escapeHtml().replace()` 패턴도 `escapeAttr()`로 통일
+### Changes
+- **XSS onclick comprehensive defense** ⭐
+  - Added `escapeAttr()` function: backslash+quote JS escape then HTML escape
+  - Applied to commute.js 5 locations, rhythm.js 9 locations, navigator-v5.html 5 locations
+  - Unified existing `escapeHtml().replace()` patterns to `escapeAttr()`
 
-- **방어적 코딩 — 자정 넘김 + settings null 방어**
-  - editMedication: 자정 넘김 시 today → history 이동 후 새 today 생성
-  - showCommuteTagPrompt: settings null 방어
+- **Defensive coding — midnight crossing + settings null defense**
+  - editMedication: On midnight crossing, today → history move then create new today
+  - showCommuteTagPrompt: settings null defense
 
-- **타이머 메모리 누수 수정**
-  - commute tag prompt 10초 타이머를 수동 닫기 시 clearTimeout
-  - resumePomodoro 기존 interval 먼저 정리 후 재등록
+- **Timer memory leak fixes**
+  - commute tag prompt 10s timer clearTimeout on manual close
+  - resumePomodoro clears existing interval before re-registering
 
-- **모달 UX 개선** ⭐
-  - brain dump 모달: 외부 클릭/취소/ESC 시 작성 내용 있으면 confirm 확인
-  - ESC 키: 6개 누락 모달에 닫기 추가 (time input, work, quick edit, import, edit completed, edit log, telegram, weekly review)
-  - Tab 포커스 트랩: `.work-modal-overlay`, `.time-input-modal.show` 셀렉터 추가
+- **Modal UX improvements** ⭐
+  - Brain dump modal: confirm dialog on outside click/cancel/ESC when content exists
+  - ESC key: added close to 6 missing modals (time input, work, quick edit, import, edit completed, edit log, telegram, weekly review)
+  - Tab focus trap: added `.work-modal-overlay`, `.time-input-modal.show` selectors
 
-- **2차 검토 수정** ⭐
-  - XSS 누락 1곳: `editLifeRhythm/deleteLifeRhythm` onclick에 `escapeAttr` 적용
-  - `toMins()` 3곳: 잘못된 시간 형식(빈 문자열, 콜론 없음) NaN 방어
-  - `minsToTime/minsToHM`: undefined/NaN 방어 + Math.round로 소수점/"07:60" 방지
-  - `getCommuteRecommendation`: settings.targetArrivalTime null 크래시 방어
-  - ESC 핸들러 2곳 추가: rhythm 액션 메뉴 + commute 루트 모달
+- **2nd review fixes** ⭐
+  - XSS missing 1 location: `escapeAttr` applied to `editLifeRhythm/deleteLifeRhythm` onclick
+  - `toMins()` 3 locations: NaN defense for malformed time formats (empty string, no colon)
+  - `minsToTime/minsToHM`: undefined/NaN defense + Math.round prevents decimal/"07:60"
+  - `getCommuteRecommendation`: settings.targetArrivalTime null crash defense
+  - ESC handler 2 additions: rhythm action menu + commute route modal
 
-### 커밋
+### Commits
 ```
 5f5842d fix: onclick XSS 전수 방어 — escapeAttr() 함수 추가 및 적용
 b82fcf6 fix: 방어적 코딩 — 자정 넘김 복약 날짜 오류 + settings null 방어
@@ -267,44 +267,44 @@ f1b987c fix: 타이머 메모리 누수 수정 — commute tag timeout + pomodor
 236774f fix: 2차 검토 — XSS 누락 1곳 + NaN 방어 + ESC 핸들러 2곳 추가
 ```
 
-### 다음 작업
-- 없음 (1차 + 2차 전체 검토 완료)
+### Next Tasks
+- None (1st + 2nd full review complete)
 
 ---
 
-## [2026-02-09] (세션 23-24)
-> 📦 `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | 🗄️ DB: deletedIds.commuteRoutes, today.updatedAt, history[date].updatedAt, route.updatedAt 추가
+## [2026-02-09] (Session 23-24)
+> `navigator-v5.html`, `js/rhythm.js`, `js/commute.js` | DB: deletedIds.commuteRoutes, today.updatedAt, history[date].updatedAt, route.updatedAt added
 
-### 작업 내용
-- **라이프 리듬 기기 간 동기화 버그 수정**
-  - `mergeRhythmToday()` 함수 신규 (rhythm.js) — 날짜 비교 후 병합
-  - today 날짜 불일치 시: 새 날짜 → today, 오래된 데이터 → history 이동
-  - loadFromFirebase / onSnapshot / handleFileImport 3곳 모두 적용
+### Changes
+- **Life rhythm cross-device sync bug fix**
+  - New `mergeRhythmToday()` function (rhythm.js) — compares dates then merges
+  - On today date mismatch: new date → today, old data → moved to history
+  - Applied to all 3 locations: loadFromFirebase / onSnapshot / handleFileImport
 
-- **리듬 삭제가 다른 기기에서 되돌아가는 버그 수정** ⭐
-  - 근본 원인: `||` 연산자로 병합 시 `null || "07:00"` = `"07:00"` → 삭제 전파 불가
-  - `saveLifeRhythm()`에 `updatedAt`, `mergeRhythmToday()`에 "last writer wins" 적용
-  - loadFromFirebase/onSnapshot 병합 후 `localStorage.setItem` 추가
+- **Rhythm deletion reverting on other devices bug fix** ⭐
+  - Root cause: merging with `||` operator — `null || "07:00"` = `"07:00"` → deletion cannot propagate
+  - Applied `updatedAt` to `saveLifeRhythm()`, "last writer wins" to `mergeRhythmToday()`
+  - Added `localStorage.setItem` after loadFromFirebase/onSnapshot merge
 
-- **mergeRhythmHistory도 updatedAt 기반 last-writer-wins 적용**
-  - 히스토리 항목 편집 시 updatedAt 타임스탬프 기록
-  - editLifeRhythmHistory, editMedicationHistory에 updatedAt 추가
+- **mergeRhythmHistory also uses updatedAt-based last-writer-wins**
+  - Records updatedAt timestamp on history entry edit
+  - Added updatedAt to editLifeRhythmHistory, editMedicationHistory
 
-- **통근 루트 수정 동기화** ⭐
-  - `saveCommuteRoute()`에 `updatedAt` 타임스탬프 추가
-  - loadFromFirebase/onSnapshot/handleFileImport 루트 병합 시 updatedAt 비교
-  - 기존 루트는 createdAt 폴백으로 하위호환
+- **Commute route edit sync** ⭐
+  - Added `updatedAt` timestamp to `saveCommuteRoute()`
+  - updatedAt comparison during loadFromFirebase/onSnapshot/handleFileImport route merge
+  - Existing routes fall back to createdAt for backward compatibility
 
-- **"변경사항 수신됨" 토스트 완전 제거**
-  - 핑퐁 루프 제거 + 토스트 자체 제거 — sync-indicator로 충분
+- **"Changes received" toast completely removed**
+  - Ping-pong loop removed + toast itself removed — sync-indicator is sufficient
 
-- **통근 트래커 동기화 버그 수정**
-  - onSnapshot에 commuteTracker 병합 추가, deletedIds.commuteRoutes Soft-Delete
+- **Commute tracker sync bug fix**
+  - Added commuteTracker merge to onSnapshot, deletedIds.commuteRoutes soft-delete
 
-- **SVG 아이콘 교체 → 리버트**
-  - SVG 아이콘 적용 후 사용자 피드백으로 리버트 (이모지가 가시성 우수)
+- **SVG icon replacement → reverted**
+  - SVG icons applied then reverted based on user feedback (emojis have better visibility)
 
-### 커밋
+### Commits
 ```
 a5e4ad0 fix: 기기 간 동기화 버그 8건 수정
 8ce320a fix: onSnapshot 핑퐁 루프 제거
@@ -315,26 +315,26 @@ a5e4ad0 fix: 기기 간 동기화 버그 8건 수정
 b07b54e feat: SVG 아이콘 교체 (reverted: 06454d0)
 ```
 
-### 다음 작업
-- 전체 코드 검토 → 세션 25에서 수정
+### Next Tasks
+- Full code review → fixed in Session 25
 
 ---
 
-## [2026-02-08] (세션 22)
-> 📦 `navigator-v5.html`, `docs/CHANGELOG.md` | 🗄️ DB: 없음
+## [2026-02-08] (Session 22)
+> `navigator-v5.html`, `docs/CHANGELOG.md` | DB: none
 
-### 작업 내용
-- **SVG 아이콘 시스템 구축 + 이모지 → SVG 교체**
-  - `SVG_ICONS` 상수 + `svgIcon(name, size)` 헬퍼 함수 추가 (Lucide 스타일, stroke 기반)
-  - 20개 아이콘 정의: target, briefcase, dollar, home, menu, bus, bar-chart, calendar, list, chevron-down, edit, trash, plus, x, check, bell, clock, play, pause, search
-  - `.svg-icon` CSS 클래스 추가 (inline-block, vertical-align, currentColor 상속)
-  - **탭 네비게이션 9개 이모지 → SVG**: 🎯→target, 💼→briefcase, 💰→dollar, 🏠→home, 📋→menu, 🚌→bus, 📊→bar-chart, 📋→list, 📅→calendar
-  - **편집 버튼 12개 ✏️ → svgIcon('edit', 14)**
-  - **삭제 버튼 10개 🗑️ → svgIcon('trash', 14)**
-  - **추가 버튼 5개 ➕/📝 → svgIcon('plus', 16)**
-  - 크로스 플랫폼 아이콘 일관성 확보 (OS별 이모지 렌더링 차이 해소)
+### Changes
+- **SVG icon system setup + emoji → SVG replacement**
+  - `SVG_ICONS` constant + `svgIcon(name, size)` helper function added (Lucide style, stroke-based)
+  - 20 icons defined: target, briefcase, dollar, home, menu, bus, bar-chart, calendar, list, chevron-down, edit, trash, plus, x, check, bell, clock, play, pause, search
+  - `.svg-icon` CSS class added (inline-block, vertical-align, currentColor inheritance)
+  - **Tab navigation 9 emojis → SVG**: target, briefcase, dollar, home, menu, bus, bar-chart, list, calendar
+  - **Edit buttons 12 pencil emojis → svgIcon('edit', 14)**
+  - **Delete buttons 10 trash emojis → svgIcon('trash', 14)**
+  - **Add buttons 5 plus/memo emojis → svgIcon('plus', 16)**
+  - Cross-platform icon consistency achieved (resolves OS-specific emoji rendering differences)
 
-### 커밋
+### Commits
 ```
 0b1103c feat: SVG 아이콘 시스템 구축 + 이모지→SVG 교체 (탭/액션 버튼 36개)
 9b57bfc feat: 접근성 개선 심화 — aria-live, skip-nav, 포커스 관리, 시맨틱 랜드마크
@@ -344,114 +344,114 @@ c3249d5 fix: 동기화 중복 버그 수정 — ID 타입 불일치 + online 핸
 81397fa fix: 2차 검증 — XSS 11곳 + _summary 2곳 + _navFunctions ReferenceError 수정
 ```
 
-- **접근성 개선 심화 (WCAG 2.1 Level AA)**
-  - `srAnnounce()` 유틸리티 — aria-live assertive 영역으로 스크린 리더 실시간 안내
-  - Toast 알림에 `role="status"` + `aria-live="polite"` 추가 (96개 showToast 호출 전체 적용)
-  - Skip-to-content 링크 (`본문으로 건너뛰기`) — 키보드 사용자 네비게이션 건너뛰기
-  - `.sr-only` CSS 유틸리티 클래스 — 시각적 숨김 + 스크린 리더 접근 가능
-  - 탭 전환 시 포커스 자동 이동 (tabContent.focus) + 스크린 리더 안내
-  - `role="navigation"` + `aria-label="탭 네비게이션"` 시맨틱 랜드마크
-  - `role="main"` 메인 콘텐츠 랜드마크 (#root)
-  - 작업 완료/삭제 시 스크린 리더 안내 (srAnnounce)
+- **Accessibility deep improvements (WCAG 2.1 Level AA)**
+  - `srAnnounce()` utility — real-time screen reader announcements via aria-live assertive region
+  - Added `role="status"` + `aria-live="polite"` to toast notifications (applied to all 96 showToast calls)
+  - Skip-to-content link — keyboard user navigation skip
+  - `.sr-only` CSS utility class — visually hidden + screen reader accessible
+  - Auto focus on tab switch (tabContent.focus) + screen reader announcement
+  - `role="navigation"` + `aria-label` semantic landmarks
+  - `role="main"` main content landmark (#root)
+  - Screen reader announcements on task completion/deletion (srAnnounce)
 
-- **동기화 중복 버그 수정 (본업/일상 항목 중복)**
-  - **근본 원인**: `mergeTasks()`/`mergeById()`에서 Map 키 타입 불일치 — 로컬(문자열 ID) vs 클라우드(숫자 ID)를 서로 다른 항목으로 인식
-  - `mergeTasks()`, `mergeById()` — 병합 전 `normalizeId()`로 ID를 문자열로 정규화
-  - `deduplicateAll()` 함수 추가 — ID 기준 중복 제거 (updatedAt 최신 우선)
-  - 앱 시작(`loadState`), Firebase 로드(`loadFromFirebase`), 실시간 동기화(`startRealtimeSync`) 3곳에서 호출
+- **Sync duplication bug fix (work/daily item duplication)**
+  - **Root cause**: ID key type mismatch in `mergeTasks()`/`mergeById()` — local (string IDs) vs cloud (numeric IDs) treated as different items
+  - `mergeTasks()`, `mergeById()` — normalize IDs to strings via `normalizeId()` before merge
+  - Added `deduplicateAll()` function — ID-based deduplication (latest updatedAt priority)
+  - Called at 3 points: app start (`loadState`), Firebase load (`loadFromFirebase`), realtime sync (`startRealtimeSync`)
 
-- **버그 수정 (P0 + P1)**
-  - **P0**: `saveCompletedAt(${id})` → `saveCompletedAt('${id}')` — UUID 미따옴표로 onclick 깨짐
-  - **P1**: `editCompletionLogEntry` 중복 정의 제거 — prompt 기반(dead) 삭제, 모달 기반(active) 유지
-  - **P1**: `addFromTemplate` 중복 정의 제거 — appState.templates 기반(dead) 삭제, quickTemplates 기반(active) 유지
-  - **P1**: `saveAsTemplate` 중복 정의 제거 — task 객체 기반(dead) 삭제, workProject 기반(active) 유지
-  - **P1**: `calculateCompletionStreak` dead else-if 분기 제거 — 압축 데이터는 배열이라 Array.isArray 조건에서 이미 처리됨
+- **Bug fixes (P0 + P1)**
+  - **P0**: `saveCompletedAt(${id})` → `saveCompletedAt('${id}')` — UUID without quotes breaks onclick
+  - **P1**: Removed duplicate `editCompletionLogEntry` definition — deleted prompt-based (dead), kept modal-based (active)
+  - **P1**: Removed duplicate `addFromTemplate` definition — deleted appState.templates-based (dead), kept quickTemplates-based (active)
+  - **P1**: Removed duplicate `saveAsTemplate` definition — deleted task object-based (dead), kept workProject-based (active)
+  - **P1**: Removed `calculateCompletionStreak` dead else-if branch — compressed data is array, already handled by Array.isArray condition
 
-- **전체 버그 스캔 + 대규모 수정 (P0×7 + P1×12 + P2×6)**
-  - **P0 onclick 따옴표 누락 6건**: `completeTask`, `toggleEventSelection`(2곳), `toggleEventGroupSelect`(2곳), `restoreFromTrash`/`permanentDeleteFromTrash`, `deleteWorkLog` — UUID가 JS 변수로 해석되어 기능 완전 고장
-  - **P0 `render()` → `renderStatic()`**: Escape 키 모달 닫기 3곳에서 존재하지 않는 `render()` 호출 → crash
-  - **P0 `getHourlyProductivity()` _summary 크래시**: 압축 데이터의 `e.at` undefined → TypeError
-  - **P1 `getCategoryDistribution()` _summary 오집계**: 압축 카테고리 데이터 활용하도록 수정
-  - **P1 `getDayOfWeekProductivity()` _summary count + UTC 시차**: `entries.length` → `e.count` 사용, UTC 방지 `T12:00:00`
-  - **P1 `toggleFocusTask()` parseInt → UUID 정규식 파싱**: parseInt로 UUID 파싱 실패 수정
-  - **P1 `moveWorkProjectStage`/`copyWorkProjectToClipboard`**: 글로벌 stage 배열 → `getStageName()` 사용
-  - **P1 XSS 미이스케이프 10곳**: nextAction.title, filteredTasks[0].title, st.text, previewText, task.link(onclick 3+href 1), detailedTask.title, detailedTask.link(3곳)
-  - **P1 XSS `log.content`/`log.date`**: work task log에 escapeHtml 적용
-  - **P2 `getRevenueStats` completionLog 통합**: appState.tasks만 → completionLog 기반 전체 수익 집계
-  - **P2 `renderRecentHistory` _summary 건너뛰기**: "undefined" 표시 방지
-  - **P2 `saveCompletedAt` 수익 타입**: `task.expectedRevenue` → `Number(task.expectedRevenue)`
-  - **P2 `validateTask` 필드 누락**: description, startDate, telegramEventId 보존 추가
-  - **P2 Escape shortcuts help 닫기**: dead code였던 shortcuts help dismiss를 early handler로 이동
-  - **P2 `syncToFirebase` 가드**: template-import에서 미로그인 시 불필요한 호출 방지
-  - **P2 `quickAddValue` escapeHtml**: value 속성 injection 방지
+- **Full bug scan + major fixes (P0x7 + P1x12 + P2x6)**
+  - **P0 onclick quote missing (6 items)**: `completeTask`, `toggleEventSelection`(2), `toggleEventGroupSelect`(2), `restoreFromTrash`/`permanentDeleteFromTrash`, `deleteWorkLog` — UUID interpreted as JS variable, completely breaking functionality
+  - **P0 `render()` → `renderStatic()`**: 3 locations in Escape key modal close calling non-existent `render()` → crash
+  - **P0 `getHourlyProductivity()` _summary crash**: compressed data's `e.at` undefined → TypeError
+  - **P1 `getCategoryDistribution()` _summary miscounting**: fixed to utilize compressed category data
+  - **P1 `getDayOfWeekProductivity()` _summary count + UTC offset**: `entries.length` → `e.count`, UTC prevention `T12:00:00`
+  - **P1 `toggleFocusTask()` parseInt → UUID regex parsing**: fixed parseInt failing on UUID parsing
+  - **P1 `moveWorkProjectStage`/`copyWorkProjectToClipboard`**: global stage array → use `getStageName()`
+  - **P1 XSS unescaped (10 locations)**: nextAction.title, filteredTasks[0].title, st.text, previewText, task.link(onclick 3+href 1), detailedTask.title, detailedTask.link(3)
+  - **P1 XSS `log.content`/`log.date`**: escapeHtml applied to work task log
+  - **P2 `getRevenueStats` completionLog integration**: appState.tasks only → completionLog-based total revenue aggregation
+  - **P2 `renderRecentHistory` _summary skip**: prevents "undefined" display
+  - **P2 `saveCompletedAt` revenue type**: `task.expectedRevenue` → `Number(task.expectedRevenue)`
+  - **P2 `validateTask` missing fields**: added description, startDate, telegramEventId preservation
+  - **P2 Escape shortcuts help close**: moved dead code shortcuts help dismiss to early handler
+  - **P2 `syncToFirebase` guard**: prevents unnecessary calls when not logged in during template-import
+  - **P2 `quickAddValue` escapeHtml**: prevents value attribute injection
 
-- **2차 검증 — 추가 발견 버그 수정**
-  - **XSS 미이스케이프 11곳 추가**: st.text(본업 서브태스크), stageName(HTML+onclick 2곳), subcat.name(onclick 2곳), task.title(onclick 2곳), stageNameForModal(label 2곳), t.stageNames(템플릿), nextAction.link, filteredTasks[0].link, entry.at(input value)
-  - **`getCompletedTasksByDate` _summary 건너뛰기**: 캘린더 상세에서 "undefined" 표시 방지
-  - **`mergeCompletionLog` _summary 충돌 해결**: 로컬/클라우드 한쪽만 압축된 경우 상세 데이터 우선
-  - **`_navFunctions` 미정의 함수 10개 제거**: 외부 JS(commute.js/rhythm.js)에서 window에 직접 등록하므로 인라인에서 참조 불필요 → ReferenceError 방지
+- **2nd verification — additional bug fixes**
+  - **XSS unescaped 11 additional locations**: st.text (work subtask), stageName (HTML+onclick 2), subcat.name (onclick 2), task.title (onclick 2), stageNameForModal (label 2), t.stageNames (template), nextAction.link, filteredTasks[0].link, entry.at (input value)
+  - **`getCompletedTasksByDate` _summary skip**: prevents "undefined" display in calendar detail
+  - **`mergeCompletionLog` _summary conflict resolution**: when only one side (local/cloud) is compressed, prioritize detailed data
+  - **`_navFunctions` 10 undefined functions removed**: external JS (commute.js/rhythm.js) register directly on window, so inline references unnecessary → prevents ReferenceError
 
-### 다음 작업
-- 전체 3차 최종 검증 완료 ✅ — 잔여 버그 0건 확인
-- SVG 아이콘 추가 교체 (P2, 대기)
-- 라이프 리듬 30일 장기 통계 ✅ 완료
+### Next Tasks
+- Full 3rd final verification complete — 0 remaining bugs confirmed
+- SVG icon additional replacement (P2, pending)
+- Life rhythm 30-day long-term statistics — completed
 
 ---
 
-## [2026-02-08] (세션 21)
-> 📦 `navigator-v5.html`, `js/commute.js`(신규), `js/rhythm.js`(신규), `CLAUDE.md`, `docs/CHANGELOG.md` | 📊 +2700/-2900 | 🗄️ DB: 없음
+## [2026-02-08] (Session 21)
+> `navigator-v5.html`, `js/commute.js` (new), `js/rhythm.js` (new), `CLAUDE.md`, `docs/CHANGELOG.md` | +2700/-2900 | DB: none
 
-### 작업 내용
-- **리팩토링 Prompt 1: ID 생성 방식 교체 (Date.now → crypto.randomUUID)**
-  - `generateId()` 헬퍼 함수 추가 — 모든 ID 생성을 단일 함수로 통합
-  - 29개 `Date.now()` ID 생성 지점을 `generateId()`로 교체
-  - `migrateNumericIds()` 함수 추가 — 기존 숫자 ID를 문자열로 자동 마이그레이션
-    - tasks, templates, workProjects(+stages/subcategories/tasks), workTemplates, trash, activeWorkProject 대상
-    - loadState(), loadFromFirebase(), startRealtimeSync() 3곳에서 호출
-  - ~85개 onclick 핸들러에서 ID 인수에 따옴표 추가 (UUID 문자열 호환)
-  - `parseInt(projectId)` → `String(projectId)` 등 숫자 ID 파싱 코드 수정
-  - 기존 데이터와 100% 하위 호환 (마이그레이션 자동 실행)
+### Changes
+- **Refactoring Prompt 1: ID generation method replacement (Date.now → crypto.randomUUID)**
+  - Added `generateId()` helper function — unified all ID generation into a single function
+  - Replaced 29 `Date.now()` ID generation points with `generateId()`
+  - Added `migrateNumericIds()` function — auto-migrates existing numeric IDs to strings
+    - Targets: tasks, templates, workProjects(+stages/subcategories/tasks), workTemplates, trash, activeWorkProject
+    - Called at 3 points: loadState(), loadFromFirebase(), startRealtimeSync()
+  - Added quotes to ID arguments in ~85 onclick handlers (UUID string compatibility)
+  - Fixed numeric ID parsing code: `parseInt(projectId)` → `String(projectId)` etc.
+  - 100% backward compatible with existing data (migration runs automatically)
 
-- **리팩토링 Prompt 2: appState JSDoc 스키마 문서화**
-  - 12개 `@typedef` 정의: Task, Subtask, WorkProject, WorkStage, WorkSubcategory, WorkTask, CompletionLogEntry, CommuteRoute, CommuteTrip, MedicationSlot, LifeRhythmDay, AppState
-  - AppState typedef에 모든 프로퍼티 + 중첩 객체 필드 문서화 (~180줄)
-  - `@type {AppState}` 어노테이션으로 IDE 자동완성/타입 체크 지원
+- **Refactoring Prompt 2: appState JSDoc schema documentation**
+  - 12 `@typedef` definitions: Task, Subtask, WorkProject, WorkStage, WorkSubcategory, WorkTask, CompletionLogEntry, CommuteRoute, CommuteTrip, MedicationSlot, LifeRhythmDay, AppState
+  - All properties + nested object fields documented in AppState typedef (~180 lines)
+  - `@type {AppState}` annotation for IDE autocomplete/type checking support
 
-- **리팩토링 Prompt 3: 핵심 테스트 시나리오 CLAUDE.md 문서화**
-  - 10개 카테고리 × 체크리스트 형식: Task CRUD, 반복 작업, Firebase 동기화, ID 호환성, 본업 프로젝트, 라이프 리듬, 통근 트래커, UI 렌더링, 데이터 내보내기/가져오기, 엣지 케이스
-  - 수정 범위에 해당하는 항목만 선택 검증하는 방식 (전수 불필요)
+- **Refactoring Prompt 3: Core test scenarios documented in CLAUDE.md**
+  - 10 categories x checklist format: Task CRUD, Recurring Tasks, Firebase Sync, ID Compatibility, Work Projects, Life Rhythm, Commute Tracker, UI Rendering, Data Export/Import, Edge Cases
+  - Selective verification of items relevant to modification scope (full verification unnecessary)
 
-- **리팩토링 Prompt 4: CHANGELOG 메타데이터 블록 구조 개선**
-  - 세션별 메타데이터 블록(파일/라인변경/DB) 추가
-  - 세션 템플릿 가이드 상단 배치
-  - 섹션명 통일: 작업 내용 / 커밋 / 다음 작업
+- **Refactoring Prompt 4: CHANGELOG metadata block structure improvement**
+  - Added per-session metadata blocks (files/line changes/DB)
+  - Session template guide placed at top
+  - Unified section names: Changes / Commits / Next Tasks
 
-- **리팩토링 Prompt 5: 모듈 분리 — 통근 트래커 → js/commute.js**
-  - 22개 통근 함수를 `js/commute.js`로 분리 (~515줄)
-  - navigator-v5.html에서 ~512줄 제거, 주석 대체
-  - 10개 함수 `window.xxx` 전역 등록 (onclick 핸들러 호환)
-  - `<script src="js/commute.js"></script>` 태그 추가
-  - 의존성: appState, renderStatic, syncToFirebase, showToast, escapeHtml, getLocalDateStr, generateId
+- **Refactoring Prompt 5: Module separation — Commute Tracker → js/commute.js**
+  - Separated 22 commute functions to `js/commute.js` (~515 lines)
+  - Removed ~512 lines from navigator-v5.html, replaced with comments
+  - 10 functions registered globally via `window.xxx` (onclick handler compatibility)
+  - Added `<script src="js/commute.js"></script>` tag
+  - Dependencies: appState, renderStatic, syncToFirebase, showToast, escapeHtml, getLocalDateStr, generateId
 
-- **리팩토링 Prompt 6: 모듈 분리 — 라이프 리듬 → js/rhythm.js**
-  - 30개 리듬/복약 함수를 `js/rhythm.js`로 분리 (~1150줄)
-  - `mergeRhythmHistory` (Firebase 병합 영역)도 함께 이동
-  - navigator-v5.html에서 ~1180줄 제거
-  - `getLocalDateStr`/`getLocalDateTimeStr` 공유 유틸리티는 HTML 유지
-  - **스크립트 아키텍처 개선**: 메인 `<script>`를 함수 정의부 / 초기화부로 분할
-    - 외부 모듈(commute.js, rhythm.js)을 두 파트 사이에 배치
-    - `loadState()` 호출 시점에 모든 외부 함수 사용 가능 (초기화 시점 버그 수정)
+- **Refactoring Prompt 6: Module separation — Life Rhythm → js/rhythm.js**
+  - Separated 30 rhythm/medication functions to `js/rhythm.js` (~1150 lines)
+  - `mergeRhythmHistory` (Firebase merge area) also moved
+  - Removed ~1180 lines from navigator-v5.html
+  - `getLocalDateStr`/`getLocalDateTimeStr` shared utilities kept in HTML
+  - **Script architecture improvement**: Split main `<script>` into function definition / initialization sections
+    - External modules (commute.js, rhythm.js) placed between the two parts
+    - All external functions available at `loadState()` call time (fixed initialization timing bug)
 
-- **리팩토링 Prompt 7: renderStatic 부분 렌더링 최적화**
-  - 9개 탭 전체에 조건부 렌더링 적용 — 활성 탭만 HTML 생성, 비활성 탭은 빈 문자열
-    - inline 탭(action, schedule, dashboard, all): `${currentTab === 'X' ? \`...\` : ''}`
-    - IIFE 탭(events, life, history): `${currentTab === 'X' ? (() => {...})() : ''}`
-    - 함수 탭(work, commute): `${currentTab === 'X' ? renderFn() : ''}`
-  - 비활성 8개 탭의 ~2000줄 템플릿 평가 + DOM 생성 스킵
-  - `updateTime()` 데드코드 제거 (`_scrollY`/`_activeId` RAF 복원 — 범위 밖 변수 참조)
-  - `renderStatic()` 데드코드 제거 (`_scrollY`/`_activeId`/`_activeClass` 미사용 변수)
+- **Refactoring Prompt 7: renderStatic partial rendering optimization**
+  - Conditional rendering applied to all 9 tabs — only active tab generates HTML, inactive tabs return empty string
+    - Inline tabs (action, schedule, dashboard, all): `${currentTab === 'X' ? \`...\` : ''}`
+    - IIFE tabs (events, life, history): `${currentTab === 'X' ? (() => {...})() : ''}`
+    - Function tabs (work, commute): `${currentTab === 'X' ? renderFn() : ''}`
+  - Skips ~2000 lines of template evaluation + DOM creation for 8 inactive tabs
+  - `updateTime()` dead code removal (`_scrollY`/`_activeId` RAF restore — out-of-scope variable references)
+  - `renderStatic()` dead code removal (`_scrollY`/`_activeId`/`_activeClass` unused variables)
 
-### 커밋
+### Commits
 ```
 158ba60 refactor: Date.now() ID 생성을 crypto.randomUUID()로 교체
 a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
@@ -461,129 +461,129 @@ a570032 docs: appState JSDoc 스키마 문서화 (Prompt 2)
 05b9383 refactor: 라이프 리듬 모듈 분리 js/rhythm.js + 스크립트 아키텍처 개선 (Prompt 6)
 ```
 
-### 다음 작업
-- Prompt 1-7 리팩토링 완료 ✅
+### Next Tasks
+- Prompt 1-7 refactoring complete
 
 ---
 
-## [2026-02-07] (세션 20)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음 (Firestore 초기화 방식 변경)
+## [2026-02-07] (Session 20)
+> `navigator-v5.html` | DB: none (Firestore initialization method changed)
 
-### 작업 내용
-- **크로스 디바이스 동기화 수정 (Firestore 단일 진실 소스)**
-  - Phase 1: Firestore 오프라인 퍼시스턴스 활성화 (IndexedDB 캐시)
+### Changes
+- **Cross-device sync fix (Firestore single source of truth)**
+  - Phase 1: Firestore offline persistence enabled (IndexedDB cache)
     - `getFirestore` → `initializeFirestore` + `persistentLocalCache` + `persistentSingleTabManager`
-    - 오프라인에서도 Firestore SDK가 자동 캐시 데이터 반환
-  - Phase 2: 동기화 디바운스 5초→1.5초 단축 (반응성 개선)
-  - Phase 3: beforeunload/visibilitychange 동기화 안정성 개선
-    - `_doSaveStateLocalOnly()` 함수 추가 — beforeunload에서 동기 저장만 수행
-    - visibilitychange hidden 시 대기 중인 Firebase 동기화 즉시 플러시
-  - Phase 4: onSnapshot 병합 후 Firebase 재업로드 (핑퐁 방지 포함)
-    - `lastOwnWriteTimestamp`로 자기 쓰기 식별 → 무한 루프 차단
-    - 다른 기기 변경 수신 시 병합 결과 재업로드 (디바운스 적용)
-  - Phase 5: 로그인 사용자 localStorage 캐싱 제거
-    - `_doSaveState`, onSnapshot, loadFromFirebase 등 ~30곳 localStorage.setItem 조건부 래핑
-    - 로그인 사용자: Firestore IndexedDB만 사용 (localStorage 캐싱 스킵)
-    - 비로그인 사용자: 기존 localStorage 동작 유지
-    - 프라이빗 브라우징: `isIndexedDBAvailable` 체크로 localStorage 폴백
-    - 로그아웃 시 `_doSaveStateLocalOnly()` 한번 덤프 (비로그인 상태 대비)
+    - Firestore SDK automatically returns cached data even offline
+  - Phase 2: Sync debounce shortened 5s → 1.5s (improved responsiveness)
+  - Phase 3: beforeunload/visibilitychange sync stability improvement
+    - Added `_doSaveStateLocalOnly()` function — synchronous save only during beforeunload
+    - Immediately flush pending Firebase sync on visibilitychange hidden
+  - Phase 4: Firebase re-upload after onSnapshot merge (with ping-pong prevention)
+    - `lastOwnWriteTimestamp` identifies self-writes → blocks infinite loop
+    - Re-uploads merge result when receiving other device changes (with debounce)
+  - Phase 5: Removed localStorage caching for logged-in users
+    - Conditionally wrapped `localStorage.setItem` at ~30 locations in `_doSaveState`, onSnapshot, loadFromFirebase, etc.
+    - Logged-in users: use Firestore IndexedDB only (skip localStorage caching)
+    - Non-logged-in users: existing localStorage behavior maintained
+    - Private browsing: `isIndexedDBAvailable` check for localStorage fallback
+    - On logout: dump via `_doSaveStateLocalOnly()` once (for non-logged-in state)
 
-### 다음 작업
-- SVG 아이콘 교체 (P2)
+### Next Tasks
+- SVG icon replacement (P2)
 
 ---
 
-## [2026-02-07] (세션 19)
-> 📦 `navigator-v5.html` | 📊 12 커밋 | 🗄️ DB: `appState.trash` 필드 추가
+## [2026-02-07] (Session 19)
+> `navigator-v5.html` | 12 commits | DB: `appState.trash` field added
 
-### 작업 내용
-- **P0 버그 수정: 반복 태스크 일일 초기화 saveState() 누락**
-  - `checkDailyReset()` 후 `saveState()` 호출 추가 (4곳)
-  - loadState(), setInterval(1분), visibilitychange, wakeUp 트리거
-  - 모바일에서 `beforeunload` 미발생 시 초기화 데이터 유실 방지
+### Changes
+- **P0 bug fix: Recurring task daily reset saveState() missing**
+  - Added `saveState()` call after `checkDailyReset()` (4 locations)
+  - Triggers: loadState(), setInterval(1min), visibilitychange, wakeUp
+  - Prevents reset data loss when `beforeunload` doesn't fire on mobile
 
-- **이벤트 탭 일괄 삭제(다중 선택) 기능**
-  - `☑ 선택` 버튼 → 선택 모드 진입: 체크박스 표시 + 액션바(전체/삭제/취소)
-  - 개별/전체 선택 → `🗑 삭제 (N)` → confirm → soft-delete(deletedIds 패턴)
-  - 선택 모드에서 액션 버튼 숨김 (오조작 방지)
-  - 비영속적 상태: `_eventBulkSelectMode`, `_eventBulkSelectedIds` (새로고침 시 초기화)
-  - 접근성: aria-label, 44px 터치 타겟
-  - XSS 방어: escapeHtml() 적용
+- **Events tab bulk delete (multi-select) feature**
+  - Select button → enter selection mode: checkboxes shown + action bar (all/delete/cancel)
+  - Individual/all select → Delete (N) → confirm → soft-delete (deletedIds pattern)
+  - Action buttons hidden in selection mode (prevents accidental actions)
+  - Non-persistent state: `_eventBulkSelectMode`, `_eventBulkSelectedIds` (reset on refresh)
+  - Accessibility: aria-label, 44px touch target
+  - XSS defense: escapeHtml() applied
 
-- **휴지통 기능 (삭제 태스크 복원)**
-  - `appState.trash` 배열 추가 — 삭제된 태스크 30일 보관
-  - `deleteTask()`, `bulkDeleteEvents()` → 태스크를 trash로 이동 (기존: 즉시 소멸)
-  - `restoreFromTrash(id)` — 복원 시 deletedIds에서도 제거 (동기화 부활 방지)
-  - `permanentDeleteFromTrash(id)`, `emptyTrash()` — 영구 삭제
-  - `cleanupOldTrash()` — 30일 만료 자동 정리 (loadState 시 실행)
-  - localStorage + Firebase 동기화 (실시간 병합 포함)
-  - export/import에 trash 포함
-  - 이벤트 탭 하단 🗑 휴지통 섹션: 삭제일, 남은 보관일 표시, 복원/영구삭제 버튼
+- **Trash feature (deleted task restoration)**
+  - Added `appState.trash` array — retains deleted tasks for 30 days
+  - `deleteTask()`, `bulkDeleteEvents()` → move tasks to trash (previously: instant destruction)
+  - `restoreFromTrash(id)` — also removes from deletedIds on restore (prevents sync resurrection)
+  - `permanentDeleteFromTrash(id)`, `emptyTrash()` — permanent deletion
+  - `cleanupOldTrash()` — automatic cleanup of 30-day expired items (runs on loadState)
+  - localStorage + Firebase sync (including realtime merge)
+  - trash included in export/import
+  - Events tab bottom trash section: deletion date, remaining retention days, restore/permanent delete buttons
 
-- **P0 버그 수정: 라이프 리듬 하루 전환 누락**
-  - `checkRhythmDayChange()` 함수 추가 — 어제 today를 히스토리로 이동 + 오늘 초기화
-  - setInterval(1분) + visibilitychange에서 호출 (기존: 버튼 클릭 시만 전환)
-  - 앱을 안 끄고 자정 넘기거나, 탭 복귀 시 리듬 자동 초기화
+- **P0 bug fix: Life rhythm day transition missing**
+  - Added `checkRhythmDayChange()` function — moves yesterday's today to history + initializes today
+  - Called from setInterval(1min) + visibilitychange (previously: only on button click)
+  - Auto-initializes rhythm when app stays open past midnight or on tab return
 
-- **이벤트 일괄 삭제 — 그룹별 선택 기능**
-  - 선택 모드에서 각 그룹 헤더에 체크박스 추가
-  - 그룹 체크박스 클릭 시 해당 그룹 전체 선택/해제
+- **Events bulk delete — group selection feature**
+  - Added checkbox to each group header in selection mode
+  - Group checkbox click selects/deselects entire group
 
-- **이벤트 탭 그룹 재편 + 접기 기능**
-  - 그룹 변경: 기한초과/오늘/3일이내/여유 → 긴급(D-1이하)/마감전(D-2~D-5)/미제출/제출완료
-  - 모든 그룹 헤더 클릭 시 접기/펼치기 (▼/▶ 토글)
-  - `_collapsedEventGroups` Set으로 접힘 상태 관리 (비영속적)
-  - 제출완료 섹션도 동일한 events-group 패턴으로 통일
+- **Events tab group reorganization + collapse feature**
+  - Groups changed: overdue/today/within 3 days/plenty of time → urgent (D-1 or less)/before deadline (D-2~D-5)/unsubmitted/submitted
+  - All group headers click to collapse/expand (toggle)
+  - `_collapsedEventGroups` Set manages collapsed state (non-persistent)
+  - Submitted section also unified to same events-group pattern
 
-- **복약 트래커 레이아웃 개선**
-  - `medication-slots` flex → `grid-template-columns: 1fr 1fr` (2열 고정 그리드)
-  - PC에서 3+1 → 2+2, 모바일에서 1+1+1+1 → 2+2로 통일
-  - `med-label` ellipsis 제거 → 텍스트 자연 줄바꿈 허용
+- **Medication tracker layout improvement**
+  - `medication-slots` flex → `grid-template-columns: 1fr 1fr` (fixed 2-column grid)
+  - PC: 3+1 → 2+2, Mobile: 1+1+1+1 → 2+2 unified
+  - `med-label` ellipsis removed → natural text wrapping allowed
 
-- **태스크 카드 카테고리 컬러바**
-  - CSS `--task-cat-color` 변수 기반 좌측 4px 컬러바
-  - 본업(파랑), 부업(보라), 일상(초록), 가족(주황) 시각 구분
-  - 적용: task-item, task-item-mini, all-task-item, life-item 전체 카드
+- **Task card category color bar**
+  - CSS `--task-cat-color` variable-based left 4px color bar
+  - Visual distinction: work (blue), side work (purple), daily (green), family (orange)
+  - Applied to: task-item, task-item-mini, all-task-item, life-item — all cards
 
-- **브레인 덤프 모드 (여러 태스크 한 번에 입력)**
-  - 퀵입력 영역에 `🧠 덤프` 버튼 추가
-  - 모달 textarea에 한 줄씩 작업 입력 → 일괄 태스크 생성
-  - 기존 `#카테고리` 파싱 재사용 (#부업, #본업, #일상, #가족)
-  - 줄 수 실시간 카운터 + saveState/renderStatic 1회만 호출
+- **Brain dump mode (enter multiple tasks at once)**
+  - Added "Dump" button to quick input area
+  - Modal textarea for one task per line → batch task creation
+  - Reuses existing `#category` parsing
+  - Real-time line counter + saveState/renderStatic called only once
 
-- **포모도로-태스크 연결 (집중 시간 자동 기록)**
-  - 태스크 카드에 🍅 포모도로 버튼 추가
-  - 25분 완료 시 연결된 태스크의 `actualTime`에 25분 자동 누적
-  - 포모도로 UI에 연결 태스크명 + 누적 시간 표시
-  - 태스크 삭제 시 `currentTaskId` 무효화 처리
+- **Pomodoro-task connection (auto-record focus time)**
+  - Added pomodoro button to task cards
+  - On 25min completion, auto-accumulates 25min to connected task's `actualTime`
+  - Pomodoro UI shows connected task name + accumulated time
+  - `currentTaskId` invalidated on task deletion
 
-- **완료 스트릭 시각화 (연속 완료일 + 배지)**
-  - `calculateCompletionStreak()`: completionLog 기반 연속 완료일 계산
-  - dayStartHour 반영 (새벽 완료 = 전날로 간주)
-  - 홈 탭 상단에 🔥 N일 연속 완료 카운터
-  - 7일(💪) / 14일(⭐) / 30일(🏆) 달성 배지
+- **Completion streak visualization (consecutive completion days + badges)**
+  - `calculateCompletionStreak()`: calculates consecutive completion days based on completionLog
+  - Reflects dayStartHour (early morning completion = counted as previous day)
+  - Home tab top shows N-day consecutive completion counter
+  - 7-day / 14-day / 30-day achievement badges
 
-- **라이프 리듬 30일 장기 통계**
-  - `calculateRhythmStats(30)`: 30일 평균 기상/취침/수면/출발/통근/근무시간
-  - 주중 vs 주말 비교 (기상, 취침, 통근)
-  - 복약 준수율 (필수/선택 구분, 슬롯별 %)
-  - 라이프 리듬 히스토리 탭에 `📊 통계` 토글 버튼
+- **Life rhythm 30-day long-term statistics**
+  - `calculateRhythmStats(30)`: 30-day average wake/sleep/sleep duration/departure/commute/work hours
+  - Weekday vs weekend comparison (wake, sleep, commute)
+  - Medication compliance rate (required/optional separated, per-slot %)
+  - Life rhythm history tab with Stats toggle button
 
-- **히스토리 개별 삭제 버튼**
-  - 더보기 > 히스토리에서 각 완료 기록에 × 삭제 버튼 추가
-  - `completionLog` 항목별 `_logDate`, `_logIndex` 추적 → `deleteCompletionLogEntry()` 호출
-  - 삭제된 이벤트가 히스토리에 남아있는 문제 해결
+- **History individual delete button**
+  - Added delete button to each completion record in More > History
+  - `completionLog` per-entry `_logDate`, `_logIndex` tracking → `deleteCompletionLogEntry()` call
+  - Fixes deleted events remaining in history
 
-- **제출완료 그룹 체크박스 추가**
-  - 이벤트 일괄 선택 모드에서 제출완료 그룹에도 그룹 체크박스 표시
-  - 긴급/마감전/미제출과 동일한 `toggleEventGroupSelect()` 패턴 적용
+- **Submitted group checkbox addition**
+  - Group checkbox also shown for submitted group in events bulk selection mode
+  - Same `toggleEventGroupSelect()` pattern as urgent/before deadline/unsubmitted
 
-- **히스토리 완료 날짜/시간 수정 기능**
-  - 히스토리 항목의 시간 클릭 → 날짜+시간 수정 모달
-  - 날짜 변경 시 기존 날짜에서 제거 → 새 날짜로 이동
-  - `parseTimeInput()` 재사용 (1430, 930 등 간편 입력 지원)
+- **History completion date/time edit feature**
+  - Click time on history item → date+time edit modal
+  - On date change, removes from old date → moves to new date
+  - Reuses `parseTimeInput()` (supports shorthand input like 1430, 930)
 
-### 커밋
+### Commits
 ```
 e305841 feat: 히스토리 완료 날짜/시간 수정 기능
 2977b4d fix: 히스토리 개별 삭제 + 제출완료 그룹 체크박스
@@ -599,50 +599,50 @@ f34ad44 feat: 휴지통 복원 기능 + 이벤트 그룹별 선택
 530b898 fix: 반복 태스크 일일 초기화 saveState() 누락 수정 (모바일 데이터 유실 방지)
 ```
 
-### 다음 작업
-- P2: SVG 아이콘 교체
-- Supabase RLS 확인 (대시보드에서 수동 확인 필요)
+### Next Tasks
+- P2: SVG icon replacement
+- Supabase RLS verification (manual check needed in dashboard)
 
 ---
 
-## [2026-02-06] (세션 18)
-> 📦 `navigator-v5.html` | 📊 5 커밋 | 🗄️ DB: Supabase `telegram_messages` 읽기/아카이브
+## [2026-02-06] (Session 18)
+> `navigator-v5.html` | 5 commits | DB: Supabase `telegram_messages` read/archive
 
-### 작업 내용
-- **P0 버그 수정: 텔레그램 연동 2건**
-  - `confirmImportTask()`: `syncToCloud()` → `syncToFirebase()` (미정의 함수 호출 수정)
-  - `_doSyncToFirebase()`: `setDoc`에 `{ merge: true }` 추가
-    - Navigator 동기화 시 텔레그램 봇이 저장한 `events` 필드가 삭제되던 문제 수정
-  - `confirmImportTask()`: `description` 필드 누락 추가
+### Changes
+- **P0 bug fix: Telegram integration (2 items)**
+  - `confirmImportTask()`: `syncToCloud()` → `syncToFirebase()` (undefined function call fix)
+  - `_doSyncToFirebase()`: Added `{ merge: true }` to `setDoc`
+    - Fixed Navigator sync deleting `events` field saved by Telegram bot
+  - `confirmImportTask()`: Added missing `description` field
 
-- **텔레그램 배지 클릭 → 이벤트 목록 모달**
-  - 이벤트 탭 `🤖 텔레그램 미연동` 배지를 `<button>`으로 변경 (기존 `<div>`)
-  - `showTelegramEvents()`: **Supabase REST API**로 `telegram_messages` 직접 조회
-    - 봇은 Supabase 사용, Navigator는 Firebase → Supabase anon key로 크로스 조회
-    - 쿼리 필터: `participated=false` + `(starred OR deadline)` + `archived_date IS NULL`
-    - analysis 필드 활용: title, summary, reward_usd, time_minutes, project, organizer
-  - `showTelegramEventsModal()`: 체크박스 리스트 모달 UI
-    - 전체 선택 / 개별 선택 지원
-    - 미추가 이벤트 없으면 상태별 안내 메시지 (이벤트 없음 / 전부 추가됨)
-    - 날짜 포맷: `YYYY-MM-DD` → `2월 15일 D-3` + D-day 색상
-    - 난이도/타입/프로젝트/주최자 메타 표시
-    - ⭐ starred 이벤트 표시
-  - **카드 상세 보기**: 제목 클릭 시 설명, 할 일 목록, 링크, 프로젝트/주최자 펼침 (▼/▲ 토글)
-  - `importSelectedTelegramEvents()`: 선택된 이벤트 일괄 Task 추가
-    - `source` 구조: 봇 `exportToNavigator()` 형식과 동일
-    - localStorage + Firebase 동기화
-  - `archiveSelectedTelegramEvents()`: 선택 이벤트 일괄 삭제(아카이브)
-    - Supabase PATCH로 `archived_date` 설정 (봇과 동일한 소프트 삭제)
-    - confirm 확인 후 처리, 삭제 후 목록 자동 새로고침
-  - CSS: `.tg-events-list`, `.tg-event-item`, `.tg-event-detail` 등
-  - 접근성: `aria-label`, `min-height: 44px` 터치 타겟
-  - XSS 방어: 모든 사용자 입력에 `escapeHtml()` 적용
+- **Telegram badge click → events list modal**
+  - Changed events tab Telegram badge from `<div>` to `<button>`
+  - `showTelegramEvents()`: Direct query to `telegram_messages` via **Supabase REST API**
+    - Bot uses Supabase, Navigator uses Firebase → cross-query via Supabase anon key
+    - Query filters: `participated=false` + `(starred OR deadline)` + `archived_date IS NULL`
+    - Uses analysis field: title, summary, reward_usd, time_minutes, project, organizer
+  - `showTelegramEventsModal()`: Checkbox list modal UI
+    - Select all / individual selection support
+    - Status messages when no unadded events (no events / all already added)
+    - Date format: `YYYY-MM-DD` → `Feb 15 D-3` + D-day color
+    - Difficulty/type/project/organizer meta display
+    - Starred event indicator
+  - **Card detail view**: Click title to expand description, task list, links, project/organizer (toggle)
+  - `importSelectedTelegramEvents()`: Batch add selected events as Tasks
+    - `source` structure: same format as bot's `exportToNavigator()`
+    - localStorage + Firebase sync
+  - `archiveSelectedTelegramEvents()`: Batch delete (archive) selected events
+    - Sets `archived_date` via Supabase PATCH (same soft-delete as bot)
+    - Confirm dialog before processing, auto-refresh list after deletion
+  - CSS: `.tg-events-list`, `.tg-event-item`, `.tg-event-detail`, etc.
+  - Accessibility: `aria-label`, `min-height: 44px` touch target
+  - XSS defense: `escapeHtml()` applied to all user inputs
 
-- **P0 추가 수정**
-  - `renderTasks()` → `renderStatic()` (미정의 함수 호출 2곳 수정)
-  - `toggleAllTelegramEvents`: label onclick 타이밍 버그 수정
+- **P0 additional fixes**
+  - `renderTasks()` → `renderStatic()` (undefined function call at 2 locations)
+  - `toggleAllTelegramEvents`: label onclick timing bug fix
 
-### 커밋 이력
+### Commits
 ```
 d775a6c feat: 텔레그램 이벤트 일괄 삭제(아카이브) 기능
 7c8c53a fix: 텔레그램 이벤트 모달 3가지 개선
@@ -651,83 +651,83 @@ dc929e8 refactor: 텔레그램 이벤트 조회를 Supabase 직접 조회로 변
 dcf9f0c feat: 텔레그램 배지 클릭 → 이벤트 목록 모달 + P0 동기화 버그 수정
 ```
 
-### 다음 작업
-- P2: SVG 아이콘 교체
-- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
+### Next Tasks
+- P2: SVG icon replacement
+- P1: Life rhythm 30-day long-term statistics (sleep pattern trends)
 
 ---
 
-## [2026-02-06] (세션 17)
-> 📦 `navigator-v5.html` | 📊 6 커밋 | 🗄️ DB: 없음 (startDate, description optional 필드)
+## [2026-02-06] (Session 17)
+> `navigator-v5.html` | 6 commits | DB: none (startDate, description optional fields)
 
-### 작업 내용
-- **P0 버그 3건 수정**
-  - `loadLifeRhythm()`: 날짜 변경 시 오늘의 리듬 자동 리셋
-    - 기존 데이터를 히스토리로 이동 후 오늘 날짜로 초기화
-    - UTC 보정 로직 제거 → 명확한 날짜 변경 감지로 대체
-  - 복약 버튼 레이아웃 밀림 수정
-    - `.medication-btn`: max-width 180px 추가
+### Changes
+- **P0 bug fixes (3 items)**
+  - `loadLifeRhythm()`: Auto-reset today's rhythm on date change
+    - Moves existing data to history then initializes with today's date
+    - Removed UTC correction logic → replaced with clear date change detection
+  - Medication button layout misalignment fix
+    - `.medication-btn`: added max-width 180px
     - `.med-label`: overflow ellipsis + flex:1 + min-width:0
-    - `.med-time`: flex-shrink:0 추가
-  - `checkDailyReset()`: 일상 반복 태스크 중복 정리 개선
-    - 완료 여부 상관없이 중복 정리 (기존: 미완료만)
-    - 완료된 태스크 우선 유지 (기존: 최신 생성만 비교)
+    - `.med-time`: added flex-shrink:0
+  - `checkDailyReset()`: Improved daily recurring task duplicate cleanup
+    - Duplicate cleanup regardless of completion status (previously: uncompleted only)
+    - Completed tasks prioritized for retention (previously: only compared newest creation)
 
-- **Phase 2: 이벤트 탭 개선 4건**
-  - `editCompletedAt()`: 완료된 이벤트의 완료 날짜 수정 기능
-    - 모달 UI로 datetime 입력
-    - completionLog 자동 갱신 (기존 날짜 제거 → 새 날짜 추가)
-  - Task description 필드 추가
-    - `detailedTask.description`: 작업 설명/메모 저장
-    - 상세 추가 폼에 textarea 추가
-    - 이벤트 카드에 description 일부(60자) 표시
-  - 이벤트 카드 표시 정보 확장
-    - organizer, eventType, expectedRevenue 메타 정보 표시
-    - 텔레그램 연동 이벤트에 📱 배지 표시
-  - 이벤트 기한별 그룹핑
-    - 기한 초과(🚨) / 오늘(⏰) / 3일 이내(⚡) / 여유 있음(📅) 4개 그룹
-    - 각 그룹별 카운트 헤더 표시
+- **Phase 2: Events tab improvements (4 items)**
+  - `editCompletedAt()`: Edit completion date for completed events
+    - Modal UI with datetime input
+    - Auto-updates completionLog (removes old date → adds new date)
+  - Task description field added
+    - `detailedTask.description`: stores task description/notes
+    - Added textarea to detailed add form
+    - Shows partial description (60 chars) on event card
+  - Event card expanded display information
+    - organizer, eventType, expectedRevenue meta info display
+    - Telegram-linked events show badge
+  - Event deadline-based grouping
+    - 4 groups: overdue / today / within 3 days / plenty of time
+    - Count header for each group
 
-- **Phase 3: 텔레그램 연동 + 통근 트래커 개선 3건**
-  - 텔레그램 연동 상태 표시
-    - 완료된 이벤트에 📱 배지 + "✓ 동기화" 표시
-    - 미제출 이벤트에도 텔레그램 소스 배지 표시
-  - 통근 최근 7일 상세 시간 표시
-    - `getRecentCommuteDetail()`: 날짜별 출발/도착 시간 포함
-    - 기존 평균만 표시 → 일별 "출발 → 도착" 시간 상세 표시
-    - 날씨 조건 아이콘 표시 (🌧️/❄️)
-  - 통근 전체 기록 히스토리 탭
-    - `commuteSubTab: 'history'` 추가
-    - `renderCommuteHistoryView()`: 날짜별 출퇴근 기록 전체 조회
-    - 루트명, 출발/도착 시간, 소요시간, 날씨 조건 표시
+- **Phase 3: Telegram integration + commute tracker improvements (3 items)**
+  - Telegram integration status display
+    - Completed events show badge + "Synced" indicator
+    - Unsubmitted events also show Telegram source badge
+  - Commute recent 7-day detailed time display
+    - `getRecentCommuteDetail()`: includes departure/arrival times by date
+    - Previous average only → daily departure → arrival time detail display
+    - Weather condition icon display
+  - Commute full history tab
+    - Added `commuteSubTab: 'history'`
+    - `renderCommuteHistoryView()`: view all commute records by date
+    - Shows route name, departure/arrival time, duration, weather conditions
 
-- **Phase 4: 일정 관리 개선 2건**
-  - Task startDate 필드 추가
-    - `detailedTask.startDate`: 시작일 저장
-    - 본업/부업/일상/가족 4개 카테고리 모두 시작일 입력 가능
-    - 시작일-마감일 가로 배치 (`.form-row` + `.form-group.half`)
-  - 이벤트 카드 일정 범위 표시
-    - 시작일만: "1월5일~"
-    - 마감일만: "~1월10일"
-    - 둘 다: "1월5일~1월10일"
+- **Phase 4: Schedule management improvements (2 items)**
+  - Task startDate field added
+    - `detailedTask.startDate`: stores start date
+    - Start date input available for all 4 categories (work/side work/daily/family)
+    - Start date - deadline horizontal layout (`.form-row` + `.form-group.half`)
+  - Event card date range display
+    - Start date only: "Jan 5~"
+    - Deadline only: "~Jan 10"
+    - Both: "Jan 5~Jan 10"
 
-- **검토 후 추가 수정**
-  - 빠른 수정 모달에 description, startDate 필드 추가
-    - showQuickEditModal(): textarea + 시작일/마감일 가로 배치
-    - saveQuickEdit(): description, startDate 저장 로직 추가
-  - detailedAdd() 초기화 2곳에 startDate 누락 수정
-  - .work-modal-field-row, .work-modal-field.half 스타일 추가
+- **Post-review additional fixes**
+  - Added description, startDate fields to quick edit modal
+    - showQuickEditModal(): textarea + start date/deadline horizontal layout
+    - saveQuickEdit(): description, startDate save logic added
+  - Fixed startDate missing in detailedAdd() initialization at 2 locations
+  - Added .work-modal-field-row, .work-modal-field.half styles
 
-- **일상 탭 반복/일회성 분리**
-  - 일상(반복): repeatType이 daily/weekdays 등인 작업
-  - 일상(일회성): repeatType이 none인 작업
-  - 가족: 기존 그대로
-  - 요약 섹션 4칸: 반복 / 일회성 / 가족 / 완료
-  - `resetCompletedRepeatTasks()`: 완료된 반복 작업 수동 리셋 기능
-  - "↺ 리셋 (N)" 버튼으로 완료된 반복 작업 일괄 리셋
-  - 반복 작업 모두 완료 시 "✓ 오늘 반복 작업 모두 완료!" 표시
+- **Daily tab recurring/one-time separation**
+  - Daily (recurring): tasks with repeatType daily/weekdays etc.
+  - Daily (one-time): tasks with repeatType none
+  - Family: unchanged
+  - Summary section 4 panels: recurring / one-time / family / completed
+  - `resetCompletedRepeatTasks()`: manual reset for completed recurring tasks
+  - "Reset (N)" button for batch reset of completed recurring tasks
+  - "All recurring tasks completed today!" message when all done
 
-### 커밋 이력
+### Commits
 ```
 b968d4e feat: 일상 탭 반복/일회성 분리 + 리셋 기능
 f9a4fd9 fix: 검토 후 누락 수정 - 빠른 수정 모달 + 초기화 코드
@@ -737,528 +737,526 @@ bed5f0f feat: 텔레그램 연동 상태 표시 + 통근 히스토리 탭
 c19a0ca fix: P0 버그 3건 수정 - 라이프 리듬 리셋, 복약 레이아웃, 반복 태스크 중복
 ```
 
-### 다음 작업
-- P2: SVG 아이콘 교체
-- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
+### Next Tasks
+- P2: SVG icon replacement
+- P1: Life rhythm 30-day long-term statistics (sleep pattern trends)
 
 ---
 
-## [2026-02-06] (세션 16)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음 (completionLog 기존 구조 유지)
+## [2026-02-06] (Session 16)
+> `navigator-v5.html` | DB: none (completionLog existing structure maintained)
 
-### 작업 내용
-- **캘린더 과거 날짜 완료 기록 추가 기능**
-  - `addCompletionLogEntry()`: prompt UI로 제목/카테고리/시간/수익 입력 → completionLog에 추가
-  - `renderDayDetail()` header에 "➕ 기록 추가" 버튼 배치
-  - 빈 날짜(기록 0개)에서도 추가 가능
-  - 추가된 기록은 기존 ✏️수정/❌삭제 버튼 자동 표시
+### Changes
+- **Calendar past date completion entry feature**
+  - `addCompletionLogEntry()`: prompt UI for title/category/time/revenue input → adds to completionLog
+  - "Add Entry" button placed in `renderDayDetail()` header
+  - Can add entries even on empty dates (0 records)
+  - Added entries automatically show existing edit/delete buttons
 
-- **시간 입력 편의 파싱 (parseTimeInput)**
-  - `1430`→`14:30`, `930`→`09:30`, `9`→`09:00` 등 콜론 없이 입력 가능
-  - 전각 콜론(：) 자동 변환
-  - addCompletionLogEntry, editCompletionLogEntry 양쪽 적용
+- **Time input convenience parsing (parseTimeInput)**
+  - `1430`→`14:30`, `930`→`09:30`, `9`→`09:00` etc. — input without colons
+  - Full-width colon auto-conversion
+  - Applied to both addCompletionLogEntry and editCompletionLogEntry
 
-- **캘린더 카운트 버그 수정 (P0)**
-  - `getCompletionMap()`: completionLog에 항목이 있어도 tasks의 추가 완료 항목이 누락되던 버그 수정
-  - 날짜 키 유무 체크 → 제목+시간 기반 정확한 중복 체크로 변경
+- **Calendar count bug fix (P0)**
+  - `getCompletionMap()`: Fixed bug where tasks' additional completion items were missing even when completionLog had entries
+  - Changed from date key existence check → title+time-based accurate duplicate check
 
-- **completionLog 중복 기록 표시 수정**
-  - `getCompletedTasksByDate()`: 같은 제목+시간 기록이 2개 이상일 때 두 번째가 사라지던 문제 수정
-  - seen key에 인덱스 포함하여 각각 표시
+- **completionLog duplicate record display fix**
+  - `getCompletedTasksByDate()`: Fixed second entry disappearing when same title+time records exist 2+
+  - Included index in seen key to display each separately
 
-- **시간 검증 피드백 추가**
-  - add/edit 모두 잘못된 시간 형식 입력 시 toast 경고 표시
-  - 과거 날짜 기록 시 기본 시간을 현재시간→12:00으로 변경 (오늘은 현재시간 유지)
+- **Time validation feedback added**
+  - Both add/edit show toast warning on malformed time format input
+  - Default time for past date entries changed from current time → 12:00 (today still uses current time)
 
-- **P0 버그 4건 수정**
-  - `saveActualTime()`: NaN/음수 입력 방어 + 에러 toast
-  - `handleTouchEnd()`: changedTouches 배열 비어있을 때 크래시 방지
-  - `importData()`: input.value 초기화로 같은 파일 재선택 가능
-  - `handleFileImport()`: JSON 외 파일 거부 + string 타입 검증
+- **P0 bug fixes (4 items)**
+  - `saveActualTime()`: NaN/negative input defense + error toast
+  - `handleTouchEnd()`: Crash prevention when changedTouches array is empty
+  - `importData()`: input.value reset enables re-selection of same file
+  - `handleFileImport()`: Rejects non-JSON files + string type validation
 
-- **기타 수정**
-  - `showTimeInputModal()`: 기존 모달 닫고 새로 열어 중첩 방지
-  - setInterval 중복 등록 방지: `window._navIntervals`로 ID 추적, 재실행 시 기존 정리
+- **Other fixes**
+  - `showTimeInputModal()`: Close existing modal before opening new one — prevents stacking
+  - setInterval duplicate registration prevention: tracks IDs via `window._navIntervals`, clears existing on re-run
 
-### 다음 작업
-- P2: SVG 아이콘 교체
-- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
-
----
-
-## [2026-02-06] (세션 15)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
-
-### 작업 내용
-- **PC 4K 레이아웃 균등 재배치 (UX 대폭 개선)**
-  - 4K CSS: 3열(RIGHT이 LEFT 아래 쌓임) → 4열(LEFT|CENTER|RIGHT|TASKLIST) 독립 배치
-  - LEFT (핵심 상태): 시간 → 라이프 리듬(↑위로 이동) → 마감 임박 → Next Action
-  - CENTER (작업 관리): 빠른 추가 → 템플릿 → 퀵 필터 → 작업 목록 → 상세 폼 → 포커스
-  - RIGHT (진행률+도구): 일일 목표(LEFT→RIGHT) → 복약(LEFT→RIGHT) → 포모도로 → 명언 → 리마인더 → PWA
-  - TASKLIST: 4K 전체 작업 목록 (기존 유지)
-  - 목적: 3면 균등 배치, LEFT 과부하 해소, 라이프 리듬 즉시 접근
-
-- **카테고리별 3컬럼 재그룹핑 (UX)**
-  - LEFT "오늘의 나": 시간 → 라이프 리듬 → 복약 → 일일 목표 → 명언
-  - CENTER "할 일": 마감 임박 → Next Action → 빠른 추가 → 퀵 필터 → 작업 목록 → 상세 폼
-  - RIGHT "집중 도구": 포모도로 → 포커스 모드 → 월요일 리마인더 → PWA
+### Next Tasks
+- P2: SVG icon replacement
+- P1: Life rhythm 30-day long-term statistics (sleep pattern trends)
 
 ---
 
-## [2026-02-06] (세션 14)
-> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `deletedIds` 필드 추가
+## [2026-02-06] (Session 15)
+> `navigator-v5.html` | DB: none
 
-### 작업 내용
-- **Soft-Delete 동기화 버그 수정 (P0)**
-  - `appState.deletedIds`: 삭제된 항목의 ID+시각 추적 (tasks, workProjects, templates, workTemplates)
-  - `mergeTasks()`, `mergeById()`: deletedIds 매개변수 추가, 삭제 항목 병합 제외
-  - `mergeDeletedIds()`: 로컬+클라우드 삭제 기록 합집합 병합
-  - `cleanupOldDeletedIds()`: 30일 이상 된 삭제 기록 자동 정리
-  - `deleteTask()`, `deleteTemplate()`, `deleteWorkProject()`: 삭제 시 deletedIds에 기록
-  - `_doSyncToFirebase()`: Firebase에 deletedIds 업로드
-  - `loadFromFirebase()`, `startRealtimeSync()`: deletedIds 병합 후 merge에 전달
-  - `_doSaveState()`, `loadState()`: localStorage에 deletedIds 저장/로드
-  - **효과**: 기기 A에서 삭제 → 기기 B 동기화 시 부활하지 않음
+### Changes
+- **PC 4K layout balanced redistribution (major UX improvement)**
+  - 4K CSS: 3-column (RIGHT stacked below LEFT) → 4-column (LEFT|CENTER|RIGHT|TASKLIST) independent layout
+  - LEFT (core status): Time → Life Rhythm (moved up) → Upcoming Deadlines → Next Action
+  - CENTER (task management): Quick Add → Templates → Quick Filter → Task List → Detail Form → Focus
+  - RIGHT (progress+tools): Daily Goal (LEFT→RIGHT) → Medication (LEFT→RIGHT) → Pomodoro → Quotes → Reminder → PWA
+  - TASKLIST: 4K full task list (unchanged)
+  - Purpose: balanced 3-panel layout, LEFT overload resolved, immediate life rhythm access
 
-- **startRealtimeSync localStorage 누락 수정 (P0)**
-  - settings, streak, templates, availableTags의 localStorage 저장 추가
-  - 앱 재시작 시 병합 결과 유실 방지
-
-- **점심약 ADHD/영양제 분리 완전 수정 (P1)**
-  - `restoreFromSyncBackup()`: 백업 복원 시 med_afternoon 마이그레이션 추가
-  - `loadFromFirebase()`, `startRealtimeSync()`: settings 병합 시 medicationSlots 로컬 우선 보호
-  - 클라우드의 옛 슬롯 정의가 분리된 슬롯을 덮어쓰는 문제 해결
-
-- **completionLog 이전 기록 수정/삭제 기능 (P1)**
-  - `editCompletionLogEntry()`: prompt 기반 제목/카테고리/시간/수익 수정
-  - `deleteCompletionLogEntry()`: confirm 후 기록 삭제
-  - `renderDayDetail()`: completionLog 항목에 ✏️/❌ 버튼 추가
-  - `getCompletedTasksByDate()`: logIndex 필드 추가 (수정/삭제 대상 인덱스)
-
-- **기타 수정**
-  - `_doSaveState()`: commuteTracker 중복 저장 제거
-  - `_doSaveState()`: streak, templates localStorage 저장 누락 추가
+- **Category-based 3-column regrouping (UX)**
+  - LEFT "My Day": Time → Life Rhythm → Medication → Daily Goal → Quotes
+  - CENTER "To Do": Upcoming Deadlines → Next Action → Quick Add → Quick Filter → Task List → Detail Form
+  - RIGHT "Focus Tools": Pomodoro → Focus Mode → Monday Reminder → PWA
 
 ---
 
-## [2026-02-05] (세션 13)
-> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `completionLog` 필드 추가
+## [2026-02-06] (Session 14)
+> `navigator-v5.html` | DB: Firebase `deletedIds` field added
 
-### 작업 내용
-- **태스크 완료 영구 기록 (completionLog) — 장기 통계 분석**
-  - `appState.completionLog`: 날짜별 완료 기록 영구 보존 (키: YYYY-MM-DD)
-  - 데이터 구조: `{ t: title, c: category, at: "HH:MM", r?: repeatType, rv?: revenue, st?: subtaskCount }`
-  - `completeTask()`에서 completionLog 자동 기록 / `uncompleteTask()`에서 제거
-  - Firebase `setDoc`에 completionLog 필드 추가 — 멀티디바이스 동기화
-  - `mergeCompletionLog()`: 날짜별 합집합 + title+at 중복 제거
-  - `loadFromFirebase()`/`startRealtimeSync()` 양쪽 병합 로직 확장
-  - `createSyncBackup()`/`restoreFromSyncBackup()` completionLog 포함
-  - `exportData()`/`handleFileImport()` completionLog 포함
-  - 기존 사용자 마이그레이션: appState.tasks + navigator-completion-history → completionLog 자동 이전
-  - 기존 `saveCompletionHistory()`/`getCompletionHistory()` 제거 (dead code 정리)
+### Changes
+- **Soft-delete sync bug fix (P0)**
+  - `appState.deletedIds`: Tracks deleted item ID+timestamp (tasks, workProjects, templates, workTemplates)
+  - `mergeTasks()`, `mergeById()`: Added deletedIds parameter, excludes deleted items from merge
+  - `mergeDeletedIds()`: Union merge of local+cloud deletion records
+  - `cleanupOldDeletedIds()`: Auto-cleanup of deletion records older than 30 days
+  - `deleteTask()`, `deleteTemplate()`, `deleteWorkProject()`: Records in deletedIds on deletion
+  - `_doSyncToFirebase()`: Uploads deletedIds to Firebase
+  - `loadFromFirebase()`, `startRealtimeSync()`: Merges deletedIds then passes to merge
+  - `_doSaveState()`, `loadState()`: Saves/loads deletedIds in localStorage
+  - **Effect**: Delete on Device A → no resurrection on Device B sync
 
-- **캘린더/히스토리 뷰 completionLog 기반 전환**
-  - `getCompletionMap()`: completionLog + tasks 통합 (캘린더 히트맵)
-  - `getCompletedTasksByDate()`: completionLog 우선, tasks 보완
-  - `renderRecentHistory()`: 14일 → 30일 확장, 날짜별 수익 표시
-  - `renderDayDetail()`: 리듬/복약 정보 통합 + 수익 표시
-  - `getWeeklyStats()`/`getWeeklyReport()`: completionLog 기반
-  - `getCompletionLogEntries()`: 날짜 범위 조회 헬퍼 함수 신규
+- **startRealtimeSync localStorage missing fix (P0)**
+  - Added localStorage saving for settings, streak, templates, availableTags
+  - Prevents merge result loss on app restart
 
-- **장기 통계 대시보드**
-  - `getHourlyProductivity()`/`getDayOfWeekProductivity()`/`getCategoryDistribution()`: completionLog 기반
-  - 대시보드: 주간/월간 + 90일 통계 + 월별 트렌드 바 차트 (최근 3개월)
-  - 복약 통계: 7일 + 30일 필수/선택 복용률 확장
-  - 라이프 리듬 히스토리 완료 수 completionLog 기반
+- **Lunch medication ADHD/supplements separation complete fix (P1)**
+  - `restoreFromSyncBackup()`: Added med_afternoon migration on backup restore
+  - `loadFromFirebase()`, `startRealtimeSync()`: Local-first protection for medicationSlots during settings merge
+  - Resolved cloud's old slot definitions overwriting separated slots
 
-- **데이터 보존 정책**
-  - `compactOldCompletionLog()`: 1년 이상 데이터 → 일별 요약 자동 압축
-  - 압축 형태: `{ _summary: true, count, categories: {...}, totalRevenue }`
-  - `getCompletionMap()`/`getCompletionLogEntries()`: 압축 데이터 지원
-  - 앱 시작 시 1일 1회 자동 실행
+- **completionLog historical record edit/delete feature (P1)**
+  - `editCompletionLogEntry()`: prompt-based title/category/time/revenue editing
+  - `deleteCompletionLogEntry()`: Confirm then delete record
+  - `renderDayDetail()`: Added edit/delete buttons to completionLog items
+  - `getCompletedTasksByDate()`: Added logIndex field (edit/delete target index)
 
-### 버그 수정 (세션 13 추가)
-- **일상/전체 작업 목록 완료 태스크 사라짐 버그 수정**
-  - 원인: `getTodayCompletedTasks()`가 오늘 완료한 태스크만 반환 → 어제 완료 태스크가 pending에도 completedTasks에도 안 보이는 "블랙홀"
-  - 수정: 일상 탭 + 전체 작업 목록에서 `lifeTasks.filter(t => t.completed)` / `categoryTasks.filter(t => t.completed)` 사용
-  - "오늘" 탭과 헤더 카운트는 기존 `getTodayCompletedTasks` 유지 (정보 표시용)
-- **점심 복약 슬롯 ADHD약/영양제 분리**
-  - `med_afternoon` (ADHD약+영양제(점심)) → `med_afternoon_adhd` (ADHD약(점심)) + `med_afternoon_nutrient` (영양제(점심))
-  - 기존 데이터 마이그레이션: loadLifeRhythm, mergeRhythmHistory, loadFromFirebase, startRealtimeSync 4곳 자동 변환
-  - 기존 `med_afternoon` 기록 → `med_afternoon_adhd`로 이전 (ADHD약이 필수이므로)
-
-### 다음 작업
-- P1: 라이프 리듬 30일 장기 통계 (수면 패턴 트렌드)
-- P1: 동기화 백업 3개 로테이션
-- P2: SVG 아이콘 교체
+- **Other fixes**
+  - `_doSaveState()`: Removed commuteTracker duplicate saving
+  - `_doSaveState()`: Added missing streak, templates localStorage save
 
 ---
 
-## [2026-02-05] (세션 12)
-> 📦 `navigator-v5.html` | 🗄️ DB: `lifeRhythm.medications` + `settings.medicationSlots` 추가
+## [2026-02-05] (Session 13)
+> `navigator-v5.html` | DB: Firebase `completionLog` field added
 
-### 작업 내용
-- **복약/영양제 트래커 — 라이프 리듬 통합 (P1)**
-  - appState.lifeRhythm에 medications 필드 + settings.medicationSlots 추가
-  - 기본 슬롯 3개: ADHD약(아침/필수), ADHD약+영양제(점심/필수), 영양제(저녁/선택)
-  - 오늘의 복약 카드: 리듬 트래커 바로 아래, 탭 한 번으로 시간 기록
-  - 기록/수정/삭제 함수 + 액션 메뉴 (기존 리듬 패턴 재사용)
-  - 필수 복약 연속일(streak) 계산 + 리마인더 표시
-  - Firebase/localStorage 이중 저장 + 병합 로직 확장
-  - mergeRhythmHistory, loadFromFirebase, startRealtimeSync 모두 medications 병합 추가
-  - today 초기화 6곳 + history 생성 2곳 모두 medications:{} 포함
-  - loadLifeRhythm 마이그레이션에 medications 필드 초기화 추가
-  - CSS: .medication-tracker, .medication-btn, .medication-btn.taken 등 스타일
-  - XSS 방어: escapeHtml() 적용 (slot.id, slot.label)
-  - 접근성: button title 속성 (수정/삭제 안내)
-  - 히스토리: 복약 행 추가 (아이콘✓/- 형태, 클릭으로 과거 날짜 편집)
-  - editMedicationHistory(): 과거 날짜 복약 기록 편집
-  - 설정 UI: 복약 슬롯 추가/편집/삭제 (이름, 아이콘, 필수 여부)
-  - 대시보드: 7일 필수/선택 복용률 + 연속일 통계
-  - hasAnyData에 복약 기록 포함 (복약만 있는 날도 히스토리에 표시)
+### Changes
+- **Task completion permanent record (completionLog) — long-term statistics analysis**
+  - `appState.completionLog`: Permanent preservation of completion records by date (key: YYYY-MM-DD)
+  - Data structure: `{ t: title, c: category, at: "HH:MM", r?: repeatType, rv?: revenue, st?: subtaskCount }`
+  - Auto-records in completionLog on `completeTask()` / removes on `uncompleteTask()`
+  - Added completionLog field to Firebase `setDoc` — multi-device sync
+  - `mergeCompletionLog()`: Per-date union + title+at deduplication
+  - Merge logic extended in both `loadFromFirebase()`/`startRealtimeSync()`
+  - `createSyncBackup()`/`restoreFromSyncBackup()` includes completionLog
+  - `exportData()`/`handleFileImport()` includes completionLog
+  - Existing user migration: appState.tasks + navigator-completion-history → auto-migrated to completionLog
+  - Removed existing `saveCompletionHistory()`/`getCompletionHistory()` (dead code cleanup)
 
-### 다음 작업
-- P1: 라이프 리듬 히스토리 30일 이후 자동 정리
-- P1: 동기화 백업 3개 로테이션
-- P2: SVG 아이콘 교체
+- **Calendar/history view switched to completionLog-based**
+  - `getCompletionMap()`: Unified completionLog + tasks (calendar heatmap)
+  - `getCompletedTasksByDate()`: completionLog priority, tasks supplementary
+  - `renderRecentHistory()`: Extended 14 days → 30 days, shows per-date revenue
+  - `renderDayDetail()`: Integrated rhythm/medication info + revenue display
+  - `getWeeklyStats()`/`getWeeklyReport()`: completionLog-based
+  - `getCompletionLogEntries()`: New date range query helper function
 
----
+- **Long-term statistics dashboard**
+  - `getHourlyProductivity()`/`getDayOfWeekProductivity()`/`getCategoryDistribution()`: completionLog-based
+  - Dashboard: weekly/monthly + 90-day stats + monthly trend bar chart (last 3 months)
+  - Medication stats: 7-day + 30-day required/optional compliance rate expansion
+  - Life rhythm history completion count now completionLog-based
 
-## [2026-02-05] (세션 11)
-> 📦 `navigator-v5.html` | 🗄️ DB: Firebase `commuteTracker` 필드 추가
+- **Data retention policy**
+  - `compactOldCompletionLog()`: Data older than 1 year → auto-compressed to daily summary
+  - Compressed format: `{ _summary: true, count, categories: {...}, totalRevenue }`
+  - `getCompletionMap()`/`getCompletionLogEntries()`: Supports compressed data
+  - Auto-runs once daily at app start
 
-### 작업 내용
-- **통근 트래커 탭 신규 추가 (P1)**
-  - 더보기 메뉴에 🚌 통근 탭 추가
-  - 서브탭 3개: 🌅 출근 / 🌆 퇴근 / 📊 통계
-  - 루트 CRUD: 이름, 설명, 방향(출근/퇴근/양방향), 예상 소요시간, 색상 설정
-  - 출퇴근 기록: 라이프 리듬(집출발/회사도착/회사출발/집도착) 시간 자동 연동
-  - 소요시간 자동 계산 + 예상 대비 비교 배지 (good/normal/bad)
-  - 출발시간 추천 알고리즘: 최근 30일 데이터 기반 75% 백분위 안전값 + 버퍼
-  - 신뢰도 표시: 높음(10회+), 중간(5회+), 낮음(<5회)
-  - 날씨 조건 태그: 맑음/비/눈
-  - 최근 7일 루트별 평균 요약
-  - 통계 뷰: 루트별 평균/최단/최장, 이용 빈도 바 차트, 요일별 패턴
-  - 🏆 추천 루트 표시 (평균 최단)
-  - 라이프 리듬 자동 태그: 출퇴근 기록 시 루트 선택 프롬프트 (10초 자동 닫기)
-  - 온보딩: 기본 루트 3개 프리셋 (셔틀버스/지하철+버스/버스 직행)
-  - 데이터 저장: localStorage + Firebase 동기화 (병합 로직 포함)
-  - 키보드 단축키 7키 → 통근 탭
-  - XSS 방어: 모든 사용자 입력 escapeHtml() 적용
-  - 접근성: aria-label, 최소 터치타겟 44px
+### Bug Fixes (Session 13 addendum)
+- **Daily/all task list completed tasks disappearing bug fix**
+  - Cause: `getTodayCompletedTasks()` only returned today's completed tasks → yesterday's completed tasks appeared in neither pending nor completedTasks ("black hole")
+  - Fix: Use `lifeTasks.filter(t => t.completed)` / `categoryTasks.filter(t => t.completed)` in daily tab + all task list
+  - "Today" tab and header count maintain existing `getTodayCompletedTasks` (for display purposes)
+- **Lunch medication slot ADHD/supplements separation**
+  - `med_afternoon` (ADHD+Supplements(lunch)) → `med_afternoon_adhd` (ADHD(lunch)) + `med_afternoon_nutrient` (Supplements(lunch))
+  - Existing data migration: auto-conversion at 4 locations — loadLifeRhythm, mergeRhythmHistory, loadFromFirebase, startRealtimeSync
+  - Existing `med_afternoon` records → migrated to `med_afternoon_adhd` (ADHD is required)
 
-### 다음 작업
-- Phase 4: 날씨 조건별 분석, CSV 내보내기
-- P1: 라이프 리듬 히스토리 30일 이후 자동 정리
-- P2: SVG 아이콘 교체
+### Next Tasks
+- P1: Life rhythm 30-day long-term statistics (sleep pattern trends)
+- P1: Sync backup 3-rotation
+- P2: SVG icon replacement
 
 ---
 
-## [2026-02-05] (세션 10)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+## [2026-02-05] (Session 12)
+> `navigator-v5.html` | DB: `lifeRhythm.medications` + `settings.medicationSlots` added
 
-### 작업 내용
-- **본업 프로젝트 상세 헤더 레이아웃 개선**
-  - 1줄: 프로젝트명 + 일정(날짜 범위 + D-day) — flex 한 줄 배치
-  - 2줄: 진행률 바
-  - 3줄: 액션 버튼들
-  - 프로젝트명 길어도 ellipsis 처리, 일정은 flex-shrink:0으로 고정
-  - 기존: 좌우 배치로 긴 이름 시 줄 밀림 → 수정: 세로 배치로 깔끔한 2~3줄 구조
+### Changes
+- **Medication/supplement tracker — Life rhythm integration (P1)**
+  - Added medications field to appState.lifeRhythm + settings.medicationSlots
+  - 3 default slots: ADHD medication (morning/required), ADHD+Supplements (lunch/required), Supplements (evening/optional)
+  - Today's medication card: directly below rhythm tracker, time recorded with one tap
+  - Record/edit/delete functions + action menu (reuses existing rhythm pattern)
+  - Required medication streak calculation + reminder display
+  - Firebase/localStorage dual storage + extended merge logic
+  - mergeRhythmHistory, loadFromFirebase, startRealtimeSync all include medications merge
+  - medications:{} included in all 6 today initialization + 2 history creation locations
+  - loadLifeRhythm migration includes medications field initialization
+  - CSS: .medication-tracker, .medication-btn, .medication-btn.taken etc. styles
+  - XSS defense: escapeHtml() applied (slot.id, slot.label)
+  - Accessibility: button title attribute (edit/delete guidance)
+  - History: medication row added (check/dash icon format, click to edit past dates)
+  - editMedicationHistory(): past date medication record editing
+  - Settings UI: medication slot add/edit/delete (name, icon, required status)
+  - Dashboard: 7-day required/optional compliance rate + streak statistics
+  - hasAnyData includes medication records (days with only medication also shown in history)
 
-- **데이터 축소 감지 확장 (P0)**
-  - `checkDataShrinkage()`에 templates, workTemplates 카운트 감시 추가
-  - 기존: tasks, workProjects만 감지 → 템플릿 유실은 미감지
-  - 수정: 4가지 데이터 타입 모두 0으로 감소 시 동기화 차단
+### Next Tasks
+- P1: Life rhythm history auto-cleanup after 30 days
+- P1: Sync backup 3-rotation
+- P2: SVG icon replacement
 
-- **반복 태스크(weekly/monthly/custom) 중복 생성 방지 (P0)**
-  - `completeTask()`에서 `createNextRepeatTask()` 호출 전 중복 체크 추가
-  - 동일 제목 + 카테고리 + 반복타입의 미완료 태스크가 이미 있으면 생성 스킵
-  - 기존: 완료할 때마다 무조건 다음 주기 태스크 생성 → 중복 누적
+---
 
-- **동기화 빈도 최적화 (디바운싱)**
-  - `syncToFirebase()` 디바운스 래퍼로 변환 (5초 간격 배치 처리)
-  - 실제 로직은 `_doSyncToFirebase()`로 분리
-  - `immediate=true` 옵션: 로드 후 머지, 온라인 복귀 등 즉시 동기화 필요 시 사용
-  - `saveStateImmediate()`: 앱 종료 전 디바운스 타이머 즉시 실행
-  - 효과: 빠른 연속 변경 시 Firebase 쓰기 1회로 통합 (비용/부하 감소)
+## [2026-02-05] (Session 11)
+> `navigator-v5.html` | DB: Firebase `commuteTracker` field added
 
-### 다음 작업
-- P1: 라이프 리듬 히스토리 30일 이후 자동 정리
-- P1: 동기화 백업 3개 로테이션
-- P2: SVG 아이콘 교체
+### Changes
+- **Commute tracker tab newly added (P1)**
+  - Added commute tab to more menu
+  - 3 sub-tabs: morning commute / evening commute / statistics
+  - Route CRUD: name, description, direction (to work/from work/both), estimated duration, color settings
+  - Commute recording: auto-linked with life rhythm (home departure/office arrival/office departure/home arrival) times
+  - Auto-calculated duration + comparison badge vs estimate (good/normal/bad)
+  - Departure time recommendation algorithm: 75th percentile safe value based on last 30 days + buffer
+  - Confidence display: high (10+), medium (5+), low (<5)
+  - Weather condition tags: clear/rain/snow
+  - Last 7-day per-route average summary
+  - Statistics view: per-route average/shortest/longest, frequency bar chart, day-of-week pattern
+  - Recommended route display (shortest average)
+  - Life rhythm auto-tag: route selection prompt on commute recording (10s auto-close)
+  - Onboarding: 3 default route presets (shuttle bus/subway+bus/direct bus)
+  - Data storage: localStorage + Firebase sync (with merge logic)
+  - Keyboard shortcut 7 key → commute tab
+  - XSS defense: escapeHtml() applied to all user inputs
+  - Accessibility: aria-label, minimum touch target 44px
 
-## [2026-02-05] (세션 9)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+### Next Tasks
+- Phase 4: Weather condition analysis, CSV export
+- P1: Life rhythm history auto-cleanup after 30 days
+- P2: SVG icon replacement
 
-### 작업 내용
-- **반복 태스크(daily/weekdays) 날짜 변경 자동 초기화**
-  - `checkDailyReset()`: 논리적 날짜 변경 감지 시 daily/weekdays 완료 상태 리셋
-  - `getLogicalDate()`: dayStartHour(기본 05:00) 기준 논리적 날짜 계산
-    - 새벽 1시 활동 → 아직 "어제" → 리셋 안 됨 / 5시 이후 → "오늘" → 리셋
-  - 설정 > "하루 시작 시각" 옵션 추가 (03:00~07:00 선택 가능)
-  - weekdays 태스크: 주말(토/일)에는 초기화하지 않음 (금 완료 → 월 리셋)
-  - `lastCompletedAt` 필드: 초기화 전 완료 시각을 히스토리로 보존
-  - 중복 반복 태스크 자동 정리 (같은 제목+카테고리+반복타입 → 최신 1개만 유지)
-  - `completeTask()`: daily/weekdays는 createNextRepeatTask 스킵 (초기화 방식으로 전환)
-  - `checkDailyRepeatStreak()`: 논리적 "어제" 기준 반복 태스크 완료 여부로 스트릭 유지/리셋
-  - 트리거: 앱 로딩 + visibilitychange(탭 포커스) + setInterval(1분) + 기상 버튼
-  - `validateTask()`에 `lastCompletedAt`, `source` 필드 보존 추가
+---
 
-- **라이프 리듬 과거 날짜 수동 입력 기능**
-  - "📅 과거 날짜 추가" 버튼: 히스토리 화면 상단에 추가
-  - `addRhythmHistoryDate()`: YYYY-MM-DD 형식으로 과거 날짜 입력
-  - 추가된 날짜는 빈 레코드로 생성 → 각 시간 클릭해서 수동 입력 가능
-  - 기존 `editLifeRhythmHistory()`: 클릭으로 개별 시간 수정 (기존 기능)
+## [2026-02-05] (Session 10)
+> `navigator-v5.html` | DB: none
 
-- **멀티디바이스 동기화 데이터 유실 방지 (P0 버그 수정)**
-  - 근본 원인: `onAuthStateChanged` → `appState.user` 설정 후 `loadFromFirebase()` 완료 전에 `syncToFirebase()`가 빈 데이터를 업로드하는 Race Condition
-  - `isLoadingFromCloud` 플래그: 클라우드 초기 로드 중 모든 Firebase 업로드 차단
-  - `loadFromFirebase()` 시작 시 `saveStateTimeout` 디바운스 타이머 강제 취소
-  - `checkDataShrinkage()`: 이전 데이터 수 대비 급격한 감소(→0) 감지 시 동기화 자동 차단
-  - `createSyncBackup()`: 매 동기화 전 현재 상태를 localStorage에 자동 백업
-  - `updateDataCounts()`: 성공적인 동기화 후 데이터 수 기록 (다음 축소 감지에 사용)
-  - `restoreFromSyncBackup()`: 데이터 유실 시 직전 동기화 백업에서 수동 복원
-  - 앱 시작 시 데이터 유실 자동 감지 → `confirm()` 복구 제안
-  - 설정 > 데이터 백업 섹션에 "🔄 동기화 백업에서 복원" 버튼 추가
-  - `loadFromFirebase()` try-finally 블록으로 에러 시에도 잠금 해제 보장
+### Changes
+- **Work project detail header layout improvement**
+  - Line 1: Project name + schedule (date range + D-day) — flex single-line layout
+  - Line 2: Progress bar
+  - Line 3: Action buttons
+  - Long project names get ellipsis treatment, schedule uses flex-shrink:0 for fixed size
+  - Before: side-by-side layout caused line overflow with long names → After: vertical layout for clean 2-3 line structure
 
-### 보호 체계 요약
+- **Data shrinkage detection expansion (P0)**
+  - Added templates, workTemplates count monitoring to `checkDataShrinkage()`
+  - Before: only detected tasks, workProjects → template loss undetected
+  - After: sync blocked when any of 4 data types drops to 0
+
+- **Recurring task (weekly/monthly/custom) duplicate creation prevention (P0)**
+  - Added duplicate check before `createNextRepeatTask()` call in `completeTask()`
+  - Skips creation if uncompleted task with same title + category + repeatType already exists
+  - Before: unconditionally created next cycle task on every completion → duplicate accumulation
+
+- **Sync frequency optimization (debouncing)**
+  - `syncToFirebase()` converted to debounce wrapper (5s interval batch processing)
+  - Actual logic separated to `_doSyncToFirebase()`
+  - `immediate=true` option: used when immediate sync needed (post-load merge, online recovery, etc.)
+  - `saveStateImmediate()`: immediately executes debounce timer before app exit
+  - Effect: consecutive rapid changes consolidated to 1 Firebase write (reduced cost/load)
+
+### Next Tasks
+- P1: Life rhythm history auto-cleanup after 30 days
+- P1: Sync backup 3-rotation
+- P2: SVG icon replacement
+
+## [2026-02-05] (Session 9)
+> `navigator-v5.html` | DB: none
+
+### Changes
+- **Recurring task (daily/weekdays) auto-reset on date change**
+  - `checkDailyReset()`: Resets daily/weekdays completion status on logical date change detection
+  - `getLogicalDate()`: Calculates logical date based on dayStartHour (default 05:00)
+    - 1 AM activity → still "yesterday" → no reset / After 5 AM → "today" → reset
+  - Settings > "Day start time" option added (03:00~07:00 selectable)
+  - weekdays tasks: not reset on weekends (Sat/Sun) (Fri completion → Mon reset)
+  - `lastCompletedAt` field: preserves completion time as history before reset
+  - Duplicate recurring task auto-cleanup (same title+category+repeatType → keep only newest 1)
+  - `completeTask()`: daily/weekdays skip createNextRepeatTask (switched to reset method)
+  - `checkDailyRepeatStreak()`: Maintains/resets streak based on logical "yesterday" recurring task completion
+  - Triggers: app loading + visibilitychange (tab focus) + setInterval (1min) + wake button
+  - Added `lastCompletedAt`, `source` field preservation to `validateTask()`
+
+- **Life rhythm past date manual entry feature**
+  - "Add past date" button: added to history view top
+  - `addRhythmHistoryDate()`: Input past date in YYYY-MM-DD format
+  - Added date creates empty record → click each time slot for manual entry
+  - Existing `editLifeRhythmHistory()`: individual time editing via click (existing feature)
+
+- **Multi-device sync data loss prevention (P0 bug fix)**
+  - Root cause: After `onAuthStateChanged` → `appState.user` set, `syncToFirebase()` uploads empty data before `loadFromFirebase()` completes — Race Condition
+  - `isLoadingFromCloud` flag: blocks all Firebase uploads during initial cloud load
+  - Forces `saveStateTimeout` debounce timer cancellation on `loadFromFirebase()` start
+  - `checkDataShrinkage()`: Detects sudden decrease (→0) compared to previous data count, auto-blocks sync
+  - `createSyncBackup()`: Auto-backs up current state to localStorage before each sync
+  - `updateDataCounts()`: Records data count after successful sync (used for next shrinkage detection)
+  - `restoreFromSyncBackup()`: Manual restore from last sync backup on data loss
+  - Auto-detects data loss on app start → offers `confirm()` recovery
+  - Settings > Data Backup section: "Restore from sync backup" button added
+  - `loadFromFirebase()` try-finally block guarantees lock release even on error
+
+### Protection System Summary
 ```
-앱 시작 → loadState() → checkDataShrinkage() → 유실 감지 시 복구 제안
-로그인 → isLoadingFromCloud=true → saveStateTimeout 취소 → loadFromFirebase()
-       → 병합 완료 → isLoadingFromCloud=false → updateDataCounts() → syncToFirebase()
-syncToFirebase() 호출 시:
-  1. isLoadingFromCloud 체크 → 대기
-  2. checkDataShrinkage() → 차단
-  3. createSyncBackup() → 백업
-  4. Firebase 업로드
-  5. updateDataCounts() → 기록
+App start → loadState() → checkDataShrinkage() → recovery offered on loss detection
+Login → isLoadingFromCloud=true → saveStateTimeout cancel → loadFromFirebase()
+       → merge complete → isLoadingFromCloud=false → updateDataCounts() → syncToFirebase()
+syncToFirebase() call:
+  1. isLoadingFromCloud check → wait
+  2. checkDataShrinkage() → block
+  3. createSyncBackup() → backup
+  4. Firebase upload
+  5. updateDataCounts() → record
 ```
 
-### 다음 작업
-- 반복 태스크(daily/weekdays) 자동 초기화 (오늘의 리듬)
-- SVG 아이콘 교체 (P2)
+### Next Tasks
+- Recurring task (daily/weekdays) auto-reset (life rhythm)
+- SVG icon replacement (P2)
 
-## [2026-02-05] (세션 8 - 전면 개선)
-> 📦 `navigator-v5.html`, `sw.js` | 🗄️ DB: 없음
+## [2026-02-05] (Session 8 - Major Overhaul)
+> `navigator-v5.html`, `sw.js` | DB: none
 
-### 작업 내용
-- **XSS 잔여 3곳 수정**: subcatData.name, sub.name, stageName confirm에 escapeHtml 적용
-- **접근성 대폭 강화**:
-  - 65개 aria-label 추가 (삭제, 완료, 편집, 미루기, 탭, 더보기 메뉴 등)
-  - 더보기 메뉴에 role="menu"/menuitem, aria-expanded, aria-haspopup 추가
-  - 모달 포커스 트랩 구현 (Tab 키 모달 내부 순환)
-- **renderStatic 스크롤/포커스 보존**: 렌더링 후 스크롤 위치 + 포커스 자동 복원
-- **Firebase 오프라인/온라인 피드백**:
-  - 동기화 시작 시 인디케이터 즉시 업데이트
-  - 온라인 복귀 시 자동 동기화 + 토스트 알림
-  - 오프라인 전환 시 경고 토스트
-- **삭제 안전성**: deleteWorkLog에 confirm 추가
-- **터치 타겟 보장**: btn-small(44px), work-task-action(44px), work-task-log-action(36px)
-- **PWA 개선**: SW v6.3, 앱 업데이트 감지 토스트 추가
-- **색상 대비 개선**: 다크모드 text-muted #707078 → #8a8a92, 라이트모드 #9aa0a6 → #72787e
-- **전역 함수 네임스페이스 정리**: window.Nav 객체로 142개 함수 그룹화
-- **favicon + apple-touch-icon 추가**: SVG data URI 아이콘
-- **온보딩 기능 투어**: 4-step 하이라이트 투어 + 설정에서 "기능 가이드" 버튼
-- **주간/월간 리포트**: 대시보드에 주간/월간 완료수, 수익, 카테고리별 통계, 일평균 표시
-- **포모도로 타이머 UI 연결**: 오늘 탭에 25분 집중/5분 휴식 포모도로 UI 표시 (기존 로직 활용)
+### Changes
+- **XSS remaining 3 locations fix**: escapeHtml applied to subcatData.name, sub.name, stageName confirm
+- **Accessibility major enhancement**:
+  - 65 aria-labels added (delete, complete, edit, defer, tabs, more menu, etc.)
+  - More menu: role="menu"/menuitem, aria-expanded, aria-haspopup added
+  - Modal focus trap implemented (Tab key cycles within modal)
+- **renderStatic scroll/focus preservation**: Auto-restore scroll position + focus after rendering
+- **Firebase offline/online feedback**:
+  - Indicator immediately updates on sync start
+  - Auto-sync + toast notification on online recovery
+  - Warning toast on offline transition
+- **Delete safety**: confirm added to deleteWorkLog
+- **Touch target guarantee**: btn-small(44px), work-task-action(44px), work-task-log-action(36px)
+- **PWA improvements**: SW v6.3, app update detection toast added
+- **Color contrast improvements**: dark mode text-muted #707078 → #8a8a92, light mode #9aa0a6 → #72787e
+- **Global function namespace cleanup**: 142 functions grouped into window.Nav object
+- **favicon + apple-touch-icon added**: SVG data URI icon
+- **Onboarding feature tour**: 4-step highlight tour + "Feature Guide" button in settings
+- **Weekly/monthly report**: Dashboard shows weekly/monthly completion count, revenue, per-category stats, daily average
+- **Pomodoro timer UI connection**: 25min focus/5min break pomodoro UI shown on today tab (using existing logic)
 
-### 배포 확인
-- 모바일(390), 데스크탑(1440), 4K(3840) 스크린샷 검증 완료
-- 포모도로, 라이프 리듬, 필터, 더보기 탭, 색상 대비 등 모든 신규 기능 정상 확인
+### Deployment Verification
+- Mobile (390), desktop (1440), 4K (3840) screenshot verification complete
+- All new features confirmed working: pomodoro, life rhythm, filter, more tab, color contrast, etc.
 
-### 다음 작업
-- SVG 아이콘 교체 (P2)
-
----
-
-## [2026-02-05] (세션 8)
-> 📦 `navigator-v5.html`, `CLAUDE.md` | 🗄️ DB: 없음
-
-### 작업 내용
-- **UTC 날짜 버그 전수 수정**: 캘린더, 히스토리, 자산 내보내기, 백업 파일명 등 14곳의 `toISOString().split('T')[0]` → `getLocalDateStr()` 교체
-- **JSON.parse 크래시 방지**: `loadState()`의 7개 bare `JSON.parse()` → `safeParseJSON()` 적용
-- **saveTemplates() Firebase 동기화 추가**: 템플릿 저장 시 Firebase 누락 수정
-- **XSS 방어 강화**: `showAchievement()`, `showUndoToast()`에 `escapeHtml()` 적용
-- **홈 버튼/섹션 UX 정리**:
-  - "글쓰기 템플릿" → "글쓰기", "직접 추가" → "📝 상세 추가" (명확한 라벨)
-  - "2분 룰" → "2분 이내", "24시간 내" → "마감 임박" (직관적 필터명)
-  - 필터 섹션 제목 "빠르게 처리할 작업" → "소요시간·마감 필터"
-  - "?" 도움말 아이콘 제거, title 속성에 설명 통합
-- **4K/대형 모니터 레이아웃 최적화**:
-  - 1920px+: max-width 1800px, 폰트/패딩 확대, 그리드 간격 30px
-  - 2560px+: max-width 2400px, 폰트 20px 기준, 전체 UI 요소 스케일업
-  - 2560px+ 3열 레이아웃 (상태+필터 | 추가+액션 | 전체 작업목록)
-  - 3200px+ zoom: 1.4 (4K 100% DPI 대응)
-  - 본업 카드, 이벤트, 수익, 캘린더, 리듬, 토스트 등 모든 컴포넌트 대응
-- **XSS 전수 방어**: innerHTML 템플릿의 사용자 입력 35곳에 `escapeHtml()` 적용
-  - task.title, project.name, subtask.text, subcat.name, tag 등 전체 커버
-- **반복 Task 마감일 UTC 버그 수정**: `getLocalDateTimeStr()` 헬퍼 추가, 4곳의 `toISOString().slice(0,16)` 교체
-- **접근성 기초 개선**:
-  - 헤더 버튼 6개에 aria-label 추가 (셔틀, 테마, 동기화, 알림, 설정)
-  - task-check-btn 5곳에 aria-label="작업 완료" 추가
-  - Escape 키로 모달/드롭다운 닫기 기능 추가
-
-### 다음 작업
-- SVG 아이콘 교체 (P2)
-- 포모도로 통합 (P2)
-- 온보딩 가이드 (P1)
-
-## [2026-02-04] (세션 7)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
-
-### 작업 내용
-- **본업 완료 로그 압축**: "✓ 완료" 로그가 누적되던 것을 "✓ N회 완료 (최근: M/D)" 형태로 요약 표시
-- **이벤트 카드 한 줄 압축**: 이벤트명, 일자, 버튼, D-Day를 한 줄에 배치
-- **오늘 탭 목록 컴팩트 모드**: 기본 "번호. 제목 (카테고리)"만 표시, hover시 액션 버튼 표시
-- **진행률 섹션 제거**: 오늘의 진행률 + 카테고리별 현황 섹션 삭제
-- **마감 알림 → 헤더 통합**: 별도 섹션에서 헤더 🔔 아이콘 드롭다운으로 이동
-
-### 다음 작업
-- UTC 날짜 사용 부분 점검
-- SVG 아이콘 교체 (P2)
+### Next Tasks
+- SVG icon replacement (P2)
 
 ---
 
-## [2026-02-04] (세션 6)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+## [2026-02-05] (Session 8)
+> `navigator-v5.html`, `CLAUDE.md` | DB: none
 
-### 작업 내용
-- **중분류/소분류 완료 체크박스 추가**
-  - 소분류(Task): status badge 앞에 체크박스 추가, 클릭 시 완료↔미시작 직접 토글
-  - 중분류(Subcategory): 📁 아이콘 → 체크박스로 교체, 하위 task 전체 완료면 자동 checked
-  - `toggleWorkTaskComplete()`, `toggleSubcategoryComplete()` 함수 추가
-  - `.work-subcategory-checkbox` CSS 추가 (기존 `.work-task-checkbox` 활용)
+### Changes
+- **UTC date bug comprehensive fix**: Replaced `toISOString().split('T')[0]` → `getLocalDateStr()` at 14 locations across calendar, history, asset export, backup filename, etc.
+- **JSON.parse crash prevention**: Applied `safeParseJSON()` to 7 bare `JSON.parse()` in `loadState()`
+- **saveTemplates() Firebase sync added**: Fixed missing Firebase sync on template save
+- **XSS defense hardening**: `escapeHtml()` applied to `showAchievement()`, `showUndoToast()`
+- **Home button/section UX cleanup**:
+  - Label clarifications and intuitive filter names
+  - "?" help icon removed, descriptions integrated into title attributes
+- **4K/large monitor layout optimization**:
+  - 1920px+: max-width 1800px, enlarged fonts/padding, 30px grid spacing
+  - 2560px+: max-width 2400px, 20px base font, all UI elements scaled up
+  - 2560px+ 3-column layout (status+filter | add+action | full task list)
+  - 3200px+ zoom: 1.4 (4K 100% DPI support)
+  - All components adapted: work card, events, revenue, calendar, rhythm, toast, etc.
+- **XSS comprehensive defense**: `escapeHtml()` applied to 35 user input locations in innerHTML templates
+  - task.title, project.name, subtask.text, subcat.name, tag etc. — full coverage
+- **Recurring task deadline UTC bug fix**: Added `getLocalDateTimeStr()` helper, replaced `toISOString().slice(0,16)` at 4 locations
+- **Accessibility basic improvements**:
+  - aria-label added to 6 header buttons (shuttle, theme, sync, notification, settings)
+  - aria-label="Complete task" added to 5 task-check-btn locations
+  - Escape key closes modal/dropdown feature added
 
-- **본업 섹션 버튼 순서 통일**
-  - 대분류: 📅✏️🗑️ → ✏️📅🗑️ 순서로 변경
-  - 중분류: 텍스트 '삭제' → 🗑️ 아이콘 + 빨간색 통일
-  - 소분류: 📅✏️ → ✏️📅 순서, 텍스트 '삭제' → 🗑️ 통일
-  - 전 계층 ✏️→📅→🗑️→[추가] 순서 통일
+### Next Tasks
+- SVG icon replacement (P2)
+- Pomodoro integration (P2)
+- Onboarding guide (P1)
 
----
+## [2026-02-04] (Session 7)
+> `navigator-v5.html` | DB: none
 
-## [2026-02-04] (세션 5)
-> 📦 `navigator-v5.html`, `ROADMAP.md`, `.gitignore` | 🗄️ DB: 없음
+### Changes
+- **Work completion log compression**: Accumulated "Completed" logs now summarized as "Completed N times (latest: M/D)"
+- **Event card single-line compression**: Event name, date, buttons, D-Day all on one line
+- **Today tab list compact mode**: Default shows only "number. title (category)", action buttons on hover
+- **Progress section removed**: Removed today's progress + per-category status sections
+- **Deadline alert → header integration**: Moved from separate section to header bell icon dropdown
 
-### 작업 내용
-- **내장 템플릿 하드코딩 제거 (보안)**
-  - 내장 템플릿 상수 삭제 → 사용자 데이터(localStorage/Firebase)로만 관리
-  - 템플릿 선택/적용 로직에서 내장 분기 제거
-
-- **템플릿 JSON 가져오기 기능 추가**
-  - 본업 대시보드 헤더에 "📥 가져오기" 버튼 추가
-  - `showWorkModal('template-import')` → JSON 텍스트 붙여넣기 모달
-  - JSON 파싱 + 구조 검증 (name, stages, subcategories, tasks 필수 필드)
-  - 가져온 템플릿 → localStorage + Firebase 자동 동기화
-
-- **템플릿 JSON 내보내기 기능 추가**
-  - 템플릿 선택 목록에서 각 항목에 📤 내보내기 버튼
-  - `exportTemplate()` → 클립보드 JSON 복사 (내부 필드 제외한 깔끔한 JSON)
-  - 클립보드 실패 시 prompt 폴백
-
-- **템플릿 선택 UI 개선**
-  - 템플릿 없을 때 안내 메시지 표시
-  - 템플릿 이름에 escapeHtml 적용 (XSS 방지)
-
-- **git history 보안 정리**
-  - 공개 레포에 노출된 내부 업무 용어 전수 제거
-  - 코드, 커밋 메시지, CHANGELOG, ROADMAP 등 전체 대상
-  - `workProjectStages` 기본값 일반화 (준비/설계/진행/점검/실행/마무리)
-  - 참여자 UI 라벨 일반화
-  - `navigator-backup-fixed.json` git 추적 제거 + .gitignore 추가
-  - `git rebase` + `force push`로 과거 커밋 history 완전 정리
-  - GitHub에서 이전 커밋 접근 불가(404) 확인 완료
+### Next Tasks
+- UTC date usage audit
+- SVG icon replacement (P2)
 
 ---
 
-## [2026-02-04] (세션 4)
-> 📦 `navigator-v5.html` | 🗄️ DB: `workTemplates.stageNames` 필드 추가
+## [2026-02-04] (Session 6)
+> `navigator-v5.html` | DB: none
 
-### 작업 내용
-- **내장 템플릿 시스템 추가**
-  - 프로젝트 템플릿 기능 구현
-  - 템플릿 선택 모달에서 내장 템플릿 표시
+### Changes
+- **Subcategory/task completion checkboxes added**
+  - Task: Added checkbox before status badge, click to directly toggle complete/not started
+  - Subcategory: folder icon → checkbox, auto-checked when all child tasks completed
+  - Added `toggleWorkTaskComplete()`, `toggleSubcategoryComplete()` functions
+  - Added `.work-subcategory-checkbox` CSS (reuses existing `.work-task-checkbox`)
 
-- **템플릿 시스템에 stageNames 지원 추가**
-  - 템플릿에 단계명(stageNames) 저장/적용 가능
-  - `saveAsTemplate()` → 프로젝트 단계명 포함
-  - `applyTemplate()` → 템플릿 단계명 사용 (없으면 전역 기본값)
-
-- **슬랙 복사 기능 추가**
-  - 프로젝트 상세보기에서 슬랙복사 버튼
-  - 진행 상태 포함한 체크리스트 텍스트 클립보드 복사
+- **Work section button order unified**
+  - Category: reordered to edit/schedule/delete
+  - Subcategory: text 'delete' → trash icon + red color unified
+  - Task: reordered to edit/schedule, text 'delete' → trash unified
+  - All levels: edit → schedule → delete → [add] order unified
 
 ---
 
-## [2026-02-04] (세션 3)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+## [2026-02-04] (Session 5)
+> `navigator-v5.html`, `ROADMAP.md`, `.gitignore` | DB: none
 
-### 작업 내용
-- **대시보드 속성명 불일치 버그 수정**
-  - 평균 출근/퇴근/출근편차가 항상 `--:--`로 표시되던 버그 수정
+### Changes
+- **Built-in template hardcoding removed (security)**
+  - Built-in template constants deleted → managed only via user data (localStorage/Firebase)
+  - Built-in branch removed from template selection/apply logic
+
+- **Template JSON import feature added**
+  - "Import" button added to work dashboard header
+  - `showWorkModal('template-import')` → JSON text paste modal
+  - JSON parsing + structure validation (required fields: name, stages, subcategories, tasks)
+  - Imported template → auto-synced to localStorage + Firebase
+
+- **Template JSON export feature added**
+  - Export button on each item in template selection list
+  - `exportTemplate()` → clean JSON clipboard copy (excluding internal fields)
+  - prompt fallback on clipboard failure
+
+- **Template selection UI improvements**
+  - Guidance message when no templates exist
+  - escapeHtml applied to template names (XSS prevention)
+
+- **git history security cleanup**
+  - Comprehensive removal of internal work terms exposed in public repo
+  - Targets: code, commit messages, CHANGELOG, ROADMAP, etc.
+  - `workProjectStages` default values generalized
+  - Participant UI labels generalized
+  - `navigator-backup-fixed.json` removed from git tracking + added to .gitignore
+  - Past commit history fully cleaned via `git rebase` + `force push`
+  - Previous commits inaccessible (404) on GitHub confirmed
+
+---
+
+## [2026-02-04] (Session 4)
+> `navigator-v5.html` | DB: `workTemplates.stageNames` field added
+
+### Changes
+- **Built-in template system added**
+  - Project template feature implemented
+  - Built-in templates shown in template selection modal
+
+- **stageNames support added to template system**
+  - Stage names (stageNames) can be saved/applied with templates
+  - `saveAsTemplate()` → includes project stage names
+  - `applyTemplate()` → uses template stage names (falls back to global defaults)
+
+- **Clipboard copy feature added**
+  - Copy button in project detail view
+  - Copies progress-included checklist text to clipboard
+
+---
+
+## [2026-02-04] (Session 3)
+> `navigator-v5.html` | DB: none
+
+### Changes
+- **Dashboard property name mismatch bug fix**
+  - Fixed average commute/work times always showing `--:--`
   - `avgWorkStart` → `avgWorkArrive`, `avgWorkEnd` → `avgWorkDepart`, `workStartDeviation` → `homeDepartDeviation`
 
-- **라이프 리듬 기록 UX 개선 — 수정/삭제 액션 메뉴**
-  - 기록된 버튼 클릭 시 `prompt()` 직행 → 수정/삭제 팝업 메뉴로 변경
-  - `showRhythmActionMenu()`, `hideRhythmActionMenu()`, `deleteLifeRhythm()` 추가
-  - 모바일 터치 친화적 CSS (`.rhythm-action-menu`)
+- **Life rhythm recording UX improvement — edit/delete action menu**
+  - Recorded button click: `prompt()` direct → changed to edit/delete popup menu
+  - Added `showRhythmActionMenu()`, `hideRhythmActionMenu()`, `deleteLifeRhythm()`
+  - Mobile touch-friendly CSS (`.rhythm-action-menu`)
 
-- **기상/취침 기록 시 목표 대비 즉시 피드백**
-  - `getTimeDiffMessage()` 헬퍼 함수 추가
-  - 토스트 예시: "☀️ 기상 07:15 (목표보다 15분 늦음)", "🌙 취침 22:50 (목표보다 10분 일찍 👍)"
-  - 취침 자정 넘김 처리 (00:00~05:00 기록 시 전날 밤 기준)
+- **Immediate feedback on wake/sleep recording vs target**
+  - Added `getTimeDiffMessage()` helper function
+  - Toast examples: "Wake 07:15 (15 min later than target)", "Sleep 22:50 (10 min earlier than target)"
+  - Midnight crossing handling for sleep (00:00~05:00 recording treated as previous night)
 
-- **대시보드에 기상/취침 목표 대비 통계 추가**
-  - `getLifeRhythmStats()` 확장: `avgWakeUp`, `avgBedtime`, `wakeTimeDiff`, `bedtimeDiff`, `targetSleepHours`
-  - 수면 섹션에 "평균 기상/취침 + 목표 대비 ±분" 행 추가
-  - ±15분 이내 = 녹색(good), 그 외 = 빨강(bad)
-  - "목표 대비" 수면 시간: 7시간 하드코딩 → 설정 기반 `targetSleepHours`로 개선
-
----
-
-## [2026-02-04] (세션 2)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
-
-### 작업 내용
-- **본업 프로젝트 '보류' 기능 추가** (`fc38a74`)
-  - `onHold` 속성으로 프로젝트 보류/재개 토글
-  - 대시보드에 ⏸ 보류 접이식 섹션 추가
-  - 상세보기 셀렉터에 보류 optgroup 추가
-  - 카드에 보류 뱃지 표시 (색상: #f5576c)
-  - `holdWorkProject()` 함수 추가
-
-- **라이프 리듬 UTC 날짜 버그 수정** (`e039d4b`)
-  - `toISOString()` (UTC) → `getLocalDateStr()` (로컬 타임존) 전환
-  - 한국(UTC+9) 자정~오전9시 사이 리듬 데이터 초기화 현상 해결
-  - Firebase 머지 시 동률이면 로컬 데이터 우선 (`>=` → `>`)
-  - 기존 UTC 날짜로 저장된 데이터 자동 보정 마이그레이션 추가
+- **Dashboard wake/sleep target comparison statistics added**
+  - `getLifeRhythmStats()` extended: `avgWakeUp`, `avgBedtime`, `wakeTimeDiff`, `bedtimeDiff`, `targetSleepHours`
+  - Added "Average wake/sleep + target difference (minutes)" row to sleep section
+  - Within 15 min = green (good), otherwise = red (bad)
+  - "vs target" sleep time: hardcoded 7 hours → improved to settings-based `targetSleepHours`
 
 ---
 
-## [2026-02-04] (세션 1)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+## [2026-02-04] (Session 2)
+> `navigator-v5.html` | DB: none
 
-### 작업 내용
-- 완료 태스크 일별 갱신 (오늘 완료만 표시, 오래된 완료 자동 정리)
-- 동기화 토스트 추가 (업로드 성공/다른 기기 수신 알림)
-- 멀티디바이스 동기화 핑퐁 루프 및 데이터 누락 수정
+### Changes
+- **Work project 'on hold' feature added** (`fc38a74`)
+  - `onHold` property for project hold/resume toggle
+  - Added collapsible "On Hold" section to dashboard
+  - Added on-hold optgroup to detail view selector
+  - On-hold badge on cards (color: #f5576c)
+  - Added `holdWorkProject()` function
+
+- **Life rhythm UTC date bug fix** (`e039d4b`)
+  - `toISOString()` (UTC) → `getLocalDateStr()` (local timezone) switch
+  - Fixed rhythm data resetting between midnight~9AM in Korea (UTC+9)
+  - Firebase merge: local data priority on tie (`>=` → `>`)
+  - Added auto-correction migration for data saved with UTC dates
 
 ---
 
-## [2026-02-03] (세션 0)
-> 📦 `navigator-v5.html` | 🗄️ DB: 없음
+## [2026-02-04] (Session 1)
+> `navigator-v5.html` | DB: none
 
-### 작업 내용
-- 더보기 드롭다운 버그 수정
-- 일상/가족 탭 수정/삭제 버튼 추가
-- 반복 작업 완료 누적 버그 수정
-- 본업 프로젝트 단계 커스터마이징 (추가/수정/삭제)
-- 본업 중분류 일정 설정 기능
-- 빠른 수정 모달 추가
-- 완료 게이지 버그 수정
-- 일상/가족 탭에 완료 섹션 추가
-- 코드 최적화 (디바운스, 검증, 중복 제거)
-- 라이프 리듬 트래커 6개 항목 확장
-- 자산관리 수익 연동
-- 데이터 내보내기/가져오기
+### Changes
+- Completed task daily refresh (show only today's completions, auto-cleanup of old completions)
+- Sync toast added (upload success/other device received notifications)
+- Multi-device sync ping-pong loop and data loss fix
+
+---
+
+## [2026-02-03] (Session 0)
+> `navigator-v5.html` | DB: none
+
+### Changes
+- More dropdown bug fix
+- Daily/family tab edit/delete buttons added
+- Recurring task completion accumulation bug fix
+- Work project stage customization (add/edit/delete)
+- Work subcategory schedule setting feature
+- Quick edit modal added
+- Completion gauge bug fix
+- Daily/family tab completed section added
+- Code optimization (debounce, validation, deduplication)
+- Life rhythm tracker expanded to 6 items
+- Asset management revenue integration
+- Data export/import
