@@ -421,6 +421,19 @@ function checkDailyReset() {
         changed = true;
       }
     }
+
+    // 서브태스크 완료 상태도 초기화
+    if (task.subtasks && task.subtasks.length > 0) {
+      const anySubCompleted = task.subtasks.some(st => st.completed);
+      if (anySubCompleted) {
+        task.subtasks.forEach(st => {
+          st.completed = false;
+          st.completedAt = null;
+        });
+        task.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+    }
   });
 
   // 2단계: 중복 반복 태스크 정리 (같은 제목+카테고리+반복타입 태스크가 여러 개면 하나만 남김)

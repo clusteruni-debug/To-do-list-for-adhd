@@ -334,6 +334,7 @@
 
     .task-item-mini {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       padding: 10px 16px;

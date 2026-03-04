@@ -219,15 +219,75 @@ function showQuickEditModal(task) {
     <div id="quick-edit-category-fields">
       ${getQuickEditCategoryFields(task.category, task)}
     </div>
+    <div class="work-modal-field">
+      <label class="work-modal-label">서브태스크</label>
+      <div class="quick-edit-subtask-list" id="quick-edit-subtask-list">
+        ${(task.subtasks || []).map((st, idx) => `
+          <div class="quick-edit-subtask-item" data-subtask-idx="${idx}">
+            <input type="text" class="quick-edit-subtask-text" value="${escapeHtml(st.text)}" placeholder="서브태스크 이름">
+            <button class="quick-edit-subtask-remove" onclick="removeQuickEditSubtask(this)" type="button">×</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="quick-edit-subtask-add">
+        <input type="text" id="quick-edit-new-subtask" placeholder="새 서브태스크 추가 후 Enter">
+        <button class="quick-edit-subtask-add-btn" onclick="addQuickEditSubtask()" type="button">+</button>
+      </div>
+    </div>
   `;
 
   modal.classList.add('show');
 
-  // 엔터키로 저장
+  // 엔터키로 저장 (제목 필드)
   body.querySelector('#quick-edit-title').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') saveQuickEdit();
   });
+
+  // 엔터키로 서브태스크 추가 (새 서브태스크 필드)
+  const newSubInput = body.querySelector('#quick-edit-new-subtask');
+  if (newSubInput) {
+    newSubInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addQuickEditSubtask();
+      }
+    });
+  }
 }
+
+/**
+ * 빠른 수정 모달: 서브태스크 추가
+ */
+function addQuickEditSubtask() {
+  const input = document.getElementById('quick-edit-new-subtask');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const list = document.getElementById('quick-edit-subtask-list');
+  if (!list) return;
+
+  const idx = list.children.length;
+  const itemHtml = `
+    <div class="quick-edit-subtask-item" data-subtask-idx="${idx}">
+      <input type="text" class="quick-edit-subtask-text" value="${escapeHtml(text)}" placeholder="서브태스크 이름">
+      <button class="quick-edit-subtask-remove" onclick="removeQuickEditSubtask(this)" type="button">×</button>
+    </div>
+  `;
+  list.insertAdjacentHTML('beforeend', itemHtml);
+  input.value = '';
+  input.focus();
+}
+window.addQuickEditSubtask = addQuickEditSubtask;
+
+/**
+ * 빠른 수정 모달: 서브태스크 제거
+ */
+function removeQuickEditSubtask(btn) {
+  const item = btn.closest('.quick-edit-subtask-item');
+  if (item) item.remove();
+}
+window.removeQuickEditSubtask = removeQuickEditSubtask;
 
 /**
  * 빠른 수정 모달 닫기
@@ -272,6 +332,19 @@ function saveQuickEdit() {
     }
   }
 
+  // 서브태스크 읽기
+  const subtaskItems = document.querySelectorAll('#quick-edit-subtask-list .quick-edit-subtask-item');
+  const newSubtasks = [];
+  subtaskItems.forEach(item => {
+    const textInput = item.querySelector('.quick-edit-subtask-text');
+    if (textInput) {
+      const stText = textInput.value.trim();
+      if (stText) {
+        newSubtasks.push({ text: stText, completed: false, completedAt: null });
+      }
+    }
+  });
+
   appState.tasks = appState.tasks.map(t => {
     if (t.id === id) {
       const updates = {
@@ -287,6 +360,14 @@ function saveQuickEdit() {
       if (organizerEl) updates.organizer = organizerEl.value.trim();
       if (eventTypeEl) updates.eventType = eventTypeEl.value;
       if (linkEl) updates.link = linkEl.value;
+
+      // 서브태스크: 기존 완료 상태 보존 (이름이 같으면)
+      const oldSubtasks = t.subtasks || [];
+      updates.subtasks = newSubtasks.map(ns => {
+        const existing = oldSubtasks.find(os => os.text === ns.text);
+        return existing ? { ...existing, text: ns.text } : ns;
+      });
+
       return { ...t, ...updates };
     }
     return t;

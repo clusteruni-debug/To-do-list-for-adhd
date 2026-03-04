@@ -266,3 +266,143 @@
       cursor: not-allowed;
       transform: none;
     }
+
+    /* ── Inline subtask chips (task-item-mini) ── */
+    .subtask-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+      padding-left: 32px;
+      width: 100%;
+    }
+
+    .subtask-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .subtask-chip:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .subtask-chip:active {
+      transform: scale(0.95);
+    }
+
+    .subtask-chip.done {
+      background: rgba(72, 187, 120, 0.15);
+      border-color: rgba(72, 187, 120, 0.3);
+      color: #48bb78;
+      text-decoration: line-through;
+    }
+
+    .subtask-chip-check {
+      font-size: 10px;
+    }
+
+    .subtask-progress-indicator {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .subtask-progress-indicator.all-done {
+      color: #48bb78;
+    }
+
+    /* Quick edit modal subtask section */
+    .quick-edit-subtask-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .quick-edit-subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quick-edit-subtask-item input[type="text"] {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .quick-edit-subtask-remove {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .quick-edit-subtask-remove:hover {
+      background: rgba(255, 107, 107, 0.2);
+      color: #ff6b6b;
+    }
+
+    .quick-edit-subtask-add {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .quick-edit-subtask-add input[type="text"] {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .quick-edit-subtask-add-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary);
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .quick-edit-subtask-add-btn:hover {
+      opacity: 0.85;
+    }

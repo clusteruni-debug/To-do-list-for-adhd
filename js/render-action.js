@@ -101,18 +101,35 @@ function renderActionTab(ctx) {
             </div>
             ${filteredTasks
               .filter(t => !t.completed && t.id !== (nextAction ? nextAction.id : null))
-              .map(task => `
+              .map(task => {
+                const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+                const doneCount = hasSubtasks ? task.subtasks.filter(s => s.completed).length : 0;
+                const totalCount = hasSubtasks ? task.subtasks.length : 0;
+                const allDone = hasSubtasks && doneCount === totalCount;
+                return `
                 <div class="task-item-mini" onclick="editTask('${escapeAttr(task.id)}')" style="--task-cat-color: var(--cat-${task.category})">
                   <div class="task-item-mini-left">
-                    <button class="task-check-btn" onclick="event.stopPropagation(); completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">○</button>
+                    ${hasSubtasks
+                      ? `<span class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation();">${doneCount}/${totalCount}</span>`
+                      : `<button class="task-check-btn" onclick="event.stopPropagation(); completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">○</button>`
+                    }
                     <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
                   </div>
                   <div class="task-item-mini-right">
                     ${task.deadline ? `<span class="task-item-mini-deadline">${formatDeadline(task.deadline)}</span>` : ''}
                     <span class="task-item-mini-category ${task.category}">${task.category}</span>
                   </div>
+                  ${hasSubtasks ? `
+                    <div class="subtask-chips" onclick="event.stopPropagation();">
+                      ${task.subtasks.map((st, idx) => `
+                        <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
+                          <span class="subtask-chip-check">${st.completed ? '✓' : '○'}</span>${escapeHtml(st.text)}
+                        </span>
+                      `).join('')}
+                    </div>
+                  ` : ''}
                 </div>
-              `).join('')}
+              `}).join('')}
           </div>
         ` : ''}
 
