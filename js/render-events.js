@@ -123,7 +123,7 @@ function renderEventsTab() {
                 if (srcProject) metaItems.push(srcProject);
                 if (srcOrganizer || task.organizer) metaItems.push(srcOrganizer || task.organizer);
                 if (task.eventType) metaItems.push(task.eventType);
-                if (task.expectedRevenue) metaItems.push('₩' + Number(task.expectedRevenue).toLocaleString());
+                if (task.expectedRevenue) metaItems.push('💰 ' + Number(task.expectedRevenue).toLocaleString() + '원');
                 const metaStr = metaItems.join(' · ');
                 const telegramBadge = task.source && task.source.type === 'telegram-event' ? '<span class="event-tg-badge" title="텔레그램 연동">📱</span>' : '';
                 const hasSubtasks = task.subtasks && task.subtasks.length > 0;

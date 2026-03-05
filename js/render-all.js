@@ -49,16 +49,32 @@ function _getSubViewTasks(view) {
  */
 function _renderTaskItem(task) {
   const urgency = getUrgencyLevel(task);
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+  const doneCount = hasSubtasks ? task.subtasks.filter(s => s.completed).length : 0;
+  const totalCount = hasSubtasks ? task.subtasks.length : 0;
+  const allDone = hasSubtasks && doneCount === totalCount;
   return `
     <div class="all-task-item ${urgency === 'urgent' ? 'urgent' : ''} ${urgency === 'warning' ? 'warning' : ''}" style="--task-cat-color: var(--cat-${task.category})">
       <div class="all-task-content">
         <div class="all-task-title">${escapeHtml(task.title)}</div>
         <div class="all-task-meta">
           <span class="category ${task.category}" style="font-size:12px;">${task.category}</span>
+          ${hasSubtasks ? `<span class="subtask-progress-indicator${allDone ? ' all-done' : ''}">${doneCount}/${totalCount}</span>` : ''}
+          ${task.repeatType && task.repeatType !== 'none' ? `<span>🔄 ${getRepeatLabel(task.repeatType, task)}</span>` : ''}
           ${task.estimatedTime ? `<span>⏱️ ${task.estimatedTime}분</span>` : ''}
           ${task.deadline ? `<span>${formatDeadline(task.deadline)}</span>` : ''}
-          ${task.organizer ? `<span>👤 ${task.organizer}</span>` : ''}
+          ${task.expectedRevenue ? `<span>💰 ${Number(task.expectedRevenue).toLocaleString()}원</span>` : ''}
+          ${task.organizer ? `<span>👤 ${escapeHtml(task.organizer)}</span>` : ''}
         </div>
+        ${hasSubtasks ? `
+          <div class="subtask-chips" onclick="event.stopPropagation();">
+            ${task.subtasks.map((st, idx) => `
+              <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
+                <span class="subtask-chip-check">${st.completed ? '✓' : '○'}</span>${escapeHtml(st.text)}
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
       <div class="all-task-actions">
         ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(task.link)}')">GO</button>` : ''}

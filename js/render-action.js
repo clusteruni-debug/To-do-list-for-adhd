@@ -56,7 +56,7 @@ function renderActionTab(ctx) {
               ${nextAction.repeatType && nextAction.repeatType !== 'none' ? `<span class="meta-item">🔄 ${getRepeatLabel(nextAction.repeatType, nextAction)}</span>` : ''}
               ${nextAction.estimatedTime ? `<span class="meta-item">⏱ ${nextAction.estimatedTime}분</span>` : ''}
               ${nextAction.deadline ? `<span class="meta-item">⏰ ${formatDeadline(nextAction.deadline)}</span>` : ''}
-              ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${parseInt(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
+              ${nextAction.expectedRevenue ? `<span class="meta-item">💰 ${Number(nextAction.expectedRevenue).toLocaleString()}원</span>` : ''}
             </div>
             ${nextAction.subtasks && nextAction.subtasks.length > 0 ? `
               <div class="next-action-subtasks">

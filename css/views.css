@@ -125,7 +125,7 @@
     .all-task-item {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       padding: 12px 15px;
       border-bottom: 1px solid var(--border-light);
       border-left: 4px solid var(--task-cat-color, transparent);
@@ -169,6 +169,10 @@
     .all-task-meta {
       font-size: 14px;
       color: #888;
+    }
+
+    .all-task-content .subtask-chips {
+      padding-left: 0;
     }
 
     .all-task-actions {

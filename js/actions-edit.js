@@ -220,6 +220,10 @@ function showQuickEditModal(task) {
       ${getQuickEditCategoryFields(task.category, task)}
     </div>
     <div class="work-modal-field">
+      <label class="work-modal-label">링크 (선택)</label>
+      <input type="url" class="work-modal-input" id="quick-edit-link" placeholder="https://..." value="${escapeHtml(task.link || '')}">
+    </div>
+    <div class="work-modal-field">
       <label class="work-modal-label">서브태스크</label>
       <div class="quick-edit-subtask-list" id="quick-edit-subtask-list">
         ${(task.subtasks || []).map((st, idx) => `
