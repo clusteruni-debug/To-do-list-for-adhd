@@ -504,6 +504,11 @@ function uncompleteTask(id) {
         e => e.t === task.title && e.at === logTime
       );
       if (idx !== -1) {
+        // Soft-Delete: 동기화 부활 방지
+        const delKey = logDate + '|' + task.title + '|' + logTime;
+        if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+        appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+
         appState.completionLog[logDate].splice(idx, 1);
         // 해당 날짜에 기록이 0개면 키 삭제
         if (appState.completionLog[logDate].length === 0) {

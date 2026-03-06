@@ -250,7 +250,7 @@ function getMedicationStreak() {
 
   var streak = 0;
   var today = new Date();
-  var todayStr = getLocalDateStr(today);
+  var todayStr = getLogicalDate();
 
   // 오늘부터 역순으로 확인
   for (var i = 0; i < 365; i++) {

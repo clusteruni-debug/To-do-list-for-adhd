@@ -650,14 +650,23 @@ async function loadFromFirebase() {
         // trips 깊은 병합: 날짜→방향 레벨로 합집합 (얕은 병합 시 같은 날짜의 다른 방향 유실)
         const cTrips = cloud.trips || {};
         const lTrips = local.trips || {};
+        const deletedTrips = appState.deletedIds.commuteTrips || {};
         const mergedTrips = {};
         for (const date of new Set([...Object.keys(cTrips), ...Object.keys(lTrips)])) {
           const cd = cTrips[date] || {};
           const ld = lTrips[date] || {};
           mergedTrips[date] = {};
           for (const dir of new Set([...Object.keys(cd), ...Object.keys(ld)])) {
-            mergedTrips[date][dir] = ld[dir] || cd[dir]; // 양쪽 다 있으면 로컬 우선
+            // Soft-Delete: 삭제된 trip은 병합에서 제외
+            if (deletedTrips[date + '|' + dir]) continue;
+            const trip = ld[dir] || cd[dir];
+            // 빈 trip 객체 스킵 (duration 없는 엔트리)
+            if (trip && (trip.duration || trip.routeId)) {
+              mergedTrips[date][dir] = trip;
+            }
           }
+          // 날짜에 유효한 trip이 없으면 날짜 키 제거
+          if (Object.keys(mergedTrips[date]).length === 0) delete mergedTrips[date];
         }
         appState.commuteTracker.trips = mergedTrips;
         appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
@@ -853,14 +862,22 @@ function startRealtimeSync() {
           // trips 깊은 병합: 날짜→방향 레벨 합집합 (얕은 병합 시 같은 날짜의 다른 방향 유실)
           const cTrips = cloud.trips || {};
           const lTrips = local.trips || {};
+          const deletedTripsRT = appState.deletedIds.commuteTrips || {};
           const mergedTrips = {};
           for (const date of new Set([...Object.keys(cTrips), ...Object.keys(lTrips)])) {
             const cd = cTrips[date] || {};
             const ld = lTrips[date] || {};
             mergedTrips[date] = {};
             for (const dir of new Set([...Object.keys(cd), ...Object.keys(ld)])) {
-              mergedTrips[date][dir] = ld[dir] || cd[dir];
+              // Soft-Delete: 삭제된 trip은 병합에서 제외
+              if (deletedTripsRT[date + '|' + dir]) continue;
+              const trip = ld[dir] || cd[dir];
+              // 빈 trip 객체 스킵 (duration 없는 엔트리)
+              if (trip && (trip.duration || trip.routeId)) {
+                mergedTrips[date][dir] = trip;
+              }
             }
+            if (Object.keys(mergedTrips[date]).length === 0) delete mergedTrips[date];
           }
           appState.commuteTracker.trips = mergedTrips;
           // 설정: cloud 기반 + 로컬 덮어쓰기

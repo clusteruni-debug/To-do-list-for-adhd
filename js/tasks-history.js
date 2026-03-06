@@ -25,6 +25,7 @@ function getCompletedTasksByDate(dateStr) {
       repeatType: e.r || null,
       expectedRevenue: e.rv || 0,
       estimatedTime: 0,
+      subtaskDone: e.st || 0,
       fromLog: true,
       logIndex: idx  // completionLog 내 원래 인덱스 (수정/삭제용)
     });
@@ -329,6 +330,12 @@ function deleteCompletionLogEntry(dateStr, index) {
 
   if (!confirm(`"${entries[index].t}" 기록을 삭제하시겠습니까?`)) return;
 
+  // Soft-Delete: 동기화 시 부활 방지
+  const entry = entries[index];
+  const delKey = dateStr + '|' + (entry.t || '') + '|' + (entry.at || '');
+  if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+  appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+
   entries.splice(index, 1);
   // 해당 날짜에 기록이 0개면 날짜 키 자체 제거
   if (entries.length === 0) delete appState.completionLog[dateStr];
@@ -402,6 +409,11 @@ function applyEditCompletionLog(origDate, origIndex) {
   if (!newDate) { showToast('날짜를 입력해주세요', 'error'); return; }
   if (!newTime) { showToast('올바른 시간을 입력해주세요 (예: 14:30, 930)', 'error'); return; }
 
+  // Soft-Delete: 원본 항목 삭제 기록 (동기화 부활 방지)
+  const delKey = origDate + '|' + (entry.t || '') + '|' + (entry.at || '');
+  if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+  appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+
   // 기존 위치에서 제거
   entries.splice(origIndex, 1);
   if (entries.length === 0) delete appState.completionLog[origDate];
@@ -428,6 +440,14 @@ function clearCompletionLogDate(dateStr) {
   const entries = (appState.completionLog || {})[dateStr];
   if (!entries || entries.length === 0) return;
   if (!confirm(`${dateStr} 기록 ${entries.length}개를 모두 삭제하시겠습니까?`)) return;
+
+  // Soft-Delete: 모든 항목 삭제 기록 추가
+  if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+  entries.forEach(e => {
+    if (e._summary) return;
+    const delKey = dateStr + '|' + (e.t || '') + '|' + (e.at || '');
+    appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+  });
 
   delete appState.completionLog[dateStr];
   saveState();
@@ -492,6 +512,16 @@ function applyClearLogRange() {
 
   if (count === 0) { showToast('해당 기간에 삭제할 기록이 없습니다', 'warning'); return; }
   if (!confirm(`${from} ~ ${to} 기간의 기록 ${count}개를 삭제하시겠습니까?`)) return;
+
+  // Soft-Delete: 모든 대상 항목 삭제 기록 추가
+  if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+  targetDates.forEach(d => {
+    (appState.completionLog[d] || []).forEach(e => {
+      if (e._summary) return;
+      const delKey = d + '|' + (e.t || '') + '|' + (e.at || '');
+      appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+    });
+  });
 
   // 확인 후 삭제
   targetDates.forEach(d => delete appState.completionLog[d]);
@@ -583,6 +613,7 @@ function renderDayDetail() {
                   <div class="day-task-title completed">${escapeHtml(task.title)}</div>
                   <div class="day-task-meta">
                     <span class="category ${cat}">${escapeHtml(cat)}</span>
+                    ${task.subtaskDone ? ` · 📋 서브태스크 ${task.subtaskDone}개` : ''}
                     ${revenue > 0 ? ` · 💰${revenue.toLocaleString()}` : ''}
                     ${task.estimatedTime ? ` · ${task.estimatedTime}분` : ''}
                   </div>
@@ -632,6 +663,7 @@ function renderRecentHistory() {
         category: e.c,
         completedAt: dateKey + 'T' + e.at,
         expectedRevenue: e.rv || 0,
+        subtaskDone: e.st || 0,
         _logDate: dateKey,
         _logIndex: idx
       });
@@ -707,7 +739,7 @@ function renderRecentHistory() {
                 return `
                   <div class="history-task">
                     <span class="history-task-check">✓</span>
-                    <span class="history-task-title">${escapeHtml(task.title)}</span>
+                    <span class="history-task-title">${escapeHtml(task.title)}${task.subtaskDone ? ` <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(📋${task.subtaskDone})</span>` : ''}</span>
                     ${hasLog ? `<span class="history-task-time" onclick="editCompletionLogEntry('${task._logDate}', ${task._logIndex})" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" title="클릭하여 날짜/시간 수정">${time}</span>` : `<span class="history-task-time">${time}</span>`}
                     ${hasLog ? `<button class="btn-small delete" onclick="deleteCompletionLogEntry('${task._logDate}', ${task._logIndex})" title="기록 삭제" aria-label="기록 삭제" style="padding:2px 6px;font-size:14px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>` : ''}
                   </div>

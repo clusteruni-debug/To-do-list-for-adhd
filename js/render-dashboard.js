@@ -227,7 +227,7 @@ function renderDashboardTab(ctx) {
                     d.setDate(today.getDate() - i);
                     const ds = getLocalDateStr(d);
                     let dayMeds;
-                    if (i === 0 && appState.lifeRhythm.today.date === ds) {
+                    if (appState.lifeRhythm.today.date === ds) {
                       dayMeds = appState.lifeRhythm.today.medications || {};
                     } else {
                       const hist = appState.lifeRhythm.history[ds];

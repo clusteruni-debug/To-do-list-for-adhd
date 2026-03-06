@@ -40,10 +40,9 @@ function getLifeRhythmStats() {
     var date = new Date(today);
     date.setDate(today.getDate() - i);
     var dateStr = getLocalDateStr(date);
-    var isToday = i === 0;
 
     var dayData;
-    if (isToday && appState.lifeRhythm.today.date === dateStr) {
+    if (appState.lifeRhythm.today.date === dateStr) {
       dayData = appState.lifeRhythm.today;
     } else {
       dayData = appState.lifeRhythm.history[dateStr] || {};
@@ -263,7 +262,7 @@ function calculateRhythmStats(days) {
   var toMins = function(t) { if (!t || typeof t !== 'string') return null; var p = t.split(':'); if (p.length !== 2) return null; var h = parseInt(p[0], 10), m = parseInt(p[1], 10); return isNaN(h) || isNaN(m) ? null : h * 60 + m; };
   var today = new Date();
   var history = appState.lifeRhythm.history || {};
-  var todayStr = getLocalDateStr(today);
+  var todayStr = getLogicalDate();
   var medSlots = getMedicationSlots();
 
   // 데이터 수집
@@ -281,7 +280,7 @@ function calculateRhythmStats(days) {
     var isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     var dayData;
-    if (i === 0 && appState.lifeRhythm.today.date === todayStr) {
+    if (appState.lifeRhythm.today.date === dateStr) {
       dayData = appState.lifeRhythm.today;
     } else {
       dayData = history[dateStr];

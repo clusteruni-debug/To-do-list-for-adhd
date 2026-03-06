@@ -460,7 +460,9 @@ const appState = {
     workProjects: {},
     templates: {},
     workTemplates: {},
-    commuteRoutes: {}   // 삭제된 통근 루트 추적
+    commuteRoutes: {},  // 삭제된 통근 루트 추적
+    completionLog: {},  // { "dateStr|title|at": "2026-03-06T..." } 삭제된 완료 기록
+    commuteTrips: {}    // { "dateStr|direction": "2026-03-06T..." } 삭제된 통근 기록
   },
   // 휴지통: 삭제된 태스크 보관 (30일 후 자동 정리)
   trash: []

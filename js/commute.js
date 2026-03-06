@@ -413,12 +413,15 @@ function renderCommuteHistoryView() {
     const d = new Date(dateStr + 'T12:00:00');
     const dayLabel = `${d.getMonth()+1}/${d.getDate()} (${dayNames[d.getDay()]})`;
     const dayTrips = trips[dateStr];
-    const rhythmData = history[dateStr] || (dateStr === getLocalDateStr() ? appState.lifeRhythm.today : null);
+    const rhythmData = history[dateStr] || (appState.lifeRhythm.today.date === dateStr ? appState.lifeRhythm.today : null);
 
     const morning = dayTrips.morning;
     const evening = dayTrips.evening;
 
-    if (!morning && !evening) return;
+    // 빈 기록 필터링: duration 없는 엔트리는 표시하지 않음
+    const hasMorning = morning && morning.duration;
+    const hasEvening = evening && evening.duration;
+    if (!hasMorning && !hasEvening) return;
 
     html += '<div class="commute-history-day">';
     html += '<div class="commute-history-date">' + dayLabel + '</div>';
@@ -542,13 +545,18 @@ function deleteCommuteTrip(dateStr, direction) {
   const dirLabel = direction === 'morning' ? '출근' : '퇴근';
   if (!confirm(dateStr + ' ' + dirLabel + ' 기록을 삭제하시겠습니까?')) return;
   if (appState.commuteTracker.trips[dateStr]) {
+    // Soft-Delete: 동기화 시 부활 방지
+    const delKey = dateStr + '|' + direction;
+    if (!appState.deletedIds.commuteTrips) appState.deletedIds.commuteTrips = {};
+    appState.deletedIds.commuteTrips[delKey] = new Date().toISOString();
+
     delete appState.commuteTracker.trips[dateStr][direction];
     // 해당 날짜에 남은 기록이 없으면 날짜 자체 삭제
     const remaining = appState.commuteTracker.trips[dateStr];
     if (!remaining.morning && !remaining.evening) {
       delete appState.commuteTracker.trips[dateStr];
     }
-    saveCommuteTracker(); renderStatic();
+    saveCommuteTracker(); saveState(); renderStatic();
     showToast('🗑️ ' + dirLabel + ' 기록이 삭제되었습니다', 'success');
   }
 }

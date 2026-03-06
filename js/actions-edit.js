@@ -73,6 +73,11 @@ function saveCompletedAt(id) {
         e => e.t === task.title && e.at === oldLogTime
       );
       if (idx !== -1) {
+        // Soft-Delete: 동기화 부활 방지
+        const delKey = oldLogDate + '|' + task.title + '|' + oldLogTime;
+        if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+        appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+
         appState.completionLog[oldLogDate].splice(idx, 1);
         if (appState.completionLog[oldLogDate].length === 0) {
           delete appState.completionLog[oldLogDate];

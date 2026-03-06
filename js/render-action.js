@@ -214,7 +214,7 @@ function _renderTodayEmptyState(completedToday) {
  * 리듬 트래커 (컴팩트)
  */
 function _renderRhythmCompact() {
-  const today = getLocalDateStr();
+  const today = getLogicalDate();
   const rhythm = appState.lifeRhythm.today.date === today ? appState.lifeRhythm.today : { wakeUp: null, homeDepart: null, workArrive: null, workDepart: null, homeArrive: null, sleep: null, medications: {} };
 
   return `
@@ -268,7 +268,7 @@ function _renderMedicationCompact() {
   const medSlots = getMedicationSlots();
   if (!medSlots || medSlots.length === 0) return '';
 
-  const todayStr = getLocalDateStr();
+  const todayStr = getLogicalDate();
   const todayRhythm = appState.lifeRhythm.today.date === todayStr ? appState.lifeRhythm.today : {};
   const todayMeds = (todayRhythm.medications) || {};
   const takenCount = medSlots.filter(s => todayMeds[s.id]).length;

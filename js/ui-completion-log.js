@@ -72,18 +72,29 @@ function loadCompletionLog() {
  */
 function mergeCompletionLog(local, cloud) {
   const merged = {};
-  // 로컬 데이터 먼저 복사
+  const deletedLog = (appState.deletedIds && appState.deletedIds.completionLog) || {};
+
+  // 삭제 여부 확인 헬퍼
+  const isDeleted = (date, entry) => {
+    const key = date + '|' + (entry.t || '') + '|' + (entry.at || '');
+    return !!deletedLog[key];
+  };
+
+  // 로컬 데이터 먼저 복사 (삭제된 항목 제외)
   for (const date of Object.keys(local || {})) {
-    merged[date] = [...(local[date] || [])];
+    const filtered = (local[date] || []).filter(e => e._summary || !isDeleted(date, e));
+    if (filtered.length > 0) merged[date] = filtered;
   }
   // 클라우드 데이터 병합
   for (const date of Object.keys(cloud || {})) {
+    const cloudEntries = (cloud[date] || []).filter(e => e._summary || !isDeleted(date, e));
+    if (cloudEntries.length === 0) continue;
+
     if (!merged[date]) {
-      merged[date] = [...(cloud[date] || [])];
+      merged[date] = [...cloudEntries];
     } else {
       // 한쪽이 압축 데이터(_summary)면 더 많은 데이터를 가진 쪽 우선
       const localIsSummary = merged[date].length === 1 && merged[date][0]?._summary;
-      const cloudEntries = cloud[date] || [];
       const cloudIsSummary = cloudEntries.length === 1 && cloudEntries[0]?._summary;
 
       if (localIsSummary && !cloudIsSummary && cloudEntries.length > 0) {
