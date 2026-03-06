@@ -356,6 +356,24 @@ function deleteCompletionLogEntry(dateStr, index) {
 window.deleteCompletionLogEntry = deleteCompletionLogEntry;
 
 /**
+ * tasks에서 온 완료 기록을 히스토리에서 숨기기
+ * (completionLog에 없는 항목도 deletedIds에 등록하여 비표시)
+ */
+function hideTaskFromHistory(dateStr, title, timeStr) {
+  if (!confirm(`"${title}" 기록을 히스토리에서 숨기시겠습니까?`)) return;
+
+  if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+  const delKey = dateStr + '|' + title + '|' + timeStr;
+  appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+
+  saveState();
+  recomputeTodayStats();
+  renderStatic();
+  showToast('기록이 숨겨졌습니다', 'success');
+}
+window.hideTaskFromHistory = hideTaskFromHistory;
+
+/**
  * completionLog 항목 수정 (날짜/시간 변경)
  */
 function editCompletionLogEntry(dateStr, index) {
@@ -670,7 +688,11 @@ function renderDayDetail() {
                       style="background:none;border:none;cursor:pointer;padding:4px;font-size:16px;"
                       aria-label="기록 삭제" title="삭제">❌</button>
                   </div>
-                ` : `<div class="day-task-status">✅</div>`}
+                ` : `<div class="day-task-actions" style="display:flex;gap:4px;align-items:center;">
+                    <button onclick="hideTaskFromHistory('${selectedDate}', '${escapeAttr(task.title)}', '${new Date(task.completedAt).toTimeString().slice(0, 5)}')"
+                      style="background:none;border:none;cursor:pointer;padding:4px;font-size:16px;"
+                      aria-label="기록 숨기기" title="숨기기">❌</button>
+                  </div>`}
               </div>
             `;
           }).join('')}
@@ -783,12 +805,14 @@ function renderRecentHistory() {
                   hour: '2-digit', minute: '2-digit'
                 });
                 const hasLog = task._logDate !== undefined && task._logIndex !== undefined;
+                const taskTimeStr = new Date(task.completedAt).toTimeString().slice(0, 5);
                 return `
                   <div class="history-task">
                     <span class="history-task-check">✓</span>
                     <span class="history-task-title">${escapeHtml(task.title)}${task.subtaskDone ? ` <span style="font-size:12px;color:var(--text-muted);font-weight:normal;">(📋${task.subtaskDone})</span>` : ''}</span>
                     ${hasLog ? `<span class="history-task-time" onclick="editCompletionLogEntry('${task._logDate}', ${task._logIndex})" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px" title="클릭하여 날짜/시간 수정">${time}</span>` : `<span class="history-task-time">${time}</span>`}
-                    ${hasLog ? `<button class="btn-small delete" onclick="deleteCompletionLogEntry('${task._logDate}', ${task._logIndex})" title="기록 삭제" aria-label="기록 삭제" style="padding:2px 6px;font-size:14px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>` : ''}
+                    ${hasLog ? `<button class="btn-small delete" onclick="deleteCompletionLogEntry('${task._logDate}', ${task._logIndex})" title="기록 삭제" aria-label="기록 삭제" style="padding:2px 6px;font-size:14px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>`
+                      : `<button class="btn-small delete" onclick="hideTaskFromHistory('${dateStr}', '${escapeAttr(task.title)}', '${taskTimeStr}')" title="기록 숨기기" aria-label="기록 숨기기" style="padding:2px 6px;font-size:14px;min-width:28px;min-height:28px;opacity:0.4;margin-left:4px;">×</button>`}
                   </div>
                 `;
               }).join('')}
