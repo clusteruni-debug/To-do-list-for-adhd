@@ -390,7 +390,9 @@ function renderSettingsModal() {
                     const last = localStorage.getItem('navigator-last-archive-date');
                     if (!last) return '⚠️ 아직 백업한 적 없음 — 오래된 데이터 자동 정리가 비활성 상태입니다';
                     const days = Math.floor((Date.now() - new Date(last).getTime()) / 86400000);
+                    if (isNaN(days)) return '⚠️ 백업 날짜를 읽을 수 없음';
                     if (days > 30) return '⚠️ 마지막 백업: ' + days + '일 전 — 자동 정리가 일시 중지됨';
+                    if (days === 0) return '✅ 마지막 백업: 오늘';
                     return '✅ 마지막 백업: ' + days + '일 전';
                   })()}
                 </div>

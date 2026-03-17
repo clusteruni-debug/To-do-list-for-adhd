@@ -533,10 +533,27 @@ function editWorkLog(projectId, stageIdx, subcatIdx, taskIdx, logIdx) {
   if (!task || !task.logs[logIdx]) return;
 
   const log = task.logs[logIdx];
-  const newContent = prompt('기록 내용 편집:', log.content);
-  if (newContent === null || newContent.trim() === '') return;
+  const isCompletion = log.content === '✓ 완료';
 
-  log.content = newContent.trim();
+  if (isCompletion) {
+    // 완료 로그 → 날짜 수정
+    const newDate = prompt('완료 날짜 수정 (YYYY-MM-DD):', log.date);
+    if (newDate === null || newDate.trim() === '') return;
+    const trimmed = newDate.trim();
+    log.date = trimmed;
+    // task.completedAt도 동기화
+    task.completedAt = trimmed;
+  } else {
+    // 일반 로그 → 내용 수정 + 날짜 수정
+    const newContent = prompt('기록 내용 편집:', log.content);
+    if (newContent === null || newContent.trim() === '') return;
+    log.content = newContent.trim();
+    const newDate = prompt('날짜 수정 (변경 없으면 그대로 확인):', log.date);
+    if (newDate && newDate.trim()) {
+      log.date = newDate.trim();
+    }
+  }
+
   project.updatedAt = new Date().toISOString();
   saveWorkProjects();
   renderStatic();

@@ -164,27 +164,27 @@ function handleFileImport(e) {
           };
           saveLifeRhythm();
         }
-      // 통근 트래커 병합 (deletedIds 필터링 + updatedAt 최신 우선)
-      if (data.commuteTracker) {
-        const cloud = data.commuteTracker;
-        const local = appState.commuteTracker;
-        const deletedRoutes = appState.deletedIds.commuteRoutes || {};
-        const routeMap = {};
-        (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
-        (cloud.routes || []).forEach(r => {
-          if (deletedRoutes[r.id]) return;
-          const existing = routeMap[r.id];
-          if (!existing) { routeMap[r.id] = r; return; }
-          const eTime = existing.updatedAt || existing.createdAt || '';
-          const cTime = r.updatedAt || r.createdAt || '';
-          if (cTime > eTime) routeMap[r.id] = r;
-        });
-        appState.commuteTracker.routes = Object.values(routeMap);
-        const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
-        appState.commuteTracker.trips = mergedTrips;
-        appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
-        localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
-      }
+        // 통근 트래커 병합 (deletedIds 필터링 + updatedAt 최신 우선)
+        if (data.commuteTracker) {
+          const cloud = data.commuteTracker;
+          const local = appState.commuteTracker;
+          const deletedRoutes = appState.deletedIds.commuteRoutes || {};
+          const routeMap = {};
+          (local.routes || []).forEach(r => { if (!deletedRoutes[r.id]) routeMap[r.id] = r; });
+          (cloud.routes || []).forEach(r => {
+            if (deletedRoutes[r.id]) return;
+            const existing = routeMap[r.id];
+            if (!existing) { routeMap[r.id] = r; return; }
+            const eTime = existing.updatedAt || existing.createdAt || '';
+            const cTime = r.updatedAt || r.createdAt || '';
+            if (cTime > eTime) routeMap[r.id] = r;
+          });
+          appState.commuteTracker.routes = Object.values(routeMap);
+          const mergedTrips = { ...(cloud.trips || {}), ...(local.trips || {}) };
+          appState.commuteTracker.trips = mergedTrips;
+          appState.commuteTracker.settings = { ...(cloud.settings || {}), ...(local.settings || {}) };
+          localStorage.setItem('navigator-commute-tracker', JSON.stringify(appState.commuteTracker));
+        }
         // 완료 기록 로그 병합
         if (data.completionLog) {
           appState.completionLog = mergeCompletionLog(appState.completionLog, data.completionLog);
