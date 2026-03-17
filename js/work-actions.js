@@ -257,6 +257,11 @@ function addSubcategory(projectId, stageIdx, name) {
     tasks: []
   });
 
+  // 접힌 스테이지 자동 펼치기
+  if (appState.collapsedStages && appState.collapsedStages[projectId + '-' + stageIdx]) {
+    appState.collapsedStages[projectId + '-' + stageIdx] = false;
+  }
+
   project.updatedAt = new Date().toISOString();
   saveWorkProjects();
   renderStatic();
@@ -334,6 +339,11 @@ function addWorkTask(projectId, stageIdx, subcatIdx, title, status, canStartEarl
     canStartEarly: canStartEarly,
     logs: []
   });
+
+  // 접힌 스테이지 자동 펼치기
+  if (appState.collapsedStages && appState.collapsedStages[projectId + '-' + stageIdx]) {
+    appState.collapsedStages[projectId + '-' + stageIdx] = false;
+  }
 
   project.updatedAt = new Date().toISOString();
   saveWorkProjects();
@@ -565,3 +575,86 @@ function copyWorkProjectToClipboard(projectId) {
   });
 }
 window.copyWorkProjectToClipboard = copyWorkProjectToClipboard;
+
+/**
+ * 완료된 작업의 completedAt 날짜 수정
+ */
+function editWorkTaskCompletedAt(projectId, stageIdx, subcatIdx, taskIdx) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+  const task = project.stages[stageIdx]?.subcategories?.[subcatIdx]?.tasks?.[taskIdx];
+  if (!task || task.status !== 'completed') return;
+
+  const input = document.createElement('input');
+  input.type = 'datetime-local';
+  input.value = task.completedAt || '';
+  input.style.cssText = 'position: fixed; opacity: 0; top: 50%; left: 50%;';
+  document.body.appendChild(input);
+
+  const cleanupTimer = setTimeout(function() {
+    if (document.body.contains(input)) document.body.removeChild(input);
+  }, 5000);
+
+  let changed = false;
+  input.addEventListener('change', function() {
+    changed = true;
+    clearTimeout(cleanupTimer);
+    task.completedAt = this.value || getLocalDateTimeStr();
+    project.updatedAt = new Date().toISOString();
+    saveWorkProjects();
+    renderStatic();
+    showToast('완료일이 수정되었습니다', 'success');
+    if (document.body.contains(input)) document.body.removeChild(input);
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(function() {
+      if (!changed) {
+        clearTimeout(cleanupTimer);
+        if (document.body.contains(input)) document.body.removeChild(input);
+      }
+    }, 200);
+  });
+
+  input.focus();
+  input.showPicker?.();
+}
+window.editWorkTaskCompletedAt = editWorkTaskCompletedAt;
+
+/**
+ * 스테이지 순서 이동 (up/down)
+ */
+function moveStage(projectId, stageIdx, direction) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+
+  const newIdx = stageIdx + (direction === 'up' ? -1 : 1);
+  if (newIdx < 0 || newIdx >= project.stages.length) return;
+
+  // Swap stages
+  const temp = project.stages[stageIdx];
+  project.stages[stageIdx] = project.stages[newIdx];
+  project.stages[newIdx] = temp;
+
+  // Update currentStage if affected
+  if (project.currentStage === stageIdx) {
+    project.currentStage = newIdx;
+  } else if (project.currentStage === newIdx) {
+    project.currentStage = stageIdx;
+  }
+
+  // Update collapse state keys
+  if (appState.collapsedStages) {
+    const keyA = projectId + '-' + stageIdx;
+    const keyB = projectId + '-' + newIdx;
+    const tempCollapse = appState.collapsedStages[keyA];
+    appState.collapsedStages[keyA] = appState.collapsedStages[keyB];
+    appState.collapsedStages[keyB] = tempCollapse;
+  }
+
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+  showToast('단계 순서 변경됨', 'success');
+}
+window.moveStage = moveStage;

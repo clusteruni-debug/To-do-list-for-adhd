@@ -578,8 +578,25 @@ function renderMMReport() {
     return;
   }
 
+  // Generate proportion table
+  const proportionTable = generateMMProportionTable(year, month);
+
+  let proportionHtml = '';
+  if (proportionTable) {
+    proportionHtml = `
+      <div style="margin-top: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">📊 비율 테이블</span>
+          <button type="button" onclick="copyMMProportionTable()" style="padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 13px; cursor: pointer;">📋 비율 복사</button>
+        </div>
+        <pre style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; font-family: 'Pretendard', -apple-system, sans-serif;" id="mm-proportion-text">${escapeHtml(proportionTable)}</pre>
+      </div>
+    `;
+  }
+
   output.innerHTML = `
     <pre style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto; font-family: 'Pretendard', -apple-system, sans-serif;" id="mm-report-text">${escapeHtml(report)}</pre>
+    ${proportionHtml}
   `;
   if (copyBtn) copyBtn.style.display = 'block';
 }
@@ -607,3 +624,25 @@ function copyMMReport() {
   });
 }
 window.copyMMReport = copyMMReport;
+
+/**
+ * Copy MM proportion table to clipboard (Notion-pasteable format).
+ */
+function copyMMProportionTable() {
+  const el = document.getElementById('mm-proportion-text');
+  if (!el) return;
+
+  const text = el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('비율 테이블 클립보드에 복사됨', 'success');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('비율 테이블 클립보드에 복사됨', 'success');
+  });
+}
+window.copyMMProportionTable = copyMMProportionTable;

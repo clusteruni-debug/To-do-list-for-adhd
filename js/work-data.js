@@ -917,6 +917,54 @@ function generateMMReport(year, month) {
   return report;
 }
 
+/**
+ * Generate proportion table for MM report (Notion-pasteable format).
+ * @param {number} year
+ * @param {number} month
+ * @returns {string|null} proportion table text, or null if no data
+ */
+function generateMMProportionTable(year, month) {
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDate = new Date(year, month, 0).getDate();
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDate}`;
+
+  // Collect time per project
+  const projectMinutes = {};
+  appState.workProjects.forEach(project => {
+    (project.stages || []).forEach(stage => {
+      (stage.subcategories || []).forEach(sub => {
+        (sub.tasks || []).forEach(task => {
+          if (task.status === 'completed' && task.completedAt) {
+            const completedDate = task.completedAt.slice(0, 10);
+            if (completedDate >= startDate && completedDate <= endDate) {
+              const name = project.name;
+              if (!projectMinutes[name]) projectMinutes[name] = 0;
+              projectMinutes[name] += (task.actualTime || task.estimatedTime || 30);
+            }
+          }
+        });
+      });
+    });
+  });
+
+  const entries = Object.entries(projectMinutes);
+  if (entries.length === 0) return null;
+
+  const totalMinutes = entries.reduce((s, [, m]) => s + m, 0);
+  if (totalMinutes === 0) return null;
+
+  // Sort by proportion descending
+  entries.sort((a, b) => b[1] - a[1]);
+
+  let table = '프로젝트명 | 비율\n';
+  entries.forEach(([name, minutes]) => {
+    const ratio = (minutes / totalMinutes).toFixed(2);
+    table += name + ' | ' + ratio + '\n';
+  });
+
+  return table.trim();
+}
+
 // ============================================
 // Notion Progress Copy (진행상황 복사)
 // ============================================

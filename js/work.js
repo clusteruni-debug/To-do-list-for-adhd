@@ -893,6 +893,16 @@ function toggleWorkSection(section) {
 }
 window.toggleWorkSection = toggleWorkSection;
 
+// 스테이지 접기/펼치기 (세션 중 유지, 비영속)
+if (!appState.collapsedStages) appState.collapsedStages = {};
+
+function toggleStageCollapse(projectId, stageIdx) {
+  const key = projectId + '-' + stageIdx;
+  appState.collapsedStages[key] = !appState.collapsedStages[key];
+  renderStatic();
+}
+window.toggleStageCollapse = toggleStageCollapse;
+
 /**
  * 대시보드 카드 렌더링
  */
@@ -1035,16 +1045,20 @@ function renderWorkProjectDetail(project) {
           </div>
           <span class="work-project-progress-text">${completedTasks}/${totalTasks} 항목 · ${completedStages}/${project.stages.length} 단계</span>
         </div>
-        <!-- 주요 액션 (1줄) -->
+        <!-- 주요 액션: 노션/슬랙, 양식, 정보 -->
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="work-project-action-btn" onclick="duplicateWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 복제">📋 복제</button>
-          <button class="work-project-action-btn" onclick="holdWorkProject('${escapeAttr(project.id)}')" aria-label="${project.onHold ? '프로젝트 재개' : '프로젝트 보류'}">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
-          <button class="work-project-action-btn" onclick="saveAsTemplate('${escapeAttr(project.id)}')" aria-label="템플릿으로 저장">💾 템플릿</button>
+          <button class="work-project-action-btn" onclick="copyWorkProjectToClipboard('${escapeAttr(project.id)}')">📋 노션/슬랙 복사</button>
+          <button class="work-project-action-btn" onclick="showFormExportMenu(event, '${escapeAttr(project.id)}')">📝 양식 출력</button>
+          <button class="work-project-action-btn" onclick="showMetaEditor('${escapeAttr(project.id)}')">ℹ️ 프로젝트 정보</button>
         </div>
-        <!-- 보조 액션 (2줄) -->
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
-          <button class="work-project-action-btn" style="opacity: 0.7; font-size: 13px;" onclick="archiveWorkProject('${escapeAttr(project.id)}')" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
-          <button class="work-project-action-btn delete" style="opacity: 0.7; font-size: 13px;" onclick="deleteWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 삭제">${svgIcon('trash', 14)} 삭제</button>
+        <!-- 관리 액션: 복제, 보류, 템플릿, 보관 -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; align-items: center;">
+          <button class="work-project-action-btn" style="font-size: 13px;" onclick="duplicateWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 복제">📋 복제</button>
+          <button class="work-project-action-btn" style="font-size: 13px;" onclick="holdWorkProject('${escapeAttr(project.id)}')" aria-label="${project.onHold ? '프로젝트 재개' : '프로젝트 보류'}">${project.onHold ? '▶ 재개' : '⏸ 보류'}</button>
+          <button class="work-project-action-btn" style="font-size: 13px;" onclick="saveAsTemplate('${escapeAttr(project.id)}')" aria-label="템플릿으로 저장">💾 템플릿</button>
+          <button class="work-project-action-btn" style="font-size: 13px; opacity: 0.7;" onclick="archiveWorkProject('${escapeAttr(project.id)}')" aria-label="${project.archived ? '프로젝트 복원' : '프로젝트 보관'}">${project.archived ? '📤 복원' : '📦 보관'}</button>
+          <span style="flex: 1;"></span>
+          <button class="work-project-action-btn delete" style="font-size: 12px; opacity: 0.6;" onclick="deleteWorkProject('${escapeAttr(project.id)}')" aria-label="프로젝트 삭제">${svgIcon('trash', 14)} 삭제</button>
         </div>
       </div>
 
@@ -1071,17 +1085,22 @@ function renderWorkProjectDetail(project) {
           const stageName = getStageName(project, stageIdx);
           const stageClass = stage.completed ? 'completed' : '';
           const subcategories = stage.subcategories || [];
+          const isCollapsed = appState.collapsedStages && appState.collapsedStages[project.id + '-' + stageIdx];
+          const stageTotalTasks = subcategories.reduce((s, sub) => s + sub.tasks.length, 0);
+          const stageCompletedTasks = subcategories.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
 
           return `
             <div class="work-stage ${stageClass}">
               <div class="work-stage-header">
                 <div class="work-stage-title">
+                  <span class="work-stage-collapse-toggle" onclick="toggleStageCollapse('${escapeAttr(project.id)}', ${stageIdx})" title="${isCollapsed ? '펼치기' : '접기'}" style="cursor: pointer; font-size: 12px; color: var(--text-muted); width: 16px; text-align: center; flex-shrink: 0;">${isCollapsed ? '▶' : '▼'}</span>
                   <div class="work-stage-checkbox ${stage.completed ? 'checked' : ''}"
                        onclick="toggleStageComplete('${escapeAttr(project.id)}', ${stageIdx})">
                     ${stage.completed ? '✓' : ''}
                   </div>
                   <span class="work-stage-number">${stageIdx + 1}</span>
                   <span class="work-stage-name" onclick="promptRenameStage('${escapeAttr(project.id)}', ${stageIdx}, '${escapeAttr(stageName)}')" style="cursor: pointer;" title="클릭하여 이름 변경">${escapeHtml(stageName)}</span>
+                  ${stageTotalTasks > 0 ? '<span style="font-size: 12px; color: var(--text-muted); margin-left: 4px;">(' + stageCompletedTasks + '/' + stageTotalTasks + ')</span><span class="work-stage-mini-progress"><span class="work-stage-mini-progress-fill" style="width: ' + Math.round(stageCompletedTasks / stageTotalTasks * 100) + '%"></span></span>' : ''}
                   ${(stage.startDate || stage.endDate) ? (() => {
                     const fmtDate = (d) => d ? (new Date(d).getMonth() + 1) + '/' + new Date(d).getDate() : '';
                     let html = '<span class="work-stage-date" style="margin-left: 8px; font-size: 14px; color: var(--text-muted);">';
@@ -1103,6 +1122,8 @@ function renderWorkProjectDetail(project) {
                   })() : ''}
                 </div>
                 <div style="display: flex; gap: 6px;">
+                  ${stageIdx > 0 ? `<button class="work-stage-add-task" onclick="moveStage('${escapeAttr(project.id)}', ${stageIdx}, 'up')" title="위로 이동" aria-label="위로 이동">▲</button>` : ''}
+                  ${stageIdx < project.stages.length - 1 ? `<button class="work-stage-add-task" onclick="moveStage('${escapeAttr(project.id)}', ${stageIdx}, 'down')" title="아래로 이동" aria-label="아래로 이동">▼</button>` : ''}
                   <button class="work-stage-add-task" onclick="copyStageToSlack('${escapeAttr(project.id)}', ${stageIdx})" title="슬랙용 복사" aria-label="슬랙용 복사">💬</button>
                   <button class="work-stage-add-task" onclick="promptRenameStage('${escapeAttr(project.id)}', ${stageIdx}, '${escapeAttr(stageName)}')" title="단계 이름 변경" aria-label="단계 이름 변경">${svgIcon('edit', 14)}</button>
                   <button class="work-stage-add-task" onclick="showWorkModal('stage-deadline', '${escapeAttr(project.id)}', ${stageIdx})" title="단계 일정 설정" aria-label="단계 일정 설정">📅</button>
@@ -1111,7 +1132,7 @@ function renderWorkProjectDetail(project) {
                 </div>
               </div>
 
-              ${subcategories.length > 0 ? `
+              ${!isCollapsed && subcategories.length > 0 ? `
                 ${subcategories.map((subcat, subcatIdx) => `
                   <div class="work-subcategory">
                     <div class="work-subcategory-header">
@@ -1151,7 +1172,7 @@ function renderWorkProjectDetail(project) {
                     ` : '<div style="color: var(--text-muted); font-size: 14px; padding: 8px;">항목 없음</div>'}
                   </div>
                 `).join('')}
-              ` : '<div style="color: var(--text-muted); font-size: 15px; padding: 10px;">중분류를 추가하세요</div>'}
+              ` : !isCollapsed ? '<div style="color: var(--text-muted); font-size: 15px; padding: 10px;">중분류를 추가하세요</div>' : ''}
             </div>
           `;
         }).join('')}
@@ -1162,18 +1183,6 @@ function renderWorkProjectDetail(project) {
             + 새 단계 추가
           </button>
         </div>
-      </div>
-
-      <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-        <button class="work-copy-btn" onclick="copyWorkProjectToClipboard('${escapeAttr(project.id)}')">
-          📋 노션/슬랙용 복사
-        </button>
-        <button class="work-copy-btn" onclick="showFormExportMenu(event, '${escapeAttr(project.id)}')">
-          📝 양식 출력
-        </button>
-        <button class="work-copy-btn" onclick="showMetaEditor('${escapeAttr(project.id)}')">
-          ℹ️ 프로젝트 정보
-        </button>
       </div>
 
       <!-- 프로젝트 정보 요약 (meta가 있을 때) -->
@@ -1224,7 +1233,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
   const pulseColor = PULSE_COLORS[taskPulse] || 'transparent';
 
   return `
-    <div class="work-task-item" style="${pulseColor !== 'transparent' ? 'border-left: 3px solid ' + pulseColor + ';' : ''}">
+    <div class="work-task-item${task.status === 'completed' ? ' work-task-completed' : ''}" style="${pulseColor !== 'transparent' ? 'border-left: 3px solid ' + pulseColor + ';' : ''}">
       <div class="work-task-header">
         <div class="work-task-checkbox ${task.status === 'completed' ? 'checked' : ''}"
              onclick="toggleWorkTaskComplete('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})"
@@ -1239,6 +1248,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
               onclick="promptRenameWorkTask('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeAttr(task.title)}')"
               title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
         ${task.canStartEarly ? '<span style="font-size: 11px; background: rgba(102,126,234,0.15); color: #667eea; padding: 1px 6px; border-radius: 4px; white-space: nowrap;" title="미리 시작 가능">선제</span>' : ''}
+        ${task.status === 'completed' && task.completedAt ? `<span class="work-task-completed-at" onclick="event.stopPropagation(); editWorkTaskCompletedAt('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="클릭하여 완료일 수정" style="font-size: 12px; color: #48bb78; cursor: pointer; white-space: nowrap; padding: 1px 6px; background: rgba(72,187,120,0.1); border-radius: 4px;">✓ ${escapeHtml(task.completedAt.substring(5, 10).replace('-', '/'))}</span>` : ''}
         ${deadlineHtml}
         <div class="work-task-actions">
           <button class="work-task-action" onclick="promptRenameWorkTask('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeAttr(task.title)}')">${svgIcon('edit', 14)}</button>
@@ -1333,7 +1343,7 @@ function renderWorkGeneralView() {
                   <div class="work-task-header">
                     <div class="work-task-checkbox checked" onclick="uncompleteTask('${escapeAttr(task.id)}')" title="완료 취소">✓</div>
                     <span class="work-task-title completed">${escapeHtml(task.title)}</span>
-                    ${task.completedAt ? '<span style="font-size: 13px; color: var(--text-muted);">' + task.completedAt.substring(5, 10).replace('-', '/') + '</span>' : ''}
+                    ${task.completedAt ? '<span style="font-size: 13px; color: var(--text-muted);">' + escapeHtml(task.completedAt.substring(5, 10).replace('-', '/')) + '</span>' : ''}
                   </div>
                 </div>
               `).join('')}

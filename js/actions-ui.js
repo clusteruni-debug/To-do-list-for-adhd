@@ -304,10 +304,42 @@ function toggleDetailedSubtask(index) {
 function toggleSubtaskComplete(taskId, subtaskIndex) {
   const task = appState.tasks.find(t => t.id === taskId);
   if (task && task.subtasks && task.subtasks[subtaskIndex]) {
-    task.subtasks[subtaskIndex].completed = !task.subtasks[subtaskIndex].completed;
-    task.subtasks[subtaskIndex].completedAt = task.subtasks[subtaskIndex].completed
-      ? new Date().toISOString()
-      : null;
+    const subtask = task.subtasks[subtaskIndex];
+    subtask.completed = !subtask.completed;
+    subtask.completedAt = subtask.completed ? new Date().toISOString() : null;
+
+    // 서브태스크 완료/해제 시 completionLog 관리
+    if (subtask.completed) {
+      const now = new Date();
+      const dateKey = getLocalDateStr(now);
+      const timeStr = now.toTimeString().slice(0, 5);
+      if (!appState.completionLog[dateKey]) appState.completionLog[dateKey] = [];
+      appState.completionLog[dateKey].push({
+        t: task.title + ' > ' + subtask.text,
+        c: task.category || '기타',
+        at: timeStr,
+        sub: true
+      });
+      saveCompletionLog();
+    } else {
+      // 해제 시 오늘 로그에서 삭제 + soft-delete (Firebase 부활 방지)
+      const dateKey = getLocalDateStr(new Date());
+      const logTitle = task.title + ' > ' + subtask.text;
+      if (appState.completionLog[dateKey]) {
+        const idx = appState.completionLog[dateKey].findIndex(
+          e => e.t === logTitle && e.sub === true
+        );
+        if (idx !== -1) {
+          const delKey = dateKey + '|' + logTitle + '|' + appState.completionLog[dateKey][idx].at;
+          if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+          appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+          appState.completionLog[dateKey].splice(idx, 1);
+          if (appState.completionLog[dateKey].length === 0) delete appState.completionLog[dateKey];
+          saveCompletionLog();
+        }
+      }
+    }
+
     saveState();
     renderStatic();
   }

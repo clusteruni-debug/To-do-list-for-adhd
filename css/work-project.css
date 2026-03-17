@@ -365,3 +365,32 @@
       border-color: #667eea;
       color: #667eea;
     }
+
+    /* 스테이지 미니 프로그레스 바 */
+    .work-stage-mini-progress {
+      display: inline-block;
+      width: 40px;
+      height: 4px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      margin-left: 6px;
+      vertical-align: middle;
+      overflow: hidden;
+    }
+
+    .work-stage-mini-progress-fill {
+      display: block;
+      height: 100%;
+      background: #48bb78;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    /* 완료된 태스크 dimming */
+    .work-task-completed {
+      opacity: 0.5;
+    }
+
+    .work-task-completed:hover {
+      opacity: 0.8;
+    }
