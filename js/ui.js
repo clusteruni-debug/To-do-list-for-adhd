@@ -567,7 +567,16 @@ function toggleFocusMode() {
 function formatDeadline(deadline) {
   const now = new Date();
   const d = new Date(deadline);
+  if (isNaN(d.getTime())) return '';
+
   const hoursLeft = (d - now) / (1000 * 60 * 60);
+
+  if (hoursLeft < 0) {
+    const overdue = Math.abs(hoursLeft);
+    if (overdue < 1) return `${Math.round(overdue * 60)}분 지남`;
+    if (overdue < 24) return `${Math.round(overdue)}시간 지남`;
+    return `${Math.round(overdue / 24)}일 지남`;
+  }
 
   if (hoursLeft < 1) {
     return `${Math.round(hoursLeft * 60)}분 후`;

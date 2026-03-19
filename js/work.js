@@ -174,15 +174,16 @@ function renderWorkProjects() {
               <div class="work-general-item-wrapper">
                 <div class="work-general-item">
                   <button class="task-check-btn" onclick="completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">○</button>
-                  <span class="work-general-item-title" onclick="editTask('${escapeAttr(task.id)}')">${escapeHtml(task.title)}</span>
+                  <span class="work-general-item-title" title="${escapeAttr(task.title)}" onclick="editTask('${escapeAttr(task.id)}')">${escapeHtml(task.title)}</span>
+                  ${task.deadline ? `<span class="work-general-deadline">${escapeHtml(formatDeadline(task.deadline))}</span>` : ''}
                   ${task.subtasks && task.subtasks.length > 0 ? `
-                    <span class="subtask-badge" onclick="event.stopPropagation(); toggleWorkGeneralSubtask('${escapeAttr(task.id)}')">
+                    <span class="subtask-badge">
                       📋${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}
                     </span>
                   ` : ''}
                   <button class="work-general-delete-btn" onclick="deleteTask('${escapeAttr(task.id)}')" title="삭제" aria-label="작업 삭제">×</button>
                 </div>
-                ${task.subtasks && task.subtasks.length > 0 && appState.expandedWorkGeneralSubtasks && appState.expandedWorkGeneralSubtasks[task.id] ? `
+                ${task.subtasks && task.subtasks.length > 0 ? `
                   <div class="work-general-subtasks">
                     ${task.subtasks.map((st, idx) => `
                       <div class="work-general-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
