@@ -27,6 +27,41 @@ function loadCommuteTracker() {
 function setCommuteSubTab(tab) { appState.commuteSubTab = tab; renderStatic(); }
 window.setCommuteSubTab = setCommuteSubTab;
 
+function getCommuteViewDate() {
+  return appState.commuteViewDate || getLocalDateStr();
+}
+
+function setCommuteViewDate(dateStr) {
+  const today = getLocalDateStr();
+  appState.commuteViewDate = (dateStr === today) ? null : dateStr;
+  renderStatic();
+}
+window.setCommuteViewDate = setCommuteViewDate;
+
+function commuteViewDatePrev() {
+  const current = getCommuteViewDate();
+  const d = new Date(current + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  setCommuteViewDate(getLocalDateStr(d));
+}
+window.commuteViewDatePrev = commuteViewDatePrev;
+
+function commuteViewDateNext() {
+  const current = getCommuteViewDate();
+  const today = getLocalDateStr();
+  if (current >= today) return; // 미래 불가
+  const d = new Date(current + 'T12:00:00');
+  d.setDate(d.getDate() + 1);
+  setCommuteViewDate(getLocalDateStr(d));
+}
+window.commuteViewDateNext = commuteViewDateNext;
+
+function commuteViewDateToday() {
+  appState.commuteViewDate = null;
+  renderStatic();
+}
+window.commuteViewDateToday = commuteViewDateToday;
+
 function openCommuteRouteModal(routeId) {
   appState.commuteRouteModal = routeId || 'add';
   renderStatic();
@@ -86,33 +121,50 @@ window.deleteCommuteRoute = deleteCommuteRoute;
 
 function selectCommuteRoute(routeId, direction) {
   const dir = direction || appState.commuteSubTab;
+  const dateStr = getCommuteViewDate();
   const today = getLocalDateStr();
-  if (!appState.commuteTracker.trips[today]) appState.commuteTracker.trips[today] = {};
-  const rhythm = appState.lifeRhythm.today;
+  if (!appState.commuteTracker.trips[dateStr]) appState.commuteTracker.trips[dateStr] = {};
+
+  // 오늘이면 lifeRhythm.today, 과거면 history에서 시간 가져오기
+  const rhythm = (dateStr === today) ? appState.lifeRhythm.today : (appState.lifeRhythm.history[dateStr] || {});
   let departTime = null, arriveTime = null, duration = null;
   if (dir === 'morning') { departTime = rhythm.homeDepart; arriveTime = rhythm.workArrive; }
   else { departTime = rhythm.workDepart; arriveTime = rhythm.homeArrive; }
-  if (departTime && arriveTime) {
+
+  // 과거 날짜에 리듬 데이터가 없으면 소요시간 수동 입력
+  if (!departTime && !arriveTime && dateStr !== today) {
+    const route = appState.commuteTracker.routes.find(r => r.id === routeId);
+    const defaultDur = route ? route.expectedDuration : 45;
+    const input = prompt('소요시간을 입력하세요 (분):', String(defaultDur));
+    if (input === null) return;
+    const parsed = parseInt(input);
+    if (isNaN(parsed) || parsed < 1 || parsed > 480) {
+      showToast('1~480분 사이로 입력해주세요', 'error'); return;
+    }
+    duration = parsed;
+  } else if (departTime && arriveTime) {
     const [dh, dm] = departTime.split(':').map(Number);
     const [ah, am] = arriveTime.split(':').map(Number);
     duration = (ah * 60 + am) - (dh * 60 + dm);
     if (duration < 0) duration += 24 * 60;
   }
-  appState.commuteTracker.trips[today][dir] = {
+
+  appState.commuteTracker.trips[dateStr][dir] = {
     routeId: routeId, departTime: departTime, arriveTime: arriveTime,
-    duration: duration, conditions: (appState.commuteTracker.trips[today][dir] || {}).conditions || 'clear'
+    duration: duration, conditions: (appState.commuteTracker.trips[dateStr][dir] || {}).conditions || 'clear'
   };
   appState.commuteSelectedRoute[dir] = routeId;
   saveCommuteTracker(); renderStatic();
-  showToast('🚌 루트가 기록되었습니다', 'success');
+  const label = dateStr === today ? '오늘' : dateStr;
+  showToast('🚌 ' + label + ' 루트가 기록되었습니다', 'success');
 }
 window.selectCommuteRoute = selectCommuteRoute;
 
 function setCommuteCondition(condition) {
-  const today = getLocalDateStr();
+  const dateStr = getCommuteViewDate();
   const dir = appState.commuteSubTab;
-  if (appState.commuteTracker.trips[today] && appState.commuteTracker.trips[today][dir]) {
-    appState.commuteTracker.trips[today][dir].conditions = condition;
+  if (appState.commuteTracker.trips[dateStr] && appState.commuteTracker.trips[dateStr][dir]) {
+    appState.commuteTracker.trips[dateStr][dir].conditions = condition;
     saveCommuteTracker(); renderStatic();
   }
 }
@@ -267,9 +319,10 @@ function getRecentCommuteDetail(direction) {
 function renderCommuteTab() {
   const routes = appState.commuteTracker.routes.filter(r => r.isActive);
   const today = getLocalDateStr();
-  const todayTrips = appState.commuteTracker.trips[today] || {};
+  const viewDate = getCommuteViewDate();
+  const viewTrips = appState.commuteTracker.trips[viewDate] || {};
   const subTab = appState.commuteSubTab;
-  const rhythm = appState.lifeRhythm.today;
+  const rhythm = (viewDate === today) ? appState.lifeRhythm.today : (appState.lifeRhythm.history[viewDate] || {});
 
   let modalHtml = '';
   if (appState.commuteRouteModal) {
@@ -308,19 +361,36 @@ function renderCommuteTab() {
     '<button class="commute-sub-tab ' + (subTab === 'stats' ? 'active' : '') + '" onclick="setCommuteSubTab(\'stats\')" aria-label="통계">📊 통계</button></div>';
 
   if (subTab === 'morning' || subTab === 'evening') {
-    content += renderCommuteDayView(subTab, todayTrips, rhythm, routes);
+    content += renderCommuteDayView(subTab, viewTrips, rhythm, routes, viewDate);
   } else if (subTab === 'history') {
     content += renderCommuteHistoryView();
   } else { content += renderCommuteStatsView(routes); }
   return content + modalHtml;
 }
 
-function renderCommuteDayView(direction, todayTrips, rhythm, routes) {
+function renderCommuteDayView(direction, dayTrips, rhythm, routes, viewDate) {
   const dirLabel = direction === 'morning' ? '출근' : '퇴근';
-  const trip = todayTrips[direction];
+  const trip = dayTrips[direction];
   const selectedRouteId = trip ? trip.routeId : (appState.commuteSelectedRoute[direction] || null);
   const filteredRoutes = routes.filter(r => r.type === direction || r.type === 'both');
+  const today = getLocalDateStr();
+  const isToday = viewDate === today;
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const vd = new Date(viewDate + 'T12:00:00');
+  const dateLabel = isToday ? '오늘' : `${vd.getMonth()+1}/${vd.getDate()} (${dayNames[vd.getDay()]})`;
+  const isAtToday = viewDate >= today;
+
   let html = '';
+  // 날짜 네비게이션
+  html += '<div class="commute-date-nav">';
+  html += '<button class="commute-date-nav-btn" onclick="commuteViewDatePrev()" aria-label="이전 날짜">&lt;</button>';
+  html += '<span class="commute-date-nav-label' + (isToday ? '' : ' past') + '">' + dateLabel + '</span>';
+  if (!isToday) {
+    html += '<button class="commute-date-nav-btn today-btn" onclick="commuteViewDateToday()" aria-label="오늘로 이동">오늘</button>';
+  }
+  html += '<button class="commute-date-nav-btn" onclick="commuteViewDateNext()"' + (isAtToday ? ' disabled' : '') + ' aria-label="다음 날짜">&gt;</button>';
+  html += '</div>';
+
   const depart = direction === 'morning' ? rhythm.homeDepart : rhythm.workDepart;
   const arrive = direction === 'morning' ? rhythm.workArrive : rhythm.homeArrive;
   const departLabel = direction === 'morning' ? '🚶 집 출발' : '🚀 회사 출발';
@@ -456,12 +526,31 @@ function renderCommuteHistoryView() {
       html += '</div>';
     }
 
+    // 해당 날짜에 출근/퇴근 중 빠진 기록이 있으면 추가 버튼 표시
+    if (!hasMorning || !hasEvening) {
+      html += '<div class="commute-history-add-row">';
+      if (!hasMorning) {
+        html += '<button class="commute-history-add-btn" onclick="goToCommuteDate(\'' + escapeAttr(dateStr) + '\', \'morning\')" title="출근 기록 추가">+ 🌅 출근</button>';
+      }
+      if (!hasEvening) {
+        html += '<button class="commute-history-add-btn" onclick="goToCommuteDate(\'' + escapeAttr(dateStr) + '\', \'evening\')" title="퇴근 기록 추가">+ 🌆 퇴근</button>';
+      }
+      html += '</div>';
+    }
+
     html += '</div>';
   });
 
   html += '</div>';
   return html;
 }
+
+function goToCommuteDate(dateStr, direction) {
+  appState.commuteViewDate = dateStr;
+  appState.commuteSubTab = direction;
+  renderStatic();
+}
+window.goToCommuteDate = goToCommuteDate;
 
 function renderCommuteStatsView(routes) {
   let html = '';

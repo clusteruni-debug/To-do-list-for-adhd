@@ -416,6 +416,7 @@ const appState = {
     }
   },
   commuteSubTab: 'morning',
+  commuteViewDate: null, // null = today, string = 'YYYY-MM-DD' for past dates
   commuteRouteModal: null,
   commuteSelectedRoute: {},
   // 히스토리/캘린더 상태
