@@ -756,6 +756,24 @@ function toggleStageCollapse(projectId, stageIdx) {
 window.toggleStageCollapse = toggleStageCollapse;
 
 /**
+ * 작업 로그 접기/펼치기 (DOM 직접 조작 — renderStatic 호출 안 함)
+ */
+function toggleWorkLogs(taskUid) {
+  const hidden = document.getElementById('logs-hidden-' + taskUid);
+  const toggle = document.getElementById('logs-toggle-' + taskUid);
+  if (!hidden || !toggle) return;
+  const isOpen = hidden.classList.contains('expanded');
+  if (isOpen) {
+    hidden.classList.remove('expanded');
+    toggle.textContent = toggle.textContent.replace('▼', '▶');
+  } else {
+    hidden.classList.add('expanded');
+    toggle.textContent = toggle.textContent.replace('▶', '▼');
+  }
+}
+window.toggleWorkLogs = toggleWorkLogs;
+
+/**
  * 대시보드 카드 렌더링
  */
 function renderWorkDashboardCard(project) {
@@ -899,6 +917,7 @@ function renderWorkProjectDetail(project) {
         </div>
         <!-- 주요 액션 + 더보기 -->
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <button class="work-project-action-btn" onclick="copyProjectToSlack('${escapeAttr(project.id)}')">💬 슬랙 복사</button>
           <button class="work-project-action-btn" onclick="showFormExportMenu(event, '${escapeAttr(project.id)}')">📝 양식 출력</button>
           <button class="work-project-action-btn" onclick="showMetaEditor('${escapeAttr(project.id)}')">ℹ️ 프로젝트 정보</button>
           <button class="work-project-action-btn" onclick="showProjectMoreMenu(event, '${escapeAttr(project.id)}')">⋯ 더보기</button>
@@ -1101,7 +1120,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
         </span>
         <span class="work-task-title ${task.status === 'completed' ? 'completed' : ''}"
               onclick="promptRenameWorkTask('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx}, '${escapeAttr(task.title)}')"
-              title="클릭하여 이름 변경">${escapeHtml(task.title)}</span>
+              title="${escapeAttr(task.title)}">${escapeHtml(task.title)}</span>
         ${task.canStartEarly ? '<span style="font-size: 11px; background: var(--accent-primary-alpha); color: var(--accent-primary); padding: 1px 6px; border-radius: 4px; white-space: nowrap;" title="미리 시작 가능">선제</span>' : ''}
         ${task.status === 'completed' && task.completedAt ? `<span class="work-task-completed-at" onclick="event.stopPropagation(); editWorkTaskCompletedAt('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="클릭하여 완료일 수정" style="font-size: 12px; color: var(--accent-success); cursor: pointer; white-space: nowrap; padding: 1px 6px; background: var(--accent-success-alpha); border-radius: 4px;">✓ ${escapeHtml(task.completedAt.substring(5, 10).replace('-', '/'))}</span>` : ''}
         ${deadlineHtml}
@@ -1122,6 +1141,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
             const otherLogs = task.logs.filter(l => l.content !== '✓ 완료');
             const pid = escapeAttr(projectId);
             const si = Number(stageIdx), sci = Number(subcatIdx), ti = Number(taskIdx);
+            const taskUid = pid + '-' + si + '-' + sci + '-' + ti;
             let html = '';
             if (completionLogs.length > 0) {
               const lastIdx = task.logs.reduce((found, l, i) => l.content === '✓ 완료' ? i : found, -1);
@@ -1135,7 +1155,24 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
                   '<button class="work-task-log-action" onclick="deleteWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + lastIdx + ')" aria-label="기록 삭제">×</button>' +
                 '</div></div>';
             }
-            otherLogs.forEach(log => {
+            // 최근 3개만 표시, 나머지는 접기
+            const MAX_VISIBLE_LOGS = 3;
+            const hiddenLogs = otherLogs.length > MAX_VISIBLE_LOGS ? otherLogs.slice(0, otherLogs.length - MAX_VISIBLE_LOGS) : [];
+            const visibleLogs = otherLogs.length > MAX_VISIBLE_LOGS ? otherLogs.slice(otherLogs.length - MAX_VISIBLE_LOGS) : otherLogs;
+            if (hiddenLogs.length > 0) {
+              html += '<div class="work-task-logs-collapsed" id="logs-hidden-' + taskUid + '">';
+              hiddenLogs.forEach(log => {
+                const actualIdx = task.logs.findIndex(l => l.date === log.date && l.content === log.content);
+                html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderFormattedText(log.content) + '</div>' +
+                  '<div class="work-task-log-actions">' +
+                    '<button class="work-task-log-action" onclick="editWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 편집">✏️</button>' +
+                    '<button class="work-task-log-action" onclick="deleteWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button>' +
+                  '</div></div>';
+              });
+              html += '</div>';
+              html += '<div class="work-task-logs-toggle" onclick="toggleWorkLogs(\'' + taskUid + '\')" id="logs-toggle-' + taskUid + '">▶ 이전 기록 ' + hiddenLogs.length + '개</div>';
+            }
+            visibleLogs.forEach(log => {
               const actualIdx = task.logs.findIndex(l => l.date === log.date && l.content === log.content);
               html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderFormattedText(log.content) + '</div>' +
                 '<div class="work-task-log-actions">' +

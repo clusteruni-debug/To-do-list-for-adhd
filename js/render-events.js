@@ -136,7 +136,7 @@ function renderEventsTab() {
                       <div class="event-card-main">
                         <div class="event-title">${telegramBadge}${escapeHtml(task.title)}${hasSubtasks ? ' <span class="event-subtask-badge">' + stDone + '/' + stTotal + '</span>' : ''}</div>
                         ${metaStr ? '<div class="event-meta-info">' + escapeHtml(metaStr) + '</div>' : ''}
-                        ${task.description ? '<div class="event-description">' + escapeHtml(task.description.slice(0, 60)) + (task.description.length > 60 ? '...' : '') + '</div>' : ''}
+                        ${task.description ? '<div class="event-description" title="' + escapeAttr(task.description) + '">' + escapeHtml(task.description) + '</div>' : ''}
                       </div>
                       ${dateDisplay ? '<span class="event-compact-date">' + dateDisplay + '</span>' : ''}
                       ${_eventBulkSelectMode ? '' : `<div class="event-actions">

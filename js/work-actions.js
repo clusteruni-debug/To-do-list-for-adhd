@@ -600,45 +600,37 @@ function copyWorkProjectToClipboard(projectId) {
   const project = appState.workProjects.find(p => p.id === projectId);
   if (!project) return;
 
-  let text = `📋 ${project.name}\n`;
-  text += `현재 단계: ${getStageName(project, project.currentStage)}\n`;
-  text += `─────────────────\n\n`;
+  let lines = [project.name, ''];
 
   project.stages.forEach((stage, idx) => {
     const hasContent = stage.subcategories && stage.subcategories.some(s => s.tasks.length > 0);
     if (!hasContent) return;
 
     const stageName = getStageName(project, idx);
-    const isCurrent = idx === project.currentStage;
-    text += `${isCurrent ? '▶ ' : ''}${idx + 1}. ${stageName}\n`;
+    const subcats = stage.subcategories || [];
+    const total = subcats.reduce((s, sub) => s + sub.tasks.length, 0);
+    const done = subcats.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
+    const stageStatus = total > 0 && done === total ? ' [완료]' : '';
+    lines.push('■ ' + stageName + stageStatus);
 
-    stage.subcategories.forEach(subcat => {
+    subcats.forEach(subcat => {
       if (subcat.tasks.length === 0) return;
-      text += `\n  📁 ${subcat.name}\n`;
+      const isGeneral = subcat.name === '일반';
+      if (!isGeneral) lines.push(subcat.name + ':');
 
       subcat.tasks.forEach(task => {
-        const statusIcon = task.status === 'completed' ? '✓' : task.status === 'in-progress' ? '→' : task.status === 'blocked' ? '⏸' : '○';
-        text += `    ${statusIcon} ${task.title}\n`;
-        task.logs.forEach(log => {
-          text += `       └ ${log.date}: ${log.content}\n`;
+        lines.push(_fmtTaskLine(task, isGeneral ? '' : '  '));
+        // 상세 모드: 로그도 포함
+        const recentLogs = task.logs ? task.logs.filter(l => l.content !== '✓ 완료').slice(-2) : [];
+        recentLogs.forEach(log => {
+          lines.push('    ' + log.date + ': ' + log.content);
         });
       });
     });
-    text += '\n';
+    lines.push('');
   });
 
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('클립보드에 복사됨!', 'success');
-  }).catch(() => {
-    // 클립보드 API 실패 시 textarea fallback
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); showToast('클립보드에 복사됨!', 'success'); }
-    catch(e) { showToast('복사 실패 — 브라우저 권한을 확인하세요', 'error'); }
-    finally { document.body.removeChild(ta); }
-  });
+  _copyText(lines.join('\n').trim(), '클립보드에 복사됨');
 }
 window.copyWorkProjectToClipboard = copyWorkProjectToClipboard;
 

@@ -210,6 +210,18 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
     });
   }
 
+  // 기록 추가 모달: "저장 + 복사" 버튼 추가
+  if (type === 'log') {
+    const actions = modal.querySelector('.work-modal-actions');
+    if (actions) {
+      actions.innerHTML = `
+        <button class="cancel" onclick="closeWorkModal()">취소</button>
+        <button class="confirm" onclick="confirmWorkModalAndCopy()" style="background: var(--accent-primary);">저장 + 복사</button>
+        <button class="confirm" onclick="confirmWorkModal()">저장</button>
+      `;
+    }
+  }
+
   // textarea에 Tab키 + auto-resize 초기화
   body.querySelectorAll('textarea').forEach(ta => initEnhancedTextarea(ta));
 
@@ -228,9 +240,9 @@ function closeWorkModal() {
   const modal = document.getElementById('work-input-modal');
   modal.classList.remove('show');
 
-  // Restore default modal actions (MM report modal replaces them)
+  // Always restore default modal actions (log modal / MM report replaces them)
   const actions = modal.querySelector('.work-modal-actions');
-  if (actions && !actions.querySelector('.confirm')) {
+  if (actions) {
     actions.innerHTML = `
       <button class="cancel" onclick="closeWorkModal()">취소</button>
       <button class="confirm" onclick="confirmWorkModal()">확인</button>
@@ -413,6 +425,41 @@ function confirmWorkModal() {
   closeWorkModal();
 }
 window.confirmWorkModal = confirmWorkModal;
+
+/**
+ * 기록 저장 + 해당 작업을 슬랙 포맷으로 복사
+ */
+function confirmWorkModalAndCopy() {
+  const { type, projectId, stageIdx, subcategoryIdx, taskIdx } = workModalState;
+  if (type !== 'log') { confirmWorkModal(); return; }
+  if (taskIdx === null || taskIdx === undefined) { confirmWorkModal(); return; }
+
+  const content = document.getElementById('work-input-content').value.trim();
+  if (!content) { showToast('내용을 입력하세요', 'error'); return; }
+
+  // 저장 (addWorkLog와 동일 로직, toast 없이)
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) { showToast('프로젝트를 찾을 수 없습니다', 'error'); return; }
+  const task = project.stages[stageIdx]?.subcategories?.[subcategoryIdx]?.tasks?.[taskIdx];
+  if (!task) { showToast('작업을 찾을 수 없습니다', 'error'); return; }
+
+  if (!task.logs) task.logs = [];
+  task.logs.push({ date: getLocalDateStr(), content: content });
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+
+  // 슬랙 포맷으로 복사 (toast: "기록 저장 + 복사됨")
+  let copyText = _fmtTaskLine(task, '');
+  const logs = task.logs.filter(l => l.content !== '✓ 완료').slice(-3);
+  if (logs.length > 0) {
+    logs.forEach(log => { copyText += '\n  ' + log.date + ': ' + log.content; });
+  }
+  _copyText(copyText, '기록 저장 + 복사됨');
+
+  closeWorkModal();
+}
+window.confirmWorkModalAndCopy = confirmWorkModalAndCopy;
 
 /**
  * 템플릿 적용

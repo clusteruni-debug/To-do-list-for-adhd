@@ -47,6 +47,12 @@
       padding: 2px 6px;
       border-radius: 4px;
       transition: background 0.2s;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.4;
+      min-width: 0;
     }
 
     .work-task-title:hover {
@@ -155,6 +161,27 @@
 
     .work-task-log-action:hover {
       background: var(--bg-tertiary);
+    }
+
+    /* 로그 접기/펼치기 */
+    .work-task-logs-collapsed {
+      display: none;
+    }
+
+    .work-task-logs-collapsed.expanded {
+      display: block;
+    }
+
+    .work-task-logs-toggle {
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 0;
+      user-select: none;
+    }
+
+    .work-task-logs-toggle:hover {
+      color: var(--accent-primary);
     }
 
     .work-log-add {

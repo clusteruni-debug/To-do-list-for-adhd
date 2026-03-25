@@ -256,6 +256,10 @@
     .life-item-title {
       font-size: 16px;
       color: var(--text-primary);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .life-item-meta {

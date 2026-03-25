@@ -305,138 +305,103 @@ function duplicateWorkProject(projectId) {
 }
 window.duplicateWorkProject = duplicateWorkProject;
 
-/**
- * 프로젝트 슬랙 형식으로 클립보드 복사
- * - 슬랙에 붙여넣기 용도의 체크리스트 텍스트 생성
- */
-function copyProjectToSlack(projectId) {
-  const project = appState.workProjects.find(p => p.id === projectId);
-  if (!project) return;
+// ============================================
+// 슬랙/노션 복사 — 통합 포맷 헬퍼
+// ============================================
 
-  const statusLabel = {
-    'not-started': '',
-    'in-progress': '[진행중]',
-    'completed': '[완료]',
-    'blocked': '[보류]'
-  };
+const _STATUS_LABEL = {
+  'not-started': '',
+  'in-progress': '[진행중]',
+  'completed': '[완료]',
+  'blocked': '[보류]'
+};
 
-  // 마감일 포맷 헬퍼
-  const fmtDeadline = (task) => {
-    if (!task.deadline) return '';
-    const d = new Date(task.deadline);
-    return ' ~' + (d.getMonth() + 1) + '/' + d.getDate();
-  };
+/** 마감일 → " ~3/28" */
+function _fmtDeadline(task) {
+  if (!task.deadline) return '';
+  const d = new Date(task.deadline);
+  if (isNaN(d.getTime())) return '';
+  return ' ~' + (d.getMonth() + 1) + '/' + d.getDate();
+}
 
-  let lines = [];
-  lines.push('[ ' + project.name + ' 진행 리스트 ]');
-  lines.push('');
+/** 작업 한 줄 포맷: "- ✓ 제목 [진행중] ~3/28" */
+function _fmtTaskLine(task, indent) {
+  const prefix = indent || '';
+  const done = task.status === 'completed';
+  const status = done ? '' : (_STATUS_LABEL[task.status] || '');
+  const deadline = _fmtDeadline(task);
+  let line = prefix + '- ' + (done ? '✓ ' : '') + task.title;
+  if (status) line += ' ' + status;
+  if (deadline) line += deadline;
+  return line;
+}
 
-  project.stages.forEach((stage, stageIdx) => {
-    const stageName = getStageName(project, stageIdx);
-    const subcats = stage.subcategories || [];
-    if (subcats.length === 0) return;
-
-    // 단계별 완료율 계산
-    const total = subcats.reduce((s, sub) => s + sub.tasks.length, 0);
-    const done = subcats.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
-    const stageStatus = total > 0 && done === total ? ' ✅' : '';
-
-    lines.push('■ ' + stageName + stageStatus);
-
-    subcats.forEach(sub => {
-      // 중분류명이 "일반"이면 생략하고 작업만 나열
-      const isGeneral = sub.name === '일반';
-
-      if (!isGeneral) {
-        // 중분류에 작업이 있으면 중분류명을 상위 항목으로 표시
-        const subDone = sub.tasks.filter(t => t.status === 'completed').length;
-        const subStatus = sub.tasks.length > 0 && subDone === sub.tasks.length ? ' [완료]' : '';
-        lines.push(sub.name + ':' + subStatus);
-
-        sub.tasks.forEach(task => {
-          const status = statusLabel[task.status] || '';
-          const deadline = fmtDeadline(task);
-          const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
-          let line = '  ' + task.title;
-          if (status) line += ' ' + status;
-          if (deadline) line += deadline;
-          if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
-          lines.push(line);
-        });
-      } else {
-        // "일반" 중분류: 작업을 최상위로 나열
-        sub.tasks.forEach(task => {
-          const status = statusLabel[task.status] || '';
-          const deadline = fmtDeadline(task);
-          const lastLog = task.logs && task.logs.length > 0 ? task.logs[task.logs.length - 1] : null;
-          let line = task.title;
-          if (status) line += ': ' + status;
-          if (deadline) line += deadline;
-          if (lastLog && lastLog.content !== '✓ 완료') line += ' - ' + lastLog.content;
-          lines.push(line);
-        });
-      }
-    });
-
-    lines.push(''); // 단계 사이 빈 줄
-  });
-
-  const text = lines.join('\n').trim();
+/** 클립보드에 복사 + toast (fallback 포함) */
+function _copyText(text, toastMsg) {
   navigator.clipboard.writeText(text).then(() => {
-    showToast('슬랙용 진행 리스트 복사됨', 'success');
+    showToast(toastMsg || '복사됨', 'success');
   }).catch(() => {
-    // 클립보드 API 실패 시 fallback
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showToast('슬랙용 진행 리스트 복사됨', 'success');
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast(toastMsg || '복사됨', 'success'); }
+    catch(e) { showToast('복사 실패 — 브라우저 권한을 확인하세요', 'error'); }
+    finally { document.body.removeChild(ta); }
   });
 }
-window.copyProjectToSlack = copyProjectToSlack;
 
-/**
- * 본업 프로젝트 단계(stage) 단위 슬랙 복사
- */
-function copyStageToSlack(projectId, stageIdx) {
-  const project = appState.workProjects.find(p => p.id === projectId);
-  if (!project || !project.stages[stageIdx]) return;
-
+/** 단계(stage) 내용을 줄 배열로 생성 */
+function _fmtStageLines(project, stageIdx) {
   const stage = project.stages[stageIdx];
   const stageName = getStageName(project, stageIdx);
-  const statusLabel = { 'not-started': '', 'in-progress': '[진행중]', 'completed': '[완료]', 'blocked': '[보류]' };
-  const fmtDeadline = (task) => {
-    if (!task.deadline) return '';
-    const d = new Date(task.deadline);
-    return ' ~' + (d.getMonth() + 1) + '/' + d.getDate();
-  };
+  const subcats = stage.subcategories || [];
+  if (subcats.length === 0) return [];
 
-  let lines = ['■ ' + stageName];
-  (stage.subcategories || []).forEach(sub => {
+  const total = subcats.reduce((s, sub) => s + sub.tasks.length, 0);
+  const done = subcats.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
+  const stageStatus = total > 0 && done === total ? ' [완료]' : '';
+
+  let lines = ['■ ' + stageName + stageStatus];
+  subcats.forEach(sub => {
     const isGeneral = sub.name === '일반';
     if (!isGeneral && sub.tasks.length > 0) {
       lines.push(sub.name + ':');
     }
     sub.tasks.forEach(task => {
-      const status = statusLabel[task.status] || '';
-      const deadline = fmtDeadline(task);
-      const prefix = isGeneral ? '' : '  ';
-      let line = prefix + task.title;
-      if (status) line += ' ' + status;
-      if (deadline) line += deadline;
-      lines.push(line);
+      lines.push(_fmtTaskLine(task, isGeneral ? '' : '  '));
     });
   });
+  return lines;
+}
 
-  const text = lines.join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('단계 복사됨 (슬랙용)', 'success');
-  }).catch(() => {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('단계 복사됨 (슬랙용)', 'success');
+/**
+ * 프로젝트 전체 슬랙 복사
+ */
+function copyProjectToSlack(projectId) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+
+  let lines = [project.name, ''];
+  project.stages.forEach((stage, idx) => {
+    const stageLines = _fmtStageLines(project, idx);
+    if (stageLines.length > 0) {
+      lines.push(...stageLines, '');
+    }
   });
+  _copyText(lines.join('\n').trim(), '슬랙용 진행 리스트 복사됨');
+}
+window.copyProjectToSlack = copyProjectToSlack;
+
+/**
+ * 단계(stage) 단위 슬랙 복사
+ */
+function copyStageToSlack(projectId, stageIdx) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project || !project.stages[stageIdx]) return;
+
+  const lines = _fmtStageLines(project, stageIdx);
+  _copyText(lines.join('\n'), '단계 복사됨');
 }
 window.copyStageToSlack = copyStageToSlack;
 
@@ -485,26 +450,16 @@ function copyWorkTaskToSlack(projectId, stageIdx, subcatIdx, taskIdx) {
   const task = project.stages[stageIdx]?.subcategories[subcatIdx]?.tasks[taskIdx];
   if (!task) return;
 
-  const statusLabel = { 'not-started': '미시작', 'in-progress': '진행중', 'completed': '완료', 'blocked': '보류' };
-  let text = task.title;
-  text += ' [' + (statusLabel[task.status] || '미시작') + ']';
-  if (task.deadline) {
-    const d = new Date(task.deadline);
-    text += ' ~' + (d.getMonth()+1) + '/' + d.getDate();
-  }
+  let text = _fmtTaskLine(task, '');
   if (task.logs && task.logs.length > 0) {
-    text += '\n최근 기록:';
-    task.logs.slice(-3).forEach(log => {
-      text += '\n  - ' + log.date + ': ' + log.content;
-    });
+    const recentLogs = task.logs.filter(l => l.content !== '✓ 완료').slice(-3);
+    if (recentLogs.length > 0) {
+      recentLogs.forEach(log => {
+        text += '\n  ' + log.date + ': ' + log.content;
+      });
+    }
   }
-
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('작업 복사됨', 'success');
-  }).catch(() => {
-    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    showToast('작업 복사됨', 'success');
-  });
+  _copyText(text, '작업 복사됨');
 }
 window.copyWorkTaskToSlack = copyWorkTaskToSlack;
 

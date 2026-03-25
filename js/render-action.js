@@ -124,11 +124,12 @@ function renderActionTab(ctx) {
                   </div>
                   ${hasSubtasks ? `
                     <div class="subtask-chips" onclick="event.stopPropagation();">
-                      ${task.subtasks.map((st, idx) => `
+                      ${task.subtasks.slice(0, 3).map((st, idx) => `
                         <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
                           <span class="subtask-chip-check">${st.completed ? '✓' : '○'}</span>${escapeHtml(st.text)}
                         </span>
                       `).join('')}
+                      ${task.subtasks.length > 3 ? `<span class="subtask-chip" style="color: var(--text-muted); border-style: dashed; cursor: default;">+${task.subtasks.length - 3}개</span>` : ''}
                     </div>
                   ` : ''}
                 </div>

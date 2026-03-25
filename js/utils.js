@@ -209,14 +209,32 @@ function renderFormattedText(text) {
 }
 
 /**
- * textarea에 Tab 키 입력 시 4스페이스 삽입 + auto-resize 초기화
+ * textarea에 Tab 키 입력 시 4스페이스 삽입 + auto-resize + Ctrl+Enter 제출
+ * @param {HTMLTextAreaElement} textarea
+ * @param {Object} [options]
+ * @param {number} [options.maxHeight=400] - auto-resize 상한 (px)
+ * @param {Function} [options.onSubmit] - Ctrl+Enter 시 호출할 콜백
  */
-function initEnhancedTextarea(textarea) {
+function initEnhancedTextarea(textarea, options) {
     if (!textarea || textarea._enhanced) return;
     textarea._enhanced = true;
+    const maxH = (options && options.maxHeight) || 400;
 
-    // Tab 키 → 4스페이스
     textarea.addEventListener('keydown', function(e) {
+        // Ctrl+Enter / Cmd+Enter → 제출
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            if (options && typeof options.onSubmit === 'function') {
+                options.onSubmit();
+            } else {
+                // 모달 내 textarea → 가장 가까운 confirm 버튼 클릭
+                const modal = textarea.closest('.work-modal-content, .modal-content');
+                const btn = modal && modal.querySelector('.confirm');
+                if (btn) btn.click();
+            }
+            return;
+        }
+        // Tab 키 → 4스페이스
         if (e.key === 'Tab') {
             e.preventDefault();
             const start = this.selectionStart;
@@ -231,7 +249,7 @@ function initEnhancedTextarea(textarea) {
     // Auto-resize
     const autoResize = () => {
         textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';
+        textarea.style.height = Math.min(textarea.scrollHeight, maxH) + 'px';
     };
     textarea.addEventListener('input', autoResize);
     // 초기 사이즈 조정
