@@ -240,7 +240,7 @@ function showImportConfirmModal(taskData) {
           </div>
         ` : ''}
 
-        <div style="background: rgba(74, 158, 255, 0.1); border-radius: 8px; padding: 10px; font-size: 0.85rem; color: var(--text-secondary);">
+        <div style="background: var(--accent-primary-alpha); border-radius: 8px; padding: 10px; font-size: 0.85rem; color: var(--text-secondary);">
           📢 출처: ${escapeHtml(taskData.source?.channel || 'telegram-event-bot')}
         </div>
       </div>
@@ -557,7 +557,7 @@ function showTelegramEventsModal(pendingEvents, totalCount = 0) {
       </div>
       ${pendingEvents.length > 0 ? `
         <div class="modal-footer" style="display: flex; gap: 10px; justify-content: space-between; padding: 15px 20px; border-top: 1px solid var(--border-color);">
-          <button class="btn" style="color:var(--accent-danger);background:var(--accent-danger-alpha);border:1px solid rgba(245,87,108,0.3)" onclick="archiveSelectedTelegramEvents()">🗑 선택 삭제</button>
+          <button class="btn" style="color:var(--accent-danger);background:var(--accent-danger-alpha);border:1px solid color-mix(in srgb, var(--accent-danger) 30%, transparent)" onclick="archiveSelectedTelegramEvents()">🗑 선택 삭제</button>
           <div style="display:flex;gap:10px">
             <button class="btn btn-secondary" onclick="closeTelegramEventsModal()">닫기</button>
             <button class="btn btn-primary" onclick="importSelectedTelegramEvents()">✅ 선택 추가</button>

@@ -85,7 +85,7 @@ function showWeeklyReview() {
       </div>
     </div>
 
-    <div style="margin-top: 16px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px; font-size: 15px; color: var(--text-secondary);">
+    <div style="margin-top: 16px; padding: 12px; background: var(--accent-primary-alpha); border-radius: 8px; font-size: 15px; color: var(--text-secondary);">
       💡 선택한 작업은 월요일에 "이번 주 집중" 알림으로 표시됩니다.
     </div>
   `;

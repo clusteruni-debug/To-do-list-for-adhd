@@ -756,7 +756,7 @@ function addOrganizerToList() {
   const display = document.getElementById('organizer-list-display');
   if (display) {
     display.innerHTML = appState.organizerList.map((o, i) => `
-      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+      <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-tertiary);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
         ${escapeHtml(o)} ✕
       </span>
     `).join('');
@@ -773,7 +773,7 @@ function removeOrganizerFromList(idx) {
   const display = document.getElementById('organizer-list-display');
   if (display) {
     display.innerHTML = appState.organizerList.map((o, i) => `
-      <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+      <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-tertiary);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
         ${escapeHtml(o)} ✕
       </span>
     `).join('');

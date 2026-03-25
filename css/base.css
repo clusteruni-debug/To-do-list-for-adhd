@@ -43,9 +43,23 @@
       --accent-danger: #f5576c;
       --accent-danger-hover: #e04460;
       --accent-purple: #764ba2;
+      --accent-neutral: #a0a0a0;
+      --accent-amber: #EAB308;
+      --pulse-warning: #ff9500;
       --accent-celebration: #ffd93d;
+      /* 차트 팔레트 (프로젝트 구분용) */
+      --chart-cyan: #22d3ee;
+      --chart-lavender: #a78bfa;
+      --chart-tangerine: #fb923c;
+      --chart-blue: #4299e1;
+      --chart-teal: #38b2ac;
+      --chart-pink: #ed64a6;
+
       --accent-primary-alpha: rgba(102, 126, 234, 0.15);
       --accent-success-alpha: rgba(72, 187, 120, 0.15);
+      --accent-success-alpha-30: rgba(72, 187, 120, 0.3);
+      --accent-success-alpha-50: rgba(72, 187, 120, 0.5);
+      --accent-success-alpha-70: rgba(72, 187, 120, 0.7);
       --accent-warning-alpha: rgba(246, 173, 85, 0.15);
       --accent-danger-alpha: rgba(245, 87, 108, 0.15);
 
@@ -105,6 +119,10 @@
       --border-color: #e0e0e0;
       --border-light: #f1f3f4;
       --shadow-color: rgba(0, 0, 0, 0.08);
+      --accent-neutral: #8e8e93;
+      --accent-success-alpha-30: rgba(72, 187, 120, 0.35);
+      --accent-success-alpha-50: rgba(72, 187, 120, 0.55);
+      --accent-success-alpha-70: rgba(72, 187, 120, 0.75);
     }
 
     body {

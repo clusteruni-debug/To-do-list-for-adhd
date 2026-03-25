@@ -521,7 +521,7 @@ function showClearLogRangeModal() {
       </div>
       <div class="modal-footer" style="padding:12px 16px;display:flex;gap:8px;justify-content:flex-end">
         <button class="btn btn-secondary" onclick="document.getElementById('${modalId}').remove()">취소</button>
-        <button class="btn btn-primary" style="background:var(--accent-danger, #ff6b6b)" onclick="applyClearLogRange()">삭제</button>
+        <button class="btn btn-primary" style="background:var(--accent-danger)" onclick="applyClearLogRange()">삭제</button>
       </div>
     </div>
   `;
@@ -663,11 +663,11 @@ function renderDayDetail() {
           <div class="day-detail-date">${dateTitle}</div>
           <div style="display:flex;gap:6px;">
             <button onclick="addCompletionLogEntry('${selectedDate}')"
-              style="background:var(--accent-color);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:15px;cursor:pointer;white-space:nowrap;"
+              style="background:var(--accent-color);color:white;border:none;border-radius:6px;padding:4px 10px;font-size:15px;cursor:pointer;white-space:nowrap;"
               aria-label="이 날짜에 기록 추가">${svgIcon('plus', 16)} 추가</button>
             ${(appState.completionLog || {})[selectedDate] && (appState.completionLog[selectedDate]).length > 0 ? `
               <button onclick="clearCompletionLogDate('${selectedDate}')"
-                style="background:var(--accent-danger, #ff6b6b);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:15px;cursor:pointer;white-space:nowrap;"
+                style="background:var(--accent-danger);color:white;border:none;border-radius:6px;padding:4px 10px;font-size:15px;cursor:pointer;white-space:nowrap;"
                 aria-label="이 날짜 기록 전체 삭제">전체 삭제</button>
             ` : ''}
           </div>
@@ -741,7 +741,7 @@ function renderDayDetail() {
           <div class="day-empty-icon">📭</div>
           <div>이 날 완료한 작업이 없습니다</div>
           <button onclick="addCompletionLogEntry('${selectedDate}')"
-            style="margin-top:12px;background:var(--accent-color);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:16px;cursor:pointer;"
+            style="margin-top:12px;background:var(--accent-color);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:16px;cursor:pointer;"
             aria-label="이 날짜에 기록 추가">${svgIcon('plus', 16)} 기록 추가</button>
         </div>
       `}

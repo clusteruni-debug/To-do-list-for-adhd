@@ -141,7 +141,7 @@ function showConfetti() {
   container.className = 'confetti-container';
   document.body.appendChild(container);
 
-  const colors = ['#667eea', '#764ba2', '#f093fb', '#48bb78', '#f6ad55', '#ed64a6'];
+  const colors = ['var(--accent-primary)', 'var(--accent-purple)', 'var(--cat-부업)', 'var(--accent-success)', 'var(--accent-warning)', 'var(--chart-pink)'];
   const shapes = ['circle', 'square', 'triangle'];
 
   for (let i = 0; i < 100; i++) {
@@ -290,7 +290,7 @@ function showCelebration(emoji = '🎉') {
   // 콘페티 효과
   const overlay = document.createElement('div');
   overlay.className = 'celebration-overlay';
-  const colors = ['#667eea', '#f093fb', '#4ecdc4', '#ffd93d', '#f5576c', '#48bb78'];
+  const colors = ['var(--accent-primary)', 'var(--cat-부업)', 'var(--chart-teal)', 'var(--accent-celebration)', 'var(--accent-danger)', 'var(--accent-success)'];
 
   for (let i = 0; i < 50; i++) {
     const confetti = document.createElement('div');

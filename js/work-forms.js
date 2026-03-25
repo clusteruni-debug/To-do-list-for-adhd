@@ -302,7 +302,7 @@ function showFormExportMenu(event, projectId) {
 
   const menu = document.createElement('div');
   menu.id = 'form-export-menu';
-  menu.style.cssText = 'position: fixed; z-index: 9999; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 2px; min-width: 200px;';
+  menu.style.cssText = 'position: fixed; z-index: 9999; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px var(--shadow-color); display: flex; flex-direction: column; gap: 2px; min-width: 200px;';
 
   const rect = event.target.getBoundingClientRect();
   menu.style.top = (rect.bottom + 4) + 'px';

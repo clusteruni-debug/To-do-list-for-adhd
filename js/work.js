@@ -74,7 +74,7 @@ function renderWorkProjects() {
         if (focusMode === 'empty') return '';
 
         if (focusMode === 'all-done') {
-          return '<div class="work-focus-card" style="background: var(--accent-success-alpha); border: 1px solid rgba(72,187,120,0.3); border-radius: 12px; padding: 16px; margin-bottom: 12px; text-align: center;">' +
+          return '<div class="work-focus-card" style="background: var(--accent-success-alpha); border: 1px solid color-mix(in srgb, var(--accent-success) 30%, transparent); border-radius: 12px; padding: 16px; margin-bottom: 12px; text-align: center;">' +
             '<span style="font-size: 16px;">🎉 모든 본업 태스크 완료!</span>' +
           '</div>';
         }
@@ -84,13 +84,13 @@ function renderWorkProjects() {
         // 모드별 라벨/색상
         const modeConfig = {
           urgent: { label: '🎯 지금 집중:', color: null }, // pulse 색상 사용
-          normal: { label: '🎯 지금 집중:', color: '#48bb78' },
-          proactive: { label: '💡 미리 해두면 좋은 것:', color: '#667eea' },
-          general: { label: '📋 여유 시간에:', color: '#a0a0a0' }
+          normal: { label: '🎯 지금 집중:', color: 'var(--accent-success)' },
+          proactive: { label: '💡 미리 해두면 좋은 것:', color: 'var(--accent-primary)' },
+          general: { label: '📋 여유 시간에:', color: 'var(--accent-neutral)' }
         };
         const cfg = modeConfig[focusMode] || modeConfig.normal;
         const focusPulse = calculateTaskPulse(focus);
-        const focusColor = cfg.color || PULSE_COLORS[focusPulse] || '#667eea';
+        const focusColor = cfg.color || PULSE_COLORS[focusPulse] || 'var(--accent-primary)';
         const timeLabel = focus.estimatedTime ? '~' + focus.estimatedTime + '분' : '';
 
         // 일반 업무 (프로젝트 미연결) 완료 버튼
@@ -105,7 +105,7 @@ function renderWorkProjects() {
           ? '<div style="font-size: 12px; color: ' + focusColor + '; margin-top: 4px; opacity: 0.8;">이 태스크는 다음 단계이지만 미리 시작할 수 있습니다</div>'
           : '';
 
-        return '<div class="work-focus-card" style="background: ' + focusColor + '15; border: 1px solid ' + focusColor + '40; border-left: 4px solid ' + focusColor + '; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">' +
+        return '<div class="work-focus-card" style="background: color-mix(in srgb, ' + focusColor + ' 8%, transparent); border: 1px solid color-mix(in srgb, ' + focusColor + ' 25%, transparent); border-left: 4px solid ' + focusColor + '; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">' +
           '<div style="flex: 1; min-width: 0;">' +
             '<div style="font-size: 13px; color: var(--text-muted); margin-bottom: 4px;">' + cfg.label + '</div>' +
             '<div style="font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + escapeHtml(focus.title) + '</div>' +
@@ -119,7 +119,7 @@ function renderWorkProjects() {
       ${(() => {
         const wl = calculateWorkload();
         if (wl.taskCount === 0) return '';
-        const statusColors = { overloaded: 'var(--accent-danger)', tight: 'var(--accent-warning)', moderate: '#EAB308', comfortable: 'var(--accent-success)' };
+        const statusColors = { overloaded: 'var(--accent-danger)', tight: 'var(--accent-warning)', moderate: 'var(--accent-amber)', comfortable: 'var(--accent-success)' };
         const statusLabels = { overloaded: '과부하', tight: '빡빡함', moderate: '보통', comfortable: '여유' };
         const barColor = statusColors[wl.status] || 'var(--accent-success)';
         const barWidth = Math.min(100, wl.loadPercentage);
@@ -144,7 +144,7 @@ function renderWorkProjects() {
         const alertProjects = appState.workProjects.filter(p => !p.archived && !p.onHold && ['critical', 'warning', 'attention'].includes(calculateProjectPulse(p)));
         if (alertProjects.length === 0) return '';
         const critCount = alertProjects.filter(p => calculateProjectPulse(p) === 'critical').length;
-        return '<div class="work-pulse-alert" style="background: ' + (critCount > 0 ? 'var(--accent-danger-alpha); border: 1px solid rgba(245,87,108,0.3)' : 'var(--accent-warning-alpha); border: 1px solid rgba(255,149,0,0.3)') + '; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px;">' +
+        return '<div class="work-pulse-alert" style="background: ' + (critCount > 0 ? 'var(--accent-danger-alpha); border: 1px solid color-mix(in srgb, var(--accent-danger) 30%, transparent)' : 'var(--accent-warning-alpha); border: 1px solid color-mix(in srgb, var(--pulse-warning) 30%, transparent)') + '; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; display: flex; align-items: center; gap: 8px;">' +
           '<span>' + (critCount > 0 ? '🔴' : '🟠') + '</span>' +
           '<span style="font-weight: 600;">' + alertProjects.length + '개 프로젝트 주의 필요</span>' +
           '<span style="color: var(--text-muted);">' + alertProjects.map(p => escapeHtml(p.name)).join(', ') + '</span>' +
@@ -235,7 +235,7 @@ function renderWorkProjects() {
 
           if (inProgressTasks.length === 0 && generalWorkTasks.length === 0) return '';
 
-          return '<div class="work-focus-section" style="background: var(--accent-primary-alpha); border: 1px solid rgba(102,126,234,0.3); border-radius: 12px; padding: 16px; margin-bottom: 20px;">' +
+          return '<div class="work-focus-section" style="background: var(--accent-primary-alpha); border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent); border-radius: 12px; padding: 16px; margin-bottom: 20px;">' +
             '<div style="font-size: 16px; font-weight: 700; color: var(--accent-blue); margin-bottom: 12px;">🎯 지금 할 것</div>' +
             inProgressTasks.slice(0, 3).map(t =>
               '<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px; cursor: pointer;" onclick="selectWorkProject(\'' + escapeAttr(t.projectId) + '\'); setWorkView(\'detail\');">' +
@@ -377,7 +377,7 @@ function renderWorkProjects() {
           var showAll = appState.scheduleShowAll || false;
           var projects = showAll ? activeAll : defaultProjects;
           var hiddenCount = activeAll.length - defaultProjects.length;
-          var projectColors = ['#667eea', '#48bb78', '#f6ad55', '#f093fb', '#22d3ee', '#f5576c', '#a78bfa', '#fb923c'];
+          var projectColors = ['var(--accent-primary)', 'var(--accent-success)', 'var(--accent-warning)', 'var(--cat-부업)', 'var(--chart-cyan)', 'var(--accent-danger)', 'var(--chart-lavender)', 'var(--chart-tangerine)'];
 
           // 시간 범위: 오늘 기준 -2주 ~ +8주 (총 10주 = 70일)
           var rangeStart = new Date(now);
@@ -450,13 +450,8 @@ function renderWorkProjects() {
               hasBar = true;
             }
 
-            var barColor = isOverdue ? '#f5576c' : color;
-            // hex to rgba for background
-            var hexStr = (isOverdue ? '#f5576c' : color).replace('#', '');
-            var rVal = parseInt(hexStr.substring(0, 2), 16);
-            var gVal = parseInt(hexStr.substring(2, 4), 16);
-            var bVal = parseInt(hexStr.substring(4, 6), 16);
-            var barBg = 'rgba(' + rVal + ',' + gVal + ',' + bVal + ',0.15)';
+            var barColor = isOverdue ? 'var(--accent-danger)' : color;
+            var barBg = 'color-mix(in srgb, ' + barColor + ' 15%, transparent)';
 
             // 프로젝트 내 작업 마감일 점(dot) 수집
             var taskDots = [];
@@ -534,7 +529,7 @@ function renderWorkProjects() {
           scheduleHtml += '<span style="font-size: 15px; color: var(--text-muted); font-weight: 400;">' + projects.length + '개 · -2주~+8주</span>';
           scheduleHtml += '<span style="flex: 1;"></span>';
           if (hiddenCount > 0) {
-            scheduleHtml += '<button onclick="appState.scheduleShowAll=!appState.scheduleShowAll; renderStatic();" style="background: ' + (showAll ? 'var(--accent-primary-alpha)' : 'var(--bg-tertiary)') + '; border: 1px solid ' + (showAll ? 'rgba(102,126,234,0.3)' : 'var(--border-color)') + '; border-radius: 6px; padding: 4px 10px; font-size: 15px; color: ' + (showAll ? 'var(--accent-primary)' : 'var(--text-muted)') + '; cursor: pointer;">' + (showAll ? '활성만' : '완료/보류 +' + hiddenCount) + '</button>';
+            scheduleHtml += '<button onclick="appState.scheduleShowAll=!appState.scheduleShowAll; renderStatic();" style="background: ' + (showAll ? 'var(--accent-primary-alpha)' : 'var(--bg-tertiary)') + '; border: 1px solid ' + (showAll ? 'color-mix(in srgb, var(--accent-primary) 30%, transparent)' : 'var(--border-color)') + '; border-radius: 6px; padding: 4px 10px; font-size: 15px; color: ' + (showAll ? 'var(--accent-primary)' : 'var(--text-muted)') + '; cursor: pointer;">' + (showAll ? '활성만' : '완료/보류 +' + hiddenCount) + '</button>';
           }
           scheduleHtml += '</div>';
           scheduleHtml += weeksHtml;
@@ -612,7 +607,7 @@ function renderWorkProjects() {
               for (var ti = 0; ti < visibleTasks.length; ti++) {
                 var t = visibleTasks[ti];
                 var taskColor = t.status === 'project' ? (t.color || 'var(--accent-primary)') : t.status === 'in-progress' ? 'var(--accent-primary)' : t.status === 'blocked' ? 'var(--accent-danger)' : 'var(--accent-success)';
-                daysHtml += '<div class="calendar-day-task" style="background: ' + taskColor + '22; border-left: 2px solid ' + taskColor + ';" title="' + escapeAttr(t.title) + (t.project ? ' (' + escapeAttr(t.project) + ')' : '') + '">' + escapeHtml(t.title) + '</div>';
+                daysHtml += '<div class="calendar-day-task" style="background: color-mix(in srgb, ' + taskColor + ' 13%, transparent); border-left: 2px solid ' + taskColor + ';" title="' + escapeAttr(t.title) + (t.project ? ' (' + escapeAttr(t.project) + ')' : '') + '">' + escapeHtml(t.title) + '</div>';
               }
               if (tasks.length > maxVisible) {
                 daysHtml += '<div class="calendar-day-more">+' + (tasks.length - maxVisible) + '개</div>';
@@ -642,7 +637,7 @@ function renderWorkProjects() {
               '<div style="font-weight: 600; margin-bottom: 10px;">' + appState.workCalendarSelected + ' 마감 작업</div>';
             selectedTasks.forEach(function(t) {
               calendarHtml += '<div style="padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">' +
-                '<span style="color: ' + (t.status === 'in-progress' ? 'var(--accent-primary)' : t.status === 'blocked' ? 'var(--accent-danger)' : t.status === 'project' ? (t.color || 'var(--accent-primary)') : '#a0a0a0') + ';">&#9679;</span>' +
+                '<span style="color: ' + (t.status === 'in-progress' ? 'var(--accent-primary)' : t.status === 'blocked' ? 'var(--accent-danger)' : t.status === 'project' ? (t.color || 'var(--accent-primary)') : 'var(--accent-neutral)') + ';">&#9679;</span>' +
                 '<span style="flex:1;">' + escapeHtml(t.title) + '</span>' +
                 (t.project ? '<span style="font-size: 15px; color: var(--text-muted);">' + escapeHtml(t.project) + '</span>' : '') +
               '</div>';
@@ -1553,7 +1548,7 @@ function renderWorkTimeline() {
           '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">' + date + ' (' + byDate[date].length + '건)</div>' +
           byDate[date].map(log =>
             '<div style="padding: 8px 12px; margin-bottom: 6px; background: var(--bg-secondary); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">' +
-              '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? 'var(--accent-success)' : log.status === 'in-progress' ? 'var(--accent-primary)' : '#a0a0a0') + '; flex-shrink: 0; margin-top: 7px;"></span>' +
+              '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? 'var(--accent-success)' : log.status === 'in-progress' ? 'var(--accent-primary)' : 'var(--accent-neutral)') + '; flex-shrink: 0; margin-top: 7px;"></span>' +
               '<span style="min-width: 80px; max-width: 200px; font-size: 15px; font-weight: 600; word-break: break-word;">' + escapeHtml(log.taskTitle) + '</span>' +
               '<div style="flex: 1; min-width: 120px; font-size: 14px; color: var(--text-secondary);">' + renderFormattedText(log.content) + '</div>' +
               '<span style="font-size: 13px; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">' + escapeHtml(log.projectName) + '</span>' +

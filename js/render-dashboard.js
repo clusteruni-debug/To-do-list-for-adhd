@@ -364,12 +364,12 @@ function renderDashboardTab(ctx) {
                 <span>${habitTitle ? '미완료' : '적음'}</span>
                 <div class="habit-legend-item"><div class="habit-legend-cell" style="background: var(--bg-tertiary)"></div></div>
                 ${habitTitle ? `
-                  <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: var(--accent-success)"></div></div>
+                  <div class="habit-legend-item"><div class="habit-legend-cell level-4"></div></div>
                 ` : `
-                  <div class="habit-legend-item"><div class="habit-legend-cell level-1" style="background: rgba(72, 187, 120, 0.3)"></div></div>
-                  <div class="habit-legend-item"><div class="habit-legend-cell level-2" style="background: rgba(72, 187, 120, 0.5)"></div></div>
-                  <div class="habit-legend-item"><div class="habit-legend-cell level-3" style="background: rgba(72, 187, 120, 0.7)"></div></div>
-                  <div class="habit-legend-item"><div class="habit-legend-cell level-4" style="background: var(--accent-success)"></div></div>
+                  <div class="habit-legend-item"><div class="habit-legend-cell level-1"></div></div>
+                  <div class="habit-legend-item"><div class="habit-legend-cell level-2"></div></div>
+                  <div class="habit-legend-item"><div class="habit-legend-cell level-3"></div></div>
+                  <div class="habit-legend-item"><div class="habit-legend-cell level-4"></div></div>
                 `}
                 <span>${habitTitle ? '완료' : '많음'}</span>
               </div>

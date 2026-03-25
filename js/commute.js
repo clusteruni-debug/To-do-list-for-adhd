@@ -86,7 +86,7 @@ function saveCommuteRoute() {
     name: name, type: typeEl ? typeEl.value : 'both',
     description: descEl ? descEl.value.trim() : '',
     expectedDuration: parseInt(durationEl ? durationEl.value : '45') || 45,
-    color: colorEl ? colorEl.dataset.color : '#667eea',
+    color: colorEl ? colorEl.dataset.color : 'var(--accent-primary)',
     isActive: true, createdAt: now, updatedAt: now
   };
   if (appState.commuteRouteModal === 'add') {
@@ -328,8 +328,10 @@ function renderCommuteTab() {
   if (appState.commuteRouteModal) {
     const isEdit = appState.commuteRouteModal !== 'add';
     const editRoute = isEdit ? appState.commuteTracker.routes.find(r => r.id === appState.commuteRouteModal) : null;
-    const colors = ['#667eea','#764ba2','#f56565','#ed8936','#48bb78','#4299e1','#9f7aea','#38b2ac'];
-    const currentColor = editRoute ? editRoute.color : '#667eea';
+    const colors = ['var(--accent-primary)','var(--accent-purple)','var(--accent-danger)','var(--accent-warning-hover)','var(--accent-success)','var(--chart-blue)','var(--chart-lavender)','var(--chart-teal)'];
+    const hexToVar = {'#667eea':'var(--accent-primary)','#764ba2':'var(--accent-purple)','#f56565':'var(--accent-danger)','#ed8936':'var(--accent-warning-hover)','#48bb78':'var(--accent-success)','#4299e1':'var(--chart-blue)','#9f7aea':'var(--chart-lavender)','#38b2ac':'var(--chart-teal)'};
+    const rawColor = editRoute ? editRoute.color : 'var(--accent-primary)';
+    const currentColor = hexToVar[rawColor] || rawColor;
     modalHtml = '<div class="commute-modal-overlay" onclick="if(event.target===this)closeCommuteRouteModal()">' +
       '<div class="commute-modal">' +
       '<div class="commute-modal-title">' + (isEdit ? '✏️ 루트 수정' : '➕ 새 루트 추가') + '</div>' +
@@ -606,9 +608,9 @@ function renderCommuteStatsView(routes) {
 
 function showCommuteOnboarding() {
   var presets = [
-    { name: '🚐 셔틀버스', type: 'morning', description: '회사 셔틀버스', expectedDuration: 30, color: '#48bb78' },
-    { name: '🚇 지하철+버스', type: 'both', description: '지하철 → 환승 → 버스', expectedDuration: 55, color: '#667eea' },
-    { name: '🚌 버스 직행', type: 'both', description: '직행 버스', expectedDuration: 45, color: '#ed8936' }
+    { name: '🚐 셔틀버스', type: 'morning', description: '회사 셔틀버스', expectedDuration: 30, color: 'var(--accent-success)' },
+    { name: '🚇 지하철+버스', type: 'both', description: '지하철 → 환승 → 버스', expectedDuration: 55, color: 'var(--accent-primary)' },
+    { name: '🚌 버스 직행', type: 'both', description: '직행 버스', expectedDuration: 45, color: 'var(--accent-warning-hover)' }
   ];
   presets.forEach(function(p) {
     appState.commuteTracker.routes.push({

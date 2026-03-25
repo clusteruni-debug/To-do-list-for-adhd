@@ -13,10 +13,10 @@ let workModalState = {
 
 // 상태 목록
 const WORK_STATUS = {
-  'not-started': { label: '미시작', color: '#a0a0a0' },
-  'in-progress': { label: '진행중', color: '#667eea' },
-  'completed': { label: '완료', color: '#48bb78' },
-  'blocked': { label: '보류', color: '#f5576c' }
+  'not-started': { label: '미시작', color: 'var(--accent-neutral)' },
+  'in-progress': { label: '진행중', color: 'var(--accent-primary)' },
+  'completed': { label: '완료', color: 'var(--accent-success)' },
+  'blocked': { label: '보류', color: 'var(--accent-danger)' }
 };
 
 /**
@@ -563,12 +563,12 @@ window.updateParticipantCount = updateParticipantCount;
 // ============================================
 
 const PULSE_COLORS = {
-  overdue:   '#f5576c',
-  critical:  '#f5576c',
-  warning:   '#ff9500',
-  attention: '#ff9500',
-  'on-track': '#48bb78',
-  waiting:   '#667eea',
+  overdue:   'var(--accent-danger)',
+  critical:  'var(--accent-danger)',
+  warning:   'var(--pulse-warning)',
+  attention: 'var(--pulse-warning)',
+  'on-track': 'var(--accent-success)',
+  waiting:   'var(--accent-primary)',
   done:      'transparent',
   normal:    'transparent'
 };
@@ -1046,7 +1046,7 @@ function showNotionCopyMenu(event, projectId, stageIdx, subcatIdx) {
 
   const menu = document.createElement('div');
   menu.id = 'notion-copy-menu';
-  menu.style.cssText = 'position: fixed; z-index: 9999; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 2px; min-width: 140px;';
+  menu.style.cssText = 'position: fixed; z-index: 9999; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px var(--shadow-color); display: flex; flex-direction: column; gap: 2px; min-width: 140px;';
 
   const rect = event.target.getBoundingClientRect();
   menu.style.top = (rect.bottom + 4) + 'px';

@@ -360,15 +360,15 @@ function renderSettingsModal() {
                 <div class="settings-label-desc" style="margin-bottom: 10px;">자동완성에 사용되는 주최자 목록입니다. 입력 후 추가, 클릭하면 삭제됩니다.</div>
                 <div id="organizer-list-display" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
                   ${(appState.organizerList || []).map((o, i) => `
-                    <span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
+                    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg-tertiary);border-radius:8px;padding:4px 10px;font-size:15px;cursor:pointer;" onclick="removeOrganizerFromList(${i})" title="클릭하여 삭제">
                       ${escapeHtml(o)} ✕
                     </span>
                   `).join('')}
                 </div>
                 <div style="display:flex;gap:8px;">
-                  <input type="text" id="new-organizer-input" class="work-modal-input" placeholder="새 주최자 이름" style="flex:1;font-size:15px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:inherit;"
+                  <input type="text" id="new-organizer-input" class="work-modal-input" placeholder="새 주최자 이름" style="flex:1;font-size:15px;padding:8px 12px;border-radius:8px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:inherit;"
                     onkeypress="if(event.key==='Enter') addOrganizerToList()">
-                  <button onclick="addOrganizerToList()" style="padding:8px 14px;border-radius:8px;background:var(--accent-primary,#667eea);border:none;color:#fff;font-size:15px;cursor:pointer;">추가</button>
+                  <button onclick="addOrganizerToList()" style="padding:8px 14px;border-radius:8px;background:var(--accent-primary);border:none;color:white;font-size:15px;cursor:pointer;">추가</button>
                 </div>
               </div>
 
@@ -396,7 +396,7 @@ function renderSettingsModal() {
                     return '✅ 마지막 백업: ' + days + '일 전';
                   })()}
                 </div>
-                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
                   <button class="backup-btn" onclick="restoreFromSyncBackup()" style="width: 100%; background: var(--accent-danger-alpha); border-color: var(--accent-danger); color: var(--accent-danger);" aria-label="동기화 백업에서 데이터 복원">
                     🔄 동기화 백업에서 복원
                   </button>
