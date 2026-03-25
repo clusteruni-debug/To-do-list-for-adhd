@@ -41,7 +41,7 @@
     .tab-btn.active {
       background: var(--accent-primary);
       color: white;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-primary) 30%, transparent);
     }
 
     /* 더보기 드롭다운 메뉴 */
@@ -59,7 +59,7 @@
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: var(--radius-md);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 24px var(--shadow-color);
       z-index: 1000;
       min-width: 140px;
       overflow: visible;
@@ -308,14 +308,14 @@
       padding: 12px 8px;
       border-radius: var(--radius-md);
       text-align: center;
-      border: 1px solid rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-light);
       cursor: pointer;
       transition: border-color var(--transition-normal);
       box-shadow: 0 2px 8px var(--shadow-color);
     }
 
     .stat-card:hover {
-      border-color: rgba(148, 163, 184, 0.15);
+      border-color: var(--border-color);
     }
     
     .stat-value {

@@ -59,7 +59,7 @@
       font-size: 12px;
       padding: 1px 6px;
       border-radius: 10px;
-      background: rgba(255, 255, 255, 0.15);
+      background: var(--bg-tertiary);
       min-width: 20px;
       text-align: center;
     }
@@ -69,12 +69,12 @@
     }
 
     .all-sub-tab-count.has-items {
-      background: rgba(245, 87, 108, 0.2);
+      background: color-mix(in srgb, var(--accent-danger) 20%, transparent);
       color: var(--accent-danger);
     }
 
     .all-sub-tab.active .all-sub-tab-count.has-items {
-      background: rgba(255, 255, 255, 0.25);
+      background: var(--bg-tertiary);
       color: white;
     }
 
@@ -137,11 +137,11 @@
     }
 
     .all-task-item.urgent {
-      background: rgba(255, 107, 107, 0.1);
+      background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
     }
 
     .all-task-item.warning {
-      background: rgba(255, 193, 7, 0.05);
+      background: color-mix(in srgb, var(--accent-celebration) 5%, transparent);
     }
 
     .all-task-item.completed {

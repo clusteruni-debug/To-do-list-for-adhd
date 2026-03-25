@@ -253,12 +253,12 @@
     }
 
     .daily-goal-message.success {
-      background: rgba(72, 187, 120, 0.15);
+      background: var(--accent-success-alpha);
       color: var(--accent-success);
     }
 
     .daily-goal-message.over {
-      background: rgba(246, 173, 85, 0.15);
+      background: var(--accent-warning-alpha);
       color: var(--accent-warning);
     }
 
@@ -348,7 +348,7 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 20px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      filter: drop-shadow(0 2px 4px var(--shadow-color));
       animation: runner-bounce 0.5s ease infinite;
     }
 
@@ -499,7 +499,7 @@
 
     .template-chip:hover {
       border-color: var(--accent-primary);
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
     }
 
     .template-chip-icon {
@@ -522,7 +522,7 @@
     }
 
     .template-chip-delete:hover {
-      background: rgba(245, 87, 108, 0.2);
+      background: color-mix(in srgb, var(--accent-danger) 20%, transparent);
       color: var(--accent-danger);
     }
 
@@ -561,7 +561,7 @@
       padding: 12px;
       margin-bottom: 15px;
       background: var(--accent-primary-alpha);
-      border: 1px dashed rgba(102, 126, 234, 0.3);
+      border: 1px dashed color-mix(in srgb, var(--accent-primary) 30%, transparent);
       border-radius: 12px;
       font-size: 15px;
       color: var(--text-secondary);
@@ -586,7 +586,7 @@
     }
 
     .swipe-hint-close:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--border-light);
     }
 
     /* 저장 표시 */
@@ -643,11 +643,11 @@
     .commute-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
     .commute-sub-tabs { display: flex; gap: 4px; background: var(--bg-secondary); border-radius: 12px; padding: 3px; margin-bottom: 16px; }
     .commute-sub-tab { flex: 1; padding: 8px 12px; border: none; background: transparent; border-radius: 10px; font-size: 15px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; min-height: 44px; }
-    .commute-sub-tab.active { background: var(--accent-primary); color: white; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); }
+    .commute-sub-tab.active { background: var(--accent-primary); color: white; box-shadow: 0 2px 8px color-mix(in srgb, var(--accent-primary) 30%, transparent); }
     .commute-route-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
     .commute-route-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--bg-card); border-radius: 14px; border: 2px solid transparent; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; min-height: 44px; }
     .commute-route-card:hover { border-color: var(--accent-primary); }
-    .commute-route-card.selected { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.08); }
+    .commute-route-card.selected { border-color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
     .commute-route-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
     .commute-route-info { flex: 1; min-width: 0; }
     .commute-route-name { font-size: 17px; font-weight: 600; color: var(--text-primary); }
@@ -663,17 +663,17 @@
     .commute-time-value { font-size: 18px; font-weight: 700; color: var(--text-primary); }
     .commute-time-value.empty { color: var(--text-muted); font-weight: 400; }
     .commute-duration-badge { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 20px; font-size: 17px; font-weight: 700; margin-top: 8px; }
-    .commute-duration-badge.good { background: rgba(72, 187, 120, 0.15); color: var(--accent-success); }
-    .commute-duration-badge.normal { background: rgba(237, 137, 54, 0.15); color: var(--accent-warning-hover); }
-    .commute-duration-badge.bad { background: rgba(245, 101, 101, 0.15); color: var(--accent-danger); }
+    .commute-duration-badge.good { background: var(--accent-success-alpha); color: var(--accent-success); }
+    .commute-duration-badge.normal { background: color-mix(in srgb, var(--accent-warning-hover) 15%, transparent); color: var(--accent-warning-hover); }
+    .commute-duration-badge.bad { background: var(--accent-danger-alpha); color: var(--accent-danger); }
     .commute-recommend-card { background: var(--accent-primary-alpha); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
     .commute-recommend-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
     .commute-recommend-time { font-size: 28px; font-weight: 800; color: var(--accent-primary); }
     .commute-recommend-detail { font-size: 14px; color: var(--text-secondary); margin-top: 6px; }
     .commute-recommend-confidence { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 14px; font-weight: 600; margin-top: 6px; }
-    .commute-recommend-confidence.high { background: rgba(72, 187, 120, 0.15); color: var(--accent-success); }
-    .commute-recommend-confidence.medium { background: rgba(237, 137, 54, 0.15); color: var(--accent-warning-hover); }
-    .commute-recommend-confidence.low { background: rgba(160, 174, 192, 0.15); color: var(--text-secondary); }
+    .commute-recommend-confidence.high { background: var(--accent-success-alpha); color: var(--accent-success); }
+    .commute-recommend-confidence.medium { background: color-mix(in srgb, var(--accent-warning-hover) 15%, transparent); color: var(--accent-warning-hover); }
+    .commute-recommend-confidence.low { background: color-mix(in srgb, var(--text-secondary) 15%, transparent); color: var(--text-secondary); }
     .commute-recent-summary { background: var(--bg-card); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
     .commute-recent-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
     .commute-recent-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 15px; }
@@ -725,8 +725,8 @@
     .commute-weekday-label { font-size: 14px; color: var(--text-muted); font-weight: 600; }
     .commute-weekday-value { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
     .commute-weekday-count { font-size: 14px; color: var(--text-muted); }
-    .commute-best-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; background: rgba(72, 187, 120, 0.15); color: var(--accent-success); margin-left: 8px; }
-    .commute-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .commute-best-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 14px; font-weight: 700; background: var(--accent-success-alpha); color: var(--accent-success); margin-left: 8px; }
+    .commute-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--overlay-backdrop); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .commute-modal { background: var(--bg-primary); border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
     .commute-modal-title { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
     .commute-modal-field { margin-bottom: 14px; }
@@ -742,11 +742,11 @@
     .commute-modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 44px; }
     .commute-modal-cancel { background: var(--bg-secondary); color: var(--text-secondary); }
     .commute-modal-save { background: var(--accent-primary); color: white; }
-    .commute-tag-prompt { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); z-index: 999; max-width: 360px; width: calc(100% - 40px); animation: commuteSlideUp 0.3s ease; }
+    .commute-tag-prompt { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--bg-card); border-radius: 16px; padding: 16px 20px; box-shadow: 0 8px 32px var(--shadow-color); z-index: 999; max-width: 360px; width: calc(100% - 40px); animation: commuteSlideUp 0.3s ease; }
     .commute-tag-prompt-title { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
     .commute-tag-prompt-routes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .commute-tag-prompt-btn { padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); font-size: 15px; font-weight: 500; cursor: pointer; min-height: 36px; transition: border-color 0.15s, background-color 0.15s; }
-    .commute-tag-prompt-btn:hover { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.08); }
+    .commute-tag-prompt-btn:hover { border-color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 8%, transparent); }
     .commute-tag-prompt-later { font-size: 14px; color: var(--text-muted); cursor: pointer; text-align: center; }
     .commute-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); }
     .commute-empty-icon { font-size: 48px; margin-bottom: 12px; }
@@ -754,7 +754,7 @@
     .commute-add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: var(--accent-primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; min-height: 44px; }
     .commute-conditions-row { display: flex; gap: 6px; margin-top: 8px; }
     .commute-condition-btn { padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-secondary); font-size: 15px; cursor: pointer; min-height: 36px; transition: border-color 0.15s, background-color 0.15s, color 0.15s; }
-    .commute-condition-btn.selected { border-color: var(--accent-primary); background: rgba(102, 126, 234, 0.1); color: var(--accent-primary); font-weight: 600; }
+    .commute-condition-btn.selected { border-color: var(--accent-primary); background: color-mix(in srgb, var(--accent-primary) 10%, transparent); color: var(--accent-primary); font-weight: 600; }
     @keyframes commuteSlideUp { from { transform: translateX(-50%) translateY(20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
     /* SVG 아이콘 시스템 */
     .svg-icon { display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }

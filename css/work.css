@@ -43,7 +43,7 @@
     .work-project-select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 20%, transparent);
     }
 
     .work-project-select optgroup {
@@ -230,8 +230,8 @@
     }
 
     .work-owner-toggle.other {
-      background: rgba(245, 87, 108, 0.15);
-      border-color: rgba(245, 87, 108, 0.4);
+      background: var(--accent-danger-alpha);
+      border-color: color-mix(in srgb, var(--accent-danger) 40%, transparent);
       color: var(--accent-danger);
     }
 
@@ -331,7 +331,7 @@
     }
 
     .work-general-delete-btn:hover {
-      background: rgba(245, 87, 108, 0.15);
+      background: var(--accent-danger-alpha);
       color: var(--danger);
     }
 
@@ -383,5 +383,5 @@
     .work-view-tab.active {
       background: var(--accent-primary-alpha);
       color: var(--accent-primary);
-      border-color: rgba(102, 126, 234, 0.3);
+      border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
     }

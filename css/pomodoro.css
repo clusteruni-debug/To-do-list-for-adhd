@@ -48,7 +48,7 @@
       color: var(--text-secondary);
       margin-bottom: 15px;
       padding: 10px;
-      background: rgba(255,255,255,0.05);
+      background: var(--bg-tertiary);
       border-radius: 8px;
     }
 

@@ -135,7 +135,7 @@
 
     .rhythm-stat-card {
       background: var(--bg-tertiary);
-      border: 1px solid var(--border-light, rgba(255,255,255,0.06));
+      border: 1px solid var(--border-light);
       border-radius: 10px;
       padding: 12px;
       text-align: center;
@@ -187,7 +187,7 @@
       justify-content: center;
       gap: 8px;
       padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid var(--border-color);
     }
 
     /* 최근 7일 미니 스트립 */
@@ -227,7 +227,7 @@
 
     .rhythm-recent-day.selected {
       border-color: var(--primary, #667eea);
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
     }
 
     .rhythm-recent-day.today {
@@ -377,7 +377,7 @@
     }
 
     .rhythm-history-summary span.total {
-      background: rgba(102, 126, 234, 0.15);
+      background: var(--accent-primary-alpha);
       color: var(--primary);
     }
 
@@ -432,12 +432,12 @@
       border-radius: 16px;
       padding: 20px;
       margin-bottom: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-light);
       transition: border-color var(--transition-normal);
     }
 
     .calendar-container:hover {
-      border-color: rgba(148, 163, 184, 0.15);
+      border-color: var(--border-color);
     }
 
     .calendar-header {
@@ -539,23 +539,23 @@
     }
 
     .calendar-day.has-activity {
-      background: rgba(102, 126, 234, 0.2);
+      background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
     }
 
     .calendar-day.has-activity.level-1 {
-      background: rgba(102, 126, 234, 0.2);
+      background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
     }
 
     .calendar-day.has-activity.level-2 {
-      background: rgba(102, 126, 234, 0.4);
+      background: color-mix(in srgb, var(--accent-primary) 40%, transparent);
     }
 
     .calendar-day.has-activity.level-3 {
-      background: rgba(102, 126, 234, 0.6);
+      background: color-mix(in srgb, var(--accent-primary) 60%, transparent);
     }
 
     .calendar-day.has-activity.level-4 {
-      background: rgba(102, 126, 234, 0.8);
+      background: color-mix(in srgb, var(--accent-primary) 80%, transparent);
       color: white;
     }
 
@@ -595,7 +595,7 @@
     }
 
     .work-calendar .calendar-day.selected {
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
       color: inherit;
     }
 
@@ -676,10 +676,10 @@
       border: 1px solid var(--border-color);
     }
 
-    .legend-box.level-1 { background: rgba(102, 126, 234, 0.2); }
-    .legend-box.level-2 { background: rgba(102, 126, 234, 0.4); }
-    .legend-box.level-3 { background: rgba(102, 126, 234, 0.6); }
-    .legend-box.level-4 { background: rgba(102, 126, 234, 0.8); }
+    .legend-box.level-1 { background: color-mix(in srgb, var(--accent-primary) 20%, transparent); }
+    .legend-box.level-2 { background: color-mix(in srgb, var(--accent-primary) 40%, transparent); }
+    .legend-box.level-3 { background: color-mix(in srgb, var(--accent-primary) 60%, transparent); }
+    .legend-box.level-4 { background: color-mix(in srgb, var(--accent-primary) 80%, transparent); }
 
     /* 일별 상세 */
     .day-detail {

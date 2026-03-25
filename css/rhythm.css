@@ -5,12 +5,12 @@
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-light);
       transition: border-color var(--transition-normal);
     }
 
     .life-rhythm-tracker:hover {
-      border-color: rgba(148, 163, 184, 0.15);
+      border-color: var(--border-color);
     }
 
     .life-rhythm-header {
@@ -29,7 +29,7 @@
     .life-rhythm-sleep {
       font-size: 14px;
       color: var(--text-secondary);
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
       padding: 4px 10px;
       border-radius: 12px;
     }
@@ -91,7 +91,7 @@
       background: var(--bg-secondary);
       border: 1px solid var(--border-color);
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 20px var(--shadow-color);
       overflow: hidden;
       min-width: 120px;
     }
@@ -163,7 +163,7 @@
     }
 
     .rhythm-stat.total {
-      background: rgba(102, 126, 234, 0.15);
+      background: var(--accent-primary-alpha);
       color: var(--primary);
       font-weight: 500;
     }
@@ -208,7 +208,7 @@
     .medication-progress {
       font-size: 14px;
       color: var(--text-secondary);
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
       padding: 4px 10px;
       border-radius: 12px;
     }

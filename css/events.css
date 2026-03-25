@@ -52,13 +52,13 @@
     }
 
     .telegram-status.connected {
-      background: rgba(72, 187, 120, 0.15);
+      background: var(--accent-success-alpha);
       border-color: var(--accent-success);
       color: var(--accent-success);
     }
 
     .telegram-status.connected:hover {
-      background: rgba(72, 187, 120, 0.25);
+      background: color-mix(in srgb, var(--accent-success) 25%, transparent);
     }
 
     .telegram-icon {
@@ -84,7 +84,7 @@
 
     .tg-event-item:has(input:checked) {
       border-color: var(--accent-blue);
-      background: rgba(74, 158, 255, 0.08);
+      background: var(--accent-primary-alpha);
     }
 
     .tg-event-row {
@@ -319,7 +319,7 @@
     }
 
     .event-completed-date:hover {
-      background: rgba(72, 187, 120, 0.15);
+      background: var(--accent-success-alpha);
     }
 
     .event-card-main {
@@ -382,7 +382,7 @@
     .event-tg-synced {
       font-size: 14px;
       color: var(--accent-success);
-      background: rgba(72, 187, 120, 0.1);
+      background: color-mix(in srgb, var(--accent-success) 10%, transparent);
       padding: 2px 6px;
       border-radius: 4px;
       white-space: nowrap;
@@ -521,13 +521,13 @@
     .event-tag.organizer {
       background: var(--accent-primary-alpha);
       color: var(--accent-primary);
-      border: 1px solid rgba(102, 126, 234, 0.27);
+      border: 1px solid color-mix(in srgb, var(--accent-primary) 27%, transparent);
     }
 
     .event-tag.type {
-      background: rgba(240, 147, 251, 0.13);
+      background: color-mix(in srgb, var(--cat-부업) 13%, transparent);
       color: var(--cat-부업);
-      border: 1px solid rgba(240, 147, 251, 0.27);
+      border: 1px solid color-mix(in srgb, var(--cat-부업) 27%, transparent);
     }
 
     .event-date {
@@ -547,11 +547,11 @@
       background: transparent;
       color: var(--accent-primary);
       text-decoration: none;
-      border: 1px solid rgba(102, 126, 234, 0.27);
+      border: 1px solid color-mix(in srgb, var(--accent-primary) 27%, transparent);
     }
 
     .btn-link:hover {
-      background: rgba(102, 126, 234, 0.13);
+      background: var(--accent-primary-alpha);
     }
 
     .btn-submit {

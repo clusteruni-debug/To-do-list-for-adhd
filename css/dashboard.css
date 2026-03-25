@@ -41,8 +41,8 @@
     .dash-hero-mode.생존 { background: var(--accent-danger-alpha); color: var(--accent-danger); }
     .dash-hero-mode.여유 { background: var(--accent-success-alpha); color: var(--accent-success); }
     .dash-hero-mode.출근 { background: var(--accent-warning-alpha); color: var(--accent-warning); }
-    .dash-hero-mode.주말 { background: rgba(240, 147, 251, 0.15); color: var(--cat-부업); }
-    .dash-hero-mode.휴식 { background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); }
+    .dash-hero-mode.주말 { background: color-mix(in srgb, var(--cat-부업) 15%, transparent); color: var(--cat-부업); }
+    .dash-hero-mode.휴식 { background: color-mix(in srgb, var(--text-muted) 15%, transparent); color: var(--text-secondary); }
 
     .dash-hero-streak {
       display: flex;
@@ -328,8 +328,7 @@
       font-size: 48px;
       font-weight: bold;
       color: var(--accent-celebration);
-      /* celebration color — keyframes 호환성 위해 hardcoded */
-      text-shadow: 0 0 20px rgba(255, 217, 61, 0.5);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--accent-celebration) 50%, transparent);
       animation: celebration-pop 0.5s ease-out;
       pointer-events: none;
       z-index: 10000;
@@ -361,7 +360,7 @@
       border-radius: 25px;
       font-size: 16px;
       font-weight: 500;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 20px var(--shadow-color);
       animation: toast-in 0.3s ease-out;
       z-index: 1000;
     }

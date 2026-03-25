@@ -6,7 +6,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: var(--overlay-heavy);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -21,7 +21,7 @@
       width: 100%;
       max-height: 80vh;
       overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 60px var(--shadow-color);
     }
 
     .modal-header {
@@ -135,7 +135,7 @@
 
     .weekly-plan-item.selected {
       border-color: var(--accent-primary);
-      background: rgba(102, 126, 234, 0.1);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
     }
 
     .weekly-plan-check {
@@ -165,7 +165,7 @@
       font-size: 14px;
       padding: 2px 8px;
       border-radius: 10px;
-      background: rgba(102, 126, 234, 0.2);
+      background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
       color: var(--accent-primary);
     }
 
@@ -194,7 +194,7 @@
     }
 
     .monday-reminder-close {
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--bg-tertiary);
       border: none;
       color: white;
       width: 24px;
@@ -211,7 +211,7 @@
     }
 
     .monday-reminder-task {
-      background: rgba(255, 255, 255, 0.15);
+      background: var(--bg-tertiary);
       padding: 10px 12px;
       border-radius: 8px;
       font-size: 15px;
@@ -223,7 +223,7 @@
     .monday-reminder-task-num {
       width: 20px;
       height: 20px;
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--bg-tertiary);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -301,7 +301,7 @@
     }
 
     .quick-filter-btn .filter-count {
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--bg-tertiary);
       padding: 2px 6px;
       border-radius: 10px;
       font-size: 14px;
@@ -309,7 +309,7 @@
     }
 
     .quick-filter-btn.active .filter-count {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--bg-tertiary);
     }
 
     /* 미루기 횟수 뱃지 */
@@ -318,7 +318,7 @@
       align-items: center;
       gap: 4px;
       padding: 2px 8px;
-      background: rgba(255, 149, 0, 0.15);
+      background: color-mix(in srgb, var(--pulse-warning) 15%, transparent);
       color: var(--accent-warning);
       border-radius: 10px;
       font-size: 14px;
@@ -326,7 +326,7 @@
     }
 
     .postpone-badge.warning {
-      background: rgba(245, 87, 108, 0.15);
+      background: var(--accent-danger-alpha);
       color: var(--accent-danger);
     }
 
@@ -339,7 +339,7 @@
       background: var(--bg-secondary);
       border-radius: 20px 20px 0 0;
       padding: 24px;
-      box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 -10px 40px var(--shadow-color);
       z-index: 10001;
       transform: translateY(100%);
       transition: transform 0.3s ease;

@@ -69,6 +69,10 @@
       --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.25);
       --shadow-color: rgba(0, 0, 0, 0.4);
 
+      /* 오버레이 */
+      --overlay-backdrop: rgba(0, 0, 0, 0.7);
+      --overlay-heavy: rgba(0, 0, 0, 0.85);
+
       /* Radius */
       --radius-sm: 8px;
       --radius-md: 12px;
@@ -118,7 +122,9 @@
       --text-muted: #72787e;
       --border-color: #e0e0e0;
       --border-light: #f1f3f4;
-      --shadow-color: rgba(0, 0, 0, 0.08);
+      --shadow-color: rgba(0, 0, 0, 0.15);
+      --overlay-backdrop: rgba(0, 0, 0, 0.5);
+      --overlay-heavy: rgba(0, 0, 0, 0.7);
       --accent-neutral: #8e8e93;
       --accent-success-alpha-30: rgba(72, 187, 120, 0.35);
       --accent-success-alpha-50: rgba(72, 187, 120, 0.55);
@@ -210,7 +216,7 @@
       }
 
       .task-item:hover {
-        border-color: rgba(148, 163, 184, 0.15);
+        border-color: var(--border-color);
       }
 
       .stat-card {

@@ -14,22 +14,22 @@
     }
 
     .work-status-badge.not-started {
-      background: rgba(160, 160, 160, 0.2);
+      background: color-mix(in srgb, var(--accent-neutral) 20%, transparent);
       color: var(--text-muted);
     }
 
     .work-status-badge.in-progress {
-      background: rgba(102, 126, 234, 0.2);
+      background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
       color: var(--accent-primary);
     }
 
     .work-status-badge.completed {
-      background: rgba(72, 187, 120, 0.2);
+      background: color-mix(in srgb, var(--accent-success) 20%, transparent);
       color: var(--accent-success);
     }
 
     .work-status-badge.blocked {
-      background: rgba(245, 87, 108, 0.2);
+      background: color-mix(in srgb, var(--accent-danger) 20%, transparent);
       color: var(--accent-danger);
     }
 
@@ -150,12 +150,12 @@
     }
 
     .work-deadline.overdue {
-      background: rgba(245, 87, 108, 0.15);
+      background: var(--accent-danger-alpha);
       color: var(--accent-danger);
     }
 
     .work-deadline.soon {
-      background: rgba(255, 149, 0, 0.15);
+      background: color-mix(in srgb, var(--pulse-warning) 15%, transparent);
       color: var(--accent-warning);
     }
 
@@ -181,18 +181,18 @@
     .work-project-card {
       background: var(--bg-secondary);
       border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-light);
       overflow: hidden;
       transition: border-color var(--transition-normal);
     }
 
     .work-project-card:hover {
-      border-color: rgba(148, 163, 184, 0.15);
+      border-color: var(--border-color);
     }
 
     .work-project-card.active {
       border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
     }
 
     .work-project-header {
@@ -286,7 +286,7 @@
     }
 
     .work-project-action-btn.delete:hover {
-      background: rgba(245, 87, 108, 0.2);
+      background: color-mix(in srgb, var(--accent-danger) 20%, transparent);
       color: var(--accent-danger);
     }
 
@@ -423,7 +423,7 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 4px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 12px var(--shadow-color);
       display: flex;
       flex-direction: column;
       gap: 2px;

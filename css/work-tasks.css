@@ -77,12 +77,12 @@
 
     .work-task-deadline.soon {
       color: var(--accent-warning);
-      background: rgba(230, 126, 34, 0.1);
+      background: color-mix(in srgb, var(--accent-warning) 10%, transparent);
     }
 
     .work-task-deadline.overdue {
       color: var(--danger);
-      background: rgba(245, 87, 108, 0.1);
+      background: color-mix(in srgb, var(--accent-danger) 10%, transparent);
     }
 
     .work-task-actions {

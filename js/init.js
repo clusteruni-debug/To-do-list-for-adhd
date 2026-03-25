@@ -3,6 +3,10 @@
 // ============================================
 loadState();
 
+// meta theme-color을 CSS 변수와 동기화
+const _tc = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
+if (_tc) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', _tc);
+
 // 알림 권한 상태 확인
 if ('Notification' in window) {
   appState.notificationPermission = Notification.permission;

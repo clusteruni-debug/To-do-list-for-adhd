@@ -39,8 +39,8 @@
     .today-mode.생존 { background: var(--accent-danger-alpha); color: var(--accent-danger); }
     .today-mode.여유 { background: var(--accent-success-alpha); color: var(--accent-success); }
     .today-mode.출근 { background: var(--accent-warning-alpha); color: var(--accent-warning); }
-    .today-mode.주말 { background: rgba(240, 147, 251, 0.15); color: var(--cat-부업); }
-    .today-mode.휴식 { background: rgba(100, 116, 139, 0.15); color: var(--text-secondary); }
+    .today-mode.주말 { background: color-mix(in srgb, var(--cat-부업) 15%, transparent); color: var(--cat-부업); }
+    .today-mode.휴식 { background: color-mix(in srgb, var(--text-muted) 15%, transparent); color: var(--text-secondary); }
 
     .today-remaining {
       font-size: 13px;
@@ -70,8 +70,8 @@
       align-items: center;
       gap: 8px;
       padding: 8px 12px;
-      background: rgba(245, 87, 108, 0.08);
-      border: 1px solid rgba(245, 87, 108, 0.2);
+      background: color-mix(in srgb, var(--accent-danger) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent-danger) 20%, transparent);
       border-radius: var(--radius-sm);
       margin-bottom: 12px;
       font-size: 14px;
@@ -81,7 +81,7 @@
 
     .today-urgent-chip {
       padding: 2px 8px;
-      background: rgba(245, 87, 108, 0.12);
+      background: color-mix(in srgb, var(--accent-danger) 12%, transparent);
       border-radius: 8px;
       cursor: pointer;
       font-size: 13px;
@@ -89,7 +89,7 @@
     }
 
     .today-urgent-chip:hover {
-      background: rgba(245, 87, 108, 0.25);
+      background: color-mix(in srgb, var(--accent-danger) 25%, transparent);
     }
 
     /* Next Action 서브태스크 */
@@ -396,10 +396,10 @@
       font-weight: 500;
     }
 
-    .task-item-mini-category.본업 { background: rgba(102, 126, 234, 0.2); color: var(--accent-primary); }
-    .task-item-mini-category.부업 { background: rgba(240, 147, 251, 0.2); color: var(--cat-부업); }
-    .task-item-mini-category.일상 { background: rgba(72, 187, 120, 0.2); color: var(--accent-success); }
-    .task-item-mini-category.가족 { background: rgba(246, 173, 85, 0.2); color: var(--accent-warning); }
+    .task-item-mini-category.본업 { background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary); }
+    .task-item-mini-category.부업 { background: color-mix(in srgb, var(--cat-부업) 20%, transparent); color: var(--cat-부업); }
+    .task-item-mini-category.일상 { background: color-mix(in srgb, var(--accent-success) 20%, transparent); color: var(--accent-success); }
+    .task-item-mini-category.가족 { background: color-mix(in srgb, var(--accent-warning) 20%, transparent); color: var(--accent-warning); }
 
     .task-list-more {
       text-align: center;
@@ -420,7 +420,7 @@
 
     .quick-add:focus-within {
       border-color: var(--accent-primary);
-      box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+      box-shadow: 0 4px 20px var(--accent-primary-alpha);
     }
 
     .quick-add-header {
@@ -611,7 +611,7 @@
       padding: 14px 16px;
       border-radius: var(--radius-md);
       margin-bottom: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.08);
+      border: 1px solid var(--border-light);
       border-left: 4px solid var(--task-cat-color, var(--border-color));
       position: relative;
       overflow: hidden;
@@ -620,7 +620,7 @@
     }
 
     .task-item:hover {
-      border-color: rgba(148, 163, 184, 0.15);
+      border-color: var(--border-color);
     }
 
     .task-item:active {
@@ -637,8 +637,8 @@
 
     .task-item.completed {
       opacity: 0.6;
-      background: rgba(72, 187, 120, 0.05);
-      border-color: rgba(72, 187, 120, 0.3);
+      background: color-mix(in srgb, var(--accent-success) 5%, transparent);
+      border-color: var(--accent-success-alpha-30);
     }
 
     .task-item.completed:hover {
@@ -650,7 +650,7 @@
       background: var(--accent-danger-alpha);
       border-color: var(--accent-danger);
       border-width: 2px;
-      box-shadow: 0 2px 12px rgba(245, 87, 108, 0.2);
+      box-shadow: 0 2px 12px color-mix(in srgb, var(--accent-danger) 20%, transparent);
     }
 
     .task-item.urgent::before {
@@ -671,7 +671,7 @@
       background: var(--accent-warning-alpha);
       border-color: var(--accent-warning);
       border-width: 2px;
-      box-shadow: 0 2px 12px rgba(255, 149, 0, 0.15);
+      box-shadow: 0 2px 12px color-mix(in srgb, var(--pulse-warning) 15%, transparent);
     }
 
     .task-item.warning::before {
@@ -870,7 +870,7 @@
       background: var(--bg-secondary);
       padding: 4px 8px;
       border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 12px var(--shadow-color);
       margin-bottom: 0;
     }
     .task-list .task-item:hover .task-item-actions {
@@ -891,10 +891,10 @@
       font-weight: 500;
       vertical-align: middle;
     }
-    .task-item-inline-cat.본업 { background: rgba(102, 126, 234, 0.2); color: var(--accent-primary); }
-    .task-item-inline-cat.부업 { background: rgba(240, 147, 251, 0.2); color: var(--cat-부업); }
-    .task-item-inline-cat.일상 { background: rgba(72, 187, 120, 0.2); color: var(--accent-success); }
-    .task-item-inline-cat.가족 { background: rgba(246, 173, 85, 0.2); color: var(--accent-warning); }
+    .task-item-inline-cat.본업 { background: color-mix(in srgb, var(--accent-primary) 20%, transparent); color: var(--accent-primary); }
+    .task-item-inline-cat.부업 { background: color-mix(in srgb, var(--cat-부업) 20%, transparent); color: var(--cat-부업); }
+    .task-item-inline-cat.일상 { background: color-mix(in srgb, var(--accent-success) 20%, transparent); color: var(--accent-success); }
+    .task-item-inline-cat.가족 { background: color-mix(in srgb, var(--accent-warning) 20%, transparent); color: var(--accent-warning); }
 
     @media (max-width: 768px) {
       .task-list .task-item .task-item-actions {
