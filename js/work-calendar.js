@@ -273,7 +273,7 @@ function renderWorkCalendarView() {
 
   if (appState.workCalendarSelected && selectedTasks.length > 0) {
     calendarHtml += '<div style="margin-top: 16px; background: var(--bg-secondary); border-radius: 12px; padding: 16px;">' +
-      '<div style="font-weight: 600; margin-bottom: 10px;">' + appState.workCalendarSelected + ' 마감 작업</div>';
+      '<div style="font-weight: 600; margin-bottom: 10px;">' + escapeHtml(appState.workCalendarSelected) + ' 마감 작업</div>';
     selectedTasks.forEach(function(t) {
       calendarHtml += '<div style="padding: 8px 12px; background: var(--bg-primary); border-radius: 8px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">' +
         '<span style="color: ' + (t.status === 'in-progress' ? 'var(--accent-primary)' : t.status === 'blocked' ? 'var(--accent-danger)' : t.status === 'project' ? (t.color || 'var(--accent-primary)') : 'var(--accent-neutral)') + ';">&#9679;</span>' +

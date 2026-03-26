@@ -4,14 +4,6 @@
 // ============================================
 
 /**
- * 프로젝트 완료 여부 판단 헬퍼 (전역)
- */
-function isProjectCompleted(p) {
-  if (p.stages.length === 0) return false;
-  return p.stages.every(s => s.completed);
-}
-
-/**
  * 프로젝트 목록 렌더링
  */
 function renderWorkProjects() {

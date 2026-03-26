@@ -390,7 +390,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
             const hiddenLogs = otherLogs.length > MAX_VISIBLE_LOGS ? otherLogs.slice(0, otherLogs.length - MAX_VISIBLE_LOGS) : [];
             const visibleLogs = otherLogs.length > MAX_VISIBLE_LOGS ? otherLogs.slice(otherLogs.length - MAX_VISIBLE_LOGS) : otherLogs;
             if (hiddenLogs.length > 0) {
-              const wasExpanded = appState.expandedWorkLogs[taskUid];
+              const wasExpanded = appState.expandedWorkLogs?.[taskUid];
               html += '<div class="work-task-logs-collapsed' + (wasExpanded ? ' expanded' : '') + '" id="logs-hidden-' + taskUid + '">';
               hiddenLogs.forEach(log => {
                 const actualIdx = task.logs.findIndex(l => l.date === log.date && l.content === log.content);
