@@ -172,21 +172,55 @@ const DEFAULT_WORK_TEMPLATES = [
     ],
     participantGoal: null,
     createdAt: '2026-03-16T00:00:00.000Z'
+  },
+  {
+    id: 'default-ro',
+    name: 'RO (리서치 오퍼레이션)',
+    isDefault: true,
+    stageNames: ['킥오프', '모객 준비', '모객 진행', '환경 세팅', '테스트 진행', '테스트 종료'],
+    stages: [
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] }
+    ],
+    participantGoal: null,
+    createdAt: '2026-03-27T00:00:00.000Z'
+  },
+  {
+    id: 'default-cx-research',
+    name: 'CX 리서치',
+    isDefault: true,
+    stageNames: ['킥오프', '리서치 준비/설계', '리서치 실사', '결과 분석'],
+    stages: [
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] },
+      { subcategories: [] }
+    ],
+    participantGoal: null,
+    createdAt: '2026-03-27T00:00:00.000Z'
   }
 ];
 
 /**
- * workTemplates가 비어있으면 기본 템플릿 추가
+ * 기본 템플릿 시딩: ID 기반 체크 (기존 유저도 새 기본 템플릿을 받음)
  */
 function seedDefaultTemplates() {
-  if (appState.workTemplates.length === 0) {
-    const defaults = DEFAULT_WORK_TEMPLATES.map(t => ({ ...t }));
-    appState.workTemplates.push(...defaults);
-    if (!appState.user) {
-      localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+  let seeded = false;
+  for (const defaultTemplate of DEFAULT_WORK_TEMPLATES) {
+    const alreadyExists = appState.workTemplates.some(t => t.id === defaultTemplate.id);
+    const wasDeleted = appState.deletedIds.workTemplates && appState.deletedIds.workTemplates[defaultTemplate.id];
+    if (!alreadyExists && !wasDeleted) {
+      appState.workTemplates.push({ ...defaultTemplate });
+      seeded = true;
     }
-    if (appState.user) { syncToFirebase(); }
-    console.log('[seed] 기본 템플릿 추가:', defaults.map(t => t.name).join(', '));
+  }
+  if (seeded) {
+    saveWorkTemplates();
+    console.log('[seed] 기본 템플릿 시딩 완료');
   }
 }
 
@@ -201,6 +235,16 @@ function saveWorkProjects() {
   if (appState.user) {
     syncToFirebase();
   }
+}
+
+/**
+ * 템플릿 저장 (localStorage + Firebase)
+ */
+function saveWorkTemplates() {
+  if (!appState.user) {
+    localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
+  }
+  if (appState.user) { syncToFirebase(); }
 }
 
 /**
@@ -533,10 +577,7 @@ function saveAsTemplate(projectId) {
   };
 
   appState.workTemplates.push(template);
-  if (!appState.user) {
-    localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-  }
-  if (appState.user) { syncToFirebase(); }
+  saveWorkTemplates();
   showToast('템플릿 저장됨', 'success');
 }
 window.saveAsTemplate = saveAsTemplate;
@@ -557,518 +598,3 @@ function updateParticipantCount(projectId) {
   renderStatic();
 }
 window.updateParticipantCount = updateParticipantCount;
-
-// ============================================
-// 펄스 (건강 상태) 계산
-// ============================================
-
-const PULSE_COLORS = {
-  overdue:   'var(--accent-danger)',
-  critical:  'var(--accent-danger)',
-  warning:   'var(--pulse-warning)',
-  attention: 'var(--pulse-warning)',
-  'on-track': 'var(--accent-success)',
-  waiting:   'var(--accent-primary)',
-  done:      'transparent',
-  normal:    'transparent'
-};
-
-/**
- * 태스크 펄스 계산
- */
-function calculateTaskPulse(task) {
-  if (task.completed || task.status === 'completed') return 'done';
-  if (task.status === 'blocked' || task.owner === 'waiting') return 'waiting';
-  if (!task.deadline) return 'normal';
-
-  const now = new Date();
-  const deadline = new Date(task.deadline);
-  const daysLeft = (deadline - now) / (1000 * 60 * 60 * 24);
-
-  if (daysLeft < 0) return 'overdue';
-  if (daysLeft < 1) return 'critical';
-  if (daysLeft < 3 && task.status !== 'in-progress') return 'warning';
-  if (daysLeft < 7 && task.status === 'not-started') return 'attention';
-  return 'on-track';
-}
-
-/**
- * 프로젝트의 모든 태스크 수집
- */
-function getAllProjectTasks(project) {
-  const tasks = [];
-  (project.stages || []).forEach(stage => {
-    (stage.subcategories || []).forEach(sub => {
-      (sub.tasks || []).forEach(t => tasks.push(t));
-    });
-  });
-  return tasks;
-}
-
-/**
- * 프로젝트 펄스 계산
- */
-function calculateProjectPulse(project) {
-  if (project.onHold) return 'waiting';
-  const allTasks = getAllProjectTasks(project);
-  const myTasks = allTasks.filter(t => t.owner === 'me' && t.status !== 'completed');
-  if (myTasks.length === 0) return 'done';
-
-  const pulses = myTasks.map(t => calculateTaskPulse(t));
-  if (pulses.includes('overdue') || pulses.includes('critical')) return 'critical';
-  if (pulses.includes('warning')) return 'warning';
-  if (pulses.includes('attention')) return 'attention';
-  return 'on-track';
-}
-
-/**
- * 오늘의 포커스: 모드 기반 태스크 추천
- * @returns {{ task: object|null, mode: 'urgent'|'normal'|'proactive'|'general'|'all-done'|'empty' }}
- */
-function getWorkFocus() {
-  const candidates = [];
-  appState.workProjects.filter(p => !p.archived && !p.onHold).forEach(p => {
-    (p.stages || []).forEach((stage, si) => {
-      (stage.subcategories || []).forEach((sub, sci) => {
-        (sub.tasks || []).forEach((task, ti) => {
-          if (task.status !== 'completed' && task.owner === 'me') {
-            candidates.push({
-              ...task,
-              _projectName: p.name,
-              _projectId: p.id,
-              _stageIdx: si,
-              _subcatIdx: sci,
-              _taskIdx: ti,
-              _stageName: stage.name || ('단계 ' + (si + 1))
-            });
-          }
-        });
-      });
-    });
-  });
-
-  if (candidates.length === 0) {
-    // 일반 업무 체크
-    const generalTasks = appState.tasks.filter(t => t.category === '본업' && !t.workProjectId && !t.completed);
-    if (generalTasks.length > 0) {
-      return { task: generalTasks[0], mode: 'general' };
-    }
-    // 프로젝트 태스크가 하나라도 있었는지 확인
-    const hasAnyTask = appState.workProjects.some(p => !p.archived && getAllProjectTasks(p).length > 0);
-    return { task: null, mode: hasAnyTask ? 'all-done' : 'empty' };
-  }
-
-  const pulseOrder = { overdue: 0, critical: 1, warning: 2, attention: 3, normal: 4, 'on-track': 4 };
-
-  // 1순위: 급한 태스크 (overdue ~ attention)
-  const urgent = candidates
-    .filter(t => {
-      const p = calculateTaskPulse(t);
-      return ['overdue', 'critical', 'warning', 'attention'].includes(p);
-    })
-    .sort((a, b) => {
-      const pa = pulseOrder[calculateTaskPulse(a)] ?? 4;
-      const pb = pulseOrder[calculateTaskPulse(b)] ?? 4;
-      if (pa !== pb) return pa - pb;
-      return (a.estimatedTime || 30) - (b.estimatedTime || 30);
-    });
-
-  if (urgent.length > 0) {
-    return { task: urgent[0], mode: 'urgent' };
-  }
-
-  // 프로젝트별 현재 단계 이하의 태스크 vs 다음 단계 canStartEarly 분리
-  const currentStageTasks = [];
-  const earlyStartTasks = [];
-
-  candidates.forEach(t => {
-    const pulse = calculateTaskPulse(t);
-    if (pulse === 'waiting' || t.status === 'blocked') return;
-
-    // 해당 태스크가 속한 프로젝트의 currentStage 확인
-    const proj = appState.workProjects.find(p => p.id === t._projectId);
-    const projCurrentStage = proj ? (proj.currentStage || 0) : 0;
-
-    if (t._stageIdx <= projCurrentStage) {
-      // 현재 단계 이하 → 일반 작업
-      currentStageTasks.push(t);
-    } else if (t.canStartEarly) {
-      // 다음 단계 + canStartEarly → 선제적 추천 후보
-      earlyStartTasks.push(t);
-    }
-  });
-
-  // 2순위: 현재 단계의 일반 태스크
-  currentStageTasks.sort((a, b) => {
-    const sa = a._stageIdx ?? 99;
-    const sb = b._stageIdx ?? 99;
-    if (sa !== sb) return sa - sb;
-    return (a.estimatedTime || 30) - (b.estimatedTime || 30);
-  });
-
-  if (currentStageTasks.length > 0) {
-    return { task: currentStageTasks[0], mode: 'normal' };
-  }
-
-  // 3순위: 다음 단계의 canStartEarly 태스크 (선제적 추천)
-  earlyStartTasks.sort((a, b) => {
-    const sa = a._stageIdx ?? 99;
-    const sb = b._stageIdx ?? 99;
-    if (sa !== sb) return sa - sb;
-    return (a.estimatedTime || 30) - (b.estimatedTime || 30);
-  });
-
-  if (earlyStartTasks.length > 0) {
-    return { task: earlyStartTasks[0], mode: 'proactive' };
-  }
-
-  // 4순위: 일반 업무 (비프로젝트)
-  const generalTasks = appState.tasks.filter(t => t.category === '본업' && !t.workProjectId && !t.completed);
-  if (generalTasks.length > 0) {
-    return { task: generalTasks[0], mode: 'general' };
-  }
-
-  return { task: null, mode: 'all-done' };
-}
-
-/**
- * 이번 달 남은 근무일 수 (주말 제외, 오늘 포함)
- */
-function getRemainingWorkdays() {
-  const now = new Date();
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  let count = 0;
-  for (let d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); d <= lastDay; d.setDate(d.getDate() + 1)) {
-    const day = d.getDay();
-    if (day !== 0 && day !== 6) count++;
-  }
-  return count;
-}
-
-/**
- * 부하 게이지 계산
- */
-function calculateWorkload() {
-  const myTasks = appState.workProjects
-    .filter(p => !p.archived && !p.onHold)
-    .flatMap(p => getAllProjectTasks(p))
-    .filter(t => t.owner === 'me' && t.status !== 'completed');
-
-  const totalRemainingMinutes = myTasks.reduce((sum, t) => sum + (t.estimatedTime || 30), 0);
-  const remainingWorkdays = getRemainingWorkdays();
-  const dailyAvailableMinutes = (appState.settings && appState.settings.dailyAvailableMinutes) || 360;
-  const totalAvailableMinutes = remainingWorkdays * dailyAvailableMinutes;
-
-  const loadPercentage = totalAvailableMinutes > 0
-    ? Math.round((totalRemainingMinutes / totalAvailableMinutes) * 100)
-    : 0;
-
-  return {
-    totalRemainingMinutes,
-    remainingWorkdays,
-    totalAvailableMinutes,
-    loadPercentage,
-    taskCount: myTasks.length,
-    status: loadPercentage > 120 ? 'overloaded'
-          : loadPercentage > 90  ? 'tight'
-          : loadPercentage > 60  ? 'moderate'
-          : 'comfortable'
-  };
-}
-
-// ============================================
-// MM (Monthly Report) Auto-Generation
-// ============================================
-
-/**
- * Generate monthly work report combining completionLog + Work project data.
- * @param {number} year - e.g. 2026
- * @param {number} month - 1-12
- * @returns {string} formatted report text
- */
-function generateMMReport(year, month) {
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const lastDate = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDate}`;
-  // Handle month overflow: use first day of next month as exclusive end
-  const endExcl = new Date(year, month, 1); // first day of next month
-  const endExclStr = getLocalDateStr(endExcl);
-
-  // 1. Completion log entries filtered to 'Main Job' category (본업)
-  const entries = getCompletionLogEntries(startDate, endExclStr)
-    .filter(e => e.c === '본업' || e.c === 'Main Job');
-
-  // 2. Work project task completions in the date range
-  const workCompletions = [];
-  appState.workProjects.forEach(project => {
-    (project.stages || []).forEach((stage, si) => {
-      (stage.subcategories || []).forEach((sub, sci) => {
-        (sub.tasks || []).forEach((task, ti) => {
-          if (task.status === 'completed' && task.completedAt) {
-            const completedDate = task.completedAt.slice(0, 10); // YYYY-MM-DD
-            if (completedDate >= startDate && completedDate <= endDate) {
-              workCompletions.push({
-                title: task.title,
-                projectName: project.name,
-                projectId: project.id,
-                stageName: stage.name || ('단계 ' + (si + 1)),
-                estimatedTime: task.estimatedTime || 30,
-                actualTime: task.actualTime || null,
-                completedAt: task.completedAt
-              });
-            }
-          }
-        });
-      });
-    });
-  });
-
-  // Check if there's any data
-  if (workCompletions.length === 0 && entries.length === 0) {
-    return null; // Signal: no data
-  }
-
-  let report = `${year}년 ${month}월 업무 보고\n`;
-  report += `${'─'.repeat(30)}\n\n`;
-
-  // 3. Group work completions by project
-  const projects = {};
-  workCompletions.forEach(t => {
-    if (!projects[t.projectName]) {
-      projects[t.projectName] = [];
-    }
-    projects[t.projectName].push(t);
-  });
-
-  if (Object.keys(projects).length > 0) {
-    for (const [name, tasks] of Object.entries(projects)) {
-      const totalMinutes = tasks.reduce((s, t) => s + (t.actualTime || t.estimatedTime || 30), 0);
-      const hours = Math.round(totalMinutes / 60 * 10) / 10;
-      report += `[${name}] (${hours}h)\n`;
-      tasks.forEach(t => {
-        const time = t.actualTime || t.estimatedTime || 30;
-        report += `- ${t.title} (${time}분)\n`;
-      });
-      report += '\n';
-    }
-  }
-
-  // 4. General completion log entries (not linked to work projects)
-  // Filter out entries whose titles already appear in workCompletions
-  const workTitles = new Set(workCompletions.map(t => t.title));
-  const general = entries.filter(e => !workTitles.has(e.t) && e.t !== '(요약)');
-  if (general.length > 0) {
-    report += `[일반 업무]\n`;
-    general.forEach(t => report += `- ${t.t}\n`);
-    report += '\n';
-  }
-
-  // 5. Summary stats
-  const totalTasks = workCompletions.length + general.length;
-  const totalMinutes = workCompletions.reduce((s, t) => s + (t.actualTime || t.estimatedTime || 30), 0);
-  const totalHours = Math.round(totalMinutes / 60 * 10) / 10;
-  report += `${'─'.repeat(30)}\n`;
-  report += `총 완료: ${totalTasks}건`;
-  if (totalHours > 0) report += ` / 총 ${totalHours}h`;
-  report += '\n';
-
-  return report;
-}
-
-/**
- * Generate proportion table for MM report (Notion-pasteable format).
- * @param {number} year
- * @param {number} month
- * @returns {string|null} proportion table text, or null if no data
- */
-function generateMMProportionTable(year, month) {
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const lastDate = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDate}`;
-
-  // Collect time per project
-  const projectMinutes = {};
-  appState.workProjects.forEach(project => {
-    (project.stages || []).forEach(stage => {
-      (stage.subcategories || []).forEach(sub => {
-        (sub.tasks || []).forEach(task => {
-          if (task.status === 'completed' && task.completedAt) {
-            const completedDate = task.completedAt.slice(0, 10);
-            if (completedDate >= startDate && completedDate <= endDate) {
-              const name = project.name;
-              if (!projectMinutes[name]) projectMinutes[name] = 0;
-              projectMinutes[name] += (task.actualTime || task.estimatedTime || 30);
-            }
-          }
-        });
-      });
-    });
-  });
-
-  const entries = Object.entries(projectMinutes);
-  if (entries.length === 0) return null;
-
-  const totalMinutes = entries.reduce((s, [, m]) => s + m, 0);
-  if (totalMinutes === 0) return null;
-
-  // Sort by proportion descending
-  entries.sort((a, b) => b[1] - a[1]);
-
-  let table = '프로젝트명 | 비율\n';
-  entries.forEach(([name, minutes]) => {
-    const ratio = (minutes / totalMinutes).toFixed(2);
-    table += name + ' | ' + ratio + '\n';
-  });
-
-  return table.trim();
-}
-
-// ============================================
-// Notion Progress Copy (진행상황 복사)
-// ============================================
-
-/**
- * Copy completed tasks from a subcategory in Notion-compatible format.
- * Format:
- *   YYYY년 M월 D일
- *   * [task title]
- *      *
- * @param {string} projectId
- * @param {number} stageIdx
- * @param {number} subcatIdx
- * @param {'today'|'week'} range
- */
-function copyNotionProgress(projectId, stageIdx, subcatIdx, range) {
-  range = range || 'today';
-  const project = appState.workProjects.find(p => p.id === projectId);
-  if (!project) return;
-
-  const subcat = project.stages[stageIdx]?.subcategories[subcatIdx];
-  if (!subcat) return;
-
-  // Determine date range
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  let startDate;
-  if (range === 'week') {
-    const dayOfWeek = today.getDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    startDate = new Date(today);
-    startDate.setDate(startDate.getDate() + mondayOffset);
-  } else {
-    startDate = new Date(today);
-  }
-  const endDate = new Date(today);
-  endDate.setDate(endDate.getDate() + 1); // end of today (exclusive)
-
-  // Filter completed tasks within date range
-  const completedTasks = subcat.tasks.filter(t => {
-    if (t.status !== 'completed' || !t.completedAt) return false;
-    const completedDate = new Date(t.completedAt);
-    return completedDate >= startDate && completedDate < endDate;
-  });
-
-  let lines = [];
-
-  if (range === 'today') {
-    const y = now.getFullYear();
-    const m = now.getMonth() + 1;
-    const d = now.getDate();
-    lines.push(y + '년 ' + m + '월 ' + d + '일');
-
-    completedTasks.forEach(t => {
-      lines.push('* ' + t.title);
-      lines.push('   * ');
-    });
-  } else {
-    // Week mode: group by date
-    const byDate = {};
-    completedTasks.forEach(t => {
-      const dateStr = t.completedAt.slice(0, 10);
-      if (!byDate[dateStr]) byDate[dateStr] = [];
-      byDate[dateStr].push(t);
-    });
-
-    const dates = Object.keys(byDate).sort();
-
-    if (dates.length === 0) {
-      // No completions this week - still output today's date
-      const y = now.getFullYear();
-      const m = now.getMonth() + 1;
-      const d = now.getDate();
-      lines.push(y + '년 ' + m + '월 ' + d + '일');
-    } else {
-      dates.forEach(dateStr => {
-        const dt = new Date(dateStr + 'T00:00:00');
-        const y = dt.getFullYear();
-        const m = dt.getMonth() + 1;
-        const d = dt.getDate();
-        lines.push(y + '년 ' + m + '월 ' + d + '일');
-
-        byDate[dateStr].forEach(t => {
-          lines.push('* ' + t.title);
-          lines.push('   * ');
-        });
-      });
-    }
-  }
-
-  const text = lines.join('\n');
-  const label = range === 'today' ? '오늘' : '이번 주';
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('Notion 진행상황 복사됨 (' + label + ')', 'success');
-  }).catch(() => {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    showToast('Notion 진행상황 복사됨 (' + label + ')', 'success');
-  });
-
-  // Close popup menu if open
-  const menu = document.getElementById('notion-copy-menu');
-  if (menu) menu.remove();
-}
-window.copyNotionProgress = copyNotionProgress;
-
-/**
- * Show a small popup menu for Notion progress copy range selection.
- */
-function showNotionCopyMenu(event, projectId, stageIdx, subcatIdx) {
-  event.stopPropagation();
-
-  // Remove existing menu
-  const existing = document.getElementById('notion-copy-menu');
-  if (existing) existing.remove();
-
-  const menu = document.createElement('div');
-  menu.id = 'notion-copy-menu';
-  menu.style.cssText = 'position: fixed; z-index: 9999; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 4px; box-shadow: 0 4px 12px var(--shadow-color); display: flex; flex-direction: column; gap: 2px; min-width: 140px;';
-
-  const rect = event.target.getBoundingClientRect();
-  menu.style.top = (rect.bottom + 4) + 'px';
-  menu.style.left = Math.min(rect.left, window.innerWidth - 160) + 'px';
-
-  const btnStyle = 'display: block; width: 100%; padding: 10px 12px; background: transparent; border: none; border-radius: 6px; color: var(--text-primary); font-size: 14px; cursor: pointer; text-align: left; min-height: 44px;';
-
-  menu.innerHTML =
-    '<button style="' + btnStyle + '" onmouseenter="this.style.background=\'var(--bg-tertiary)\'" onmouseleave="this.style.background=\'transparent\'" ' +
-      'onclick="copyNotionProgress(\'' + escapeAttr(projectId) + '\', ' + stageIdx + ', ' + subcatIdx + ', \'today\')">📋 오늘</button>' +
-    '<button style="' + btnStyle + '" onmouseenter="this.style.background=\'var(--bg-tertiary)\'" onmouseleave="this.style.background=\'transparent\'" ' +
-      'onclick="copyNotionProgress(\'' + escapeAttr(projectId) + '\', ' + stageIdx + ', ' + subcatIdx + ', \'week\')">📋 이번 주</button>';
-
-  document.body.appendChild(menu);
-
-  // Auto-close on outside click
-  setTimeout(() => {
-    document.addEventListener('click', function handler() {
-      const m = document.getElementById('notion-copy-menu');
-      if (m) m.remove();
-      document.removeEventListener('click', handler);
-    }, { once: true });
-  }, 0);
-}
-window.showNotionCopyMenu = showNotionCopyMenu;

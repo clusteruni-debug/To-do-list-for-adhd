@@ -164,3 +164,12 @@
     .work-status-option.selected.blocked {
       background: var(--accent-danger);
     }
+
+    /* Template pill (project creation modal) */
+    .template-pill {
+      text-align: left;
+    }
+
+    .template-pill span {
+      font-weight: 400;
+    }

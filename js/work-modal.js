@@ -18,12 +18,26 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
   const project = projectId ? appState.workProjects.find(p => p.id === projectId) : null;
 
   switch(type) {
-    case 'project':
+    case 'project': {
       titleText = '📁 새 프로젝트';
+      const templates = appState.workTemplates;
       bodyHtml = `
         <div class="work-modal-field">
           <label class="work-modal-label">프로젝트 이름</label>
           <input type="text" class="work-modal-input" id="work-input-name" placeholder="예: UT 10월차" autofocus>
+        </div>
+        <div class="work-modal-field">
+          <label class="work-modal-label">템플릿</label>
+          <div class="work-status-group" style="flex-wrap: wrap;">
+            <button type="button" class="work-status-option template-pill selected" data-template-id="">템플릿 없음</button>
+            ${templates.map(t => {
+              const stageCount = t.stageNames ? t.stageNames.length : t.stages.length;
+              return '<button type="button" class="work-status-option template-pill" data-template-id="' + escapeAttr(t.id) + '">' +
+                escapeHtml(t.name) +
+                ' <span style="font-size:12px;color:var(--text-muted);">(' + stageCount + '단계)</span>' +
+              '</button>';
+            }).join('')}
+          </div>
         </div>
         <div class="work-modal-field">
           <label class="work-modal-label">마감일 (선택)</label>
@@ -31,6 +45,7 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         </div>
       `;
       break;
+    }
     case 'subcategory':
       titleText = '📂 중분류 추가';
       bodyHtml = `
@@ -91,7 +106,7 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         ` : ''}
       `;
       break;
-    case 'stage-deadline':
+    case 'stage-deadline': {
       titleText = '📅 단계 일정';
       const stageData = project?.stages[stageIdx] || {};
       const stageNameForModal = getStageName(project, stageIdx);
@@ -106,7 +121,8 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         </div>
       `;
       break;
-    case 'subcat-deadline':
+    }
+    case 'subcat-deadline': {
       titleText = '📅 중분류 일정';
       const subcatData = project?.stages[stageIdx]?.subcategories[subcatIdx] || {};
       bodyHtml = `
@@ -120,6 +136,7 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         </div>
       `;
       break;
+    }
     case 'participant':
       titleText = '👥 참여자 목표 설정';
       bodyHtml = `
@@ -141,7 +158,7 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         bodyHtml = `
           <div class="work-modal-field" style="text-align: center; padding: 20px; color: var(--text-muted);">
             <div style="font-size: 16px; margin-bottom: 12px;">저장된 템플릿이 없습니다</div>
-            <div style="font-size: 14px;">📥 가져오기 버튼으로 JSON 템플릿을 추가하거나,<br>프로젝트 상세에서 "템플릿으로 저장"을 이용하세요.</div>
+            <div style="font-size: 14px;">📋 템플릿 관리에서 새 템플릿을 추가하거나,<br>프로젝트 상세에서 "템플릿으로 저장"을 이용하세요.</div>
           </div>
         `;
       } else {
@@ -184,6 +201,40 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
       `;
       break;
     }
+    case 'template-manage': {
+      titleText = '📋 템플릿 관리';
+      const manageTpls = appState.workTemplates;
+      const mTotalTaskCount = (t) => t.stages.reduce((sum, s) => sum + (s.subcategories || []).reduce((ss, sub) => ss + sub.tasks.length, 0), 0);
+      bodyHtml = `
+        <div style="max-height: 60vh; overflow-y: auto;">
+          ${manageTpls.length === 0 ? '<div style="text-align: center; padding: 20px; color: var(--text-muted);">저장된 템플릿이 없습니다</div>' :
+            manageTpls.map(t => {
+              const stageList = (t.stageNames || []).join(' → ');
+              const taskCount = mTotalTaskCount(t);
+              return '<div style="background: var(--bg-tertiary); border-radius: 10px; padding: 14px; margin-bottom: 10px;">' +
+                '<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">' +
+                  '<div style="flex: 1; min-width: 0;">' +
+                    '<div style="font-weight: 600; font-size: 15px;">' + escapeHtml(t.name) + (t.isDefault ? ' <span style="font-size:12px;color:var(--text-muted);">(기본)</span>' : '') + '</div>' +
+                    '<div style="font-size: 13px; color: var(--text-muted); margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' +
+                      escapeHtml(stageList) + (taskCount > 0 ? ' | ' + taskCount + '개 항목' : '') +
+                    '</div>' +
+                  '</div>' +
+                  '<div style="display: flex; gap: 4px; flex-shrink: 0;">' +
+                    '<button type="button" class="work-project-action-btn" onclick="showTemplateEditor(\'' + escapeAttr(t.id) + '\')" title="편집" style="padding: 8px; font-size: 16px;">✏️</button>' +
+                    '<button type="button" class="work-project-action-btn" onclick="exportTemplate(\'' + escapeAttr(t.id) + '\')" title="내보내기" style="padding: 8px; font-size: 16px;">📤</button>' +
+                    '<button type="button" class="work-project-action-btn" onclick="deleteWorkTemplate(\'' + escapeAttr(t.id) + '\')" title="삭제" style="padding: 8px; font-size: 16px;">🗑</button>' +
+                  '</div>' +
+                '</div>' +
+              '</div>';
+            }).join('')}
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+          <button type="button" class="work-project-add-btn" onclick="createCustomTemplate()" style="flex: 1;">+ 새 템플릿</button>
+          <button type="button" class="work-project-action-btn" onclick="closeWorkModal(); showWorkModal('template-import')" style="padding: 10px 16px; font-size: 14px;">📥 가져오기</button>
+        </div>
+      `;
+      break;
+    }
   }
 
   title.textContent = titleText;
@@ -200,6 +251,16 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
     });
   }
 
+  // 프로젝트 생성 모달: 템플릿 pill 이벤트
+  if (type === 'project') {
+    body.querySelectorAll('.template-pill').forEach(btn => {
+      btn.onclick = () => {
+        body.querySelectorAll('.template-pill').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      };
+    });
+  }
+
   // 템플릿 선택 이벤트
   if (type === 'template-select') {
     body.querySelectorAll('.template-option').forEach(btn => {
@@ -208,6 +269,14 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
         btn.classList.add('selected');
       };
     });
+  }
+
+  // 템플릿 관리 모달: 닫기 버튼만 표시
+  if (type === 'template-manage') {
+    const actions = modal.querySelector('.work-modal-actions');
+    if (actions) {
+      actions.innerHTML = '<button class="cancel" onclick="closeWorkModal()">닫기</button>';
+    }
   }
 
   // 기록 추가 모달: "저장 + 복사" 버튼 추가
@@ -264,7 +333,10 @@ function confirmWorkModal() {
       const name = document.getElementById('work-input-name').value.trim();
       if (!name) { showToast('이름을 입력하세요', 'error'); return; }
       const deadline = document.getElementById('work-input-deadline')?.value || null;
-      addWorkProject(name, deadline);
+      const modalBody = document.getElementById('work-modal-body');
+      const selectedPill = modalBody ? modalBody.querySelector('.template-pill.selected') : null;
+      const templateId = selectedPill?.dataset.templateId || null;
+      addWorkProjectWithTemplate(name, deadline, templateId || null);
       break;
     }
     case 'subcategory': {
@@ -345,10 +417,12 @@ function confirmWorkModal() {
     }
     case 'template-select': {
       const selected = document.querySelector('.template-option.selected');
-      if (selected) {
-        const templateId = selected.dataset.templateId;
-        applyTemplate(templateId);
+      if (!selected) {
+        showToast('템플릿을 선택하세요', 'error');
+        return;
       }
+      const templateId = selected.dataset.templateId;
+      applyTemplate(templateId);
       break;
     }
     case 'template-import': {
@@ -405,10 +479,7 @@ function confirmWorkModal() {
         };
 
         appState.workTemplates.push(template);
-        if (!appState.user) {
-          localStorage.setItem('navigator-work-templates', JSON.stringify(appState.workTemplates));
-        }
-        if (appState.user) { syncToFirebase(); }
+        saveWorkTemplates();
         showToast(`"${escapeHtml(template.name)}" 템플릿 가져오기 완료`, 'success');
         renderStatic();
       } catch (e) {
@@ -419,6 +490,10 @@ function confirmWorkModal() {
     case 'mm-report': {
       // MM report modal has its own close button; no confirm action needed
       break;
+    }
+    case 'template-edit': {
+      confirmTemplateEdit(projectId);
+      return; // confirmTemplateEdit handles its own close
     }
   }
 
@@ -469,7 +544,7 @@ function applyTemplate(templateId) {
   if (!template) return;
 
   const projectName = prompt('프로젝트 이름을 입력하세요:', template.name.replace(' 템플릿', ''));
-  if (!projectName) return;
+  if (!projectName || !projectName.trim()) return;
 
   // 템플릿에 stageNames가 있으면 그것 사용, 없으면 전역 기본값 사용
   const stageSource = template.stageNames || appState.workProjectStages;
@@ -696,3 +771,89 @@ function copyMMProportionTable() {
   });
 }
 window.copyMMProportionTable = copyMMProportionTable;
+
+// ============================================
+// 템플릿 편집기
+// ============================================
+
+/**
+ * 템플릿 편집 모달 표시
+ */
+function showTemplateEditor(templateId) {
+  const template = appState.workTemplates.find(t => t.id === templateId);
+  if (!template) return;
+
+  closeWorkModal();
+
+  const modal = document.getElementById('work-input-modal');
+  const title = document.getElementById('work-modal-title');
+  const body = document.getElementById('work-modal-body');
+
+  workModalState = { type: 'template-edit', projectId: templateId, stageIdx: null, subcategoryIdx: null, taskIdx: null };
+
+  title.textContent = '✏️ 템플릿 편집';
+
+  const stageNames = template.stageNames || [];
+  const tid = escapeAttr(templateId);
+
+  let stageListHtml = '';
+  stageNames.forEach((name, idx) => {
+    const isFirst = idx === 0;
+    const isLast = idx === stageNames.length - 1;
+    stageListHtml +=
+      '<div style="display: flex; align-items: center; gap: 6px; background: var(--bg-tertiary); padding: 10px 12px; border-radius: 8px;">' +
+        '<span style="flex: 1; font-size: 14px;">' + (idx + 1) + '. ' + escapeHtml(name) + '</span>' +
+        '<button type="button" class="work-project-action-btn" onclick="moveTemplateStage(\'' + tid + '\', ' + idx + ', \'up\'); showTemplateEditor(\'' + tid + '\')" ' + (isFirst ? 'disabled style="opacity:0.3;padding:6px;"' : 'style="padding:6px;"') + ' title="위로">▲</button>' +
+        '<button type="button" class="work-project-action-btn" onclick="moveTemplateStage(\'' + tid + '\', ' + idx + ', \'down\'); showTemplateEditor(\'' + tid + '\')" ' + (isLast ? 'disabled style="opacity:0.3;padding:6px;"' : 'style="padding:6px;"') + ' title="아래로">▼</button>' +
+        '<button type="button" class="work-project-action-btn" onclick="renameTemplateStage(\'' + tid + '\', ' + idx + '); showTemplateEditor(\'' + tid + '\')" style="padding:6px;" title="이름 수정">✏️</button>' +
+        '<button type="button" class="work-project-action-btn" onclick="deleteTemplateStage(\'' + tid + '\', ' + idx + '); showTemplateEditor(\'' + tid + '\')" style="padding:6px;" title="삭제">✕</button>' +
+      '</div>';
+  });
+
+  body.innerHTML =
+    '<div class="work-modal-field">' +
+      '<label class="work-modal-label">템플릿 이름</label>' +
+      '<input type="text" class="work-modal-input" id="template-edit-name" value="' + escapeAttr(template.name) + '">' +
+    '</div>' +
+    '<div class="work-modal-field">' +
+      '<label class="work-modal-label">단계 목록</label>' +
+      '<div style="display: flex; flex-direction: column; gap: 6px;">' +
+        (stageNames.length === 0 ? '<div style="text-align: center; padding: 12px; color: var(--text-muted); font-size: 14px;">단계가 없습니다. 아래에서 추가하세요.</div>' : stageListHtml) +
+      '</div>' +
+      '<button type="button" class="work-project-action-btn" onclick="addTemplateStage(\'' + tid + '\'); showTemplateEditor(\'' + tid + '\')" style="margin-top: 8px; width: 100%; text-align: center; padding: 10px; font-size: 14px;">+ 단계 추가</button>' +
+    '</div>';
+
+  const actions = modal.querySelector('.work-modal-actions');
+  if (actions) {
+    actions.innerHTML =
+      '<button class="cancel" onclick="closeWorkModal(); showWorkModal(\'template-manage\')">← 돌아가기</button>' +
+      '<button class="confirm" onclick="confirmTemplateEdit(\'' + tid + '\')">저장</button>';
+  }
+
+  modal.classList.add('show');
+
+  setTimeout(() => {
+    const input = document.getElementById('template-edit-name');
+    if (input) input.focus();
+  }, 100);
+}
+window.showTemplateEditor = showTemplateEditor;
+
+/**
+ * 템플릿 편집 저장
+ */
+function confirmTemplateEdit(templateId) {
+  const template = appState.workTemplates.find(t => t.id === templateId);
+  if (!template) return;
+
+  const nameInput = document.getElementById('template-edit-name');
+  if (nameInput && nameInput.value.trim()) {
+    template.name = nameInput.value.trim();
+  }
+  template.updatedAt = new Date().toISOString();
+  saveWorkTemplates();
+  closeWorkModal();
+  showWorkModal('template-manage');
+  showToast('템플릿 저장됨', 'success');
+}
+window.confirmTemplateEdit = confirmTemplateEdit;

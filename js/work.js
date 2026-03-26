@@ -61,8 +61,7 @@ function renderWorkProjects() {
         <div class="work-projects-title">💼 본업</div>
         <div style="display: flex; gap: 8px;">
           <button class="work-project-add-btn" onclick="showWorkModal('project')">+ 새 프로젝트</button>
-          <button class="work-project-action-btn" onclick="showWorkModal('template-select')">📋 템플릿</button>
-          <button class="work-project-action-btn" onclick="showWorkModal('template-import')">📥 가져오기</button>
+          <button class="work-project-action-btn" onclick="showWorkModal('template-manage')">📋 템플릿 관리</button>
           <button class="work-project-action-btn" onclick="showMMReportModal()">📊 MM 리포트</button>
         </div>
       </div>
