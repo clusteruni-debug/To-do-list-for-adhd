@@ -89,7 +89,7 @@ function renderWorkTimeline() {
   // === 프로젝트 단위 이력 ===
   let projectHistoryHtml = '';
   if (timelineTab === 'project') {
-    let projects = [...appState.workProjects.filter(p => !p.archived)];
+    let projects = [...(appState.workProjects || []).filter(p => !p.archived)];
     const sortKey = appState.workProjectHistorySort;
 
     // 정렬
@@ -146,7 +146,7 @@ function renderWorkTimeline() {
       projectHistoryHtml += renderPagination(safePageIdx, totalPages, projects.length, 'goProjectHistoryPage');
 
       // 아카이브 프로젝트
-      const archived = appState.workProjects.filter(p => p.archived);
+      const archived = (appState.workProjects || []).filter(p => p.archived);
       if (archived.length > 0) {
         projectHistoryHtml += '<div style="margin-top: 16px;">' +
           '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; cursor: pointer;" onclick="appState.showArchivedTimeline=!appState.showArchivedTimeline; renderStatic();">' +
@@ -170,7 +170,7 @@ function renderWorkTimeline() {
   let activityHistoryHtml = '';
   if (timelineTab === 'activity') {
     const allLogs = [];
-    appState.workProjects.filter(p => !p.archived).forEach(p => {
+    (appState.workProjects || []).filter(p => !p.archived).forEach(p => {
       p.stages.forEach((stage, si) => {
         (stage.subcategories || []).forEach((sub, sci) => {
           sub.tasks.forEach((task, ti) => {
@@ -189,27 +189,41 @@ function renderWorkTimeline() {
       });
     });
 
-    // 완료된 일반 본업 작업
-    const completedWork = appState.tasks.filter(t => t.category === '본업' && t.completed && t.completedAt).map(t => ({
-      date: t.completedAt.substring(0, 10),
-      content: '✓ 완료',
-      taskTitle: t.title,
-      projectName: '일반',
-      projectId: null,
-      status: 'completed'
-    }));
-    allLogs.push(...completedWork);
+    // 완료된 일반 본업 작업 — completionLog (영구 저장)에서 읽기
+    // appState.tasks는 7~30일 후 자동 정리되므로 completionLog 기반으로 변경
+    const projectLogKeys = new Set();
+    allLogs.forEach(l => projectLogKeys.add(l.date + '|' + l.taskTitle));
+
+    for (const [dateKey, dayEntries] of Object.entries(appState.completionLog || {})) {
+      (dayEntries || []).forEach(e => {
+        if (e._summary) return; // 압축 데이터 스킵
+        if (!e.t) return; // 제목 없는 항목 스킵
+        if (e.c !== '본업' && e.c !== 'Main Job') return; // 본업만 (레거시 포함)
+        // 이미 프로젝트 로그에 있는 동일 제목+날짜는 중복 방지
+        if (projectLogKeys.has(dateKey + '|' + e.t)) return;
+        allLogs.push({
+          date: dateKey,
+          content: '✓ 완료' + (e.at ? ' (' + e.at + ')' : ''),
+          taskTitle: e.t,
+          projectName: '일반',
+          projectId: null,
+          status: 'completed'
+        });
+      });
+    }
 
     // 정렬
     const sortKey = appState.workActivityHistorySort;
+    // null-safe sort helpers
+    const safeCompare = (a, b, locale) => (a || '').localeCompare(b || '', locale);
     if (sortKey === 'date-desc') {
-      allLogs.sort((a, b) => b.date.localeCompare(a.date) || a.taskTitle.localeCompare(b.taskTitle, 'ko'));
+      allLogs.sort((a, b) => safeCompare(b.date, a.date) || safeCompare(a.taskTitle, b.taskTitle, 'ko'));
     } else if (sortKey === 'date-asc') {
-      allLogs.sort((a, b) => a.date.localeCompare(b.date) || a.taskTitle.localeCompare(b.taskTitle, 'ko'));
+      allLogs.sort((a, b) => safeCompare(a.date, b.date) || safeCompare(a.taskTitle, b.taskTitle, 'ko'));
     } else if (sortKey === 'name-asc') {
-      allLogs.sort((a, b) => a.taskTitle.localeCompare(b.taskTitle, 'ko') || b.date.localeCompare(a.date));
+      allLogs.sort((a, b) => safeCompare(a.taskTitle, b.taskTitle, 'ko') || safeCompare(b.date, a.date));
     } else if (sortKey === 'name-desc') {
-      allLogs.sort((a, b) => b.taskTitle.localeCompare(a.taskTitle, 'ko') || b.date.localeCompare(a.date));
+      allLogs.sort((a, b) => safeCompare(b.taskTitle, a.taskTitle, 'ko') || safeCompare(b.date, a.date));
     }
 
     // 개별 항목 기준 페이지네이션 (20건/페이지)
@@ -228,21 +242,36 @@ function renderWorkTimeline() {
         if (!byDate[log.date]) byDate[log.date] = [];
         byDate[log.date].push(log);
       });
-      const dates = Object.keys(byDate).sort(sortKey === 'date-asc' ? (a, b) => a.localeCompare(b) : (a, b) => b.localeCompare(a));
+      // 날짜 그룹 헤더 정렬: name 정렬에서도 날짜 내림차순 유지 (논리적으로 최신 먼저)
+      const dateOrder = sortKey === 'date-asc' ? 1 : -1;
+      const dates = Object.keys(byDate).sort((a, b) => dateOrder * a.localeCompare(b));
 
-      activityHistoryHtml = dates.map(date =>
-        '<div style="margin-bottom: 16px;">' +
-          '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">' + date + ' (' + byDate[date].length + '건)</div>' +
-          byDate[date].map(log =>
-            '<div style="padding: 8px 12px; margin-bottom: 6px; background: var(--bg-secondary); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">' +
+      // 접힘/펼침 상태 초기화
+      if (!appState._expandedActivityDates) appState._expandedActivityDates = {};
+
+      activityHistoryHtml = dates.map(date => {
+        const isExpanded = !!appState._expandedActivityDates[date];
+        const logs = byDate[date];
+        // 접힌 상태: 날짜 헤더 + 요약만 표시
+        const summaryTitles = logs.slice(0, 3).map(l => escapeHtml(l.taskTitle)).join(', ');
+        const moreCount = logs.length > 3 ? ' 외 ' + (logs.length - 3) + '건' : '';
+
+        return '<div style="margin-bottom: 12px;">' +
+          '<div style="font-size: 14px; font-weight: 600; color: var(--text-muted); padding: 8px 4px; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; gap: 6px;" onclick="toggleActivityDate(\'' + escapeAttr(date) + '\')">' +
+            '<span style="font-size: 12px; display: inline-block;">' + (isExpanded ? '▼' : '▶') + '</span>' +
+            '<span>' + date + ' (' + logs.length + '건)</span>' +
+            (!isExpanded ? '<span style="font-size: 13px; font-weight: 400; color: var(--text-muted); margin-left: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">' + summaryTitles + moreCount + '</span>' : '') +
+          '</div>' +
+          (isExpanded ? logs.map(log =>
+            '<div style="padding: 8px 12px; margin-top: 6px; background: var(--bg-secondary); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start;">' +
               '<span style="width: 6px; height: 6px; border-radius: 50%; background: ' + (log.status === 'completed' ? 'var(--accent-success)' : log.status === 'in-progress' ? 'var(--accent-primary)' : 'var(--accent-neutral)') + '; flex-shrink: 0; margin-top: 7px;"></span>' +
               '<span style="min-width: 80px; max-width: 200px; font-size: 15px; font-weight: 600; word-break: break-word;">' + escapeHtml(log.taskTitle) + '</span>' +
               '<div style="flex: 1; min-width: 120px; font-size: 14px; color: var(--text-secondary);">' + renderFormattedText(log.content) + '</div>' +
               '<span style="font-size: 13px; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 8px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;">' + escapeHtml(log.projectName) + '</span>' +
             '</div>'
-          ).join('') +
-        '</div>'
-      ).join('');
+          ).join('') : '') +
+        '</div>';
+      }).join('');
 
       // 페이지네이션
       activityHistoryHtml += renderPagination(safePageIdx, totalPages, allLogs.length, 'goActivityHistoryPage');
@@ -278,6 +307,7 @@ window.goProjectHistoryPage = goProjectHistoryPage;
 
 function goActivityHistoryPage(page) {
   appState.workActivityHistoryPage = page;
+  appState._expandedActivityDates = {};
   renderStatic();
   setTimeout(() => {
     const el = document.querySelector('.work-view-tabs');
@@ -285,6 +315,13 @@ function goActivityHistoryPage(page) {
   }, 50);
 }
 window.goActivityHistoryPage = goActivityHistoryPage;
+
+function toggleActivityDate(date) {
+  if (!appState._expandedActivityDates) appState._expandedActivityDates = {};
+  appState._expandedActivityDates[date] = !appState._expandedActivityDates[date];
+  renderStatic();
+}
+window.toggleActivityDate = toggleActivityDate;
 
 function setProjectHistorySort(value) {
   const allowed = ['date-desc', 'date-asc', 'name-asc', 'name-desc'];
@@ -301,6 +338,7 @@ function setActivityHistorySort(value) {
   if (!allowed.includes(value)) value = 'date-desc';
   appState.workActivityHistorySort = value;
   appState.workActivityHistoryPage = 0;
+  appState._expandedActivityDates = {};
   try { localStorage.setItem('nav-activity-history-sort', JSON.stringify(value)); } catch (_) {}
   renderStatic();
 }
