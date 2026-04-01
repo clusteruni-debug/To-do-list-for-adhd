@@ -35,7 +35,7 @@ function editCompletedAt(id) {
         </div>
         <div class="work-modal-footer">
           <button class="work-modal-btn secondary" onclick="closeEditCompletedModal()">취소</button>
-          <button class="work-modal-btn primary" onclick="saveCompletedAt('${id}')">저장</button>
+          <button class="work-modal-btn primary" onclick="saveCompletedAt('${escapeAttr(id)}')">저장</button>
         </div>
       </div>
     </div>
@@ -184,7 +184,8 @@ function getQuickEditCategoryFields(category, task) {
 function updateQuickEditCategoryFields(category) {
   const container = document.getElementById('quick-edit-category-fields');
   if (!container) return;
-  container.innerHTML = getQuickEditCategoryFields(category, {});
+  const task = appState.tasks.find(t => t.id === appState.quickEditTaskId) || {};
+  container.innerHTML = getQuickEditCategoryFields(category, task);
 }
 window.updateQuickEditCategoryFields = updateQuickEditCategoryFields;
 
@@ -234,7 +235,7 @@ function showQuickEditModal(task) {
       <label class="work-modal-label">서브태스크</label>
       <div class="quick-edit-subtask-list" id="quick-edit-subtask-list">
         ${(task.subtasks || []).map((st, idx) => `
-          <div class="quick-edit-subtask-item">
+          <div class="quick-edit-subtask-item" data-orig-idx="${idx}">
             <textarea class="quick-edit-subtask-text" rows="1" placeholder="서브태스크 이름">${escapeHtml(st.text)}</textarea>
             <button class="quick-edit-subtask-remove" onclick="removeQuickEditSubtask(this)" type="button">×</button>
           </div>
@@ -277,7 +278,7 @@ function showQuickEditModal(task) {
         if (!list) return;
         lines.forEach(line => {
           const itemHtml = `
-            <div class="quick-edit-subtask-item">
+            <div class="quick-edit-subtask-item" data-orig-idx="-1">
               <textarea class="quick-edit-subtask-text" rows="1" placeholder="서브태스크 이름">${escapeHtml(line)}</textarea>
               <button class="quick-edit-subtask-remove" onclick="removeQuickEditSubtask(this)" type="button">×</button>
             </div>
@@ -307,7 +308,7 @@ function addQuickEditSubtask() {
   const lines = parseBulletLines(rawText);
   lines.forEach(text => {
     const itemHtml = `
-      <div class="quick-edit-subtask-item">
+      <div class="quick-edit-subtask-item" data-orig-idx="-1">
         <textarea class="quick-edit-subtask-text" rows="1" placeholder="서브태스크 이름">${escapeHtml(text)}</textarea>
         <button class="quick-edit-subtask-remove" onclick="removeQuickEditSubtask(this)" type="button">×</button>
       </div>
@@ -374,7 +375,7 @@ function saveQuickEdit() {
     }
   }
 
-  // 서브태스크 읽기
+  // 서브태스크 읽기 (data-orig-idx로 기존 완료 상태 보존)
   const subtaskItems = document.querySelectorAll('#quick-edit-subtask-list .quick-edit-subtask-item');
   const newSubtasks = [];
   subtaskItems.forEach(item => {
@@ -382,7 +383,8 @@ function saveQuickEdit() {
     if (textInput) {
       const stText = textInput.value.trim();
       if (stText) {
-        newSubtasks.push({ text: stText, completed: false, completedAt: null });
+        const origIdx = parseInt(item.dataset.origIdx);
+        newSubtasks.push({ text: stText, completed: false, completedAt: null, _origIdx: isNaN(origIdx) ? -1 : origIdx });
       }
     }
   });
@@ -403,11 +405,13 @@ function saveQuickEdit() {
       if (eventTypeEl) updates.eventType = eventTypeEl.value;
       if (linkEl) updates.link = linkEl.value;
 
-      // 서브태스크: 기존 완료 상태 보존 (trim 비교로 공백 차이 허용)
+      // 서브태스크: 인덱스 기반으로 기존 완료 상태 보존 (텍스트 변경 시에도 유지)
       const oldSubtasks = t.subtasks || [];
       updates.subtasks = newSubtasks.map(ns => {
-        const existing = oldSubtasks.find(os => os.text.trim() === ns.text.trim());
-        return existing ? { ...existing, text: ns.text } : ns;
+        const origIdx = ns._origIdx;
+        const existing = origIdx >= 0 && origIdx < oldSubtasks.length ? oldSubtasks[origIdx] : null;
+        const { _origIdx, ...cleanNs } = ns;
+        return existing ? { ...existing, text: cleanNs.text } : cleanNs;
       });
 
       return { ...t, ...updates };
@@ -692,6 +696,7 @@ function copyTask(id) {
     id: generateId(),
     title: task.title + ' (복사)',
     completed: false,
+    spawnedFromTaskId: undefined,
     createdAt: now,
     updatedAt: now
   };

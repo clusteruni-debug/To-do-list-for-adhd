@@ -23,8 +23,8 @@
     }
 
     .resolution-add-btn {
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       background: var(--accent-success);
       border: none;
       border-radius: var(--radius-sm);

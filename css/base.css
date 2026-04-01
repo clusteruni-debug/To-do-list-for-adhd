@@ -145,6 +145,17 @@
       -moz-osx-font-smoothing: grayscale;
     }
     
+    /* 키보드 포커스 링 — 모든 인터랙티브 요소 (WCAG 2.4.7) */
+    button:focus-visible,
+    [role="button"]:focus-visible,
+    a:focus-visible,
+    .tab-btn:focus-visible,
+    .btn:focus-visible,
+    .btn-small:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
     .app {
       max-width: 1400px;
       margin: 0 auto;

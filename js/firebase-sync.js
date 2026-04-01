@@ -204,6 +204,7 @@ async function _doSyncToFirebase() {
       resolutions: appState.resolutions || [],
       deletedIds: appState.deletedIds,
       trash: appState.trash,
+      _migrations: appState._migrations || {},
       lastUpdated: writeTimestamp
     }, { merge: true });
 
@@ -539,6 +540,11 @@ async function loadFromFirebase() {
     if (docSnap.exists()) {
       const data = docSnap.data();
 
+      // 마이그레이션 플래그 병합 (양쪽 합집합 — 어느 기기에서든 완료된 마이그레이션은 유지)
+      if (data._migrations) {
+        appState._migrations = { ...(appState._migrations || {}), ...data._migrations };
+      }
+
       // Soft-Delete: 삭제 기록 병합 (merge 전에 수행해야 삭제된 항목 필터링 가능)
       appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);
 
@@ -767,6 +773,10 @@ function startRealtimeSync() {
       }
 
       {
+        // 마이그레이션 플래그 병합
+        if (data._migrations) {
+          appState._migrations = { ...(appState._migrations || {}), ...data._migrations };
+        }
         // Soft-Delete: 삭제 기록 병합 (merge 전에 수행)
         if (data.deletedIds) {
           appState.deletedIds = mergeDeletedIds(appState.deletedIds, data.deletedIds);

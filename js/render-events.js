@@ -229,7 +229,7 @@ function _renderLocalEventCard(task) {
         <div class="event-dday">${formatDday(days)}</div>
         ${hasSubtasks ? `
         <div onclick="event.stopPropagation();">
-          <span class="subtask-progress-indicator${task.subtasks.filter(s=>s.completed).length === task.subtasks.length ? ' all-done' : ''}" onclick="toggleSubtaskChips('${escapeAttr(task.id)}')" style="cursor:pointer; display:inline-block; margin: 4px 0 2px 0;" title="서브태스크 접기/펼치기">${task.subtasks.filter(s=>s.completed).length}/${task.subtasks.length} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</span>
+          <button class="subtask-progress-indicator${task.subtasks.filter(s=>s.completed).length === task.subtasks.length ? ' all-done' : ''}" onclick="toggleSubtaskChips('${escapeAttr(task.id)}')" style="display:inline-block; margin: 4px 0 2px 0;" title="서브태스크 접기/펼치기" aria-label="서브태스크 ${task.subtasks.filter(s=>s.completed).length}/${task.subtasks.length} 접기/펼치기">${task.subtasks.filter(s=>s.completed).length}/${task.subtasks.length} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>
           ${!(appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id]) ? `
             <div class="subtask-chips event-subtask-chips">
               ${task.subtasks.map((st, idx) => `

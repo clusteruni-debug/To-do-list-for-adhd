@@ -113,7 +113,7 @@ function renderActionTab(ctx) {
                 <div class="task-item-mini" onclick="editTask('${escapeAttr(task.id)}')" style="--task-cat-color: var(--cat-${task.category})">
                   <div class="task-item-mini-left">
                     ${hasSubtasks
-                      ? `<span class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" style="cursor:pointer;" title="서브태스크 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</span>`
+                      ? `<button class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" title="서브태스크 접기/펼치기" aria-label="서브태스크 ${doneCount}/${totalCount} 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>`
                       : `<button class="task-check-btn" onclick="event.stopPropagation(); completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">○</button>`
                     }
                     <span class="task-item-mini-title">${escapeHtml(task.title)}</span>
@@ -204,13 +204,6 @@ function _renderTodayEmptyState(completedToday) {
         </button>
       </div>
     </div>
-    <script>
-      (function() {
-        if (${completedToday} >= 1) {
-          setTimeout(function() { if (typeof showConfetti === 'function') showConfetti(); }, 300);
-        }
-      })();
-    </script>
   `;
 }
 
@@ -423,7 +416,7 @@ function _renderDetailedAddForm(categoryFields) {
         <div class="subtasks-container">
           ${(appState.detailedTask.subtasks || []).map((subtask, index) => `
             <div class="subtask-item ${subtask.completed ? 'completed' : ''}">
-              <span class="subtask-list-check" onclick="toggleDetailedSubtask(${index})" style="cursor:pointer">${subtask.completed ? '✓' : index + 1}</span>
+              <button class="subtask-list-check" onclick="toggleDetailedSubtask(${index})" aria-label="서브태스크 ${index + 1} 토글">${subtask.completed ? '✓' : index + 1}</button>
               <span class="subtask-text ${subtask.completed ? 'completed' : ''}" style="${subtask.completed ? 'text-decoration: line-through; color: var(--text-muted);' : ''}">${escapeHtml(subtask.text)}</span>
               <button class="subtask-remove" onclick="removeSubtask(${index})">×</button>
             </div>

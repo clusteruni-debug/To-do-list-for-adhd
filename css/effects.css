@@ -343,34 +343,26 @@
       }
     }
 
-    /* Stage 3: 높이 축소 + 슬라이드 아웃 (300ms) */
+    /* Stage 3: 슬라이드 아웃 + 축소 (300ms, transform/opacity only for performance) */
     @keyframes task-collapse {
       0% {
         opacity: 0.5;
-        max-height: 200px;
-        padding-top: 18px;
-        padding-bottom: 18px;
-        margin-bottom: var(--task-gap);
-        transform: translateX(0);
+        transform: translateX(0) scaleY(1);
       }
       60% {
         opacity: 0.2;
-        transform: translateX(30px);
+        transform: translateX(30px) scaleY(1);
       }
       100% {
         opacity: 0;
-        max-height: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-        margin-bottom: 0;
-        transform: translateX(60px);
-        overflow: hidden;
+        transform: translateX(60px) scaleY(0);
       }
     }
 
     /* 완료 애니메이션 트리거 클래스 */
     .task-item.completing {
       pointer-events: none;
+      transform-origin: top;
     }
 
     .task-item.completing .btn-small.complete,
@@ -501,7 +493,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: var(--bg-tertiary);
-      color: white;
+      color: var(--text-primary);
       padding: 14px 24px;
       border-radius: var(--radius-md);
       box-shadow: 0 4px 20px var(--shadow-color);
@@ -574,10 +566,31 @@
 
     .toast.success {
       background: var(--accent-success);
+      color: white;
     }
 
     .toast.error {
       background: var(--accent-danger);
+      color: white;
+    }
+
+    /* 동작 민감성 사용자: 장식 애니메이션 비활성화 (WCAG 2.3.3) */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      /* 기능적 요소: 애니메이션 제거 + 최종 상태로 즉시 표시 */
+      .toast, .toast-undo {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: translateX(-50%) !important;
+      }
+      .completion-overlay.show {
+        transition: none !important;
+        pointer-events: none !important;
+      }
     }
 
     /* 히든 파일 인풋 */

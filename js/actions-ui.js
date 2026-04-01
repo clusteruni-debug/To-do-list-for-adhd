@@ -310,6 +310,7 @@ function toggleSubtaskComplete(taskId, subtaskIndex) {
     const subtask = task.subtasks[subtaskIndex];
     subtask.completed = !subtask.completed;
     subtask.completedAt = subtask.completed ? new Date().toISOString() : null;
+    task.updatedAt = new Date().toISOString();
 
     // 서브태스크 완료/해제 시 completionLog 관리
     if (subtask.completed) {

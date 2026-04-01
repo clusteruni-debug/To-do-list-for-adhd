@@ -479,6 +479,7 @@ function createNextRepeatTask(task) {
     subtasks: (task.subtasks || []).map(st => ({ text: st.text, completed: false })),
     tags: task.tags || [],
     completed: false,
+    spawnedFromTaskId: task.id,
     createdAt: now.toISOString(),
     updatedAt: now.toISOString()
   };
@@ -531,17 +532,12 @@ function uncompleteTask(id) {
 
   // 반복 작업이었다면 자동 생성된 다음 회차 작업 제거
   if (task.repeatType && task.repeatType !== 'none') {
-    // 같은 제목의 미완료 작업 중 방금 생성된 것 제거
-    const recentTasks = appState.tasks.filter(t =>
-      t.title === task.title &&
-      !t.completed &&
-      t.id !== id &&
-      t.createdAt &&
-      (new Date() - new Date(t.createdAt)) < 60000 // 1분 이내 생성된 것
+    // spawnedFromTaskId로 정확한 자식 태스크 검색 (시간 무관)
+    const spawnedTask = appState.tasks.find(t =>
+      t.spawnedFromTaskId === id && !t.completed
     );
-    if (recentTasks.length > 0) {
-      const removeId = recentTasks[recentTasks.length - 1].id;
-      appState.tasks = appState.tasks.filter(t => t.id !== removeId);
+    if (spawnedTask) {
+      appState.tasks = appState.tasks.filter(t => t.id !== spawnedTask.id);
     }
   }
 

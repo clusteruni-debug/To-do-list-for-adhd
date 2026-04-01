@@ -218,6 +218,7 @@
     .subtask-list-check {
       width: 18px;
       height: 18px;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -225,6 +226,7 @@
       border: 2px solid var(--border-color);
       border-radius: 4px;
       font-size: 14px;
+      font-family: inherit;
       cursor: pointer;
       transition: background-color 0.2s, border-color 0.2s, color 0.2s;
     }
@@ -307,7 +309,7 @@
     }
 
     .subtask-chip-check {
-      font-size: 10px;
+      font-size: 12px;
     }
 
     .subtask-progress-indicator {
@@ -319,6 +321,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: inherit;
     }
 
     .subtask-progress-indicator.all-done {

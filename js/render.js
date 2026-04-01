@@ -347,6 +347,14 @@ function renderStatic() {
 
   // textarea Tab 키 + auto-resize 초기화
   document.querySelectorAll('#root textarea').forEach(ta => initEnhancedTextarea(ta));
+
+  // NavigatorZero confetti: empty state가 렌더된 경우에만 실행
+  if (document.getElementById('todoist-zero') && typeof showConfetti === 'function') {
+    const completedToday = appState.todayStats.completedToday || 0;
+    if (completedToday >= 1) {
+      setTimeout(showConfetti, 300);
+    }
+  }
 }
 
 /**

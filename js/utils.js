@@ -365,7 +365,7 @@ function validateTask(task) {
     expectedRevenue: task.expectedRevenue || '',
     link: typeof task.link === 'string' ? task.link.substring(0, 2000) : '',
     tags: Array.isArray(task.tags) ? task.tags.filter(t => typeof t === 'string').slice(0, 20) : [],
-    repeatType: ['none', 'daily', 'weekdays', 'weekends', 'weekly', 'custom', 'monthly'].includes(task.repeatType) ? task.repeatType : 'none',
+    repeatType: ['none', 'daily', 'weekdays', 'weekends', 'weekly', 'custom', 'monthly', 'interval'].includes(task.repeatType) ? task.repeatType : 'none',
     repeatDays: Array.isArray(task.repeatDays) ? task.repeatDays.filter(d => Number.isInteger(d) && d >= 0 && d <= 6) : [],
     createdAt: task.createdAt || new Date().toISOString(),
     priority: typeof task.priority === 'number' ? Math.min(Math.max(0, task.priority), 100) : 0,
@@ -380,12 +380,14 @@ function validateTask(task) {
   if (Array.isArray(task.subtasks)) validated.subtasks = task.subtasks;
   if (task.organizer) validated.organizer = task.organizer;
   if (task.eventType) validated.eventType = task.eventType;
+  if (task.repeatInterval) validated.repeatInterval = task.repeatInterval;
   if (task.repeatMonthDay) validated.repeatMonthDay = task.repeatMonthDay;
   if (task.lastCompletedAt) validated.lastCompletedAt = task.lastCompletedAt;
   if (task.source) validated.source = task.source;
   if (task.description) validated.description = task.description;
   if (task.startDate) validated.startDate = task.startDate;
   if (task.telegramEventId) validated.telegramEventId = task.telegramEventId;
+  if (task.spawnedFromTaskId) validated.spawnedFromTaskId = task.spawnedFromTaskId;
 
   return validated;
 }

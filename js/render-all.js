@@ -59,7 +59,7 @@ function _renderTaskItem(task) {
         <div class="all-task-title">${escapeHtml(task.title)}</div>
         <div class="all-task-meta">
           <span class="category ${task.category}" style="font-size:12px;">${task.category}</span>
-          ${hasSubtasks ? `<span class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" style="cursor:pointer;" title="서브태스크 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</span>` : ''}
+          ${hasSubtasks ? `<button class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" title="서브태스크 접기/펼치기" aria-label="서브태스크 ${doneCount}/${totalCount} 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>` : ''}
           ${task.repeatType && task.repeatType !== 'none' ? `<span>🔄 ${getRepeatLabel(task.repeatType, task)}</span>` : ''}
           ${task.estimatedTime ? `<span>⏱️ ${task.estimatedTime}분</span>` : ''}
           ${task.deadline ? `<span>${formatDeadline(task.deadline)}</span>` : ''}

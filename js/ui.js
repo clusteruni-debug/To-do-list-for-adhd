@@ -249,6 +249,7 @@ function saveActualTime(minutes) {
   const parsed = parseInt(minutes);
   if (isNaN(parsed) || parsed <= 0) {
     showToast('유효한 시간을 입력해주세요', 'error');
+    closeTimeInputModal();
     return;
   }
 
@@ -486,7 +487,7 @@ function showUndoToast(taskId, taskTitle) {
   toast.className = 'toast-undo';
   toast.innerHTML = `
     <span class="toast-undo-text">✓ "${escapeHtml(taskTitle.substring(0, 15))}${taskTitle.length > 15 ? '...' : ''}" 완료</span>
-    <button class="toast-undo-btn" onclick="undoComplete('${taskId}')">↩ 실행취소</button>
+    <button class="toast-undo-btn" onclick="undoComplete('${escapeAttr(taskId)}')">↩ 실행취소</button>
     <span class="toast-undo-timer">5</span>
   `;
   document.body.appendChild(toast);
