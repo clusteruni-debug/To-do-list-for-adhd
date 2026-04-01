@@ -399,29 +399,35 @@ function confirmWorkModal() {
     case 'edit-task': {
       const newTitle = document.getElementById('work-input-content').value.trim();
       if (!newTitle) { showToast('이름을 입력하세요', 'error'); return; }
+      // 변경 없으면 불필요한 저장/렌더 방지
+      const editProj = appState.workProjects.find(p => p.id === projectId);
+      const editT = editProj?.stages[stageIdx]?.subcategories?.[subcategoryIdx]?.tasks?.[taskIdx];
+      if (editT && editT.title === newTitle) break;
       renameWorkTask(projectId, stageIdx, subcategoryIdx, taskIdx, newTitle);
       break;
     }
     case 'edit-log': {
       const proj = appState.workProjects.find(p => p.id === projectId);
-      if (!proj) break;
+      if (!proj) { showToast('프로젝트를 찾을 수 없습니다', 'error'); return; }
       const t = proj.stages[stageIdx]?.subcategories?.[subcategoryIdx]?.tasks?.[taskIdx];
-      if (!t || !t.logs[logIdx]) break;
+      if (!t || !t.logs[logIdx]) { showToast('기록을 찾을 수 없습니다', 'error'); return; }
       const log = t.logs[logIdx];
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (log.content === '✓ 완료') {
         const newDate = document.getElementById('work-input-date').value;
-        if (!newDate || !dateRegex.test(newDate)) {
+        if (!newDate || !dateRegex.test(newDate) || isNaN(new Date(newDate).getTime())) {
           showToast('올바른 날짜를 선택하세요', 'error'); return;
         }
         log.date = newDate;
-        t.completedAt = newDate + 'T00:00';
+        // 기존 시간 보존, 없으면 00:00 폴백
+        const existingTime = t.completedAt ? t.completedAt.split('T')[1] || '00:00' : '00:00';
+        t.completedAt = newDate + 'T' + existingTime;
       } else {
         const newContent = document.getElementById('work-input-content').value.trim();
         if (!newContent) { showToast('내용을 입력하세요', 'error'); return; }
         log.content = newContent;
         const newDate = document.getElementById('work-input-date').value;
-        if (newDate && dateRegex.test(newDate)) {
+        if (newDate && dateRegex.test(newDate) && !isNaN(new Date(newDate).getTime())) {
           log.date = newDate;
         }
       }
