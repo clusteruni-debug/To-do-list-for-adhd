@@ -128,9 +128,10 @@ function renderLifeTab() {
           // 모든 완료 태스크 표시
           const logicalToday = getLogicalDate();
           const completedTasks = lifeTasks.filter(t => {
-            if (!t.completed) return false;
-            if (!t.completedAt) return true; // 레거시 데이터
-            return getLogicalDate(new Date(t.completedAt)) === logicalToday;
+            if (!t.completed || !t.completedAt) return false;
+            const d = new Date(t.completedAt);
+            if (isNaN(d.getTime())) return false;
+            return getLogicalDate(d) === logicalToday;
           });
           // 일상을 반복/일회성으로 분리
           const isRepeat = (t) => t.repeatType && t.repeatType !== 'none';

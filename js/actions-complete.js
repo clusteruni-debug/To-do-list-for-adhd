@@ -61,8 +61,9 @@ function completeTaskForDate(id, dateStr) {
   // daily/weekdays 태스크를 과거 논리일로 백데이트 → 즉시 리셋 (오늘 다시 완료 가능)
   const logicalToday = getLogicalDate();
   const logicalCompDate = getLogicalDate(new Date(dateStr + 'T12:00:00'));
-  if (logicalCompDate !== logicalToday &&
-      (task.repeatType === 'daily' || task.repeatType === 'weekdays')) {
+  const wasBackdateReset = logicalCompDate !== logicalToday &&
+      (task.repeatType === 'daily' || task.repeatType === 'weekdays');
+  if (wasBackdateReset) {
     const updatedTask = appState.tasks.find(t => t.id === id);
     if (updatedTask) {
       updatedTask.lastCompletedAt = updatedTask.completedAt;
@@ -80,31 +81,37 @@ function completeTaskForDate(id, dateStr) {
 
   saveState();
 
-  // telegram-event-bot 연동
-  if (task.source && task.source.type === 'telegram-event') {
+  // telegram-event-bot 연동 (백데이트 리셋 시 스킵)
+  if (!wasBackdateReset && task.source && task.source.type === 'telegram-event') {
     updateLinkedEventStatus(task, true);
   }
-
-  // 태스크 아이템 DOM에 completing 애니메이션
-  const taskEls = document.querySelectorAll(`[id$="-${id}"], [data-task-id="${id}"]`);
-  taskEls.forEach(el => {
-    if (el.classList.contains('task-item') || el.closest('.task-item')) {
-      const item = el.classList.contains('task-item') ? el : el.closest('.task-item');
-      item.classList.add('completing');
-    }
-  });
-
-  setTimeout(() => {
-    showCompletionAnimation(task.title, appState.todayStats.streak);
-  }, 350);
 
   const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
   const dateLabel = isToday ? '오늘' :
     dateStr === getLocalDateStr(_yd) ? '어제' : dateStr;
-  showToast(`${dateLabel} 완료: ${task.title}`, 'success');
-  srAnnounce('작업 완료: ' + task.title);
-  showUndoToast(id, task.title);
-  if (isToday) checkMilestone();
+
+  if (wasBackdateReset) {
+    // 백데이트 리셋: 기록만 남기고 태스크 리셋됨 — 애니메이션/undo 불필요
+    showToast(`${dateLabel} 기록 완료: ${task.title}`, 'success');
+    srAnnounce(`${dateLabel} 기록: ` + task.title);
+    renderStatic();
+  } else {
+    // 일반 완료: 애니메이션 + undo
+    const taskEls = document.querySelectorAll(`[id$="-${id}"], [data-task-id="${id}"]`);
+    taskEls.forEach(el => {
+      if (el.classList.contains('task-item') || el.closest('.task-item')) {
+        const item = el.classList.contains('task-item') ? el : el.closest('.task-item');
+        item.classList.add('completing');
+      }
+    });
+    setTimeout(() => {
+      showCompletionAnimation(task.title, appState.todayStats.streak);
+    }, 350);
+    showToast(`${dateLabel} 완료: ${task.title}`, 'success');
+    srAnnounce('작업 완료: ' + task.title);
+    showUndoToast(id, task.title);
+    if (isToday) checkMilestone();
+  }
 
   if (navigator.vibrate) {
     navigator.vibrate([50, 100, 50]);
@@ -119,9 +126,12 @@ function showBackdateMenu(id, anchorEl) {
   // detached 엘리먼트 가드 (renderStatic 후 stale 참조 방지)
   if (!document.body.contains(anchorEl)) return;
 
-  // 기존 메뉴 제거
+  // 기존 메뉴 제거 (이벤트 리스너 즉시 정리)
   const existing = document.querySelector('.backdate-menu');
-  if (existing) existing.remove();
+  if (existing) {
+    if (existing._closeCleanup) existing._closeCleanup();
+    existing.remove();
+  }
 
   const rect = anchorEl.getBoundingClientRect();
   const menu = document.createElement('div');
@@ -156,6 +166,7 @@ function showBackdateMenu(id, anchorEl) {
     const val = dateInput.value;
     if (!val) return;
     if (val > today) { showToast('미래 날짜는 선택할 수 없습니다', 'error'); return; }
+    if (menu._closeCleanup) menu._closeCleanup();
     menu.remove();
     completeTaskForDate(id, val);
   });
@@ -166,6 +177,7 @@ function showBackdateMenu(id, anchorEl) {
   menu.addEventListener('click', (e) => {
     const item = e.target.closest('.backdate-menu-item[data-date]');
     if (!item) return;
+    if (menu._closeCleanup) menu._closeCleanup();
     menu.remove();
     completeTaskForDate(id, item.dataset.date);
   });
@@ -175,11 +187,13 @@ function showBackdateMenu(id, anchorEl) {
     if (!document.body.contains(menu) || !menu.contains(e.target)) {
       if (document.body.contains(menu)) menu.remove();
       document.removeEventListener('pointerdown', closeHandler);
+      menu._closeCleanup = null;
     }
   };
   setTimeout(() => {
     if (!document.body.contains(menu)) return;
     document.addEventListener('pointerdown', closeHandler);
+    menu._closeCleanup = () => document.removeEventListener('pointerdown', closeHandler);
   }, 10);
 }
 window.showBackdateMenu = showBackdateMenu;
@@ -194,14 +208,19 @@ function showSubtaskBackdateMenu(taskId, subtaskIndex, anchorEl) {
   if (!task || !task.subtasks || !task.subtasks[subtaskIndex]) return;
   const subtask = task.subtasks[subtaskIndex];
 
-  // 이미 완료된 서브태스크면 토글(해제)만 수행
+  // 이미 완료된 서브태스크면 해제
   if (subtask.completed) {
     toggleSubtaskComplete(taskId, subtaskIndex);
+    showToast(`해제됨: ${subtask.text}`, 'success');
     return;
   }
 
+  // 기존 메뉴 제거 (이벤트 리스너 즉시 정리)
   const existing = document.querySelector('.backdate-menu');
-  if (existing) existing.remove();
+  if (existing) {
+    if (existing._closeCleanup) existing._closeCleanup();
+    existing.remove();
+  }
 
   const rect = anchorEl.getBoundingClientRect();
   const menu = document.createElement('div');
@@ -231,6 +250,7 @@ function showSubtaskBackdateMenu(taskId, subtaskIndex, anchorEl) {
 
   const handleDate = (dateStr) => {
     if (dateStr > today) { showToast('미래 날짜는 선택할 수 없습니다', 'error'); return; }
+    if (menu._closeCleanup) menu._closeCleanup();
     menu.remove();
     completeSubtaskForDate(taskId, subtaskIndex, dateStr);
   };
@@ -244,15 +264,18 @@ function showSubtaskBackdateMenu(taskId, subtaskIndex, anchorEl) {
     if (item) handleDate(item.dataset.date);
   });
 
+  // 바깥 클릭 시 닫기 (이벤트 리스너 즉시 정리)
   const closeHandler = (e) => {
     if (!document.body.contains(menu) || !menu.contains(e.target)) {
       if (document.body.contains(menu)) menu.remove();
       document.removeEventListener('pointerdown', closeHandler);
+      menu._closeCleanup = null;
     }
   };
   setTimeout(() => {
     if (!document.body.contains(menu)) return;
     document.addEventListener('pointerdown', closeHandler);
+    menu._closeCleanup = () => document.removeEventListener('pointerdown', closeHandler);
   }, 10);
 }
 window.showSubtaskBackdateMenu = showSubtaskBackdateMenu;

@@ -518,6 +518,7 @@ function cleanupOldCompletedTasks() {
  */
 function getLogicalDate(d) {
   const dt = d || new Date();
+  if (isNaN(dt.getTime())) return getLocalDateStr(new Date());
   const dayStartHour = (appState.settings && appState.settings.dayStartHour) || 5;
 
   if (dt.getHours() < dayStartHour) {

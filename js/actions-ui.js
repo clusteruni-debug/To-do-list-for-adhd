@@ -308,6 +308,7 @@ function toggleSubtaskComplete(taskId, subtaskIndex) {
   const task = appState.tasks.find(t => t.id === taskId);
   if (task && task.subtasks && task.subtasks[subtaskIndex]) {
     const subtask = task.subtasks[subtaskIndex];
+    const prevCompletedAt = subtask.completedAt; // 백데이트 완료 해제 시 원래 날짜 참조용
     subtask.completed = !subtask.completed;
     subtask.completedAt = subtask.completed ? new Date().toISOString() : null;
     task.updatedAt = new Date().toISOString();
@@ -326,8 +327,8 @@ function toggleSubtaskComplete(taskId, subtaskIndex) {
       });
       saveCompletionLog();
     } else {
-      // 해제 시 오늘 로그에서 삭제 + soft-delete (Firebase 부활 방지)
-      const dateKey = getLocalDateStr(new Date());
+      // 해제 시 완료 날짜의 로그에서 삭제 + soft-delete (Firebase 부활 방지)
+      const dateKey = prevCompletedAt ? getLocalDateStr(new Date(prevCompletedAt)) : getLocalDateStr(new Date());
       const logTitle = task.title + ' > ' + subtask.text;
       if (appState.completionLog[dateKey]) {
         const idx = appState.completionLog[dateKey].findIndex(

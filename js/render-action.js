@@ -64,7 +64,10 @@ function renderActionTab(ctx) {
             ${nextAction.subtasks && nextAction.subtasks.length > 0 ? `
               <div class="next-action-subtasks">
                 ${nextAction.subtasks.slice(0, 5).map((st, idx) => `
-                  <div class="next-action-subtask ${st.completed ? 'completed' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(nextAction.id)}', ${idx})">
+                  <div class="next-action-subtask ${st.completed ? 'completed' : ''}" onclick="if(this._longPressed){this._longPressed=false;return;}toggleSubtaskComplete('${escapeAttr(nextAction.id)}', ${idx})"
+                    onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showSubtaskBackdateMenu('${escapeAttr(nextAction.id)}', ${idx}, this); }, 500)"
+                    onpointerup="clearTimeout(this._lpTimer)"
+                    onpointerleave="clearTimeout(this._lpTimer)">
                     <span class="next-action-subtask-check">${st.completed ? '✓' : '○'}</span>
                     <span>${escapeHtml(st.text)}</span>
                   </div>
