@@ -78,7 +78,11 @@ function _renderTaskItem(task) {
       </div>
       <div class="all-task-actions">
         ${task.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(task.link)}')">GO</button>` : ''}
-        <button class="btn-small complete" onclick="completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">✓</button>
+        <button class="btn-small complete" onclick="if(this._longPressed){this._longPressed=false;return;}completeTask('${escapeAttr(task.id)}')"
+          onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(task.id)}', this); }, 500)"
+          onpointerup="clearTimeout(this._lpTimer)"
+          onpointerleave="clearTimeout(this._lpTimer)"
+          aria-label="작업 완료 (길게 누르면 날짜 선택)">✓</button>
         <button class="btn-small edit" onclick="editTask('${escapeAttr(task.id)}')" aria-label="작업 수정">${svgIcon('edit', 14)}</button>
         <button class="btn-small delete" onclick="deleteTask('${escapeAttr(task.id)}')" aria-label="작업 삭제">×</button>
       </div>

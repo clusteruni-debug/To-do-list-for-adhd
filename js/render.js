@@ -284,7 +284,11 @@ function renderStatic() {
                   </div>
                   <div class="task-item-actions">
                     <button class="btn-small edit" onclick="editTask('${escapeAttr(task.id)}')">${svgIcon('edit', 14)} 마감 추가</button>
-                    <button class="btn-small complete" onclick="completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">✓</button>
+                    <button class="btn-small complete" onclick="if(this._longPressed){this._longPressed=false;return;}completeTask('${escapeAttr(task.id)}')"
+                      onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(task.id)}', this); }, 500)"
+                      onpointerup="clearTimeout(this._lpTimer)"
+                      onpointerleave="clearTimeout(this._lpTimer)"
+                      aria-label="작업 완료 (길게 누르면 날짜 선택)">✓</button>
                   </div>
                 </div>
               `).join('')}

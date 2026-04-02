@@ -119,13 +119,16 @@ function showBackdateMenu(id, anchorEl) {
     </div>
   `;
 
-  // 위치 계산
+  // 위치 계산 (우측 클리핑 방지)
   menu.style.position = 'fixed';
-  menu.style.left = Math.max(8, rect.left - 40) + 'px';
-  menu.style.top = (rect.bottom + 6) + 'px';
   menu.style.zIndex = '9999';
-
+  menu.style.visibility = 'hidden';
   document.body.appendChild(menu);
+  const menuWidth = menu.offsetWidth || 160;
+  const leftPos = Math.min(Math.max(8, rect.left - 40), window.innerWidth - menuWidth - 8);
+  menu.style.left = leftPos + 'px';
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.visibility = '';
 
   // date input 변경 시 완료 처리
   const dateInput = menu.querySelector('.backdate-date-input');
@@ -709,3 +712,4 @@ function uncompleteTask(id) {
   renderStatic();
   showToast('완료 취소', 'success');
 }
+window.uncompleteTask = uncompleteTask;

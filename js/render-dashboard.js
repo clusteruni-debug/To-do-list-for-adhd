@@ -65,7 +65,11 @@ function renderDashboardTab(ctx) {
               </div>
               <div class="dash-next-actions">
                 ${nextAction.link ? `<button class="btn-small go" onclick="handleGo('${escapeAttr(nextAction.link)}')">GO</button>` : ''}
-                <button class="btn-small complete" onclick="completeTask('${escapeAttr(nextAction.id)}')">✓</button>
+                <button class="btn-small complete" onclick="if(this._longPressed){this._longPressed=false;return;}completeTask('${escapeAttr(nextAction.id)}')"
+                  onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(nextAction.id)}', this); }, 500)"
+                  onpointerup="clearTimeout(this._lpTimer)"
+                  onpointerleave="clearTimeout(this._lpTimer)"
+                  aria-label="작업 완료 (길게 누르면 날짜 선택)">✓</button>
               </div>
             </div>
           </div>
