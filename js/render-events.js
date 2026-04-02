@@ -233,7 +233,10 @@ function _renderLocalEventCard(task) {
           ${!(appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id]) ? `
             <div class="subtask-chips event-subtask-chips">
               ${task.subtasks.map((st, idx) => `
-                <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
+                <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="if(this._longPressed){this._longPressed=false;return;}toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})"
+                  onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showSubtaskBackdateMenu('${escapeAttr(task.id)}', ${idx}, this); }, 500)"
+                  onpointerup="clearTimeout(this._lpTimer)"
+                  onpointerleave="clearTimeout(this._lpTimer)">
                   <span class="subtask-chip-check">${st.completed ? '✓' : '○'}</span>${escapeHtml(st.text)}
                 </span>
               `).join('')}

@@ -404,12 +404,12 @@ function validateTasks(tasks) {
  * 오늘 통계 재계산 (중복 코드 방지)
  */
 function recomputeTodayStats() {
-  const today = getLocalDateStr();
+  const logicalToday = getLogicalDate();
   appState.todayStats.completedToday = appState.tasks.filter(t => {
     if (!t.completed || !t.completedAt) return false;
     const d = new Date(t.completedAt);
     if (isNaN(d.getTime())) return false;
-    return getLocalDateStr(d) === today;
+    return getLogicalDate(d) === logicalToday;
   }).length;
 }
 
@@ -471,12 +471,12 @@ function getStreakBadge(streak) {
  * 히스토리/캘린더/수익 통계와 무관하게, 탭의 "완료됨" 섹션에 오늘 것만 표시
  */
 function getTodayCompletedTasks(tasks) {
-  const today = getLocalDateStr();
+  const logicalToday = getLogicalDate();
   return tasks.filter(t => {
     if (!t.completed || !t.completedAt) return false;
     const d = new Date(t.completedAt);
     if (isNaN(d.getTime())) return false;
-    return getLocalDateStr(d) === today;
+    return getLogicalDate(d) === logicalToday;
   });
 }
 
@@ -576,14 +576,25 @@ function checkDailyReset() {
       }
     }
 
-    // 서브태스크 완료 상태도 초기화
+    // 서브태스크 완료 상태도 초기화 (각 서브태스크의 논리적 완료일 기준)
     if (task.subtasks && task.subtasks.length > 0) {
-      const anySubCompleted = task.subtasks.some(st => st.completed);
-      if (anySubCompleted) {
-        task.subtasks.forEach(st => {
+      let subtaskChanged = false;
+      task.subtasks.forEach(st => {
+        if (!st.completed) return;
+        if (!st.completedAt) {
+          // completedAt 없는 레거시 데이터 → 리셋
+          st.completed = false;
+          subtaskChanged = true;
+          return;
+        }
+        const stLogicalDate = getLogicalDate(new Date(st.completedAt));
+        if (stLogicalDate !== logicalToday) {
           st.completed = false;
           st.completedAt = null;
-        });
+          subtaskChanged = true;
+        }
+      });
+      if (subtaskChanged) {
         task.updatedAt = new Date().toISOString();
         changed = true;
       }

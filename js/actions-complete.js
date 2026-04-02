@@ -58,6 +58,26 @@ function completeTaskForDate(id, dateStr) {
     }
   }
 
+  // daily/weekdays 태스크를 과거 논리일로 백데이트 → 즉시 리셋 (오늘 다시 완료 가능)
+  const logicalToday = getLogicalDate();
+  const logicalCompDate = getLogicalDate(new Date(dateStr + 'T12:00:00'));
+  if (logicalCompDate !== logicalToday &&
+      (task.repeatType === 'daily' || task.repeatType === 'weekdays')) {
+    const updatedTask = appState.tasks.find(t => t.id === id);
+    if (updatedTask) {
+      updatedTask.lastCompletedAt = updatedTask.completedAt;
+      updatedTask.completed = false;
+      updatedTask.completedAt = null;
+      updatedTask.updatedAt = new Date().toISOString();
+      if (updatedTask.subtasks) {
+        updatedTask.subtasks.forEach(st => {
+          st.completed = false;
+          st.completedAt = null;
+        });
+      }
+    }
+  }
+
   saveState();
 
   // telegram-event-bot 연동
@@ -163,6 +183,111 @@ function showBackdateMenu(id, anchorEl) {
   }, 10);
 }
 window.showBackdateMenu = showBackdateMenu;
+
+/**
+ * 서브태스크용 롱프레스 날짜 선택 팝업 표시
+ */
+function showSubtaskBackdateMenu(taskId, subtaskIndex, anchorEl) {
+  if (!document.body.contains(anchorEl)) return;
+
+  const task = appState.tasks.find(t => t.id === taskId);
+  if (!task || !task.subtasks || !task.subtasks[subtaskIndex]) return;
+  const subtask = task.subtasks[subtaskIndex];
+
+  // 이미 완료된 서브태스크면 토글(해제)만 수행
+  if (subtask.completed) {
+    toggleSubtaskComplete(taskId, subtaskIndex);
+    return;
+  }
+
+  const existing = document.querySelector('.backdate-menu');
+  if (existing) existing.remove();
+
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'backdate-menu';
+
+  const today = getLocalDateStr();
+  const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+  const yesterday = getLocalDateStr(_yd);
+
+  menu.innerHTML = `
+    <div class="backdate-menu-item" data-date="${today}">오늘</div>
+    <div class="backdate-menu-item" data-date="${yesterday}">어제</div>
+    <div class="backdate-menu-item backdate-menu-custom">
+      <input type="date" class="backdate-date-input" value="${yesterday}" max="${today}">
+    </div>
+  `;
+
+  menu.style.position = 'fixed';
+  menu.style.zIndex = '9999';
+  menu.style.visibility = 'hidden';
+  document.body.appendChild(menu);
+  const menuWidth = menu.offsetWidth || 160;
+  const leftPos = Math.min(Math.max(8, rect.left - 40), window.innerWidth - menuWidth - 8);
+  menu.style.left = leftPos + 'px';
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.visibility = '';
+
+  const handleDate = (dateStr) => {
+    if (dateStr > today) { showToast('미래 날짜는 선택할 수 없습니다', 'error'); return; }
+    menu.remove();
+    completeSubtaskForDate(taskId, subtaskIndex, dateStr);
+  };
+
+  const dateInput = menu.querySelector('.backdate-date-input');
+  dateInput.addEventListener('change', () => { if (dateInput.value) handleDate(dateInput.value); });
+  dateInput.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.backdate-menu-item[data-date]');
+    if (item) handleDate(item.dataset.date);
+  });
+
+  const closeHandler = (e) => {
+    if (!document.body.contains(menu) || !menu.contains(e.target)) {
+      if (document.body.contains(menu)) menu.remove();
+      document.removeEventListener('pointerdown', closeHandler);
+    }
+  };
+  setTimeout(() => {
+    if (!document.body.contains(menu)) return;
+    document.addEventListener('pointerdown', closeHandler);
+  }, 10);
+}
+window.showSubtaskBackdateMenu = showSubtaskBackdateMenu;
+
+/**
+ * 특정 날짜로 서브태스크 완료 기록
+ */
+function completeSubtaskForDate(taskId, subtaskIndex, dateStr) {
+  const task = appState.tasks.find(t => t.id === taskId);
+  if (!task || !task.subtasks || !task.subtasks[subtaskIndex]) return;
+
+  const subtask = task.subtasks[subtaskIndex];
+  subtask.completed = true;
+  subtask.completedAt = new Date(dateStr + 'T12:00:00').toISOString();
+  task.updatedAt = new Date().toISOString();
+
+  // completionLog에 기록
+  if (!appState.completionLog[dateStr]) appState.completionLog[dateStr] = [];
+  appState.completionLog[dateStr].push({
+    t: task.title + ' > ' + subtask.text,
+    c: task.category || '기타',
+    at: '12:00',
+    sub: true
+  });
+  saveCompletionLog();
+  saveState();
+  renderStatic();
+
+  const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+  const isToday = dateStr === getLocalDateStr();
+  const dateLabel = isToday ? '오늘' :
+    dateStr === getLocalDateStr(_yd) ? '어제' : dateStr;
+  showToast(`${dateLabel} 완료: ${subtask.text}`, 'success');
+}
+window.completeSubtaskForDate = completeSubtaskForDate;
 
 /**
  * 작업 완료

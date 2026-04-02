@@ -17,7 +17,11 @@ function _renderLifeTaskItem(task) {
   return `
     <div class="life-item" style="--task-cat-color: var(--cat-${task.category})">
       ${hasSubtasks
-        ? `<button class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" title="서브태스크 접기/펼치기" aria-label="서브태스크 ${doneCount}/${totalCount} 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>`
+        ? `<button class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="if(this._longPressed){this._longPressed=false;return;}event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')"
+            onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(task.id)}', this); }, 500)"
+            onpointerup="clearTimeout(this._lpTimer)"
+            onpointerleave="clearTimeout(this._lpTimer)"
+            title="접기/펼치기 (길게 누르면 날짜 선택)" aria-label="서브태스크 ${doneCount}/${totalCount} (길게 누르면 날짜 선택)">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>`
         : `<button class="task-check-btn" onclick="if(this._longPressed){this._longPressed=false;return;}completeTask('${escapeAttr(task.id)}')"
             onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(task.id)}', this); }, 500)"
             onpointerup="clearTimeout(this._lpTimer)"
@@ -44,7 +48,10 @@ function _renderLifeTaskItem(task) {
       ${hasSubtasks && !(appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id]) ? `
         <div class="subtask-chips" onclick="event.stopPropagation();">
           ${task.subtasks.map((st, idx) => `
-            <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})">
+            <span class="subtask-chip ${st.completed ? 'done' : ''}" onclick="if(this._longPressed){this._longPressed=false;return;}toggleSubtaskComplete('${escapeAttr(task.id)}', ${idx})"
+              onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showSubtaskBackdateMenu('${escapeAttr(task.id)}', ${idx}, this); }, 500)"
+              onpointerup="clearTimeout(this._lpTimer)"
+              onpointerleave="clearTimeout(this._lpTimer)">
               <span class="subtask-chip-check">${st.completed ? '✓' : '○'}</span>${escapeHtml(st.text)}
             </span>
           `).join('')}
@@ -119,7 +126,12 @@ function renderLifeTab() {
             return new Date(a.deadline) - new Date(b.deadline);
           });
           // 모든 완료 태스크 표시
-          const completedTasks = lifeTasks.filter(t => t.completed);
+          const logicalToday = getLogicalDate();
+          const completedTasks = lifeTasks.filter(t => {
+            if (!t.completed) return false;
+            if (!t.completedAt) return true; // 레거시 데이터
+            return getLogicalDate(new Date(t.completedAt)) === logicalToday;
+          });
           // 일상을 반복/일회성으로 분리
           const isRepeat = (t) => t.repeatType && t.repeatType !== 'none';
           const repeatTasks = pendingTasks.filter(t => t.category === '일상' && isRepeat(t));
