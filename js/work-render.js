@@ -210,7 +210,10 @@ function renderWorkProjectDetail(project) {
           const stageName = getStageName(project, stageIdx);
           const stageClass = stage.completed ? 'completed' : stageIdx === currentIdx ? 'current' : 'future';
           const subcategories = stage.subcategories || [];
-          const isCollapsed = appState.collapsedStages && appState.collapsedStages[project.id + '-' + stageIdx];
+          const _csVal = appState.collapsedStages && appState.collapsedStages[project.id + '-' + stageIdx];
+          const isCollapsed = _csVal === 'explicit-collapsed' ? true
+            : _csVal === 'explicit-expanded' ? false
+            : stage.completed; // default: completed stages collapsed
           const stageTotalTasks = subcategories.reduce((s, sub) => s + sub.tasks.length, 0);
           const stageCompletedTasks = subcategories.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
 
@@ -262,10 +265,13 @@ function renderWorkProjectDetail(project) {
               ${!isCollapsed && subcategories.length > 0 ? `
                 ${subcategories.map((subcat, subcatIdx) => {
                   const subcatKey = project.id + '-' + stageIdx + '-' + subcatIdx;
-                  const isSubcatCollapsed = appState.collapsedSubcategories && appState.collapsedSubcategories[subcatKey];
                   const subcatCompletedCount = subcat.tasks.filter(t => t.status === 'completed').length;
                   const subcatTotalCount = subcat.tasks.length;
                   const subcatAllDone = (subcatTotalCount > 0 && subcatCompletedCount === subcatTotalCount) || (subcatTotalCount === 0 && subcat._completed);
+                  const _scVal = appState.collapsedSubcategories && appState.collapsedSubcategories[subcatKey];
+                  const isSubcatCollapsed = _scVal === 'explicit-collapsed' ? true
+                    : _scVal === 'explicit-expanded' ? false
+                    : subcatAllDone; // default: all-done subcategories collapsed
                   return `
                   <div class="work-subcategory">
                     <div class="work-subcategory-header">

@@ -469,7 +469,17 @@ if (!appState.collapsedStages) appState.collapsedStages = {};
 
 function toggleStageCollapse(projectId, stageIdx) {
   const key = projectId + '-' + stageIdx;
-  appState.collapsedStages[key] = !appState.collapsedStages[key];
+  const current = appState.collapsedStages[key];
+  // Determine effective state (considering default for completed stages)
+  const project = (appState.workProjects || []).find(p => p.id === projectId);
+  const stage = project && project.stages[stageIdx];
+  const isCompletedStage = stage && stage.completed;
+  let effectivelyCollapsed;
+  if (current === 'explicit-collapsed') effectivelyCollapsed = true;
+  else if (current === 'explicit-expanded') effectivelyCollapsed = false;
+  else effectivelyCollapsed = !!isCompletedStage; // default
+  // Toggle and save as explicit user preference
+  appState.collapsedStages[key] = effectivelyCollapsed ? 'explicit-expanded' : 'explicit-collapsed';
   renderStatic();
 }
 window.toggleStageCollapse = toggleStageCollapse;
@@ -479,7 +489,17 @@ if (!appState.collapsedSubcategories) appState.collapsedSubcategories = {};
 
 function toggleSubcategoryCollapse(projectId, stageIdx, subcatIdx) {
   const key = projectId + '-' + stageIdx + '-' + subcatIdx;
-  appState.collapsedSubcategories[key] = !appState.collapsedSubcategories[key];
+  const current = appState.collapsedSubcategories[key];
+  const project = (appState.workProjects || []).find(p => p.id === projectId);
+  const subcat = project && project.stages[stageIdx] &&
+    (project.stages[stageIdx].subcategories || [])[subcatIdx];
+  const isAllDone = subcat && subcat.tasks.length > 0 &&
+    subcat.tasks.every(t => t.status === 'completed');
+  let effectivelyCollapsed;
+  if (current === 'explicit-collapsed') effectivelyCollapsed = true;
+  else if (current === 'explicit-expanded') effectivelyCollapsed = false;
+  else effectivelyCollapsed = !!isAllDone;
+  appState.collapsedSubcategories[key] = effectivelyCollapsed ? 'explicit-expanded' : 'explicit-collapsed';
   renderStatic();
 }
 window.toggleSubcategoryCollapse = toggleSubcategoryCollapse;

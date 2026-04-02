@@ -4,6 +4,161 @@
 // ============================================
 
 /**
+ * 특정 날짜로 작업 완료 기록 (백데이트)
+ * completionLog에 해당 날짜로 기록하고, 태스크는 완료 처리
+ */
+function completeTaskForDate(id, dateStr) {
+  const task = appState.tasks.find(t => t.id === id);
+  if (!task) return;
+  if (task.completed) return;
+
+  // completedAt을 백데이트 날짜의 12:00으로 설정 (uncompleteTask 호환)
+  const completedAt = new Date(dateStr + 'T12:00:00').toISOString();
+  const now = new Date();
+  const updatedAt = now.toISOString();
+
+  // 태스크 완료 처리
+  appState.tasks = appState.tasks.map(t =>
+    t.id === id ? { ...t, completed: true, completedAt: completedAt, updatedAt: updatedAt } : t
+  );
+
+  // completionLog에 지정 날짜로 기록
+  const timeStr = '12:00';
+  const logEntry = { t: task.title, c: task.category, at: timeStr };
+  if (task.repeatType && task.repeatType !== 'none') logEntry.r = task.repeatType;
+  if (task.expectedRevenue) logEntry.rv = Number(task.expectedRevenue);
+  if (task.subtasks && task.subtasks.length > 0) {
+    const doneCount = task.subtasks.filter(s => s.completed).length;
+    if (doneCount > 0) logEntry.st = doneCount;
+  }
+  if (!appState.completionLog[dateStr]) appState.completionLog[dateStr] = [];
+  appState.completionLog[dateStr].push(logEntry);
+  saveCompletionLog();
+
+  const isToday = dateStr === getLocalDateStr();
+
+  // 오늘 통계는 오늘 완료일 때만 증가
+  if (isToday) {
+    appState.todayStats.completedToday++;
+    appState.todayStats.streak++;
+  }
+  recordActivity(task.title);
+
+  // 반복 작업이면 다음 주기 작업 자동 생성 (daily/weekdays는 checkDailyReset이 처리)
+  if (task.repeatType && task.repeatType !== 'none'
+      && task.repeatType !== 'daily' && task.repeatType !== 'weekdays') {
+    const isDuplicate = appState.tasks.some(t =>
+      t.id !== task.id && !t.completed &&
+      t.title === task.title && t.category === task.category &&
+      t.repeatType === task.repeatType
+    );
+    if (!isDuplicate) {
+      const nextTask = createNextRepeatTask(task);
+      if (nextTask) appState.tasks.push(nextTask);
+    }
+  }
+
+  saveState();
+
+  // telegram-event-bot 연동
+  if (task.source && task.source.type === 'telegram-event') {
+    updateLinkedEventStatus(task, true);
+  }
+
+  // 태스크 아이템 DOM에 completing 애니메이션
+  const taskEls = document.querySelectorAll(`[id$="-${id}"], [data-task-id="${id}"]`);
+  taskEls.forEach(el => {
+    if (el.classList.contains('task-item') || el.closest('.task-item')) {
+      const item = el.classList.contains('task-item') ? el : el.closest('.task-item');
+      item.classList.add('completing');
+    }
+  });
+
+  setTimeout(() => {
+    showCompletionAnimation(task.title, appState.todayStats.streak);
+  }, 350);
+
+  const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+  const dateLabel = isToday ? '오늘' :
+    dateStr === getLocalDateStr(_yd) ? '어제' : dateStr;
+  showToast(`${dateLabel} 완료: ${task.title}`, 'success');
+  srAnnounce('작업 완료: ' + task.title);
+  showUndoToast(id, task.title);
+  if (isToday) checkMilestone();
+
+  if (navigator.vibrate) {
+    navigator.vibrate([50, 100, 50]);
+  }
+}
+window.completeTaskForDate = completeTaskForDate;
+
+/**
+ * 롱프레스용 날짜 선택 팝업 표시
+ */
+function showBackdateMenu(id, anchorEl) {
+  // 기존 메뉴 제거
+  const existing = document.querySelector('.backdate-menu');
+  if (existing) existing.remove();
+
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'backdate-menu';
+
+  const today = getLocalDateStr();
+  const _yd = new Date(); _yd.setDate(_yd.getDate() - 1);
+  const yesterday = getLocalDateStr(_yd);
+
+  menu.innerHTML = `
+    <div class="backdate-menu-item" data-date="${today}">오늘</div>
+    <div class="backdate-menu-item" data-date="${yesterday}">어제</div>
+    <div class="backdate-menu-item backdate-menu-custom">
+      <input type="date" class="backdate-date-input" value="${yesterday}" max="${today}">
+    </div>
+  `;
+
+  // 위치 계산
+  menu.style.position = 'fixed';
+  menu.style.left = Math.max(8, rect.left - 40) + 'px';
+  menu.style.top = (rect.bottom + 6) + 'px';
+  menu.style.zIndex = '9999';
+
+  document.body.appendChild(menu);
+
+  // date input 변경 시 완료 처리
+  const dateInput = menu.querySelector('.backdate-date-input');
+  dateInput.addEventListener('change', () => {
+    const val = dateInput.value;
+    if (!val) return;
+    if (val > today) { showToast('미래 날짜는 선택할 수 없습니다', 'error'); return; }
+    menu.remove();
+    completeTaskForDate(id, val);
+  });
+  // date input 클릭 시 메뉴 닫힘 방지
+  dateInput.addEventListener('pointerdown', (e) => e.stopPropagation());
+
+  // 오늘/어제 클릭 처리
+  menu.addEventListener('click', (e) => {
+    const item = e.target.closest('.backdate-menu-item[data-date]');
+    if (!item) return;
+    menu.remove();
+    completeTaskForDate(id, item.dataset.date);
+  });
+
+  // 바깥 클릭 시 닫기 (detached menu 자동 정리 포함)
+  const closeHandler = (e) => {
+    if (!document.body.contains(menu) || !menu.contains(e.target)) {
+      if (document.body.contains(menu)) menu.remove();
+      document.removeEventListener('pointerdown', closeHandler);
+    }
+  };
+  setTimeout(() => {
+    if (!document.body.contains(menu)) return;
+    document.addEventListener('pointerdown', closeHandler);
+  }, 10);
+}
+window.showBackdateMenu = showBackdateMenu;
+
+/**
  * 작업 완료
  * 반복 작업인 경우 다음 주기로 새 작업 생성
  */

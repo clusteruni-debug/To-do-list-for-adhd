@@ -316,3 +316,53 @@
     .life-empty-text {
       font-size: 16px;
     }
+
+    /* 백데이트 메뉴 (롱프레스) */
+    .backdate-menu {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 16px var(--shadow-color);
+      overflow: hidden;
+      min-width: 140px;
+      animation: backdate-menu-in 0.15s ease-out;
+    }
+
+    @keyframes backdate-menu-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .backdate-menu-item {
+      padding: 12px 16px;
+      font-size: 15px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .backdate-menu-item:not(:last-child) {
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .backdate-menu-item:hover {
+      background: var(--bg-tertiary);
+    }
+
+    .backdate-menu-item:active {
+      background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+    }
+
+    .backdate-menu-custom {
+      padding: 8px 12px;
+    }
+
+    .backdate-date-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+      color-scheme: dark light;
+    }

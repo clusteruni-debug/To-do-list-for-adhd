@@ -261,9 +261,14 @@ function addSubcategory(projectId, stageIdx, name) {
     tasks: []
   });
 
-  // 접힌 스테이지 자동 펼치기
-  if (appState.collapsedStages && appState.collapsedStages[projectId + '-' + stageIdx]) {
-    appState.collapsedStages[projectId + '-' + stageIdx] = false;
+  // 접힌 스테이지 자동 펼치기 (중분류 추가 시)
+  if (appState.collapsedStages) {
+    const _csKey = projectId + '-' + stageIdx;
+    const _csVal = appState.collapsedStages[_csKey];
+    const _stage = project.stages[stageIdx];
+    if (_csVal === 'explicit-collapsed' || (!_csVal && _stage && _stage.completed)) {
+      appState.collapsedStages[_csKey] = 'explicit-expanded';
+    }
   }
 
   project.updatedAt = new Date().toISOString();
@@ -360,9 +365,14 @@ function addWorkTask(projectId, stageIdx, subcatIdx, title, status, canStartEarl
     logs: []
   });
 
-  // 접힌 스테이지 자동 펼치기
-  if (appState.collapsedStages && appState.collapsedStages[projectId + '-' + stageIdx]) {
-    appState.collapsedStages[projectId + '-' + stageIdx] = false;
+  // 접힌 스테이지 자동 펼치기 (항목 추가 시)
+  if (appState.collapsedStages) {
+    const _csKey = projectId + '-' + stageIdx;
+    const _csVal = appState.collapsedStages[_csKey];
+    const _stage = project.stages[stageIdx];
+    if (_csVal === 'explicit-collapsed' || (!_csVal && _stage && _stage.completed)) {
+      appState.collapsedStages[_csKey] = 'explicit-expanded';
+    }
   }
 
   project.updatedAt = new Date().toISOString();
@@ -715,6 +725,9 @@ function moveStage(projectId, stageIdx, direction) {
     const tempCollapse = appState.collapsedStages[keyA];
     appState.collapsedStages[keyA] = appState.collapsedStages[keyB];
     appState.collapsedStages[keyB] = tempCollapse;
+    // 명시적 설정 없는 키는 삭제 (기본값 사용)
+    if (appState.collapsedStages[keyA] === undefined) delete appState.collapsedStages[keyA];
+    if (appState.collapsedStages[keyB] === undefined) delete appState.collapsedStages[keyB];
   }
 
   project.updatedAt = new Date().toISOString();

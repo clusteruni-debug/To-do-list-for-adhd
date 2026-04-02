@@ -18,7 +18,11 @@ function _renderLifeTaskItem(task) {
     <div class="life-item" style="--task-cat-color: var(--cat-${task.category})">
       ${hasSubtasks
         ? `<button class="subtask-progress-indicator${allDone ? ' all-done' : ''}" onclick="event.stopPropagation(); toggleSubtaskChips('${escapeAttr(task.id)}')" title="서브태스크 접기/펼치기" aria-label="서브태스크 ${doneCount}/${totalCount} 접기/펼치기">${doneCount}/${totalCount} ${appState.collapsedSubtaskChips && appState.collapsedSubtaskChips[task.id] ? '▶' : '▼'}</button>`
-        : `<button class="task-check-btn" onclick="completeTask('${escapeAttr(task.id)}')" aria-label="작업 완료">○</button>`
+        : `<button class="task-check-btn" onclick="if(this._longPressed){this._longPressed=false;return;}completeTask('${escapeAttr(task.id)}')"
+            onpointerdown="this._lpTimer = setTimeout(() => { this._longPressed = true; showBackdateMenu('${escapeAttr(task.id)}', this); }, 500)"
+            onpointerup="clearTimeout(this._lpTimer)"
+            onpointerleave="clearTimeout(this._lpTimer); this._longPressed = false;"
+            aria-label="작업 완료 (길게 누르면 날짜 선택)">○</button>`
       }
       <div class="life-item-content">
         <div class="life-item-title">${escapeHtml(task.title)}</div>
