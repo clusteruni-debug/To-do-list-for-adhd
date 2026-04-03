@@ -48,15 +48,102 @@ function renderEventsTab() {
     </div>
 
     ${_renderSupabaseSection(sbPending, sbParticipated, isLoading, error)}
-    ${_renderLocalEventsSection(localPending, localSubmitted)}
+    ${_renderLocalEventsSection(localPending)}
+    ${_renderCompletedLog(sbParticipated, localSubmitted)}
   `;
 }
+
+// ============================================
+// ✅ 참여 완료 통합 로그 (수신 + 로컬, 페이지네이션)
+// ============================================
+
+function _renderCompletedLog(sbParticipated, localSubmitted) {
+  // 통합 리스트: source 표시 + 날짜 정렬
+  const all = [
+    ...sbParticipated.map(e => ({
+      title: e.title,
+      date: e.deadline || e.date,
+      source: '📡',
+      id: 'sb_' + e.supabaseId,
+      supabaseId: e.supabaseId
+    })),
+    ...localSubmitted.map(t => ({
+      title: t.title,
+      date: t.completedAt || t.deadline,
+      source: '📌',
+      id: 'local_' + t.id,
+      localId: t.id
+    }))
+  ].sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  if (all.length === 0) return '';
+
+  const isCollapsed = _collapsedEventGroups.has('completed_log');
+  const totalPages = Math.ceil(all.length / COMPLETED_LOG_PAGE_SIZE);
+  const page = Math.min(_completedLogPage, totalPages - 1);
+  const pageItems = all.slice(page * COMPLETED_LOG_PAGE_SIZE, (page + 1) * COMPLETED_LOG_PAGE_SIZE);
+
+  const rows = pageItems.map(item => {
+    let dateStr = '';
+    if (item.date) {
+      const raw = String(item.date);
+      const d = new Date(raw.length === 10 ? raw + 'T00:00:00' : raw);
+      if (!isNaN(d.getTime())) dateStr = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+    }
+    const undoBtn = item.supabaseId
+      ? `<button class="completed-log-undo" onclick="event.stopPropagation(); uncompleteSupabaseEvent('${escapeAttr(String(item.supabaseId))}')" title="참여 취소">↩</button>`
+      : `<button class="completed-log-undo" onclick="event.stopPropagation(); uncompleteTask('${escapeAttr(item.localId)}')" title="완료 취소">↩</button>` +
+        `<button class="completed-log-undo" onclick="event.stopPropagation(); deleteTask('${escapeAttr(item.localId)}')" title="삭제">✕</button>`;
+    return `<div class="completed-log-row">
+      <span class="completed-log-check">✓</span>
+      <span class="completed-log-source">${item.source}</span>
+      <span class="completed-log-title" title="${escapeAttr(item.title)}">${escapeHtml(item.title)}</span>
+      ${dateStr ? `<span class="completed-log-date">${dateStr}</span>` : ''}
+      ${undoBtn}
+    </div>`;
+  }).join('');
+
+  const pagination = totalPages > 1 ? `
+    <div class="completed-log-pagination">
+      <button onclick="changeCompletedLogPage(${page - 1})" ${page === 0 ? 'disabled' : ''}>‹</button>
+      <span>${page + 1} / ${totalPages}</span>
+      <button onclick="changeCompletedLogPage(${page + 1})" ${page >= totalPages - 1 ? 'disabled' : ''}>›</button>
+    </div>
+  ` : '';
+
+  return `
+    <div class="events-section completed-log-section">
+      <div class="events-group-header" onclick="toggleEventGroup('completed_log')">
+        <span>✅ 참여 완료 (${all.length})</span>
+        <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
+      </div>
+      <div class="${isCollapsed ? 'collapsed' : ''}">
+        ${rows}
+        ${pagination}
+      </div>
+    </div>
+  `;
+}
+
+function changeCompletedLogPage(page) {
+  const sbParticipated = (_supabaseEventCache.data || []).filter(e => e.participated);
+  const localSubmitted = appState.tasks.filter(t => t.category === '부업' && !(t.source && t.source.type === 'telegram-event') && t.completed);
+  const total = sbParticipated.length + localSubmitted.length;
+  const maxPage = Math.max(0, Math.ceil(total / COMPLETED_LOG_PAGE_SIZE) - 1);
+  _completedLogPage = Math.max(0, Math.min(page, maxPage));
+  renderStatic();
+}
+window.changeCompletedLogPage = changeCompletedLogPage;
 
 // ============================================
 // 📌 내 이벤트 섹션 (로컬)
 // ============================================
 
-function _renderLocalEventsSection(pendingEvents, submittedEvents) {
+function _renderLocalEventsSection(pendingEvents) {
   const localPendingSorted = [...pendingEvents].sort((a, b) => {
     if (!a.deadline) return 1;
     if (!b.deadline) return -1;
@@ -93,37 +180,7 @@ function _renderLocalEventsSection(pendingEvents, submittedEvents) {
       renderGroup('pending', '미제출', '📅', pending);
   }
 
-  // 제출완료
-  let submittedContent = '';
-  if (submittedEvents.length > 0) {
-    const isCollapsed = _collapsedEventGroups.has('local_submitted');
-    submittedContent = `
-      <div class="events-group">
-        <div class="events-group-header" onclick="toggleEventGroup('local_submitted')">
-          <span>✅ 제출완료 (${submittedEvents.length})</span>
-          <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
-        </div>
-        <div class="events-list ${isCollapsed ? 'collapsed' : ''}">
-          ${submittedEvents.map(task => {
-            const completedDate = task.completedAt ? new Date(task.completedAt) : null;
-            const completedStr = completedDate ? completedDate.toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) + ' ' + completedDate.toTimeString().slice(0, 5) : '';
-            return `
-              <div class="event-card completed">
-                <div style="flex:1;min-width:0">
-                  <div class="event-title">${escapeHtml(task.title)}</div>
-                  ${completedStr ? '<span class="event-completed-date">✓ ' + completedStr + '</span>' : ''}
-                  <div class="event-actions">
-                    <button class="btn btn-small btn-undo" onclick="uncompleteTask('${escapeAttr(task.id)}')" aria-label="완료 되돌리기">↩</button>
-                    <button class="btn btn-small btn-delete" onclick="deleteTask('${escapeAttr(task.id)}')" aria-label="삭제">🗑</button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
+  // 제출완료는 renderEventsTab()의 통합 로그에서 렌더링
 
   // 휴지통
   const eventTrash = appState.trash.filter(t => t.category === '부업');
@@ -185,7 +242,6 @@ function _renderLocalEventsSection(pendingEvents, submittedEvents) {
       </div>
 
       ${pendingContent}
-      ${submittedContent}
       ${trashContent}
     </div>
   `;

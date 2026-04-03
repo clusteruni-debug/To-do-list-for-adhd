@@ -98,9 +98,6 @@
       letter-spacing: 0.5px;
     }
 
-    .events-section.submitted .events-section-title {
-      color: var(--accent-success);
-    }
 
     .events-list {
       display: flex;
@@ -229,7 +226,6 @@
     }
     .events-group-header .toggle-icon {
       font-size: 14px;
-      transition: transform 0.2s;
     }
 
     .event-tg-badge {
@@ -418,7 +414,7 @@
     }
 
     .btn-submit:hover {
-      filter: brightness(0.9);
+      background: color-mix(in srgb, var(--accent-success) 85%, black);
     }
 
     .btn-edit {
@@ -539,4 +535,113 @@
     .supabase-badge {
       margin-right: 4px;
       font-size: 14px;
+    }
+
+    .event-revenue-inline {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent-success);
+      margin-left: 4px;
+    }
+
+    /* ── Completed log (compact text list) ── */
+    .completed-log-section {
+      margin-top: 8px;
+    }
+
+    .completed-log-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .completed-log-row:last-of-type {
+      border-bottom: none;
+    }
+
+    .completed-log-check {
+      color: var(--accent-success);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .completed-log-source {
+      flex-shrink: 0;
+      font-size: 12px;
+    }
+
+    .completed-log-title {
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-secondary);
+    }
+
+    .completed-log-date {
+      flex-shrink: 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .completed-log-undo {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 6px;
+      font-size: 14px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .completed-log-row:hover .completed-log-undo {
+      opacity: 1;
+    }
+
+    @media (hover: none) {
+      .completed-log-undo {
+        opacity: 1;
+      }
+    }
+
+    .completed-log-undo:hover {
+      color: var(--accent-warning);
+      background: var(--bg-tertiary);
+    }
+
+    .completed-log-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 8px 0;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .completed-log-pagination button {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px 10px;
+      font-size: 14px;
+      min-height: 32px;
+    }
+
+    .completed-log-pagination button:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .completed-log-pagination button:not(:disabled):hover {
+      background: var(--bg-tertiary);
     }

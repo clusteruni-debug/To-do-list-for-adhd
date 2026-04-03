@@ -165,13 +165,23 @@ async function uncompleteSupabaseEvent(supabaseId) {
 
     event.participated = false;
 
-    // completionLog에서 해당 엔트리 soft-delete
-    const now = new Date();
-    const dateKey = getLocalDateStr(now);
-    const delKey = dateKey + '|' + (event.title || '') + '|' + now.toTimeString().slice(0, 5);
-    if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
-    appState.deletedIds.completionLog[delKey] = now.toISOString();
-    saveCompletionLog();
+    // completionLog에서 해당 엔트리 찾아서 splice + soft-delete
+    const title = event.title || '';
+    let removed = false;
+    for (const [dateKey, entries] of Object.entries(appState.completionLog || {})) {
+      const idx = entries.findIndex(e => e.t === title && e.c === '부업');
+      if (idx !== -1) {
+        const entry = entries[idx];
+        const delKey = dateKey + '|' + title + '|' + (entry.at || '');
+        if (!appState.deletedIds.completionLog) appState.deletedIds.completionLog = {};
+        appState.deletedIds.completionLog[delKey] = new Date().toISOString();
+        entries.splice(idx, 1);
+        if (entries.length === 0) delete appState.completionLog[dateKey];
+        removed = true;
+        break;
+      }
+    }
+    if (removed) saveCompletionLog();
 
     showToast('참여 완료 취소됨', 'info');
     renderStatic();
@@ -186,7 +196,7 @@ window.uncompleteSupabaseEvent = uncompleteSupabaseEvent;
 // 📡 수신 이벤트 섹션 렌더링
 // ============================================
 
-function _renderSupabaseSection(pending, participated, isLoading, error) {
+function _renderSupabaseSection(pending, _, isLoading, error) {
   const staleMinutes = _supabaseEventCache.fetchedAt ? Math.floor((Date.now() - _supabaseEventCache.fetchedAt) / 60000) : null;
   const staleText = staleMinutes !== null ? `<span style="font-size:12px;color:var(--text-muted);margin-left:8px;">(${staleMinutes}분 전 동기화)</span>` : '';
 
@@ -194,7 +204,7 @@ function _renderSupabaseSection(pending, participated, isLoading, error) {
 
   if (isLoading && pending.length === 0) {
     content = '<div class="events-empty"><div class="events-empty-icon">⏳</div><div class="events-empty-text">수신 이벤트 불러오는 중...</div></div>';
-  } else if (error && pending.length === 0 && participated.length === 0) {
+  } else if (error && pending.length === 0) {
     content = `<div class="events-empty"><div class="events-empty-icon">📴</div><div class="events-empty-text">${escapeHtml(error)}</div><button class="btn btn-secondary" onclick="refreshSupabaseEvents()" style="margin-top:8px;">🔄 다시 시도</button></div>`;
   } else {
     const urgent = pending.filter(e => { const d = getDaysLeft(e.deadline); return d !== null && d <= 1; });
@@ -225,29 +235,7 @@ function _renderSupabaseSection(pending, participated, isLoading, error) {
       content = '<div class="events-empty" style="padding:20px"><div class="events-empty-text">미제출 수신 이벤트 없음</div></div>';
     }
 
-    if (participated.length > 0) {
-      const isCollapsed = _collapsedEventGroups.has('sb_participated');
-      content += `
-        <div class="events-group">
-          <div class="events-group-header" onclick="toggleEventGroup('sb_participated')">
-            <span>✅ 참여완료 (${participated.length})</span>
-            <span class="toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
-          </div>
-          <div class="events-list ${isCollapsed ? 'collapsed' : ''}">
-            ${participated.map(e => `
-              <div class="event-card supabase-event-card completed">
-                <div style="flex:1;min-width:0">
-                  <div class="event-title"><span class="supabase-badge">📡</span>${escapeHtml(e.title)}</div>
-                </div>
-                <div class="event-actions">
-                  <button class="btn btn-small btn-undo" onclick="uncompleteSupabaseEvent('${escapeAttr(String(e.supabaseId))}')" aria-label="참여 취소">↩</button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-    }
+    // 참여완료는 renderEventsTab()의 통합 로그에서 렌더링
   }
 
   return `
@@ -264,23 +252,18 @@ function _renderSupabaseSection(pending, participated, isLoading, error) {
 function _renderSupabaseCard(event) {
   const days = getDaysLeft(event.deadline);
   const deadlineStr = event.deadline ? new Date(event.deadline + 'T00:00:00').toLocaleDateString('ko-KR', {month:'short', day:'numeric'}) : '';
-  const metaItems = [];
-  if (event.project) metaItems.push(event.project);
-  if (event.organizer) metaItems.push(event.organizer);
-  if (event.channel) metaItems.push(event.channel);
-  if (event.type) metaItems.push(event.type);
-  if (event.expectedRevenue) metaItems.push('💰 ' + event.expectedRevenue);
-  const metaStr = metaItems.join(' · ');
+  const metaChips = [];
+  if (event.organizer) metaChips.push(event.organizer);
+  if (event.type) metaChips.push(event.type);
+  const revenueStr = event.expectedRevenue ? '💰 ' + event.expectedRevenue : '';
 
   return `
     <div class="event-card supabase-event-card ${days !== null && days <= 1 ? 'urgent' : (days !== null && days <= 3 ? 'warning' : '')}">
       <div style="flex:1;min-width:0">
         <div class="event-card-main">
-          <div class="event-title"><span class="supabase-badge">📡</span>${escapeHtml(event.title)}</div>
-          ${metaStr ? '<div class="event-meta-info">' + escapeHtml(metaStr) + '</div>' : ''}
-          ${event.description ? '<div class="event-description" title="' + escapeAttr(event.description) + '">' + escapeHtml(event.description) + '</div>' : ''}
+          <div class="event-title"><span class="supabase-badge">📡</span>${escapeHtml(event.title)}${revenueStr ? ' <span class="event-revenue-inline">' + revenueStr + '</span>' : ''}</div>
+          ${metaChips.length ? '<div class="event-meta-info">' + escapeHtml(metaChips.join(' · ')) + (deadlineStr ? ' · ~' + deadlineStr : '') + '</div>' : (deadlineStr ? '<div class="event-meta-info">~' + deadlineStr + '</div>' : '')}
         </div>
-        ${deadlineStr ? '<span class="event-compact-date">~' + deadlineStr + '</span>' : ''}
         <div class="event-actions">
           ${event.link ? '<a href="' + escapeHtml(sanitizeUrl(event.link) || '') + '" target="_blank" rel="noopener" class="btn btn-small btn-link">🔗</a>' : ''}
           <button class="btn btn-small btn-submit" onclick="completeSupabaseEvent('${escapeAttr(String(event.supabaseId))}')" aria-label="참여 완료">✓</button>

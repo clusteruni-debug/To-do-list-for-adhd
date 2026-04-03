@@ -10,6 +10,8 @@ const TG_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 let _eventBulkSelectMode = false;
 const _eventBulkSelectedIds = new Set();
 const _collapsedEventGroups = new Set(); // 접힌 그룹 ID
+let _completedLogPage = 0; // 참여 완료 로그 페이지 (0-based)
+const COMPLETED_LOG_PAGE_SIZE = 10;
 
 // 수신 이벤트 캐시 (UI-only, not synced to Firebase)
 let _supabaseEventCache = { data: [], fetchedAt: null, loading: false, error: null };
