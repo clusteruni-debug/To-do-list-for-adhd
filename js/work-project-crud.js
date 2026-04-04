@@ -4,38 +4,6 @@
 // ============================================
 
 /**
- * 프로젝트 추가
- */
-function addWorkProject(name, deadline = null) {
-  // 기본 단계 (프로젝트별로 커스터마이징 가능)
-  const defaultStages = appState.workProjectStages.map(stageName => ({
-    name: stageName,
-    completed: false,
-    subcategories: [],
-    startDate: null,
-    endDate: null
-  }));
-
-  const newProject = {
-    id: generateId(),
-    name: name,
-    currentStage: 0,
-    deadline: deadline,
-    meta: {},
-    stages: defaultStages,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-
-  appState.workProjects.push(newProject);
-  appState.activeWorkProject = newProject.id;
-  appState.workView = 'detail'; // 새 프로젝트 생성 시 상세보기로
-  saveWorkProjects();
-  renderStatic();
-  showToast(`프로젝트 "${name}" 생성됨`, 'success');
-}
-
-/**
  * 프로젝트 단계 추가
  */
 function addProjectStage(projectId, stageName) {

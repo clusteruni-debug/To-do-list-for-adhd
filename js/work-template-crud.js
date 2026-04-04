@@ -238,6 +238,7 @@ function applyTemplate(templateId) {
   renderStatic();
   showToast(`"${projectName}" 생성됨`, 'success');
 }
+window.applyTemplate = applyTemplate;
 
 /**
  * 템플릿 JSON 내보내기 (클립보드 복사)

@@ -184,10 +184,6 @@ function deleteSubcategory(projectId, stageIdx, subcatIdx) {
 window.deleteSubcategory = deleteSubcategory;
 
 /**
- * 프로젝트 단계 이동
- */
-
-/**
  * 작업 항목 추가
  */
 function addWorkTask(projectId, stageIdx, subcatIdx, title, status, canStartEarly = false) {
