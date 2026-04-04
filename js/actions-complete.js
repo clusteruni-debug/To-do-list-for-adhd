@@ -81,7 +81,7 @@ function completeTaskForDate(id, dateStr) {
 
   saveState();
 
-  // telegram-event-bot 연동 (백데이트 리셋 시 스킵)
+  // tgeventbot 연동 (백데이트 리셋 시 스킵)
   if (!wasBackdateReset && task.source && task.source.type === 'telegram-event') {
     updateLinkedEventStatus(task, true);
   }
@@ -374,7 +374,7 @@ function completeTask(id) {
 
   saveState();
 
-  // telegram-event-bot 연동: 연결된 이벤트 상태 업데이트
+  // tgeventbot 연동: 연결된 이벤트 상태 업데이트
   if (task.source && task.source.type === 'telegram-event') {
     updateLinkedEventStatus(task, true);
   }
@@ -852,7 +852,7 @@ function uncompleteTask(id) {
 
   saveState();
 
-  // telegram-event-bot 연동: 연결된 이벤트 상태 업데이트
+  // tgeventbot 연동: 연결된 이벤트 상태 업데이트
   if (task.source && task.source.type === 'telegram-event') {
     updateLinkedEventStatus(task, false);
   }

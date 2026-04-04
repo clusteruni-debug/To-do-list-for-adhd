@@ -14,7 +14,7 @@
 ## Important Notes
 - Maintain localStorage + Firebase dual storage architecture
 - Full XSS defense applied
-- Integration with telegram-event-bot (event data)
+- Integration with tgeventbot (event data)
 
 ## Git Permissions (Common, cannot be overridden)
 - **Codex must NEVER execute `git commit` / `git push`.**

@@ -1,5 +1,5 @@
 // ============================================
-// Supabase (telegram-event-bot) — 이벤트 탭에서 직접 사용
+// Supabase (tgeventbot) — 이벤트 탭에서 직접 사용
 // ============================================
 const TG_SUPABASE_URL = 'https://hgygyilcrkygnvaquvko.supabase.co';
 const TG_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhneWd5aWxjcmt5Z252YXF1dmtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkzMzE5NDIsImV4cCI6MjA4NDkwNzk0Mn0.iEVFwhZmfpjZqaaZyVVBiwK8GWNWfydXAtN-OaNsjFk';

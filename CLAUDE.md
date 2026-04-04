@@ -30,7 +30,7 @@ Single-file architecture (navigator-v5.html) + js/rhythm.js + js/commute.js + sw
 - [ ] XSS defense (escapeHtml)
 
 ## Integrations
-- telegram-event-bot: Event -> Task conversion (URL parameters)
+- tgeventbot: Event -> Task conversion (URL parameters)
 - Asset Manager: Revenue data clipboard exchange
 
 ## References

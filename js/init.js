@@ -163,7 +163,7 @@ document.addEventListener('visibilitychange', async () => {
 setTimeout(() => checkWeeklyReview(), 3000);
 
 // ============================================
-// telegram-event-bot 연동: URL 파라미터 import
+// tgeventbot 연동: URL 파라미터 import
 // ============================================
 function checkUrlImport() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -278,7 +278,7 @@ function showImportConfirmModal(taskData) {
         ` : ''}
 
         <div style="background: var(--accent-primary-alpha); border-radius: 8px; padding: 10px; font-size: 0.85rem; color: var(--text-secondary);">
-          📢 출처: ${escapeHtml(taskData.source?.channel || 'telegram-event-bot')}
+          📢 출처: ${escapeHtml(taskData.source?.channel || 'tgeventbot')}
         </div>
       </div>
       <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px 20px; border-top: 1px solid var(--border-color);">
@@ -323,7 +323,7 @@ async function confirmImportTask() {
       link: taskData.link || null,
       completed: false,
       pinned: false,
-      // telegram-event-bot 연동 정보
+      // tgeventbot 연동 정보
       source: taskData.source || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -416,7 +416,7 @@ setTimeout(checkUrlImport, 500);
 
 // Firebase 인증 상태 리스너
 window.addEventListener('firebase-ready', () => {
-  // URL import 파라미터 확인 (telegram-event-bot 연동)
+  // URL import 파라미터 확인 (tgeventbot 연동)
   checkUrlImport();
 
   // 오프라인/타임아웃 대비: 5초 후에도 클라우드 로드가 안 됐으면 로컬 기반으로 checkDailyReset 실행
