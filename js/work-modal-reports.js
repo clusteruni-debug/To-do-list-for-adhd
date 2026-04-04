@@ -110,7 +110,7 @@ function copyMMReport() {
   navigator.clipboard.writeText(text).then(() => {
     showToast('MM 리포트 클립보드에 복사됨', 'success');
   }).catch(() => {
-    // Fallback
+    // Deprecated fallback — navigator.clipboard 미지원 환경용 (execCommand 향후 제거 예정)
     const ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);

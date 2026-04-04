@@ -145,6 +145,7 @@ function addSubcategory(projectId, stageIdx, name) {
   renderStatic();
   showToast(`"${name}" 추가됨`, 'success');
 }
+window.addSubcategory = addSubcategory;
 
 /**
  * 중분류 삭제
@@ -217,6 +218,7 @@ function addWorkTask(projectId, stageIdx, subcatIdx, title, status, canStartEarl
   renderStatic();
   showToast('항목 추가됨', 'success');
 }
+window.addWorkTask = addWorkTask;
 
 /**
  * 작업 상태 순환
@@ -397,6 +399,8 @@ function addWorkLog(projectId, stageIdx, subcatIdx, taskIdx, content) {
   renderStatic();
   showToast('기록 추가됨', 'success');
 }
+
+window.addWorkLog = addWorkLog;
 
 /**
  * 로그 삭제
