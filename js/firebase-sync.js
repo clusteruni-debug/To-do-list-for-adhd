@@ -734,6 +734,11 @@ async function diagnoseSyncIssue() {
     console.groupEnd();
     return;
   }
+  if (!window.firebaseDb || !window.firebaseGetDocFromServer) {
+    console.error('❌ Firebase SDK 미초기화 — 페이지 로딩 완료 후 다시 시도하세요');
+    console.groupEnd();
+    return;
+  }
   console.log('✅ 로그인:', appState.user.email, '(UID:', appState.user.uid + ')');
 
   // 2. 로컬 데이터 현황
@@ -762,16 +767,24 @@ async function diagnoseSyncIssue() {
     const serverWP = (serverData.workProjects || []).length;
     const serverUpdated = serverData.lastUpdated;
 
+    // Firestore Timestamp 객체 또는 ISO 문자열 모두 처리
+    let ageStr = 'N/A';
+    if (serverUpdated) {
+      const ts = typeof serverUpdated.toDate === 'function' ? serverUpdated.toDate() : new Date(serverUpdated);
+      const ageSec = Math.round((Date.now() - ts.getTime()) / 1000);
+      ageStr = isNaN(ageSec) ? '알 수 없음' : ageSec + '초 전';
+    }
+
     console.log('☁️ 서버 데이터:', {
       tasks: serverTasks,
       workProjects: serverWP,
       lastUpdated: serverUpdated,
-      age: serverUpdated ? Math.round((Date.now() - new Date(serverUpdated).getTime()) / 1000) + '초 전' : 'N/A'
+      age: ageStr
     });
 
     // 4. 차이 분석
-    const localTaskIds = new Set(appState.tasks.map(t => t.id));
-    const serverTaskIds = new Set((serverData.tasks || []).map(t => t.id));
+    const localTaskIds = new Set(appState.tasks.filter(t => t.id).map(t => t.id));
+    const serverTaskIds = new Set((serverData.tasks || []).filter(t => t.id).map(t => t.id));
     const onlyLocal = [...localTaskIds].filter(id => !serverTaskIds.has(id));
     const onlyServer = [...serverTaskIds].filter(id => !localTaskIds.has(id));
 
@@ -779,13 +792,13 @@ async function diagnoseSyncIssue() {
       console.warn('⚠️ 로컬에만 있는 태스크:', onlyLocal.length + '개');
       onlyLocal.forEach(id => {
         const t = appState.tasks.find(task => task.id === id);
-        console.log('  - ' + (t ? t.title : id));
+        console.log('  - ' + (t ? t.title || t.id : id));
       });
     }
     if (onlyServer.length > 0) {
       console.warn('⚠️ 서버에만 있는 태스크:', onlyServer.length + '개');
       (serverData.tasks || []).filter(t => onlyServer.includes(t.id)).forEach(t => {
-        console.log('  - ' + t.title);
+        console.log('  - ' + (t.title || t.id));
       });
     }
     if (onlyLocal.length === 0 && onlyServer.length === 0) {
@@ -800,8 +813,10 @@ async function diagnoseSyncIssue() {
     if (error.code === 'unavailable') {
       console.error('❌ Firebase 서버 연결 불가 — 네트워크 차단 가능성 (회사 방화벽?)');
       console.error('   Firestore는 로컬 캐시로만 동작 중 → "동기화됨" 표시되지만 실제 서버에 미도달');
+    } else if (error.code === 'permission-denied') {
+      console.error('❌ Firebase 권한 거부 — Security Rules 확인 필요');
     } else {
-      console.error('❌ 서버 조회 실패:', error.code, error.message);
+      console.error('❌ 서버 조회 실패:', error.code || error.name, error.message);
     }
   }
 
