@@ -4,6 +4,7 @@
 // ============================================
 
 let quickTimerInterval = null;
+let _cachedQuickTimerEl = null;
 
 /**
  * 5분 퀵타이머 시작
