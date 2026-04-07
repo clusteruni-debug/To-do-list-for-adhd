@@ -134,7 +134,7 @@ function syncToFirebase(immediate = false) {
     return;
   }
 
-  // 디바운스: 5초 내 추가 호출이 있으면 마지막 호출만 실행
+  // 디바운스: 1.5초 내 추가 호출이 있으면 마지막 호출만 실행
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
   }

@@ -114,7 +114,7 @@ document.addEventListener('visibilitychange', async () => {
     if (appState.user && syncDebounceTimer) {
       clearTimeout(syncDebounceTimer);
       syncDebounceTimer = null;
-      _doSyncToFirebase();
+      syncToFirebase(true);
     }
   } else {
     // 탭 복귀: 클라우드 동기화 먼저 → 그 다음 일일 초기화
