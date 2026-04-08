@@ -16,6 +16,10 @@ const SYNC_DEBOUNCE_MS = 1500; // 동기화 디바운스 간격 (1.5초)
 let lastOwnWriteTimestamp = null; // 핑퐁 방지: 자기가 마지막으로 쓴 timestamp
 // lastRealtimeSyncToastTime 제거 — 동기화 수신 토스트 자체를 삭제함
 
+// UI 피드백 안전 래퍼 — ui.js/render.js 로드 실패 시에도 동기화 경로 보호
+function _safeToast(msg, type) { if (typeof showToast === 'function') showToast(msg, type); }
+function _safeRender() { if (typeof renderStatic === 'function') renderStatic(); }
+
 // IndexedDB 가용성 체크 (프라이빗 브라우징에서 사용 불가 시 localStorage 폴백)
 let isIndexedDBAvailable = true;
 try {
@@ -32,7 +36,7 @@ try {
 async function loginWithGoogle() {
   try {
     if (!window.firebaseAuth) {
-      showToast('Firebase 로딩 중...', 'info');
+      _safeToast('Firebase 로딩 중...', 'info');
       return;
     }
     const result = await window.firebaseSignIn(window.firebaseAuth, window.firebaseProvider);
@@ -42,7 +46,7 @@ async function loginWithGoogle() {
       displayName: result.user.displayName,
       photoURL: result.user.photoURL
     };
-    showToast('로그인 성공! 동기화를 시작합니다', 'success');
+    _safeToast('로그인 성공! 동기화를 시작합니다', 'success');
 
     // 클라우드 데이터 가져오기
     await loadFromFirebase();
@@ -50,10 +54,10 @@ async function loginWithGoogle() {
     // 실시간 동기화 시작
     startRealtimeSync();
 
-    renderStatic();
+    _safeRender();
   } catch (error) {
     console.error('로그인 실패:', error);
-    showToast('로그인에 실패했습니다', 'error');
+    _safeToast('로그인에 실패했습니다', 'error');
   }
 }
 window.loginWithGoogle = loginWithGoogle;
@@ -76,8 +80,8 @@ async function logout() {
       unsubscribeSnapshot = null;
     }
 
-    showToast('로그아웃되었습니다', 'info');
-    renderStatic();
+    _safeToast('로그아웃되었습니다', 'info');
+    _safeRender();
   } catch (error) {
     console.error('로그아웃 실패:', error);
   }
@@ -89,16 +93,16 @@ window.logout = logout;
  */
 async function forceSync() {
   if (!appState.user) {
-    showToast('로그인이 필요합니다', 'info');
+    _safeToast('로그인이 필요합니다', 'info');
     return;
   }
   if (isSyncing) {
-    showToast('동기화 진행 중입니다', 'info');
+    _safeToast('동기화 진행 중입니다', 'info');
     return;
   }
 
   try {
-    showToast('🔄 동기화 갱신 중...', 'info');
+    _safeToast('🔄 동기화 갱신 중...', 'info');
     // 디바운스 타이머 취소 (loadFromFirebase에서 병합 후 syncToFirebase 호출)
     if (saveStateTimeout) {
       clearTimeout(saveStateTimeout);
@@ -107,11 +111,11 @@ async function forceSync() {
     // 클라우드에서 가져와 병합 후 업로드 (loadFromFirebase 내에서 syncToFirebase 호출)
     await loadFromFirebase();
     recomputeTodayStats();
-    renderStatic();
-    showToast('✅ 동기화 완료!', 'success');
+    _safeRender();
+    _safeToast('✅ 동기화 완료!', 'success');
   } catch (error) {
     console.error('수동 동기화 실패:', error);
-    showToast('동기화에 실패했습니다', 'error');
+    _safeToast('동기화에 실패했습니다', 'error');
   }
 }
 window.forceSync = forceSync;
@@ -169,7 +173,7 @@ async function _doSyncToFirebase() {
   const shrinkage = checkDataShrinkage();
   if (shrinkage.blocked) {
     console.warn('⚠️ 데이터 축소 감지, 동기화 차단:', shrinkage.details);
-    showToast('⚠️ 데이터 손실 감지 — 동기화를 차단했습니다. 설정 > 동기화 백업에서 복원하세요.', 'error');
+    _safeToast('⚠️ 데이터 손실 감지 — 동기화를 차단했습니다. 설정 > 동기화 백업에서 복원하세요.', 'error');
     appState.syncStatus = 'error';
     updateSyncIndicator();
     return;
@@ -181,7 +185,8 @@ async function _doSyncToFirebase() {
     appState.syncStatus = 'syncing';
 
     // 동기화 전 자동 백업 (데이터가 있을 때만 저장)
-    createSyncBackup();
+    // firebase-backup.js 로드 실패 시에도 동기화는 정상 진행 (backup은 선택적 안전망)
+    if (typeof createSyncBackup === 'function') createSyncBackup();
 
     const userDoc = window.firebaseDoc(window.firebaseDb, 'users', appState.user.uid);
     const writeTimestamp = new Date().toISOString();
@@ -678,7 +683,7 @@ function startRealtimeSync() {
         // 병합 결과를 localStorage에 백업 (브라우저 크래시 대비)
         _doSaveStateLocalOnly();
 
-        renderStatic();
+        _safeRender();
         updateSyncIndicator();
 
         // syncBack: 병합 결과를 Firebase에 업로드 — 3대+ 기기 비대칭 해소
