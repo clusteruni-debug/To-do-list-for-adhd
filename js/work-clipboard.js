@@ -124,3 +124,106 @@ function copyWorkTaskToSlack(projectId, stageIdx, subcatIdx, taskIdx) {
   _copyText(text, '작업 복사됨');
 }
 window.copyWorkTaskToSlack = copyWorkTaskToSlack;
+
+// ============================================
+// Slack ↔ Navigator 양방향 포맷 변환
+// - 입력 textarea onPaste: Slack rich-text(HTML) → 마크다운
+// - 개별 log content 복사: Navigator는 이미 마크다운이라 plain text 그대로 복사
+// ============================================
+
+/**
+ * Slack에서 복사한 HTML clipboard를 Navigator 마크다운으로 변환
+ * 실패 시 null 반환 → 호출 측에서 기본 paste 동작으로 fallback
+ */
+function slackHtmlToMarkdown(html) {
+  if (!html || typeof html !== 'string') return null;
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    if (!doc || !doc.body) return null;
+    const md = _slackNodeToMarkdown(doc.body);
+    // 빈 변환 결과면 fallback
+    if (!md || !md.trim()) return null;
+    return md.replace(/\n{3,}/g, '\n\n').trim();
+  } catch (e) {
+    return null;
+  }
+}
+window.slackHtmlToMarkdown = slackHtmlToMarkdown;
+
+function _slackNodeToMarkdown(node) {
+  if (!node) return '';
+  if (node.nodeType === 3) return node.textContent || ''; // text
+  if (node.nodeType !== 1) return ''; // not element
+
+  const tag = (node.tagName || '').toUpperCase();
+  const childText = Array.from(node.childNodes).map(_slackNodeToMarkdown).join('');
+
+  switch (tag) {
+    case 'B': case 'STRONG':
+      return childText ? '*' + childText + '*' : '';
+    case 'I': case 'EM':
+      return childText ? '_' + childText + '_' : '';
+    case 'S': case 'STRIKE': case 'DEL':
+      return childText ? '~' + childText + '~' : '';
+    case 'CODE': {
+      // PRE 안의 CODE는 PRE에서 코드 블록으로 처리
+      if (node.parentElement && node.parentElement.tagName === 'PRE') return childText;
+      return childText ? '`' + childText + '`' : '';
+    }
+    case 'PRE':
+      return '```\n' + childText.replace(/\n+$/, '') + '\n```\n';
+    case 'BR':
+      return '\n';
+    case 'LI':
+      return '• ' + childText.replace(/\n+$/, '').trim() + '\n';
+    case 'UL': case 'OL':
+      return childText;
+    case 'P': case 'DIV':
+      return childText.endsWith('\n') ? childText : childText + '\n';
+    case 'A':
+      return childText;
+    default:
+      return childText;
+  }
+}
+
+/**
+ * textarea onpaste 핸들러 — Slack rich-text가 있으면 마크다운으로 변환 후 커서 위치에 삽입
+ * - clipboard에 HTML 없거나 변환 실패 시 기본 paste 동작 유지 (preventDefault 안 함)
+ */
+function handleSlackPasteToWorkModal(event) {
+  if (!event || !event.clipboardData) return;
+  const html = event.clipboardData.getData('text/html');
+  if (!html) return; // plain text paste → 기본 동작
+  const markdown = slackHtmlToMarkdown(html);
+  if (markdown == null) return; // 변환 실패 → 기본 동작
+
+  event.preventDefault();
+  const ta = event.target;
+  if (!ta || ta.tagName !== 'TEXTAREA') return;
+
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(end);
+  ta.value = before + markdown + after;
+  const newPos = start + markdown.length;
+  ta.selectionStart = ta.selectionEnd = newPos;
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  showToast('Slack 형식 변환 적용', 'success');
+}
+window.handleSlackPasteToWorkModal = handleSlackPasteToWorkModal;
+
+/**
+ * 개별 log content를 Slack 형식으로 클립보드 복사
+ * Navigator는 이미 마크다운 (`*bold*` `_italic_` 등)이라 plain text 그대로 복사
+ */
+function copyLogContentToSlack(projectId, stageIdx, subcatIdx, taskIdx, logIdx) {
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+  const log = project.stages?.[stageIdx]?.subcategories?.[subcatIdx]?.tasks?.[taskIdx]?.logs?.[logIdx];
+  if (!log) return;
+  _copyText(log.content || '', '슬랙 형식으로 복사됨');
+}
+window.copyLogContentToSlack = copyLogContentToSlack;

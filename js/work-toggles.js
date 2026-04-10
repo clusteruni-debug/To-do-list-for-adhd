@@ -74,14 +74,13 @@ if (!appState.collapsedStages) appState.collapsedStages = {};
 function toggleStageCollapse(projectId, stageIdx) {
   const key = projectId + '-' + stageIdx;
   const current = appState.collapsedStages[key];
-  // Determine effective state (considering default for completed stages)
+  // Determine effective state (default: only current stage expanded, others collapsed)
   const project = (appState.workProjects || []).find(p => p.id === projectId);
-  const stage = project && project.stages[stageIdx];
-  const isCompletedStage = stage && stage.completed;
+  const _currentIdx = project ? project.stages.findIndex(s => !s.completed) : -1;
   let effectivelyCollapsed;
   if (current === 'explicit-collapsed') effectivelyCollapsed = true;
   else if (current === 'explicit-expanded') effectivelyCollapsed = false;
-  else effectivelyCollapsed = !!isCompletedStage; // default
+  else effectivelyCollapsed = (_currentIdx === -1 || stageIdx !== _currentIdx); // default: only current stage expanded
   // Toggle and save as explicit user preference
   appState.collapsedStages[key] = effectivelyCollapsed ? 'explicit-expanded' : 'explicit-collapsed';
   renderStatic();
@@ -166,3 +165,50 @@ function toggleWorkLogs(taskUid) {
   }
 }
 window.toggleWorkLogs = toggleWorkLogs;
+
+// 긴 log 본문 개별 접기/펴기 (세션 메모리 only)
+if (!appState.expandedWorkLogContents) appState.expandedWorkLogContents = {};
+
+function toggleWorkLogContent(logKey) {
+  if (!appState.expandedWorkLogContents) appState.expandedWorkLogContents = {};
+  if (appState.expandedWorkLogContents[logKey]) {
+    delete appState.expandedWorkLogContents[logKey];
+  } else {
+    appState.expandedWorkLogContents[logKey] = true;
+  }
+  renderStatic();
+}
+window.toggleWorkLogContent = toggleWorkLogContent;
+
+// 한 작업 항목 안의 긴 log 본문 일괄 접기/펴기
+// (전부 펼쳐져 있으면 전부 접기, 아니면 전부 펼치기)
+function toggleAllWorkLogContents(projectId, stageIdx, subcatIdx, taskIdx) {
+  if (!appState.expandedWorkLogContents) appState.expandedWorkLogContents = {};
+  const project = (appState.workProjects || []).find(p => p.id === projectId);
+  if (!project) return;
+  const stage = project.stages && project.stages[stageIdx];
+  const subcat = stage && stage.subcategories && stage.subcategories[subcatIdx];
+  const task = subcat && subcat.tasks && subcat.tasks[taskIdx];
+  if (!task || !task.logs) return;
+
+  const taskUid = task.id || (projectId + '-' + stageIdx + '-' + subcatIdx + '-' + taskIdx);
+  // 긴 log만 대상 (짧은 건 처음부터 접기 대상이 아님)
+  const longLogKeys = task.logs
+    .map((log, idx) => {
+      const c = log.content || '';
+      const isLong = c.length > 250 || c.split('\n').length >= 5;
+      return isLong ? (taskUid + '-log-' + idx) : null;
+    })
+    .filter(k => k !== null);
+
+  if (longLogKeys.length === 0) return;
+
+  const allExpanded = longLogKeys.every(k => appState.expandedWorkLogContents[k]);
+  if (allExpanded) {
+    longLogKeys.forEach(k => { delete appState.expandedWorkLogContents[k]; });
+  } else {
+    longLogKeys.forEach(k => { appState.expandedWorkLogContents[k] = true; });
+  }
+  renderStatic();
+}
+window.toggleAllWorkLogContents = toggleAllWorkLogContents;

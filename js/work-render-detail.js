@@ -4,6 +4,109 @@
 // ============================================
 
 /**
+ * Next Up: 현재 단계의 미완료 task 최대 3개를 우선순위대로 렌더
+ * - 필터: completed/blocked 제외, owner !== 'other'
+ * - 정렬: deadline 임박순 → in-progress 우선 → 배열 순서
+ * - 빈 상태(후보 0개 또는 모든 단계 완료): 블록 자체 숨김
+ * - v1 스코프: canStartEarly 미래 task 제외, 클릭 동작 없음
+ */
+function renderNextUpBlock(project) {
+  if (!project || !project.stages || project.stages.length === 0) return '';
+
+  const currentIdx = project.stages.findIndex(s => !s.completed);
+  if (currentIdx === -1) return ''; // 모든 단계 완료
+
+  const currentStage = project.stages[currentIdx];
+  const stageName = getStageName(project, currentIdx);
+  const subcategories = currentStage.subcategories || [];
+
+  // 후보 수집: 현재 단계의 모든 중분류 > 모든 task
+  const candidates = [];
+  subcategories.forEach(subcat => {
+    (subcat.tasks || []).forEach(task => {
+      if (task.status === 'completed' || task.status === 'blocked') return;
+      if (task.owner === 'other') return;
+      candidates.push({ task, subcatName: subcat.name });
+    });
+  });
+
+  if (candidates.length === 0) return '';
+
+  // 정렬: deadline 임박순 → in-progress 우선 → 배열 순서 (stable)
+  const STATUS_WEIGHT = { 'in-progress': 0, 'not-started': 1 };
+  candidates.sort((a, b) => {
+    const da = a.task.deadline;
+    const db = b.task.deadline;
+    if (da && db) {
+      if (da !== db) return da < db ? -1 : 1;
+    } else if (da && !db) {
+      return -1;
+    } else if (!da && db) {
+      return 1;
+    }
+    const wa = STATUS_WEIGHT[a.task.status] ?? 2;
+    const wb = STATUS_WEIGHT[b.task.status] ?? 2;
+    if (wa !== wb) return wa - wb;
+    return 0;
+  });
+
+  const topItems = candidates.slice(0, 3);
+
+  const itemsHtml = topItems.map(({ task, subcatName }) => {
+    const statusInfo = WORK_STATUS[task.status] || WORK_STATUS['not-started'];
+    let deadlineHtml = '';
+    if (task.deadline) {
+      const d = new Date(task.deadline);
+      const daysLeft = Math.ceil((d - new Date()) / (1000 * 60 * 60 * 24));
+      const cls = daysLeft < 0 ? 'overdue' : daysLeft <= 3 ? 'soon' : '';
+      const txt = daysLeft < 0 ? 'D+' + Math.abs(daysLeft) : daysLeft === 0 ? 'D-Day' : 'D-' + daysLeft;
+      deadlineHtml = '<span class="work-next-up-deadline ' + cls + '">' + txt + '</span>';
+    }
+    const metaText = escapeHtml(stageName) + ' · ' + escapeHtml(subcatName);
+    return '<div class="work-next-up-item">' +
+      '<span class="work-next-up-status ' + task.status + '">' + escapeHtml(statusInfo.label) + '</span>' +
+      '<span class="work-next-up-title">' + escapeHtml(task.title) + '</span>' +
+      '<span class="work-next-up-meta">' + metaText + deadlineHtml + '</span>' +
+      '</div>';
+  }).join('');
+
+  return '<div class="work-next-up">' +
+    '<div class="work-next-up-header">▶ 지금 할 일</div>' +
+    '<div class="work-next-up-list">' + itemsHtml + '</div>' +
+    '</div>';
+}
+
+/**
+ * 긴 log 본문 자동 접기 — content가 250자 OR 5줄 이상이면 미리보기 + 더보기 토글
+ * - logKey: 작업 단위 고유 키(taskUid) + log 인덱스 조합
+ * - 상태 저장: appState.expandedWorkLogContents (메모리 only, 세션 단위)
+ */
+function renderWorkLogContent(content, logKey) {
+  if (!content) return '';
+  const LONG_CHAR = 250;
+  const LONG_LINES = 5;
+  const PREVIEW_CHAR = 100;
+  const lines = content.split('\n');
+  const isLong = content.length > LONG_CHAR || lines.length >= LONG_LINES;
+
+  if (!isLong) {
+    return renderFormattedText(content);
+  }
+
+  const isExpanded = appState.expandedWorkLogContents && appState.expandedWorkLogContents[logKey];
+
+  if (isExpanded) {
+    return renderFormattedText(content) +
+      '<button class="work-log-content-toggle" onclick="event.stopPropagation(); toggleWorkLogContent(\'' + escapeAttr(logKey) + '\')">▲ 접기</button>';
+  }
+
+  const firstLine = lines[0] || '';
+  const preview = firstLine.length > PREVIEW_CHAR ? firstLine.slice(0, PREVIEW_CHAR) : firstLine;
+  return '<div class="work-log-content-preview">' + renderFormattedText(preview) + '</div>' +
+    '<button class="work-log-content-toggle" onclick="event.stopPropagation(); toggleWorkLogContent(\'' + escapeAttr(logKey) + '\')">▼ 더보기</button>';
+}
+
+/**
  * 프로젝트 상세 렌더링
  */
 function renderWorkProjectDetail(project) {
@@ -77,6 +180,9 @@ function renderWorkProjectDetail(project) {
         </div>
       </div>
 
+      <!-- Next Up: 지금 할 일 -->
+      ${renderNextUpBlock(project)}
+
       <!-- 참여자 트래커 -->
       ${project.participantGoal ? `
         <div class="work-participant-tracker">
@@ -136,7 +242,7 @@ function renderWorkProjectDetail(project) {
           const _csVal = appState.collapsedStages && appState.collapsedStages[project.id + '-' + stageIdx];
           const isCollapsed = _csVal === 'explicit-collapsed' ? true
             : _csVal === 'explicit-expanded' ? false
-            : stage.completed; // default: completed stages collapsed
+            : (currentIdx === -1 || stageIdx !== currentIdx); // default: only current stage expanded
           const stageTotalTasks = subcategories.reduce((s, sub) => s + sub.tasks.length, 0);
           const stageCompletedTasks = subcategories.reduce((s, sub) => s + sub.tasks.filter(t => t.status === 'completed').length, 0);
 
@@ -196,9 +302,13 @@ function renderWorkProjectDetail(project) {
                     : _scVal === 'explicit-expanded' ? false
                     : subcatAllDone; // default: all-done subcategories collapsed
                   return `
-                  <div class="work-subcategory">
+                  <div class="work-subcategory"
+                       ondragover="handleSubcategoryDragOver(event, '${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})"
+                       ondrop="handleSubcategoryDrop(event, '${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})"
+                       ondragend="handleWorkDragEnd(event)">
                     <div class="work-subcategory-header">
                       <div class="work-subcategory-title">
+                        <span class="work-drag-handle" draggable="true" ondragstart="handleSubcategoryDragStart(event, '${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})" title="드래그하여 순서 변경">≡</span>
                         <span class="work-subcategory-collapse-toggle" onclick="toggleSubcategoryCollapse('${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})" title="${isSubcatCollapsed ? '펼치기' : '접기'}" style="cursor: pointer; font-size: 12px; color: var(--text-muted); width: 16px; text-align: center; flex-shrink: 0;">${isSubcatCollapsed ? '▶' : '▼'}</span>
                         <div class="work-subcategory-checkbox ${subcatAllDone ? 'checked' : ''}"
                              onclick="toggleSubcategoryComplete('${escapeAttr(project.id)}', ${stageIdx}, ${subcatIdx})">
@@ -280,9 +390,20 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
   const isCollapsible = totalLogCount >= 3;
   const isDetailExpanded = !isCollapsible || (appState.expandedWorkTaskDetails && appState.expandedWorkTaskDetails[taskExpandKey]);
 
+  // 긴 log 본문이 하나라도 있으면 일괄 토글 버튼 노출 (250자 OR 5줄 이상 기준)
+  const hasLongLogs = (task.logs || []).some(log => {
+    const c = log.content || '';
+    return c.length > 250 || c.split('\n').length >= 5;
+  });
+
   return `
-    <div class="work-task-item${task.status === 'completed' ? ' work-task-completed' : ''}" style="${pulseColor !== 'transparent' ? 'border-left: 3px solid ' + pulseColor + ';' : ''}">
+    <div class="work-task-item${task.status === 'completed' ? ' work-task-completed' : ''}"
+         ondragover="handleWorkTaskDragOver(event, '${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})"
+         ondrop="handleWorkTaskDrop(event, '${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})"
+         ondragend="handleWorkDragEnd(event)"
+         style="${pulseColor !== 'transparent' ? 'border-left: 3px solid ' + pulseColor + ';' : ''}">
       <div class="work-task-header">
+        <span class="work-drag-handle" draggable="true" ondragstart="handleWorkTaskDragStart(event, '${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="드래그하여 순서 변경">≡</span>
         ${isCollapsible ? `<span class="work-task-detail-chevron" data-detail-key="${taskExpandKey}" data-log-count="${totalLogCount}" onclick="event.stopPropagation(); toggleTaskDetailExpand('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="${isDetailExpanded ? '기록 접기' : '기록 펼치기'}">${isDetailExpanded ? '▼' : '▶ ' + totalLogCount + '기록'}</span>` : ''}
         <div class="work-task-checkbox ${task.status === 'completed' ? 'checked' : ''}"
              onclick="toggleWorkTaskComplete('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})"
@@ -303,6 +424,7 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
           <button class="work-task-action" onclick="promptRenameWorkTask('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})">${svgIcon('edit', 14)}</button>
           <button class="work-task-action" onclick="promptTaskDeadline('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="마감일 설정" aria-label="마감일 설정">📅</button>
           <button class="work-task-action" onclick="showWorkModal('log', '${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" aria-label="기록 추가">+ 기록</button>
+          ${hasLongLogs ? `<button class="work-task-action" onclick="event.stopPropagation(); toggleAllWorkLogContents('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="긴 기록 본문 일괄 접기/펴기" aria-label="기록 본문 일괄 토글">📖</button>` : ''}
           <button class="work-task-action" onclick="event.stopPropagation(); toggleCanStartEarly('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="${task.canStartEarly ? '선제적 시작 해제' : '선제적 시작 설정'}" aria-label="선제적 시작 토글" style="${task.canStartEarly ? 'color: var(--accent-primary);' : ''}">💡</button>
           <button class="work-task-action" onclick="event.stopPropagation(); copyWorkTaskToSlack('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="슬랙 복사" aria-label="슬랙 복사">📋</button>
           <button class="work-task-action" onclick="deleteWorkTask('${escapeAttr(projectId)}', ${stageIdx}, ${subcatIdx}, ${taskIdx})" title="항목 삭제" aria-label="항목 삭제" style="color: var(--accent-danger);">${svgIcon('trash', 14)}</button>
@@ -326,7 +448,9 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
               const label = completionLogs.length === 1
                 ? '✓ 완료 (' + lastDate + ')'
                 : '✓ ' + completionLogs.length + '회 완료 (최근: ' + lastDate + ')';
-              html += '<div class="work-task-log"><span class="work-task-log-date" style="color: var(--accent-success);">' + label + '</span>' +
+              // 일관성: 모든 log 본문은 renderWorkLogContent를 거침 (completion label은 짧아 항상 그대로 출력)
+              const _compLogKey = taskUid + '-log-' + lastIdx;
+              html += '<div class="work-task-log"><span class="work-task-log-date" style="color: var(--accent-success);">' + renderWorkLogContent(label, _compLogKey) + '</span>' +
                 '<div class="work-task-log-actions">' +
                   '<button class="work-task-log-action" onclick="editWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + lastIdx + ')" aria-label="기록 편집">✏️</button>' +
                   '<button class="work-task-log-action" onclick="deleteWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + lastIdx + ')" aria-label="기록 삭제">×</button>' +
@@ -341,9 +465,11 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
               html += '<div class="work-task-logs-collapsed' + (wasExpanded ? ' expanded' : '') + '" id="logs-hidden-' + taskUid + '">';
               hiddenLogs.forEach(log => {
                 const actualIdx = log._idx;
-                html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderFormattedText(log.content) + '</div>' +
+                const _logKey = taskUid + '-log-' + actualIdx;
+                html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderWorkLogContent(log.content, _logKey) + '</div>' +
                   '<div class="work-task-log-actions">' +
                     '<button class="work-task-log-action" onclick="editWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 편집">✏️</button>' +
+                    '<button class="work-task-log-action" onclick="copyLogContentToSlack(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" title="슬랙 형식 복사" aria-label="슬랙 형식 복사">📋</button>' +
                     '<button class="work-task-log-action" onclick="deleteWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button>' +
                   '</div></div>';
               });
@@ -352,9 +478,11 @@ function renderWorkTask(projectId, stageIdx, subcatIdx, task, taskIdx) {
             }
             visibleLogs.forEach(log => {
               const actualIdx = log._idx;
-              html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderFormattedText(log.content) + '</div>' +
+              const _logKey = taskUid + '-log-' + actualIdx;
+              html += '<div class="work-task-log"><span class="work-task-log-date">' + escapeHtml(log.date) + '</span><div class="work-task-log-content">' + renderWorkLogContent(log.content, _logKey) + '</div>' +
                 '<div class="work-task-log-actions">' +
                   '<button class="work-task-log-action" onclick="editWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 편집">✏️</button>' +
+                  '<button class="work-task-log-action" onclick="copyLogContentToSlack(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" title="슬랙 형식 복사" aria-label="슬랙 형식 복사">📋</button>' +
                   '<button class="work-task-log-action" onclick="deleteWorkLog(\'' + pid + '\', ' + si + ', ' + sci + ', ' + ti + ', ' + actualIdx + ')" aria-label="기록 삭제">×</button>' +
                 '</div></div>';
             });

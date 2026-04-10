@@ -95,8 +95,8 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
       titleText = '📋 진행 기록 추가';
       bodyHtml = `
         <div class="work-modal-field">
-          <label class="work-modal-label">진행 내용</label>
-          <textarea class="work-modal-textarea" id="work-input-content" placeholder="* 진행 내용을 입력하세요\n   * 세부 내용" autofocus></textarea>
+          <label class="work-modal-label">진행 내용 <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Slack에서 붙여넣으면 자동 변환)</span></label>
+          <textarea class="work-modal-textarea" id="work-input-content" onpaste="handleSlackPasteToWorkModal(event)" placeholder="* 진행 내용을 입력하세요\n   * 세부 내용" autofocus></textarea>
         </div>
       `;
       break;
@@ -126,8 +126,8 @@ function showWorkModal(type, projectId = null, stageIdx = null, subcatIdx = null
       } else {
         bodyHtml = `
           <div class="work-modal-field">
-            <label class="work-modal-label">기록 내용</label>
-            <textarea class="work-modal-textarea" id="work-input-content" autofocus>${escapeHtml(editLog?.content || '')}</textarea>
+            <label class="work-modal-label">기록 내용 <span style="font-size: 11px; color: var(--text-muted); font-weight: normal;">(Slack에서 붙여넣으면 자동 변환)</span></label>
+            <textarea class="work-modal-textarea" id="work-input-content" onpaste="handleSlackPasteToWorkModal(event)" autofocus>${escapeHtml(editLog?.content || '')}</textarea>
           </div>
           <div class="work-modal-field">
             <label class="work-modal-label">날짜</label>

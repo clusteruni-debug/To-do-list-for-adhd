@@ -326,6 +326,167 @@
       border-style: dashed;
     }
 
+    /* ============================================
+       Next Up 블록 (본업 프로젝트 상세 상단)
+       ============================================ */
+    .work-next-up {
+      margin: 12px 0 16px;
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--accent-primary);
+      border-radius: var(--radius-md);
+    }
+    .work-next-up-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-primary);
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    .work-next-up-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .work-next-up-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+    }
+    .work-next-up-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-primary);
+      color: var(--text-muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .work-next-up-status.in-progress {
+      background: var(--accent-primary-alpha);
+      color: var(--accent-primary);
+    }
+    .work-next-up-title {
+      color: var(--text-primary);
+      font-weight: 500;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .work-next-up-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .work-next-up-deadline {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--bg-primary);
+      color: var(--text-muted);
+    }
+    .work-next-up-deadline.soon {
+      background: var(--accent-warning-alpha);
+      color: var(--accent-warning);
+    }
+    .work-next-up-deadline.overdue {
+      background: var(--accent-danger-alpha);
+      color: var(--accent-danger);
+    }
+    @media (max-width: 640px) {
+      .work-next-up-item {
+        flex-wrap: wrap;
+      }
+      .work-next-up-title {
+        white-space: normal;
+        flex-basis: 100%;
+        order: 2;
+      }
+      .work-next-up-meta {
+        order: 3;
+        flex-basis: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    /* ============================================
+       긴 log 본문 자동 접기 / 일괄 토글
+       ============================================ */
+    .work-log-content-preview {
+      color: var(--text-primary);
+      opacity: 0.85;
+      display: inline;
+    }
+    .work-log-content-toggle {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 2px 8px;
+      background: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--accent-primary);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      vertical-align: middle;
+      line-height: 1.4;
+    }
+    .work-log-content-toggle:hover {
+      background: var(--accent-primary-alpha);
+      border-color: var(--accent-primary);
+    }
+
+    /* ============================================
+       드래그 재정렬 (중분류 + 작업 항목)
+       ============================================ */
+    .work-drag-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: grab;
+      user-select: none;
+      flex-shrink: 0;
+      margin-right: 4px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+    .work-drag-handle:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .work-drag-handle:active {
+      cursor: grabbing;
+    }
+    .work-dragging {
+      opacity: 0.4;
+    }
+    .work-drop-target {
+      outline: 2px dashed var(--accent-primary);
+      outline-offset: -2px;
+    }
+    /* dragstart부터 dragend까지 전역 grabbing 커서 — HTML5 drag는 :active가 안 잡혀서 body 클래스로 처리 */
+    body.work-drag-active,
+    body.work-drag-active * {
+      cursor: grabbing !important;
+    }
+
     .work-stage-header {
       display: flex;
       justify-content: space-between;

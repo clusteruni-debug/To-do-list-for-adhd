@@ -134,8 +134,9 @@ function addSubcategory(projectId, stageIdx, name) {
   if (appState.collapsedStages) {
     const _csKey = projectId + '-' + stageIdx;
     const _csVal = appState.collapsedStages[_csKey];
-    const _stage = project.stages[stageIdx];
-    if (_csVal === 'explicit-collapsed' || (!_csVal && _stage && _stage.completed)) {
+    const _currentIdx = project.stages.findIndex(s => !s.completed);
+    const _isDefaultCollapsed = _currentIdx === -1 || stageIdx !== _currentIdx;
+    if (_csVal === 'explicit-collapsed' || (!_csVal && _isDefaultCollapsed)) {
       appState.collapsedStages[_csKey] = 'explicit-expanded';
     }
   }
@@ -207,8 +208,9 @@ function addWorkTask(projectId, stageIdx, subcatIdx, title, status, canStartEarl
   if (appState.collapsedStages) {
     const _csKey = projectId + '-' + stageIdx;
     const _csVal = appState.collapsedStages[_csKey];
-    const _stage = project.stages[stageIdx];
-    if (_csVal === 'explicit-collapsed' || (!_csVal && _stage && _stage.completed)) {
+    const _currentIdx = project.stages.findIndex(s => !s.completed);
+    const _isDefaultCollapsed = _currentIdx === -1 || stageIdx !== _currentIdx;
+    if (_csVal === 'explicit-collapsed' || (!_csVal && _isDefaultCollapsed)) {
       appState.collapsedStages[_csKey] = 'explicit-expanded';
     }
   }
@@ -442,4 +444,217 @@ function toggleCanStartEarly(projectId, stageIdx, subcatIdx, taskIdx) {
   showToast(task.canStartEarly ? '선제적 시작 가능으로 설정됨' : '선제적 시작 해제됨', 'success');
 }
 window.toggleCanStartEarly = toggleCanStartEarly;
+
+// ============================================
+// 본업 중분류/작업 항목 드래그 재정렬 (HTML5 Drag, 데스크톱 전용)
+// ============================================
+
+/**
+ * 인덱스 매핑 헬퍼: fromIdx에서 insertIdx로 이동했을 때 oldIdx의 새 위치 반환
+ * - 이동된 항목 자체: fromIdx → insertIdx
+ * - forward (fromIdx < insertIdx): 사이 인덱스 1씩 감소
+ * - backward (fromIdx > insertIdx): 사이 인덱스 1씩 증가
+ */
+function _mapReorderedIdx(oldIdx, fromIdx, insertIdx) {
+  if (oldIdx === fromIdx) return insertIdx;
+  if (fromIdx < insertIdx) {
+    if (oldIdx > fromIdx && oldIdx <= insertIdx) return oldIdx - 1;
+  } else {
+    if (oldIdx >= insertIdx && oldIdx < fromIdx) return oldIdx + 1;
+  }
+  return oldIdx;
+}
+
+/**
+ * state 키 매핑 헬퍼: prefix 다음 첫 segment(인덱스)를 reorder 결과에 맞춰 재매핑
+ * - Navigator state 키 형식: "projectId-stageIdx-subcatIdx[-taskIdx[-...]]"
+ * - prefix는 매핑할 segment 직전까지 (예: 'projId-0-' → subcatIdx 매핑)
+ * - prefix와 무관한 키는 그대로 보존
+ * - 다른 subcat/task의 사용자 펼침 상태가 reorder 후에도 유지됨
+ */
+function _remapStateKeys(stateObj, prefix, fromIdx, insertIdx) {
+  if (!stateObj) return;
+  const remapped = {};
+  Object.keys(stateObj).forEach(k => {
+    if (!k.startsWith(prefix)) {
+      remapped[k] = stateObj[k];
+      return;
+    }
+    const rest = k.slice(prefix.length);
+    const dash = rest.indexOf('-');
+    const idxStr = dash === -1 ? rest : rest.slice(0, dash);
+    const idx = parseInt(idxStr, 10);
+    if (isNaN(idx)) {
+      remapped[k] = stateObj[k];
+      return;
+    }
+    const newIdx = _mapReorderedIdx(idx, fromIdx, insertIdx);
+    const tail = dash === -1 ? '' : rest.slice(dash);
+    remapped[prefix + newIdx + tail] = stateObj[k];
+  });
+  Object.keys(stateObj).forEach(k => delete stateObj[k]);
+  Object.assign(stateObj, remapped);
+}
+
+/**
+ * 중분류 순서 재정렬 (같은 단계 내에서만)
+ */
+function reorderSubcategory(projectId, stageIdx, fromIdx, toIdx) {
+  if (fromIdx === toIdx) return;
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+  const stage = project.stages && project.stages[stageIdx];
+  if (!stage || !stage.subcategories) return;
+  const arr = stage.subcategories;
+  if (fromIdx < 0 || fromIdx >= arr.length || toIdx < 0 || toIdx >= arr.length) return;
+
+  const [moved] = arr.splice(fromIdx, 1);
+  // 표준 drag-drop 보정: from < to인 경우 splice 후 인덱스가 1 줄어들었으므로 to-- 필요
+  // → "C 위에 drop"이 "A가 C 자리에" 결과로 나오게 함 (사용자 직관 일치)
+  const insertIdx = fromIdx < toIdx ? toIdx - 1 : toIdx;
+  arr.splice(insertIdx, 0, moved);
+
+  // 인덱스 기반 UI 상태 매핑 (이동된 subcat 인덱스만 변경, 다른 subcat 펼침 상태 보존)
+  const stagePrefix = projectId + '-' + stageIdx + '-';
+  _remapStateKeys(appState.collapsedSubcategories, stagePrefix, fromIdx, insertIdx);
+  _remapStateKeys(appState.expandedWorkTasks, stagePrefix, fromIdx, insertIdx);
+  _remapStateKeys(appState.expandedWorkTaskDetails, stagePrefix, fromIdx, insertIdx);
+  _remapStateKeys(appState.expandedWorkLogContents, stagePrefix, fromIdx, insertIdx);
+
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+  showToast('중분류 순서 변경됨', 'success');
+}
+window.reorderSubcategory = reorderSubcategory;
+
+/**
+ * 작업 항목 순서 재정렬 (같은 중분류 내에서만)
+ */
+function reorderWorkTask(projectId, stageIdx, subcatIdx, fromIdx, toIdx) {
+  if (fromIdx === toIdx) return;
+  const project = appState.workProjects.find(p => p.id === projectId);
+  if (!project) return;
+  const subcat = project.stages && project.stages[stageIdx] &&
+    project.stages[stageIdx].subcategories && project.stages[stageIdx].subcategories[subcatIdx];
+  if (!subcat || !subcat.tasks) return;
+  const arr = subcat.tasks;
+  if (fromIdx < 0 || fromIdx >= arr.length || toIdx < 0 || toIdx >= arr.length) return;
+
+  const [moved] = arr.splice(fromIdx, 1);
+  // 표준 drag-drop 보정 (reorderSubcategory와 동일 로직)
+  const insertIdx = fromIdx < toIdx ? toIdx - 1 : toIdx;
+  arr.splice(insertIdx, 0, moved);
+
+  // 해당 중분류 내 task 인덱스 매핑 (이동된 task만 인덱스 변경, 다른 task 펼침 상태 보존)
+  const subcatPrefix = projectId + '-' + stageIdx + '-' + subcatIdx + '-';
+  _remapStateKeys(appState.expandedWorkTasks, subcatPrefix, fromIdx, insertIdx);
+  _remapStateKeys(appState.expandedWorkTaskDetails, subcatPrefix, fromIdx, insertIdx);
+  _remapStateKeys(appState.expandedWorkLogContents, subcatPrefix, fromIdx, insertIdx);
+
+  project.updatedAt = new Date().toISOString();
+  saveWorkProjects();
+  renderStatic();
+  showToast('항목 순서 변경됨', 'success');
+}
+window.reorderWorkTask = reorderWorkTask;
+
+// ─── 중분류 드래그 핸들러 ───
+
+function handleSubcategoryDragStart(e, projectId, stageIdx, subcatIdx) {
+  e.stopPropagation();
+  appState.workDragState = { type: 'subcat', projectId, stageIdx, subcatIdx };
+  e.dataTransfer.effectAllowed = 'move';
+  const parent = e.target.closest('.work-subcategory');
+  if (parent) {
+    try { e.dataTransfer.setDragImage(parent, 0, 0); } catch (_) {}
+    parent.classList.add('work-dragging');
+  }
+  document.body.classList.add('work-drag-active');
+}
+window.handleSubcategoryDragStart = handleSubcategoryDragStart;
+
+function handleSubcategoryDragOver(e, projectId, stageIdx, targetSubcatIdx) {
+  const ds = appState.workDragState;
+  if (!ds || ds.type !== 'subcat') return;
+  if (ds.projectId !== projectId || ds.stageIdx !== stageIdx) return;
+  if (ds.subcatIdx === targetSubcatIdx) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.work-subcategory.work-drop-target').forEach(el => {
+    if (el !== e.currentTarget) el.classList.remove('work-drop-target');
+  });
+  e.currentTarget.classList.add('work-drop-target');
+}
+window.handleSubcategoryDragOver = handleSubcategoryDragOver;
+
+function handleSubcategoryDrop(e, projectId, stageIdx, targetSubcatIdx) {
+  const ds = appState.workDragState;
+  if (!ds || ds.type !== 'subcat') return;
+  if (ds.projectId !== projectId || ds.stageIdx !== stageIdx) {
+    appState.workDragState = null;
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  const fromIdx = ds.subcatIdx;
+  appState.workDragState = null;
+  reorderSubcategory(projectId, stageIdx, fromIdx, targetSubcatIdx);
+}
+window.handleSubcategoryDrop = handleSubcategoryDrop;
+
+// ─── 작업 항목 드래그 핸들러 ───
+
+function handleWorkTaskDragStart(e, projectId, stageIdx, subcatIdx, taskIdx) {
+  e.stopPropagation();
+  appState.workDragState = { type: 'task', projectId, stageIdx, subcatIdx, taskIdx };
+  e.dataTransfer.effectAllowed = 'move';
+  const parent = e.target.closest('.work-task-item');
+  if (parent) {
+    try { e.dataTransfer.setDragImage(parent, 0, 0); } catch (_) {}
+    parent.classList.add('work-dragging');
+  }
+  document.body.classList.add('work-drag-active');
+}
+window.handleWorkTaskDragStart = handleWorkTaskDragStart;
+
+function handleWorkTaskDragOver(e, projectId, stageIdx, subcatIdx, targetTaskIdx) {
+  const ds = appState.workDragState;
+  if (!ds || ds.type !== 'task') return;
+  if (ds.projectId !== projectId || ds.stageIdx !== stageIdx || ds.subcatIdx !== subcatIdx) return;
+  if (ds.taskIdx === targetTaskIdx) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.work-task-item.work-drop-target').forEach(el => {
+    if (el !== e.currentTarget) el.classList.remove('work-drop-target');
+  });
+  e.currentTarget.classList.add('work-drop-target');
+}
+window.handleWorkTaskDragOver = handleWorkTaskDragOver;
+
+function handleWorkTaskDrop(e, projectId, stageIdx, subcatIdx, targetTaskIdx) {
+  const ds = appState.workDragState;
+  if (!ds || ds.type !== 'task') return;
+  if (ds.projectId !== projectId || ds.stageIdx !== stageIdx || ds.subcatIdx !== subcatIdx) {
+    appState.workDragState = null;
+    return;
+  }
+  e.preventDefault();
+  e.stopPropagation();
+  const fromIdx = ds.taskIdx;
+  appState.workDragState = null;
+  reorderWorkTask(projectId, stageIdx, subcatIdx, fromIdx, targetTaskIdx);
+}
+window.handleWorkTaskDrop = handleWorkTaskDrop;
+
+// 공통: dragend 시 모든 시각 표시 정리 (subcat/task 공용)
+function handleWorkDragEnd(e) {
+  appState.workDragState = null;
+  document.querySelectorAll('.work-dragging').forEach(el => el.classList.remove('work-dragging'));
+  document.querySelectorAll('.work-drop-target').forEach(el => el.classList.remove('work-drop-target'));
+  document.body.classList.remove('work-drag-active');
+}
+window.handleWorkDragEnd = handleWorkDragEnd;
 
